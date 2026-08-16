@@ -177,11 +177,14 @@ export function MonthGridView({
                       cell.inMonth ? "" : "opacity-35"
                     } ${cell.isToday ? "bg-surface-2" : ""}`}
                   >
-                    <div className="flex items-baseline justify-between gap-1">
-                      {/* Name days, small at the left like the printed lists. */}
-                      <span className="text-muted min-w-0 flex-1 truncate text-[9px]">
-                        {names.join(", ")}
-                      </span>
+                    {/* The date has the first line to itself. A portrait
+                        phone gives a cell ~48 px of width, which is not
+                        enough to share with a name — "Bartolomeus" beside
+                        the 24th truncated to "B…" and told nobody anything.
+                        The names and the holiday get their own rows below,
+                        wrapping onto a second line and breaking mid-word
+                        when a single name is wider than the column. */}
+                    <div className="text-right">
                       <span
                         className={`cal-serif text-base leading-none sm:text-lg ${
                           red ? "cal-red" : "text-fg"
@@ -194,11 +197,23 @@ export function MonthGridView({
                         kalender.se convention. */}
                     {holiday && (
                       <div
-                        className={`truncate text-[9px] leading-tight ${
+                        className={`line-clamp-3 text-[9px] leading-[1.15] break-words ${
                           holiday.red ? "cal-red" : "text-muted"
                         }`}
                       >
                         {holiday.name}
+                      </div>
+                    )}
+                    {/* Name days, small under the date like the printed
+                        lists — but one per line rather than comma-separated.
+                        At this width a pair almost always wraps anyway, and
+                        wrapping a comma-joined string strands the comma at
+                        the head of the second line ("Bernhard" / ", Bernt").
+                        Clamped at two lines so a day with three names cannot
+                        crowd out the note text below. */}
+                    {names.length > 0 && (
+                      <div className="text-muted line-clamp-2 text-[9px] leading-[1.15] break-words whitespace-pre-line">
+                        {names.join("\n")}
                       </div>
                     )}
                     <div className="min-h-0 flex-1">

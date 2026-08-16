@@ -296,6 +296,12 @@ infer from the diff.
 - **No dead gutters.** A fixed-width column that is empty under the current
   settings must not be rendered at all — an always-reserved `w-7` week gutter
   is 36 px of wasted left margin on every row when week numbers are off.
+- **Nothing meaningful is truncated.** A month cell is only ~48 px wide in
+  portrait, so `truncate` on a name day or a holiday renders it as "B…" and
+  tells the reader nothing. Give the text its own row and let it wrap
+  (`break-words`, `line-clamp-2`/`-3`) instead of sharing a line with the
+  date. Multi-value text wraps better one value per line than comma-joined —
+  a wrapped `"A, B"` strands the comma at the head of line two.
 - **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
   header-action size.
 - **The safe areas are respected.** The top menu adds
