@@ -5,6 +5,13 @@ import { join, posix, relative, sep } from "node:path";
 import type { HtmlTagDescriptor, Plugin, ResolvedConfig } from "vite";
 
 import { cacheIdForBase } from "./src/app/pwa.ts";
+import {
+  navigationDenyPrefixes,
+  robotsContent,
+  slotForBase,
+  slotTitles,
+  type DeploySlot,
+} from "./src/app/slot.ts";
 
 // Hand-rolls the app's service worker at build time so the deployed app is an
 // installable, self-updating PWA. We deliberately avoid `vite-plugin-pwa` /
@@ -20,9 +27,10 @@ import { cacheIdForBase } from "./src/app/pwa.ts";
 //   - a Cache Storage entry named `<cacheId>-precache`
 
 type AppPwaOptions = {
-  // The bundler base (`/` locally, `/calendar/` on GitHub Pages). Drives the
-  // SW scope, the emitted file URLs, and — via `cacheIdForBase` — the
-  // precache name.
+  // The bundler base (`/` for production, `/preview/` and `/branch/` for the
+  // secondary slots). Drives the SW scope, the emitted file URLs, and — via
+  // `cacheIdForBase` — the precache name, so the slots never poison each
+  // other's precache (OSS_SPEC §11.4.8).
   base: string;
   // Label shown in the "a new version is ready" toast. Embedding it in the SW
   // also guarantees the worker's bytes differ between deploys even when no
@@ -31,22 +39,28 @@ type AppPwaOptions = {
 };
 
 // Public assets we never want in the precache: the SEO files are for
-// crawlers, not the app shell.
+// crawlers, not the app shell, and CNAME is a Pages directive that only ever
+// means anything at the root of the deployed artifact.
 const PUBLIC_SKIP = new Set([
   "robots.txt",
   "sitemap.xml",
   "llms.txt",
   "og.png",
+  "CNAME",
 ]);
 
 // Build the web app manifest for a given deploy base. Emitted per build
 // rather than shipped as a static `public/` file so `id`, `start_url`,
 // `scope`, and the icon `src`s stay base-correct — some engines resolve them
-// relative to the *origin*, not the manifest URL.
-export function buildManifest(base: string): string {
+// relative to the *origin*, not the manifest URL. The slot additionally names
+// the installed app, so an install from `/preview/` is visibly distinct from
+// the production one instead of fighting it for the same home-screen tile
+// (§11.4.8).
+export function buildManifest(base: string, slot: DeploySlot): string {
+  const titles = slotTitles(slot);
   const manifest = {
-    name: "Calendar — a wall calendar that doesn't nag",
-    short_name: "Calendar",
+    name: titles.name,
+    short_name: titles.shortName,
     description:
       "A local-first wall-calendar PWA: monthly view with week numbers and " +
       "name days (UK & Sweden), a week planner, per-day notes, and storage " +
@@ -99,6 +113,7 @@ export function buildServiceWorker(
   precache: string[],
 ): string {
   const cacheName = `${cacheId}-precache`;
+  const deny = navigationDenyPrefixes(slotForBase(base));
   return `// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // GENERATED — do not edit. Emitted by pwa-plugin.ts for the Calendar PWA.
 // A minimal "prompt to update" precaching worker: it installs the build's
@@ -108,6 +123,13 @@ export function buildServiceWorker(
 const CACHE = ${JSON.stringify(cacheName)};
 const BASE = ${JSON.stringify(base)};
 const INDEX = ${JSON.stringify(`${base}index.html`)};
+// Path prefixes belonging to OTHER deployment slots on this origin. The
+// production worker is scoped at \`/\`, which spans \`/preview/\` and
+// \`/branch/\` too — without this denylist it would answer their navigations
+// with the production shell, so a PWA installed from \`/preview/\` would
+// silently run production (OSS_SPEC §11.5). Empty for the non-root slots:
+// their own BASE check already confines them.
+const DENY = ${JSON.stringify(deny)};
 const PRECACHE = ${JSON.stringify(precache)};
 const PRECACHE_PATHS = new Set(
   PRECACHE.map((u) => new URL(u, self.location.href).pathname),
@@ -176,9 +198,20 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  // App-shell navigations: only our own routes get the shell fallback.
+  // App-shell navigations: only our own routes get the shell fallback —
+  // never another slot's, even when ours is the origin-wide \`/\` scope.
   if (req.mode === "navigate") {
     if (!url.pathname.startsWith(BASE)) return;
+    for (const prefix of DENY) {
+      // Match the slash-less form too: /preview and /preview/ are the same
+      // slot, and Pages serves the directory either way.
+      if (
+        url.pathname.startsWith(prefix) ||
+        url.pathname === prefix.slice(0, -1)
+      ) {
+        return;
+      }
+    }
     event.respondWith(navigateFallback(req));
     return;
   }
@@ -198,6 +231,8 @@ self.addEventListener("fetch", (event) => {
 
 export function appPwa({ base, version }: AppPwaOptions): Plugin {
   const cacheId = cacheIdForBase(base);
+  const slot: DeploySlot = slotForBase(base);
+  const titles = slotTitles(slot);
   let config: ResolvedConfig;
 
   return {
@@ -219,6 +254,17 @@ export function appPwa({ base, version }: AppPwaOptions): Plugin {
         {
           tag: "link",
           attrs: { rel: "manifest", href: `${base}manifest.webmanifest` },
+          injectTo: "head",
+        },
+        // Indexability is a per-slot property, so it is injected here rather
+        // than written into index.html: only production may be indexed, and
+        // `/preview/` + `/branch/` must never put a second copy of the app in
+        // front of a searcher (OSS_SPEC §11.5.1). The canonical URL in the
+        // shell stays pointed at production for every slot, which is what it
+        // means for production to be the copy that counts.
+        {
+          tag: "meta",
+          attrs: { name: "robots", content: robotsContent(slot) },
           injectTo: "head",
         },
         // The raster fallback first: engines that don't honour the SVG favicon
@@ -266,7 +312,10 @@ export function appPwa({ base, version }: AppPwaOptions): Plugin {
         },
         {
           tag: "meta",
-          attrs: { name: "apple-mobile-web-app-title", content: "Calendar" },
+          attrs: {
+            name: "apple-mobile-web-app-title",
+            content: titles.appleTitle,
+          },
           injectTo: "head",
         },
       ];
@@ -307,7 +356,7 @@ export function appPwa({ base, version }: AppPwaOptions): Plugin {
       // The web manifest is generated here (not shipped from `public/`) so
       // its identity fields are base-correct; add it to the precache so the
       // installed shell resolves its icons and identity offline.
-      const manifestSource = buildManifest(base);
+      const manifestSource = buildManifest(base, slot);
       add(`${base}manifest.webmanifest`, Buffer.byteLength(manifestSource));
 
       const precache = Object.keys(assets);

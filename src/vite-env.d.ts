@@ -17,6 +17,12 @@ declare const __BUILD_LABEL__: string;
 declare const __BUILD_COMMIT__: string;
 declare const __BUILD_NUMBER__: string;
 
+// Which deployment slot this build was made for — "production", "preview", or
+// "branch" (see `src/app/slot.ts`) — and, for the `/branch/` slot whose URL
+// never changes, the source branch parked in it. Empty otherwise.
+declare const __BUILD_SLOT__: string;
+declare const __BUILD_SOURCE__: string;
+
 // Build-time env the app reads through `import.meta.env`. All optional — the
 // app builds and runs with none of them set. See `docs/configuration.md`.
 interface ImportMetaEnv {

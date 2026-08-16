@@ -12,6 +12,10 @@
 [![spec](https://img.shields.io/badge/OSS__SPEC-v2.9.0-blueviolet)](OSS_SPEC.md)
 [![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
 
+**[calendar.niclaslindstedt.se](https://calendar.niclaslindstedt.se)** — open
+it in a browser and install it from there for offline use. No download, no
+account, no server.
+
 ## What it is
 
 A frontend-only, local-first calendar PWA built on
@@ -96,6 +100,15 @@ All configuration is optional build-time environment (`.env`, see
 
 See [`docs/configuration.md`](docs/configuration.md).
 
+## Deployment
+
+The app is deployed to GitHub Pages under three slots on one domain: `/` (the
+latest release), `/preview/` (current `main`), and `/branch/` (a feature branch
+a maintainer parks there for review). Releases are cut by dispatching the
+`release` workflow, which sizes the bump from the changelog fragments in
+`.changes/unreleased/`, collates them into `CHANGELOG.md`, tags, and deploys.
+See [`docs/deployment.md`](docs/deployment.md).
+
 ## Examples
 
 [`examples/`](examples/) contains a sample calendar document
@@ -119,6 +132,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - [Architecture](docs/architecture.md)
 - [Configuration](docs/configuration.md)
 - [Storage & sync](docs/storage.md)
+- [Deployment & releases](docs/deployment.md)
 - [Locale packs (adding a country)](docs/features/locales.md)
 - [Troubleshooting](docs/troubleshooting.md)
 

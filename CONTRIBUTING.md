@@ -37,11 +37,40 @@ make fmt-check
    ```
    Types: `feat`, `fix`, `perf`, `docs`, `test`, `refactor`, `chore`, `ci`,
    `build`, `style`. Breaking changes: `<type>!:` or `BREAKING CHANGE:` footer.
-   The release pipeline derives the next semver from this commit stream, and
-   the changelog is generated from it — write subjects users can read.
-4. Open a PR. The **PR title** must be conventional-commit format because we
+4. If the change is **user-visible**, add a changelog fragment (below).
+5. Open a PR. The **PR title** must be conventional-commit format because we
    squash-merge and that title becomes the commit message on `main`.
-5. CI must be green and at least one reviewer must approve.
+6. CI must be green and at least one reviewer must approve.
+
+## Changelog fragments
+
+`CHANGELOG.md` is never edited by hand: it is collated at release time from
+small fragments, and the semver bump is derived from them too. A PR that
+changes what users see adds one file:
+
+```
+.changes/unreleased/1786400010-week-numbers-toggle.md
+
+---
+type: Added
+title: Week numbers toggle
+---
+
+Week numbers can be switched off in Settings → Calendar.
+```
+
+`type` is one of `Added | Changed | Fixed | Removed | Security | Deprecated`
+(Keep a Changelog); `title` is optional; the body is one sentence a user will
+read. Add `breaking: true` when an older build can't survive the change — it
+forces a major release.
+
+The `changeset` CI job requires a fragment on any PR touching user-visible
+code. Pure refactors, CI/build tweaks, tests and docs pass automatically via
+the skip-list in `scripts/release/check-changeset.mjs`; anything else that is
+genuinely invisible can be opted out with the `no-changelog` label. Preview
+what your fragments imply with `make bump` and
+`make changelog VERSION=X.Y.Z`. More in
+[`docs/deployment.md`](docs/deployment.md).
 
 ## Tests
 

@@ -1,4 +1,10 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://niclaslindstedt.github.io/calendar/sitemap.xml
+# The secondary deployment slots (OSS_SPEC §11.5) are the same app built from
+# `main` and from a parked feature branch. Only production may be indexed —
+# the builds themselves also ship `noindex,nofollow`.
+Disallow: /preview/
+Disallow: /branch/
+
+Sitemap: https://calendar.niclaslindstedt.se/sitemap.xml

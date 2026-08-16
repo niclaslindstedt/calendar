@@ -27,6 +27,8 @@ make lint          # eslint + tsc --noEmit
 make fmt           # prettier --write
 make fmt-check     # verify formatting (CI)
 make icons         # regenerate the PWA icons + og image from the app mark
+make bump          # print the semver bump the fragments imply (read-only)
+make changelog VERSION=X.Y.Z   # preview a release's CHANGELOG section
 ```
 
 The `@niclaslindstedt/oss-framework` dependency comes from the **GitHub
@@ -52,9 +54,11 @@ if a `make` target fails on a missing dependency, wait and retry.
 - PRs are squash-merged; the **PR title** becomes the single commit on `main`,
   so it must follow conventional-commit format.
 - Breaking changes use `<type>!:` or a `BREAKING CHANGE:` footer.
-- The release pipeline (`version-bump.yml` → `release.yml`) derives the next
-  semver and the changelog from the commit stream — write subjects users can
-  read.
+- **A PR that changes user-visible behaviour ships a changelog fragment** in
+  `.changes/unreleased/` (see "Releases and changelog" below). The `changeset`
+  CI job enforces this; opt out with the `no-changelog` label. The changelog
+  and the semver bump are derived from those fragments, **not** from the
+  commit stream.
 
 ### Watching a PR after you open it
 
@@ -63,6 +67,113 @@ Don't babysit a PR with polling. **Do not** schedule `send_later`, cron jobs,
 just burn turns. Open the PR, confirm the checks you can see are green, then
 stop. CI failures and review comments are delivered to the session as webhook
 events, so you'll be woken when there's actually something to act on.
+
+## Releases and changelog
+
+### Deployment slots
+
+The app is hosted on GitHub Pages under the custom domain
+**calendar.niclaslindstedt.se** (set by `public/CNAME`, which Vite copies into
+every build; the Pages workflow keeps a single CNAME at the root of the
+artifact). `.github/workflows/pages.yml` assembles up to three slots into one
+Pages artifact in a single run (OSS_SPEC §11.5):
+
+- `/` — the highest released `v*` tag. Before the first release exists, `main`
+  is served here instead and there is no `/preview/` slot.
+- `/preview/` — the current `main`. Every push to `main` rebuilds it.
+- `/branch/` — an opt-in slot for a feature branch, on a URL that never
+  changes so a reviewer's install survives the swap. A maintainer dispatches
+  `pages.yml` with a `branch_ref`; the build is force-pushed to the
+  auto-managed `branch-deploy` orphan branch and rehydrated into every
+  subsequent deploy until the next dispatch overwrites it. Delete
+  `branch-deploy` to clear the slot.
+
+The base path each slot is built with comes from `VITE_BASE` (`/`,
+`/preview/`, `/branch/`). Everything that must differ per slot is derived from
+that one value in **`src/app/slot.ts`** — do not re-derive it elsewhere:
+
+- the precache cache id (`cacheIdForBase`), so the slots never poison each
+  other's precache;
+- the manifest `id` / `scope` / `start_url` and the installed app's name, so
+  the three install as separate apps (§11.4.8);
+- the `robots` meta — only production is indexed, `/preview/` and `/branch/`
+  ship `noindex,nofollow` (and `public/robots.txt` disallows both paths);
+- the service worker's **navigation denylist**: the production worker is
+  scoped at `/`, which spans the other slots too, so without the denylist a
+  PWA installed from `/preview/` would silently be served the production
+  shell;
+- the build label's slot suffix (`pre`, `br-<branch>`), shown in
+  Settings → Developer → Build alongside the slot and the parked source
+  branch.
+
+> **Storage caveat.** All three slots share one origin and `localStorage` is
+> per-origin (not per-path), so `/preview/` and `/branch/` read and write the
+> **same** calendar document as production. Namespace the storage keys by base
+> path before using the secondary slots for destructive testing.
+
+### Cutting a release
+
+Releases are manual to _trigger_ but automatic to _size_: dispatch
+`.github/workflows/release.yml` (`workflow_dispatch` only) and leave `bump` on
+its `auto` default. There is deliberately **no separate version-bump
+workflow** — the bump is a function of the fragments, derived by
+`scripts/release/compute-bump.mjs`, taking the **highest** level any fragment
+implies:
+
+- `patch` — only `Fixed` / `Security` fragments.
+- `minor` — any `Added` / `Changed` / `Removed` / `Deprecated` fragment.
+- `major` — any fragment flagged `breaking: true`: a change to the persisted
+  `CalendarDoc` shape that `src/app/migrations.ts` can't carry forward, or a
+  deliberate UX overhaul. A genuinely breaking removal is `type: Removed`
+  **plus** `breaking: true`, not `Removed` alone.
+
+Set `bump` to an explicit `patch` / `minor` / `major` on dispatch only to
+override that derivation; preview it locally with `make bump` (read-only).
+
+The workflow then collates `.changes/unreleased/` into a dated `CHANGELOG.md`
+section, bumps `package.json`, tags `vX.Y.Z`, publishes a GitHub Release whose
+body is that section, and chains into `pages.yml` so the tag is served at `/`
+immediately rather than waiting for the next push. Preview the changelog
+locally with `make changelog VERSION=X.Y.Z` (it _consumes_ the fragments — run
+on a scratch branch).
+
+The optional `commit` input cuts a release from an earlier commit when `main`
+has advanced past it: the release commit is built on that commit and **only
+the tag** is pushed, leaving `main` untouched. Because production is resolved
+from the highest semver tag rather than the nearest reachable one, that
+release is still what `/` serves.
+
+### Changeset fragments
+
+When a PR introduces a **user-visible** change, drop a small markdown file in
+`.changes/unreleased/<unix-ts>-<slug>.md`:
+
+```
+---
+type: Added
+title: Short title
+doc: locales        # optional
+breaking: true      # optional — forces a major release bump
+---
+
+One sentence users will read in the changelog.
+```
+
+`type:` is one of `Added | Changed | Fixed | Removed | Security | Deprecated`
+(Keep a Changelog). `title:` (optional) is a short noun phrase bolded at the
+head of the bullet; the body is a **one-sentence** summary. `doc:` (optional,
+big features only) is the slug of a feature doc at `docs/features/<slug>.md` —
+the collator appends `[Learn more](feature:<slug>)`; create the doc in the
+same PR. The timestamp filename prefix keeps the lexical sort deterministic so
+collation roughly mirrors commit order.
+
+Parsing and validation are shared by the collator and the bump-computer
+(`scripts/release/fragments.mjs`), so a fragment that collates is the same
+fragment the bump was computed from — an unknown `type:`, a malformed line, or
+an empty body fails the release run loudly. The `changeset` job in `ci.yml`
+enforces a fragment per PR; pure refactors, CI/build/test tweaks and docs-only
+edits pass via the skip-list in `scripts/release/check-changeset.mjs` — extend
+it when adding new "obviously not user-visible" path patterns.
 
 ## Architecture summary
 
@@ -134,14 +245,15 @@ range if a newer one exists, reinstall, and work against that.
 
 ## Where new code goes
 
-| Change type      | Goes in                                                               |
-| ---------------- | --------------------------------------------------------------------- |
-| New feature      | `src/app/...`                                                         |
-| New country pack | `src/app/locale/<bcp47>.ts` + register in `src/app/locale/index.ts`   |
-| Tests            | `tests/...`                                                           |
-| Docs update      | `docs/...`                                                            |
-| Examples         | `examples/...`                                                        |
-| LLM prompt       | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`) |
+| Change type      | Goes in                                                                   |
+| ---------------- | ------------------------------------------------------------------------- |
+| New feature      | `src/app/...`                                                             |
+| New country pack | `src/app/locale/<bcp47>.ts` + register in `src/app/locale/index.ts`       |
+| Tests            | `tests/...`                                                               |
+| Docs update      | `docs/...`                                                                |
+| Examples         | `examples/...`                                                            |
+| LLM prompt       | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)     |
+| Changelog entry  | `.changes/unreleased/<unix-ts>-<slug>.md` (never `CHANGELOG.md` directly) |
 
 ## Test conventions
 
@@ -162,21 +274,27 @@ range if a newer one exists, reinstall, and work against that.
 
 ## Documentation sync points
 
-| When you change…                | Update…                                                                                              |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| the document model / migrations | `docs/storage.md`, `tests/migrations_test.ts`                                                        |
-| locale packs / name days        | `docs/features/locales.md`, `tests/locale_test.ts`                                                   |
-| storage backends                | `docs/storage.md`, `docs/configuration.md`                                                           |
-| settings surface                | `docs/getting-started.md`                                                                            |
-| user-visible features           | `CHANGELOG.md` is generated from commits — write a clear conventional-commit subject; update `docs/` |
+| When you change…                | Update…                                                                                                     |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| the document model / migrations | `docs/storage.md`, `tests/migrations_test.ts`                                                               |
+| locale packs / name days        | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
+| storage backends                | `docs/storage.md`, `docs/configuration.md`                                                                  |
+| settings surface                | `docs/getting-started.md`                                                                                   |
+| user-visible features           | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |
+| deployment slots / hosting      | `docs/deployment.md`, `tests/slot_test.ts`                                                                  |
+| the release flow / fragments    | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                       |
 
 ## Website staleness
 
-The app **is** the website (§11.2): `pages.yml` builds `dist/` with the Pages
-base path and deploys it. There is no separate `website/` tree to keep in
-sync — but `index.html`'s SEO head (title, description, OG/Twitter/JSON-LD)
-and `public/` (robots.txt, sitemap.xml, llms.txt, og.png) must be kept
-truthful as features change.
+The app **is** the website (§11.2): `pages.yml` builds one `dist/` per
+deployment slot and deploys the merged tree to
+**calendar.niclaslindstedt.se**. There is no separate `website/` tree to keep
+in sync — but `index.html`'s SEO head (title, description, canonical,
+OG/Twitter/JSON-LD) and `public/` (CNAME, robots.txt, sitemap.xml, llms.txt,
+og.png) must be kept truthful as features change. The canonical URL, the
+sitemap `<loc>`, robots' `Sitemap:` line, and `public/CNAME` must all name the
+same host — `scripts/check-seo.mjs` fails the `seo` workflow if they drift
+apart, so change them together.
 
 ## Maintenance skills
 

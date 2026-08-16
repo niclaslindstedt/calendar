@@ -87,6 +87,8 @@ export const sv: Catalog = {
     version: "Version",
     commit: "Commit",
     buildNumber: "Byggnummer",
+    slot: "Plats",
+    sourceBranch: "Källgren",
     checkForUpdates: "Sök efter uppdateringar",
   },
   logs: {

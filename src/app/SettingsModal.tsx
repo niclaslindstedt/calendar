@@ -329,6 +329,19 @@ export function SettingsModal({
                     {t("developer.buildNumber")}
                   </span>
                   <span>{__BUILD_NUMBER__}</span>
+                  {/* Which of the three deploy slots this is. The `/branch/`
+                      slot's URL is stable and only the parked build changes,
+                      so it also names its source branch. */}
+                  <span className="text-muted">{t("developer.slot")}</span>
+                  <span>{__BUILD_SLOT__}</span>
+                  {__BUILD_SOURCE__ && (
+                    <>
+                      <span className="text-muted">
+                        {t("developer.sourceBranch")}
+                      </span>
+                      <span>{__BUILD_SOURCE__}</span>
+                    </>
+                  )}
                 </div>
                 <div className="pt-2">
                   <CheckForUpdatesItem

@@ -4,13 +4,14 @@ All configuration is optional, build-time environment (Vite `VITE_*` vars).
 Copy `.env.example` to `.env` and fill in what you need — the app builds and
 runs with none of them set.
 
-| Variable                  | Effect                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------ |
-| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key. Unset **hides** the Dropbox backend in Settings → Storage.     |
-| `VITE_GOOGLE_CLIENT_ID`   | Google OAuth client id (GIS token client). Unset **hides** the Google Drive backend. |
-| `VITE_DROPBOX_APP_FOLDER` | The Dropbox app-folder name (fixed by your Dropbox app config). Default `Calendar`.  |
-| `VITE_GDRIVE_APP_FOLDER`  | The folder the app creates in My Drive for the document. Default `Calendar`.         |
-| `VITE_BASE`               | Deploy base path. CI sets `/calendar/` for GitHub Pages; default `/` for local dev.  |
+| Variable                  | Effect                                                                                                                                              |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key. Unset **hides** the Dropbox backend in Settings → Storage.                                                                    |
+| `VITE_GOOGLE_CLIENT_ID`   | Google OAuth client id (GIS token client). Unset **hides** the Google Drive backend.                                                                |
+| `VITE_DROPBOX_APP_FOLDER` | The Dropbox app-folder name (fixed by your Dropbox app config). Default `Calendar`.                                                                 |
+| `VITE_GDRIVE_APP_FOLDER`  | The folder the app creates in My Drive for the document. Default `Calendar`.                                                                        |
+| `VITE_BASE`               | Deploy base path — one per deployment slot (`/`, `/preview/`, `/branch/`), set by the Pages workflow. Default `/`. See [deployment](deployment.md). |
+| `VITE_SOURCE_REF`         | The branch parked in the `/branch/` slot, shown in its build label. Set by the Pages workflow; unset everywhere else.                               |
 
 ## Setting up the cloud backends
 
