@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- The app mark: a paper wall-calendar card — red month band, light day
+       grid, one red day (the rightmost column, the red-Sundays convention).
+       scripts/generate-icons.mjs mirrors this geometry for the PNG icons;
+       keep the two in lockstep. -->
+  <rect width="100" height="100" rx="18" fill="#f6f2ea" />
+  <rect x="10" y="10" width="80" height="20" fill="#c12c26" />
+  <g fill="#d6cfc2">
+    <rect x="10" y="42" width="8.6" height="7.2" />
+    <rect x="21.4" y="42" width="8.6" height="7.2" />
+    <rect x="32.9" y="42" width="8.6" height="7.2" />
+    <rect x="44.3" y="42" width="8.6" height="7.2" />
+    <rect x="55.7" y="42" width="8.6" height="7.2" />
+    <rect x="67.1" y="42" width="8.6" height="7.2" />
+    <rect x="78.6" y="42" width="8.6" height="7.2" />
+    <rect x="10" y="51.6" width="8.6" height="7.2" />
+    <rect x="21.4" y="51.6" width="8.6" height="7.2" />
+    <rect x="32.9" y="51.6" width="8.6" height="7.2" />
+    <rect x="44.3" y="51.6" width="8.6" height="7.2" />
+    <rect x="55.7" y="51.6" width="8.6" height="7.2" />
+    <rect x="67.1" y="51.6" width="8.6" height="7.2" />
+    <rect x="78.6" y="51.6" width="8.6" height="7.2" />
+    <rect x="10" y="61.2" width="8.6" height="7.2" />
+    <rect x="21.4" y="61.2" width="8.6" height="7.2" />
+    <rect x="32.9" y="61.2" width="8.6" height="7.2" />
+    <rect x="44.3" y="61.2" width="8.6" height="7.2" />
+    <rect x="55.7" y="61.2" width="8.6" height="7.2" />
+    <rect x="67.1" y="61.2" width="8.6" height="7.2" />
+    <rect x="10" y="70.8" width="8.6" height="7.2" />
+    <rect x="21.4" y="70.8" width="8.6" height="7.2" />
+    <rect x="32.9" y="70.8" width="8.6" height="7.2" />
+    <rect x="44.3" y="70.8" width="8.6" height="7.2" />
+    <rect x="55.7" y="70.8" width="8.6" height="7.2" />
+    <rect x="67.1" y="70.8" width="8.6" height="7.2" />
+    <rect x="78.6" y="70.8" width="8.6" height="7.2" />
+    <rect x="10" y="80.4" width="8.6" height="7.2" />
+    <rect x="21.4" y="80.4" width="8.6" height="7.2" />
+    <rect x="32.9" y="80.4" width="8.6" height="7.2" />
+  </g>
+  <rect x="78.6" y="61.2" width="8.6" height="7.2" fill="#c12c26" />
+</svg>
