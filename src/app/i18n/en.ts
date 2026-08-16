@@ -88,6 +88,8 @@ export const en = {
     version: "Version",
     commit: "Commit",
     buildNumber: "Build number",
+    slot: "Slot",
+    sourceBranch: "Source branch",
     checkForUpdates: "Check for updates",
   },
   logs: {

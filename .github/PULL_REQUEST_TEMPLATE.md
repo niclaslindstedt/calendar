@@ -14,6 +14,7 @@
 ## Checklist
 
 - [ ] PR title follows [Conventional Commits](https://www.conventionalcommits.org/)
+- [ ] Changelog fragment added under `.changes/unreleased/` (or the PR is labelled `no-changelog`)
 - [ ] Tests added or updated
 - [ ] Docs updated (`docs/`, README, manpages as applicable)
 - [ ] `make build && make test && make lint && make fmt-check` all pass locally

@@ -6,7 +6,7 @@
 > you type a short note meant to be read by you later. No reminders, no
 > accounts, no server.
 
-- App: https://niclaslindstedt.github.io/calendar/
+- App: https://calendar.niclaslindstedt.se/
 - Source: https://github.com/niclaslindstedt/calendar
 - Framework: https://github.com/niclaslindstedt/oss-framework
 

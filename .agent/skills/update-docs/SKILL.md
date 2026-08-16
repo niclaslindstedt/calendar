@@ -16,15 +16,16 @@ commit of the repository.
 
 ## Topic map
 
-| Source surface                               | Doc                             |
-| -------------------------------------------- | ------------------------------- |
-| views, editor, settings (`src/app/*.tsx`)    | `docs/getting-started.md`       |
-| module layout, renderer, PWA plumbing        | `docs/architecture.md`          |
-| env vars (`.env.example`, `vite.config.ts`)  | `docs/configuration.md`         |
-| storage backends, document model, migrations | `docs/storage.md`               |
-| locale packs (`src/app/locale/`)             | `docs/features/locales.md`      |
-| month images seam (`src/app/monthImage.ts`)  | `docs/features/month-images.md` |
-| failure modes users hit                      | `docs/troubleshooting.md`       |
+| Source surface                                                                                                         | Doc                             |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| views, editor, settings (`src/app/*.tsx`)                                                                              | `docs/getting-started.md`       |
+| module layout, renderer, PWA plumbing                                                                                  | `docs/architecture.md`          |
+| env vars (`.env.example`, `vite.config.ts`)                                                                            | `docs/configuration.md`         |
+| storage backends, document model, migrations                                                                           | `docs/storage.md`               |
+| locale packs (`src/app/locale/`)                                                                                       | `docs/features/locales.md`      |
+| month images seam (`src/app/monthImage.ts`)                                                                            | `docs/features/month-images.md` |
+| failure modes users hit                                                                                                | `docs/troubleshooting.md`       |
+| deploy slots, release flow, fragments (`.github/workflows/{pages,release}.yml`, `scripts/release/`, `src/app/slot.ts`) | `docs/deployment.md`            |
 
 ## Discovery process
 

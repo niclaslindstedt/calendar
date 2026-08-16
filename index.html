@@ -17,7 +17,16 @@
       name="description"
       content="Calendar is a local-first wall-calendar PWA. A monthly view with week numbers, red Sundays, and name days (UK & Sweden); click a date and type a note meant to be read by you later — no reminders, no accounts. Entries live on your device and can sync to Dropbox, Google Drive, or a local folder."
     />
-    <link rel="canonical" href="https://niclaslindstedt.github.io/calendar/" />
+    <!-- The canonical URL is production's, in every deployment slot: the
+         `/preview/` and `/branch/` builds are the same page, and only the
+         production copy is meant to be indexed (their `robots` meta is
+         injected as `noindex,nofollow` by pwa-plugin.ts). -->
+    <link rel="canonical" href="https://calendar.niclaslindstedt.se/" />
+    <link
+      rel="sitemap"
+      type="application/xml"
+      href="https://calendar.niclaslindstedt.se/sitemap.xml"
+    />
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
@@ -29,13 +38,10 @@
       property="og:description"
       content="A local-first wall-calendar PWA: monthly view with week numbers and name days (UK & Sweden), a week planner, per-day notes, and storage backends you control."
     />
-    <meta
-      property="og:url"
-      content="https://niclaslindstedt.github.io/calendar/"
-    />
+    <meta property="og:url" content="https://calendar.niclaslindstedt.se/" />
     <meta
       property="og:image"
-      content="https://niclaslindstedt.github.io/calendar/og.png"
+      content="https://calendar.niclaslindstedt.se/og.png"
     />
 
     <!-- Twitter Card -->
@@ -50,7 +56,7 @@
     />
     <meta
       name="twitter:image"
-      content="https://niclaslindstedt.github.io/calendar/og.png"
+      content="https://calendar.niclaslindstedt.se/og.png"
     />
 
     <!-- JSON-LD -->
@@ -62,8 +68,8 @@
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "Any",
         "description": "A local-first wall-calendar PWA with week numbers, name days (UK & Sweden), a week planner, and per-day notes — no reminders.",
-        "url": "https://niclaslindstedt.github.io/calendar/",
-        "image": "https://niclaslindstedt.github.io/calendar/og.png",
+        "url": "https://calendar.niclaslindstedt.se/",
+        "image": "https://calendar.niclaslindstedt.se/og.png",
         "offers": { "@type": "Offer", "price": "0" }
       }
     </script>

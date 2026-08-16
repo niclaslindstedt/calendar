@@ -27,6 +27,7 @@ assert(html.includes('name="twitter:card"'), "missing twitter:card");
 assert(html.includes("application/ld+json"), "missing JSON-LD block");
 assert(html.includes('rel="manifest"'), "missing manifest link (PWA)");
 assert(html.includes('name="theme-color"'), "missing theme-color meta");
+assert(html.includes('name="robots"'), "missing robots meta");
 
 // The og:image the meta points at must actually ship.
 const og = /property="og:image"\s+content="([^"]+)"/.exec(html)?.[1];
@@ -64,12 +65,48 @@ for (const f of [
   assert(existsSync(join(dist, f)), `missing dist/${f}`);
 }
 
-// The sitemap's canonical URL and robots' sitemap pointer must agree.
+// The canonical URL, the sitemap, robots' sitemap pointer, and the CNAME that
+// decides which domain actually answers all have to name the SAME host. They
+// live in four files, so this is exactly the kind of drift that ships quietly
+// and then splits the site's identity across two domains.
+const canonical = /rel="canonical"\s+href="([^"]+)"/.exec(html)?.[1];
+let canonicalHost;
+if (canonical) {
+  canonicalHost = new URL(canonical).host;
+}
+
 if (existsSync(join(dist, "robots.txt"))) {
   const robots = readFileSync(join(dist, "robots.txt"), "utf8");
   assert(
     robots.includes("sitemap.xml"),
     "robots.txt does not point at the sitemap",
+  );
+  const sitemapLine = /Sitemap:\s*(\S+)/i.exec(robots)?.[1];
+  if (sitemapLine && canonicalHost) {
+    assert(
+      new URL(sitemapLine).host === canonicalHost,
+      `robots.txt Sitemap host (${new URL(sitemapLine).host}) != canonical host (${canonicalHost})`,
+    );
+  }
+}
+
+if (existsSync(join(dist, "sitemap.xml")) && canonical) {
+  const sitemap = readFileSync(join(dist, "sitemap.xml"), "utf8");
+  assert(
+    sitemap.includes(`<loc>${canonical}</loc>`),
+    `sitemap.xml has no <loc> for the canonical URL ${canonical}`,
+  );
+}
+
+// The custom domain is served off this file; without it Pages falls back to
+// the github.io project path and every absolute URL above points elsewhere.
+const cnamePath = join(dist, "CNAME");
+assert(existsSync(cnamePath), "missing dist/CNAME (custom domain)");
+if (existsSync(cnamePath) && canonicalHost) {
+  const cname = readFileSync(cnamePath, "utf8").trim();
+  assert(
+    cname === canonicalHost,
+    `CNAME (${cname}) does not match the canonical host (${canonicalHost})`,
   );
 }
 

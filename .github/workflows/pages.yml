@@ -1,34 +1,85 @@
 name: pages
 
-# The app IS the project website (OSS_SPEC §11.2): build the PWA with the
-# GitHub Pages base path and deploy dist/ to Pages.
+# The app IS the project website (OSS_SPEC §11.2), and it is served from three
+# disjoint slots on one Pages domain — calendar.niclaslindstedt.se, set by
+# `public/CNAME` (§11.5):
+#
+#   /          the highest released `v*` tag — what real users get
+#   /preview/  current main — for dogfooding the next release
+#   /branch/   a manually parked feature branch, on a URL that never changes
+#
+# All three are assembled by THIS single run and deployed as one Pages
+# artifact. Before the first release exists, main is served at `/` and there is
+# no `/preview/` slot.
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      branch_ref:
+        description: "Optional branch to park in the stable /branch/ slot. Persists across regular deploys until the next branch_ref dispatch overwrites it."
+        required: false
+        type: string
+        default: ""
+  # Let release.yml chain into us after a tag is pushed, so a release reaches
+  # `/` without waiting for the next push to main. The tag arrives as
+  # `release_ref`; otherwise we resolve the highest `v*` semver tag ourselves.
+  workflow_call:
+    inputs:
+      release_ref:
+        description: "Tag or sha to build for the production '/' slot."
+        required: false
+        type: string
 
+# contents: write — the /branch/ slot's build is force-pushed to the
+#                   `branch-deploy` orphan branch.
+# pages + id-token — the deploy itself.
+# packages: read  — npm ci resolves @niclaslindstedt/oss-framework from
+#                   GitHub Packages.
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
-  # npm ci resolves @niclaslindstedt/oss-framework from GitHub Packages.
   packages: read
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
+env:
+  # The staging slot is always the default branch's HEAD, resolved at build
+  # time rather than from `github.sha`. When release.yml chains into us, the
+  # event we inherit is its dispatch — whose sha predates the release commit
+  # that was just pushed — so `github.sha` would build a `/preview/` one commit
+  # behind `main`.
+  DEFAULT_BRANCH: main
+  # Stable orphan branch in this repo holding the most recently dispatched
+  # /branch/ build. Created on demand by the first workflow_dispatch carrying a
+  # branch_ref. Every Pages run rehydrates the /branch/ slot from here, so
+  # regular deploys preserve the slot until the next dispatch overwrites it.
+  # Delete the branch to clear the slot.
+  BRANCH_DEPLOY_REF: branch-deploy
+
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+    # The build-time env every slot's build shares. These are public client
+    # identifiers (both OAuth flows are PKCE, no secret), but they are injected
+    # at build time so a fork plugs in its own apps — and an unset one HIDES
+    # that storage backend, so they must be mapped here or the deployed build
+    # silently loses Dropbox / Drive.
+    env:
+      VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY }}
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_DROPBOX_APP_FOLDER: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
+      VITE_GDRIVE_APP_FOLDER: ${{ vars.VITE_GDRIVE_APP_FOLDER }}
+      NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ env.DEFAULT_BRANCH }}
       - uses: actions/setup-node@v6
         with:
           node-version-file: .nvmrc
@@ -36,18 +87,199 @@ jobs:
           registry-url: "https://npm.pkg.github.com"
           scope: "@niclaslindstedt"
       - run: npm ci
+
+      # ---- Resolve which tag to serve at `/` (if any) ----
+      - name: Resolve production tag
+        id: tag
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: npm run build
+          RELEASE_REF: ${{ inputs.release_ref }}
+        run: |
+          if [ -n "$RELEASE_REF" ]; then
+            REF="$RELEASE_REF"
+          else
+            # The HIGHEST semver tag, not the nearest reachable one: a release
+            # cut from an earlier commit tags something that is NOT an ancestor
+            # of main, so `git describe` would miss it and silently re-serve
+            # main at `/`. Only release.yml ever creates tags here, so the
+            # highest one is always the intended production release.
+            REF=$(git tag --list 'v*' --sort=-v:refname | head -n1)
+          fi
+          if [ -n "$REF" ]; then
+            echo "ref=$REF" >> "$GITHUB_OUTPUT"
+            echo "has_release=true" >> "$GITHUB_OUTPUT"
+            echo "Resolved production ref: $REF"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+            echo "has_release=false" >> "$GITHUB_OUTPUT"
+            echo "No release tag found — will serve main at /."
+          fi
+
+      # `branch_ref` is only ever set on workflow_dispatch. A push to main or a
+      # workflow_call from release.yml leaves it empty — the /branch/ slot then
+      # comes from whatever BRANCH_DEPLOY_REF already holds, so previously
+      # dispatched builds survive unrelated deploys.
+      - name: Resolve branch dispatch
+        id: dispatch
         env:
-          VITE_BASE: /calendar/
-          VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY }}
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
-          VITE_DROPBOX_APP_FOLDER: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
-          VITE_GDRIVE_APP_FOLDER: ${{ vars.VITE_GDRIVE_APP_FOLDER }}
+          BRANCH_REF: ${{ inputs.branch_ref }}
+        run: |
+          if [ -z "$BRANCH_REF" ]; then
+            echo "has_dispatch=false" >> "$GITHUB_OUTPUT"
+            echo "No branch_ref input — preserving any previously-dispatched /branch/ build."
+          else
+            echo "ref=$BRANCH_REF" >> "$GITHUB_OUTPUT"
+            echo "has_dispatch=true" >> "$GITHUB_OUTPUT"
+            echo "Dispatched: $BRANCH_REF -> /branch/"
+          fi
+
+      # ---- Production build (latest tag, root path) ----
+      - name: Check out production tag
+        if: steps.tag.outputs.has_release == 'true'
+        run: git checkout --force --detach "${{ steps.tag.outputs.ref }}"
+      - name: Reinstall deps for the production tag
+        if: steps.tag.outputs.has_release == 'true'
+        run: npm ci
+      - name: Build production
+        if: steps.tag.outputs.has_release == 'true'
+        run: npm run build
+        env:
+          VITE_BASE: /
+      - name: Stash production dist
+        if: steps.tag.outputs.has_release == 'true'
+        run: mv dist dist-prod
+
+      - name: Return to the default branch
+        if: steps.tag.outputs.has_release == 'true'
+        run: git checkout --force --detach "origin/$DEFAULT_BRANCH"
+      - name: Reinstall main's deps
+        if: steps.tag.outputs.has_release == 'true'
+        run: npm ci
+
+      # ---- Staging build (current main, /preview/ path) ----
+      - name: Build preview
+        run: npm run build
+        env:
+          # With no release yet this build serves at `/` and the merge step
+          # below ships it as-is; once the first release lands it becomes the
+          # /preview/ slot instead.
+          VITE_BASE: ${{ steps.tag.outputs.has_release == 'true' && '/preview/' || '/' }}
+
+      # ---- Optional /branch/ build, persisted to the orphan branch ----
+      - name: Stash preview dist
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: mv dist dist-preview
+      - name: Check out the dispatched ref
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: |
+          git fetch origin "${{ steps.dispatch.outputs.ref }}"
+          git checkout --force --detach FETCH_HEAD
+      - name: Reinstall deps for the dispatched ref
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: npm ci
+      - name: Build /branch/
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: npm run build
+        env:
+          VITE_BASE: /branch/
+          # The /branch/ URL is stable and only what's parked in it changes, so
+          # the source branch has to travel inside the build — it shows up in
+          # the Developer tab's build label (OSS_SPEC §11.5.4).
+          VITE_SOURCE_REF: ${{ steps.dispatch.outputs.ref }}
+      - name: Persist the /branch/ build to the orphan branch
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        env:
+          SOURCE_REF: ${{ steps.dispatch.outputs.ref }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mv dist dist-branch
+          STAGE=$(mktemp -d)
+          cp -R dist-branch/. "$STAGE/"
+          # Only the root of the artifact may carry a CNAME (Vite copies
+          # public/CNAME into every build); drop the per-slot copy.
+          rm -f "$STAGE/CNAME"
+          # Build an orphan tree of just the build output and force-push it.
+          # Force-pushing is safe: the branch is auto-managed and only ever
+          # written by this step. The identity must be configured INSIDE the
+          # staging repo — `git init` creates a fresh repo with no inherited
+          # config, so a workspace-level `git config` would not reach this
+          # commit ("empty ident name" otherwise).
+          cd "$STAGE"
+          git init -q -b "$BRANCH_DEPLOY_REF"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "branch deploy: ${SOURCE_REF} (${GITHUB_RUN_ID})"
+          REMOTE_URL=$(git -C "$GITHUB_WORKSPACE" remote get-url origin)
+          AUTH_URL=$(printf '%s' "$REMOTE_URL" \
+            | sed "s|https://|https://x-access-token:${GH_TOKEN}@|")
+          git remote add origin "$AUTH_URL"
+          git push -f origin "HEAD:$BRANCH_DEPLOY_REF"
+      - name: Return to the default branch after the dispatch build
+        if: steps.dispatch.outputs.has_dispatch == 'true'
+        run: |
+          git checkout --force --detach "origin/$DEFAULT_BRANCH"
+          mv dist-preview dist
+
+      # ---- Rehydrate /branch/ from the orphan branch (every run) ----
+      # The orphan branch outlives any single dispatch, so ordinary deploys
+      # pick the parked build up and carry it forward untouched.
+      - name: Rehydrate /branch/ from the orphan branch
+        id: rehydrate
+        run: |
+          if git ls-remote --exit-code --heads origin "$BRANCH_DEPLOY_REF" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH_DEPLOY_REF"
+            rm -rf dist-branch && mkdir -p dist-branch
+            git --work-tree=dist-branch checkout "origin/$BRANCH_DEPLOY_REF" -- .
+            # Leave the index pointing at the working tree again; the checkout
+            # above staged the orphan branch's paths.
+            git reset -q
+            echo "has_branch_dist=true" >> "$GITHUB_OUTPUT"
+            echo "Rehydrated /branch/ from $BRANCH_DEPLOY_REF."
+          else
+            echo "has_branch_dist=false" >> "$GITHUB_OUTPUT"
+            echo "$BRANCH_DEPLOY_REF does not exist yet — skipping the /branch/ slot."
+          fi
+
+      # ---- Merge the slots into one artifact ----
+      - name: Merge builds
+        run: |
+          if [ -d dist-prod ]; then
+            mv dist dist-preview
+            mv dist-prod dist
+            mkdir -p dist/preview
+            # Exactly one CNAME may exist in the artifact (Pages reads the one
+            # at the root). Drop the per-slot copies before merging them in.
+            rm -f dist-preview/CNAME
+            cp -R dist-preview/. dist/preview/
+            echo "Merged: / = ${{ steps.tag.outputs.ref }}, /preview/ = $DEFAULT_BRANCH @ $(git rev-parse --short "origin/$DEFAULT_BRANCH")"
+          else
+            echo "No release yet — serving main at / (no /preview/ slot)."
+          fi
+          if [ "${{ steps.rehydrate.outputs.has_branch_dist }}" = "true" ]; then
+            mkdir -p dist/branch
+            rm -f dist-branch/CNAME
+            cp -R dist-branch/. dist/branch/
+            echo "Merged: /branch/ from $BRANCH_DEPLOY_REF"
+          fi
+          test -f dist/CNAME || {
+            echo "::error::the assembled artifact has no CNAME at its root — the custom domain would break"
+            exit 1
+          }
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
-      - id: deploy
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+    steps:
+      - id: deployment
         uses: actions/deploy-pages@v4
