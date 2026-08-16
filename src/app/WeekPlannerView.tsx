@@ -6,7 +6,6 @@
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildWeekStrip,
-  isoWeek,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 
@@ -14,9 +13,11 @@ import { DayEntry } from "./DayEntry.tsx";
 import { WEEK_ROW_FONT } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import {
-  isRedWeekday,
+  holidayFor,
+  isRedDay,
   monthName,
   nameDaysFor,
+  weekNumber,
   weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
@@ -54,7 +55,7 @@ export function WeekPlannerView({
   return (
     <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 pb-3 sm:px-6">
       <h2 className="cal-serif py-4 text-center text-2xl tracking-wide sm:text-3xl">
-        {t("topbar.week", { n: isoWeek(days[0].key) })}
+        {t("topbar.week", { n: weekNumber(pack, days[0].key) })}
         <span className="text-muted ml-3 text-lg">
           {first ? `${monthName(pack, first.month)} ${first.year}` : ""}
         </span>
@@ -64,7 +65,12 @@ export function WeekPlannerView({
         {days.map((cell) => {
           const parts = parseDayKey(cell.key);
           const weekday = new Date(`${cell.key}T12:00:00Z`).getUTCDay();
-          const red = isRedWeekday(pack, weekday);
+          const holiday = parts
+            ? holidayFor(pack, parts.year, parts.month, parts.day)
+            : null;
+          const red = parts
+            ? isRedDay(pack, parts.year, parts.month, parts.day, weekday)
+            : false;
           const names =
             showNameDays && parts
               ? nameDaysFor(pack, parts.month, parts.day)
@@ -96,6 +102,15 @@ export function WeekPlannerView({
                 <span className="text-muted cal-serif text-sm">
                   {parts?.day}
                 </span>
+                {holiday && (
+                  <span
+                    className={`truncate text-[11px] ${
+                      holiday.red ? "cal-red" : "text-muted"
+                    }`}
+                  >
+                    {holiday.name}
+                  </span>
+                )}
                 <span className="text-muted min-w-0 flex-1 truncate text-right text-[10px]">
                   {names.join(", ")}
                 </span>

@@ -10,10 +10,13 @@ import { parseDayKey, toDayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
 import { LIST_ROW_FONT } from "./entryFont.ts";
+import { useT } from "./i18n/index.ts";
 import {
-  isRedWeekday,
+  holidayFor,
+  isRedDay,
   monthName,
   nameDaysFor,
+  weekNumber,
   weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
@@ -26,6 +29,7 @@ type Props = {
   month: number;
   today: DayKey;
   pack: LocalePack;
+  showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
   doc: CalendarDoc;
@@ -43,6 +47,7 @@ export function DayListView({
   month,
   today,
   pack,
+  showWeekNumbers,
   showNameDays,
   rowMode,
   doc,
@@ -50,6 +55,7 @@ export function DayListView({
   onEditDay,
   onCommit,
 }: Props) {
+  const t = useT();
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
 
@@ -76,13 +82,20 @@ export function DayListView({
           const key = toDayKey({ year, month, day });
           const parts = parseDayKey(key);
           const weekday = new Date(`${key}T12:00:00Z`).getUTCDay();
-          const red = isRedWeekday(pack, weekday);
+          const holiday = holidayFor(pack, year, month, day);
+          const red = isRedDay(pack, year, month, day, weekday);
           const names =
             showNameDays && parts
               ? nameDaysFor(pack, parts.month, parts.day)
               : [];
           const entry = doc.entries[key] ?? "";
           const fixed = rowMode === "fixed" && editingDay !== key;
+          // A small week marker on the first day of each week (and on the
+          // 1st), the way Swedish wall calendars badge their week rows.
+          const weekMark =
+            showWeekNumbers && (weekday === pack.weekStartsOn || day === 1)
+              ? `${t("weekdays.weekShort")}${weekNumber(pack, key)}`
+              : "";
           return (
             <div
               key={key}
@@ -100,6 +113,9 @@ export function DayListView({
                 fixed ? "h-11 overflow-hidden" : "min-h-11"
               } ${key === today ? "bg-surface-2" : ""}`}
             >
+              <span className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight">
+                {weekMark}
+              </span>
               <span
                 className={`cal-serif w-7 shrink-0 text-right text-lg leading-tight ${
                   red ? "cal-red" : "text-fg"
@@ -114,8 +130,16 @@ export function DayListView({
               >
                 {weekdayName(pack, weekday, "short")}
               </span>
-              <span className="text-muted w-24 shrink-0 truncate pt-1 text-[10px] leading-tight sm:w-32">
-                {names.join(", ")}
+              <span className="w-24 shrink-0 truncate pt-1 text-[10px] leading-tight sm:w-36">
+                {holiday && (
+                  <span className={holiday.red ? "cal-red" : "text-muted"}>
+                    {holiday.name}
+                  </span>
+                )}
+                {holiday && names.length > 0 && (
+                  <span className="text-muted"> · </span>
+                )}
+                <span className="text-muted">{names.join(", ")}</span>
               </span>
               <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
                 <DayEntry

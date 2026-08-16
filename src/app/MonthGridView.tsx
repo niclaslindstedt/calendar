@@ -9,7 +9,6 @@
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildMonthGrid,
-  isoWeek,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 
@@ -17,9 +16,12 @@ import { DayEntry } from "./DayEntry.tsx";
 import { MONTH_CELL_FONT } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import {
+  holidayFor,
+  isRedDay,
   isRedWeekday,
   monthName,
   nameDaysFor,
+  weekNumber,
   weekdayName,
   weekdayOrder,
   type LocalePack,
@@ -123,24 +125,29 @@ export function MonthGridView({
               {showWeekNumbers && (
                 <div
                   className="text-muted pt-1 pl-1 text-[10px]"
-                  aria-label={t("topbar.week", { n: isoWeek(week[0].key) })}
+                  aria-label={t("topbar.week", {
+                    n: weekNumber(pack, week[0].key),
+                  })}
                 >
                   {t("weekdays.weekShort")}
-                  {isoWeek(week[0].key)}
+                  {weekNumber(pack, week[0].key)}
                 </div>
               )}
               {week.map((cell) => {
-                const weekday = parseDayKey(cell.key)
+                const parts = parseDayKey(cell.key);
+                const weekday = parts
                   ? new Date(`${cell.key}T12:00:00Z`).getUTCDay()
                   : 1;
-                const red = isRedWeekday(pack, weekday);
-                const names = showNameDays
-                  ? nameDaysFor(
-                      pack,
-                      parseDayKey(cell.key)?.month ?? month,
-                      parseDayKey(cell.key)?.day ?? 1,
-                    )
-                  : [];
+                const holiday = parts
+                  ? holidayFor(pack, parts.year, parts.month, parts.day)
+                  : null;
+                const red = parts
+                  ? isRedDay(pack, parts.year, parts.month, parts.day, weekday)
+                  : false;
+                const names =
+                  showNameDays && parts
+                    ? nameDaysFor(pack, parts.month, parts.day)
+                    : [];
                 const entry = doc.entries[cell.key] ?? "";
                 return (
                   <div
@@ -172,6 +179,17 @@ export function MonthGridView({
                         {cell.day}
                       </span>
                     </div>
+                    {/* The holiday name, red for official red days — the
+                        kalender.se convention. */}
+                    {holiday && (
+                      <div
+                        className={`truncate text-[9px] leading-tight ${
+                          holiday.red ? "cal-red" : "text-muted"
+                        }`}
+                      >
+                        {holiday.name}
+                      </div>
+                    )}
                     <div className="min-h-0 flex-1">
                       <DayEntry
                         text={entry}

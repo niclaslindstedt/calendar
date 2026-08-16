@@ -7,11 +7,14 @@ import { enGB } from "./en-gb.ts";
 import { svSE } from "./sv-se.ts";
 import type { LocalePack } from "./types.ts";
 
-export type { LocalePack, NameDayTable } from "./types.ts";
+export type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 export {
+  holidayFor,
+  isRedDay,
   isRedWeekday,
   monthName,
   nameDaysFor,
+  weekNumber,
   weekdayName,
   weekdayOrder,
 } from "./types.ts";

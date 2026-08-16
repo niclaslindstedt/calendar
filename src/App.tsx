@@ -176,6 +176,7 @@ export function App() {
             month={parts.month}
             today={today}
             pack={pack}
+            showWeekNumbers={toggles.weekNumbers}
             showNameDays={toggles.nameDays}
             rowMode={settings.listRows}
             doc={store.doc}

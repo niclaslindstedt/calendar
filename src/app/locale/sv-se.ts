@@ -8,7 +8,8 @@
 // The table is static data: corrections are one-line edits, and a future
 // revision of the official list lands here without touching any code.
 
-import type { LocalePack, NameDayTable } from "./types.ts";
+import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 
 const NAME_DAYS: NameDayTable = {
   "01-02": ["Svea"],
@@ -372,13 +373,54 @@ const NAME_DAYS: NameDayTable = {
   "12-31": ["Sylvester"],
 };
 
+// The Swedish holidays for a year: the thirteen official "röda dagar"
+// (lagen om allmänna helgdagar) plus the three eves every Swedish wall
+// calendar names — Midsommarafton, Julafton, Nyårsafton — which are not red
+// by law (though treated as holidays in practice). Midsommardagen is the
+// Saturday 20–26 June; Alla helgons dag the Saturday 31 Oct–6 Nov; the
+// Easter chain moves with the computus.
+function holidays(year: number): readonly Holiday[] {
+  const easter = easterSunday(year);
+  const chain = (offset: number, name: string): Holiday => ({
+    ...addToDate(year, easter.month, easter.day, offset),
+    name,
+    red: true,
+  });
+  const midsommardagen = weekdayOnOrAfter(year, 6, 20, 6);
+  const allaHelgon = weekdayOnOrAfter(year, 10, 31, 6);
+  return [
+    { month: 1, day: 1, name: "Nyårsdagen", red: true },
+    { month: 1, day: 6, name: "Trettondedag jul", red: true },
+    chain(-2, "Långfredagen"),
+    chain(0, "Påskdagen"),
+    chain(1, "Annandag påsk"),
+    { month: 5, day: 1, name: "Första maj", red: true },
+    chain(39, "Kristi himmelsfärdsdag"),
+    chain(49, "Pingstdagen"),
+    { month: 6, day: 6, name: "Sveriges nationaldag", red: true },
+    {
+      ...addToDate(year, midsommardagen.month, midsommardagen.day, -1),
+      name: "Midsommarafton",
+      red: false,
+    },
+    { ...midsommardagen, name: "Midsommardagen", red: true },
+    { ...allaHelgon, name: "Alla helgons dag", red: true },
+    { month: 12, day: 24, name: "Julafton", red: false },
+    { month: 12, day: 25, name: "Juldagen", red: true },
+    { month: 12, day: 26, name: "Annandag jul", red: true },
+    { month: 12, day: 31, name: "Nyårsafton", red: false },
+  ];
+}
+
 export const svSE: LocalePack = {
   id: "sv-SE",
   label: "Sverige",
   bcp47: "sv-SE",
   weekStartsOn: 1,
+  weekNumbering: "iso",
   showWeekNumbersDefault: true,
   showNameDaysDefault: true,
   redWeekdays: [0],
   nameDays: NAME_DAYS,
+  holidays,
 };

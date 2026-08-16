@@ -9,10 +9,26 @@
 // register it in `index.ts`. Month and weekday names come from `Intl` via the
 // pack's BCP-47 tag, so a pack carries no name tables beyond the name days.
 
-import type { WeekStart } from "@niclaslindstedt/oss-framework/calendar";
+import type {
+  DayKey,
+  WeekStart,
+} from "@niclaslindstedt/oss-framework/calendar";
+import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
 
 /** `"MM-DD"` → the day's celebrated names, in display order. */
 export type NameDayTable = Readonly<Record<string, readonly string[]>>;
+
+/** One holiday occurrence in a concrete year. `red` marks an official
+ *  public-holiday "red day" (printed red like a Sunday); non-red entries are
+ *  observances a wall calendar still names (bank-holiday substitutes, eves
+ *  like Midsommarafton). Names are in the pack's own language — that's what
+ *  a printed calendar does. */
+export type Holiday = {
+  month: number;
+  day: number;
+  name: string;
+  red: boolean;
+};
 
 export type LocalePack = {
   /** Stable id, also the persisted settings value — use the BCP-47 tag. */
@@ -23,7 +39,12 @@ export type LocalePack = {
   readonly bcp47: string;
   /** First day of the week, `Date.getDay()` numbering (1 = Monday). */
   readonly weekStartsOn: WeekStart;
-  /** Whether this country's wall calendars print ISO week numbers. */
+  /** The country's week-numbering rule. Both current packs use ISO-8601
+   *  (the Swedish standard — week 1 holds the year's first Thursday); a
+   *  future pack with a different rule adds its variant here and in
+   *  `weekNumber` below. */
+  readonly weekNumbering: "iso";
+  /** Whether this country's wall calendars print week numbers by default. */
   readonly showWeekNumbersDefault: boolean;
   /** Whether this country has a name-day tradition to show. */
   readonly showNameDaysDefault: boolean;
@@ -31,7 +52,50 @@ export type LocalePack = {
   readonly redWeekdays: readonly number[];
   /** The name-day table, or null when the country has no tradition. */
   readonly nameDays: NameDayTable | null;
+  /** The country's holidays for a year — fixed dates plus computed rules
+   *  (Easter chain, "the Saturday between…", bank-holiday substitutes). */
+  readonly holidays: (year: number) => readonly Holiday[];
 };
+
+/** The week number of a day under the pack's numbering rule. */
+export function weekNumber(pack: LocalePack, key: DayKey): number {
+  // Only ISO-8601 exists today; new rules switch on `pack.weekNumbering`.
+  void pack;
+  return isoWeek(key);
+}
+
+// Per-pack, per-year holiday lookup tables, built lazily — the rules run
+// once a year per pack, then day lookups are O(1).
+const holidayCache = new Map<string, Map<string, Holiday>>();
+
+/** The holiday falling on a day in this pack, or null. */
+export function holidayFor(
+  pack: LocalePack,
+  year: number,
+  month: number,
+  day: number,
+): Holiday | null {
+  const cacheKey = `${pack.id}:${year}`;
+  let table = holidayCache.get(cacheKey);
+  if (!table) {
+    table = new Map(pack.holidays(year).map((h) => [`${h.month}-${h.day}`, h]));
+    holidayCache.set(cacheKey, table);
+  }
+  return table.get(`${month}-${day}`) ?? null;
+}
+
+/** Whether the day prints red in this pack: a red weekday (Sunday) or an
+ *  official red-day holiday. */
+export function isRedDay(
+  pack: LocalePack,
+  year: number,
+  month: number,
+  day: number,
+  weekday: number,
+): boolean {
+  if (pack.redWeekdays.includes(weekday)) return true;
+  return holidayFor(pack, year, month, day)?.red ?? false;
+}
 
 /** The name days for a month/day in this pack, or `[]` when there are none
  *  (no tradition, or a nameless day like 1 January in Sweden). */
