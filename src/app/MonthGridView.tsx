@@ -177,45 +177,66 @@ export function MonthGridView({
                       cell.inMonth ? "" : "opacity-35"
                     } ${cell.isToday ? "bg-surface-2" : ""}`}
                   >
-                    {/* The date has the first line to itself. A portrait
-                        phone gives a cell ~48 px of width, which is not
-                        enough to share with a name — "Bartolomeus" beside
-                        the 24th truncated to "B…" and told nobody anything.
-                        The names and the holiday get their own rows below,
-                        wrapping onto a second line and breaking mid-word
-                        when a single name is wider than the column. */}
-                    <div className="text-right">
+                    {/* The date **floats** right so the holiday and the name
+                        days flow around it: a short name ("Ada") sits beside
+                        the number on the first line, a long one drops under
+                        it, and neither is ever truncated to "B…" the way a
+                        shared flex row forced at ~48 px of cell width.
+                        `overflow-hidden` does double duty — it contains the
+                        float (a block holding only a float has no height, so
+                        the number would otherwise overlap the note below)
+                        and it caps the block at `max-h`, keeping a day with
+                        a long holiday and three names from crowding the note
+                        surface out of the cell. It is also why the text
+                        can't use `line-clamp-*`: that sets
+                        `display: -webkit-box`, whose line boxes ignore a
+                        float instead of wrapping around it. */}
+                    <div className="-mx-1 max-h-[3.5rem] shrink-0 overflow-hidden">
                       <span
-                        className={`cal-serif text-base leading-none sm:text-lg ${
+                        className={`cal-serif float-right pr-1 pl-1 text-base leading-none sm:text-lg ${
                           red ? "cal-red" : "text-fg"
                         } ${cell.isToday ? "font-bold" : ""}`}
                       >
                         {cell.day}
                       </span>
+                      {/* The holiday name clears the float: Swedish holiday
+                          names are long compounds ("Midsommarafton" is 60 px
+                          at a 43 px line) that have to break somewhere, and
+                          breaking them against the ~20 px left beside the
+                          date shatters them into three fragments. Starting
+                          below the date costs the ~13 holidays a year one
+                          line and breaks the word at most once. The 7.5 px
+                          matches the names, and is also what keeps
+                          "Nyårsdagen" (43.1 px at 8 px) on one line instead
+                          of stranding its last letter. */}
+                      {holiday && (
+                        <span
+                          className={`clear-right block px-0.5 text-[7.5px] leading-[1.25] break-words ${
+                            holiday.red ? "cal-red" : "text-muted"
+                          }`}
+                        >
+                          {holiday.name}
+                        </span>
+                      )}
+                      {/* Name days flow around the date, so "Ada" shares its
+                          line and only a name too wide for the gap drops
+                          below. Deliberately NO `break-words`: the default
+                          never splits a word, so a name that does not fit
+                          beside the date moves down whole instead of
+                          shattering into "Mart" / "a", and "Bernhard," can
+                          never leave its comma stranded at the head of the
+                          next line. That only holds if every name fits a
+                          full line — at 7.5 px on the 43 px line this block
+                          gets (the cell's own padding is cancelled by the
+                          `-mx-1` bleed), all 627 names in the Swedish
+                          almanac do, the widest being "Bartolomeus" at
+                          42 px. Re-measure before growing this font. */}
+                      {names.length > 0 && (
+                        <span className="text-muted block px-0.5 text-[7.5px] leading-[1.25]">
+                          {names.join(", ")}
+                        </span>
+                      )}
                     </div>
-                    {/* The holiday name, red for official red days — the
-                        kalender.se convention. */}
-                    {holiday && (
-                      <div
-                        className={`line-clamp-3 text-[9px] leading-[1.15] break-words ${
-                          holiday.red ? "cal-red" : "text-muted"
-                        }`}
-                      >
-                        {holiday.name}
-                      </div>
-                    )}
-                    {/* Name days, small under the date like the printed
-                        lists — but one per line rather than comma-separated.
-                        At this width a pair almost always wraps anyway, and
-                        wrapping a comma-joined string strands the comma at
-                        the head of the second line ("Bernhard" / ", Bernt").
-                        Clamped at two lines so a day with three names cannot
-                        crowd out the note text below. */}
-                    {names.length > 0 && (
-                      <div className="text-muted line-clamp-2 text-[9px] leading-[1.15] break-words whitespace-pre-line">
-                        {names.join("\n")}
-                      </div>
-                    )}
                     <div className="min-h-0 flex-1">
                       <DayEntry
                         text={entry}
