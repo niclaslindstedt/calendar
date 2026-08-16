@@ -23,7 +23,10 @@ import {
 
 import { DayListView } from "./app/DayListView.tsx";
 import { MonthGridView } from "./app/MonthGridView.tsx";
-import { SettingsModal } from "./app/SettingsModal.tsx";
+import {
+  SettingsModal,
+  type SettingsDraft,
+} from "./app/settings/SettingsModal.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
@@ -56,12 +59,17 @@ const DEFAULT_APPEARANCE: ThemeAppearance = {
 
 export function App() {
   const t = useT();
-  const { settings, update, reset } = useAppSettings();
+  const { settings, update, commitLook } = useAppSettings();
   const [appearance, setAppearance] = useLocalStorageState<ThemeAppearance>(
     "calendar:appearance",
     DEFAULT_APPEARANCE,
   );
-  useApplyTheme(appearance);
+  // The open Settings dialog streams its unsaved draft here, so the calendar
+  // behind it previews the look live. Cancel simply drops the draft: the
+  // preview clears and the persisted look reasserts itself.
+  const [preview, setPreview] = useState<SettingsDraft | null>(null);
+  const live = preview ? { ...settings, ...preview.look } : settings;
+  useApplyTheme(preview?.appearance ?? appearance);
 
   // The in-app log records only in developer mode; the capture toggle
   // additionally mirrors it to localStorage.
@@ -123,8 +131,8 @@ export function App() {
     );
   };
 
-  const pack = getLocale(settings.localeId);
-  const toggles = effectiveToggles(settings);
+  const pack = getLocale(live.localeId);
+  const toggles = effectiveToggles(live);
 
   return (
     <div className="flex h-[100svh] flex-col overflow-hidden bg-page-bg text-fg">
@@ -152,6 +160,7 @@ export function App() {
             pack={pack}
             showWeekNumbers={toggles.weekNumbers}
             showNameDays={toggles.nameDays}
+            textSize={live.textSize}
             doc={store.doc}
             editingDay={editingDay}
             onEditDay={setEditingDay}
@@ -164,6 +173,7 @@ export function App() {
             today={today}
             pack={pack}
             showNameDays={toggles.nameDays}
+            textSize={live.textSize}
             doc={store.doc}
             editingDay={editingDay}
             onEditDay={setEditingDay}
@@ -178,7 +188,8 @@ export function App() {
             pack={pack}
             showWeekNumbers={toggles.weekNumbers}
             showNameDays={toggles.nameDays}
-            rowMode={settings.listRows}
+            rowMode={live.listRows}
+            textSize={live.textSize}
             doc={store.doc}
             editingDay={editingDay}
             onEditDay={setEditingDay}
@@ -192,9 +203,11 @@ export function App() {
         onClose={() => setSettingsOpen(false)}
         settings={settings}
         update={update}
-        reset={reset}
+        commitLook={commitLook}
         appearance={appearance}
+        defaultAppearance={DEFAULT_APPEARANCE}
         onAppearanceChange={setAppearance}
+        onPreview={setPreview}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
         storage={{

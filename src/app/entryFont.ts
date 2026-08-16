@@ -3,6 +3,11 @@
 // renders comfortably large; as the text grows the font shrinks, so the note
 // always fits its cell instead of clipping. Pure function so the curve is
 // testable and shared by all three views (which pass their own bounds).
+//
+// The shrink-to-fit curve is the *dynamic* setting. Settings → Entries can
+// pin the text instead, at one of three steps (small / medium / large) that
+// are resolved inside each view's own [minPx, maxPx] band — so a month cell's
+// "large" is still a month cell's size, never the week planner's.
 
 export type EntryFontOptions = {
   /** Font size for a near-empty entry, in px. */
@@ -45,5 +50,51 @@ export function entryFontPx(length: number, opts: EntryFontOptions): number {
   if (length <= opts.startAt) return opts.maxPx;
   if (length >= opts.floorAt) return opts.minPx;
   const t = (length - opts.startAt) / (opts.floorAt - opts.startAt);
-  return Math.round((opts.maxPx - (opts.maxPx - opts.minPx) * t) * 10) / 10;
+  return round1(opts.maxPx - (opts.maxPx - opts.minPx) * t);
+}
+
+/** How the entry text is sized: shrink-to-fit, or pinned at one of three
+ *  steps. */
+export type EntryTextSize = "dynamic" | "small" | "medium" | "large";
+
+export const ENTRY_TEXT_SIZES: readonly EntryTextSize[] = [
+  "dynamic",
+  "small",
+  "medium",
+  "large",
+];
+
+export type FixedEntryTextSize = Exclude<EntryTextSize, "dynamic">;
+
+/** Where each fixed step sits in a view's own [minPx, maxPx] band. `large`
+ *  is the curve's comfortable size; `small` sits just above its floor, so
+ *  even the smallest step stays readable. */
+const FIXED_STEPS: Record<FixedEntryTextSize, number> = {
+  small: 0.2,
+  medium: 0.6,
+  large: 1,
+};
+
+/** The pinned font size (px) for `size` within the view's band. */
+export function fixedEntryFontPx(
+  size: FixedEntryTextSize,
+  opts: EntryFontOptions,
+): number {
+  return round1(opts.minPx + (opts.maxPx - opts.minPx) * FIXED_STEPS[size]);
+}
+
+/** The font size (px) an entry renders at: the shrink-to-fit curve on
+ *  `dynamic`, the pinned step otherwise. This is what the views call. */
+export function resolveEntryFontPx(
+  length: number,
+  opts: EntryFontOptions,
+  size: EntryTextSize,
+): number {
+  return size === "dynamic"
+    ? entryFontPx(length, opts)
+    : fixedEntryFontPx(size, opts);
+}
+
+function round1(px: number): number {
+  return Math.round(px * 10) / 10;
 }
