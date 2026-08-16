@@ -29,21 +29,41 @@ The switcher in the top bar toggles:
 - **Week** — one week at a time, one generous row per weekday, with more room
   to read and write.
 - **Day list** — the month as a vertical scroll, one row per day with the
-  day's name days beside the number. In Settings you can choose whether rows
-  keep a fixed height or grow with their text.
+  day's name days beside the number. In Settings → Entries you can choose
+  whether rows keep a fixed height or grow with their text.
 
 The arrows and **Today** in the top bar page between months (or weeks, in the
 week view).
 
 ## Settings (the cogwheel, top right)
 
+Settings opens a tabbed dialog: the sections sit in a rail down the left on a
+wide screen, and behind the burger button in the header on a phone. Changes to
+the calendar's look preview live behind the dialog and are kept with **Save**
+— **Cancel** (or Escape) drops them, and **Reset to defaults** restores the
+stock look without touching your storage connections or developer switches.
+
 - **General** — UI language (English / Svenska), the country calendar
   (United Kingdom / Sverige — sets start of week, week numbers, red days,
-  name days), display toggles, and the day-list row mode.
-- **Appearance** — themes (light/dark/custom), font, text size, density.
+  name days), the week-number and name-day toggles, and developer mode.
+- **Appearance** — themes (light/dark/custom), font, UI text size, density.
+- **Entries** — how your day text is sized, and the day-list row height.
 - **Storage** — where your calendar lives. See [storage.md](storage.md).
-- **Developer** — developer mode, demo data, log capture, build info.
-- **Logs** — the in-app log (visible in developer mode).
+- **Developer** — demo data, log capture, build info, update check (visible
+  in developer mode).
+- **Logs** — the in-app log (visible once log capture is on).
+
+### Entry text size
+
+**Settings → Entries → Text size** chooses how the text you write on a day is
+sized:
+
+- **Dynamic** (the default) — a note shrinks as you write, so it always fits
+  its day instead of clipping.
+- **Small / Medium / Large** — the text stays at that size no matter how much
+  you write; a long note is clipped by its cell rather than shrunk. Each step
+  is scaled to the view it renders in, so a month cell stays legible while the
+  roomier week planner uses its extra space.
 
 ## Install as an app
 

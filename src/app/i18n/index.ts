@@ -11,12 +11,21 @@
 // the packs in `../locale/` — a Swede abroad can run an English UI over the
 // Swedish calendar, or vice versa.
 
-import { createI18n } from "@niclaslindstedt/oss-framework/i18n";
+import {
+  createI18n,
+  type MessageKeyOf,
+  type TFunction as TFunctionOf,
+} from "@niclaslindstedt/oss-framework/i18n";
 
 import { en, type Catalog } from "./en.ts";
 
 export type Lang = "en" | "sv";
 export type { Catalog };
+
+/** A dotted key into the catalog — for components that carry a key around
+ *  (the settings tab table) rather than translating on the spot. */
+export type MessageKey = MessageKeyOf<Catalog>;
+export type TFunction = TFunctionOf<Catalog>;
 
 export const i18n = createI18n<Lang, Catalog>({
   fallbackLang: "en",

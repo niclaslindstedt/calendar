@@ -13,7 +13,7 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { MONTH_CELL_FONT } from "./entryFont.ts";
+import { MONTH_CELL_FONT, type EntryTextSize } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import {
   holidayFor,
@@ -36,6 +36,7 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -49,6 +50,7 @@ export function MonthGridView({
   pack,
   showWeekNumbers,
   showNameDays,
+  textSize,
   doc,
   editingDay,
   onEditDay,
@@ -195,6 +197,7 @@ export function MonthGridView({
                         text={entry}
                         editing={editingDay === cell.key}
                         font={MONTH_CELL_FONT}
+                        size={textSize}
                         onCommit={(text) => onCommit(cell.key, text)}
                         onClose={() => onEditDay(null)}
                       />

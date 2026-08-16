@@ -28,12 +28,15 @@ src/
     ├── migrations.ts     version chain (framework createMigrator)
     ├── useCalendarStore.ts  load/save through the active StorageAdapter
     ├── useAppSettings.ts    persisted app settings (country, view, dev mode…)
-    ├── entryFont.ts      the shrink-to-fit sizing curve (pure, tested)
+    ├── entryFont.ts      entry sizing: the shrink-to-fit curve and the three
+    │                     fixed steps (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── DayEntry.tsx      shared read/edit entry surface
     ├── TopBar.tsx        the only chrome — no sidebar
-    ├── SettingsModal.tsx tabbed settings dialog
+    ├── settings/         the tabbed settings dialog: SettingsModal.tsx (shell
+    │                     + draft/Save), tabs.tsx (header + rail), one file
+    │                     per tab section
     ├── log.ts            the in-app log store
     └── pwa.ts            cache-id convention shared with pwa-plugin.ts
 ```

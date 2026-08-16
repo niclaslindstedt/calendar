@@ -10,7 +10,7 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { WEEK_ROW_FONT } from "./entryFont.ts";
+import { WEEK_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import {
   holidayFor,
@@ -29,6 +29,7 @@ type Props = {
   today: DayKey;
   pack: LocalePack;
   showNameDays: boolean;
+  textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -40,6 +41,7 @@ export function WeekPlannerView({
   today,
   pack,
   showNameDays,
+  textSize,
   doc,
   editingDay,
   onEditDay,
@@ -120,6 +122,7 @@ export function WeekPlannerView({
                   text={entry}
                   editing={editingDay === cell.key}
                   font={WEEK_ROW_FONT}
+                  size={textSize}
                   onCommit={(text) => onCommit(cell.key, text)}
                   onClose={() => onEditDay(null)}
                 />

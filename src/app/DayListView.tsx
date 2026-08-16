@@ -9,7 +9,7 @@ import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { parseDayKey, toDayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { LIST_ROW_FONT } from "./entryFont.ts";
+import { LIST_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import {
   holidayFor,
@@ -32,6 +32,7 @@ type Props = {
   showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
+  textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -50,6 +51,7 @@ export function DayListView({
   showWeekNumbers,
   showNameDays,
   rowMode,
+  textSize,
   doc,
   editingDay,
   onEditDay,
@@ -146,6 +148,7 @@ export function DayListView({
                   text={entry}
                   editing={editingDay === key}
                   font={LIST_ROW_FONT}
+                  size={textSize}
                   onCommit={(text) => onCommit(key, text)}
                   onClose={() => onEditDay(null)}
                 />

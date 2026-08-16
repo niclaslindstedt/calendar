@@ -7,13 +7,19 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { entryFontPx, type EntryFontOptions } from "./entryFont.ts";
+import {
+  resolveEntryFontPx,
+  type EntryFontOptions,
+  type EntryTextSize,
+} from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 
 type Props = {
   text: string;
   editing: boolean;
   font: EntryFontOptions;
+  /** Shrink-to-fit, or pinned at one of the three steps. */
+  size: EntryTextSize;
   onCommit: (text: string) => void;
   onClose: () => void;
   /** Extra classes on the read view (colour/weight comes from the cell). */
@@ -24,6 +30,7 @@ export function DayEntry({
   text,
   editing,
   font,
+  size,
   onCommit,
   onClose,
   className,
@@ -52,7 +59,7 @@ export function DayEntry({
     return (
       <div
         className={`cal-entry ${className ?? ""}`}
-        style={{ fontSize: `${entryFontPx(text.length, font)}px` }}
+        style={{ fontSize: `${resolveEntryFontPx(text.length, font, size)}px` }}
       >
         {text}
       </div>
@@ -68,7 +75,7 @@ export function DayEntry({
     <textarea
       ref={ref}
       className="cal-entry-editor cal-entry"
-      style={{ fontSize: `${entryFontPx(draft.length, font)}px` }}
+      style={{ fontSize: `${resolveEntryFontPx(draft.length, font, size)}px` }}
       value={draft}
       placeholder={t("editor.placeholder")}
       aria-label={t("editor.placeholder")}
