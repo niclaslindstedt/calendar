@@ -20,7 +20,9 @@ import {
   weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
+import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { monthImageUrl } from "./monthImage.ts";
+import { PeriodHeading } from "./PeriodHeading.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
 
@@ -37,6 +39,8 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 };
 
 function daysInMonth(year: number, month: number): number {
@@ -56,13 +60,18 @@ export function DayListView({
   editingDay,
   onEditDay,
   onCommit,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useT();
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-3 pb-6 sm:px-6">
+    <div
+      className="mx-auto w-full max-w-2xl px-3 sm:px-6"
+      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
+    >
       {/* The slim artwork band (smaller than the month view's). */}
       {image && (
         <img
@@ -73,10 +82,14 @@ export function DayListView({
         />
       )}
 
-      <h2 className="cal-serif py-4 text-center text-2xl tracking-wide sm:text-3xl">
-        {monthName(pack, month)}
-        <span className="text-muted ml-3 text-lg">{year}</span>
-      </h2>
+      <PeriodHeading
+        title={monthName(pack, month)}
+        meta={String(year)}
+        titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
+        metaClass="text-lg"
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
 
       <div className="border-t border-line">
         {Array.from({ length: count }, (_, i) => {
@@ -115,9 +128,13 @@ export function DayListView({
                 fixed ? "h-11 overflow-hidden" : "min-h-11"
               } ${key === today ? "bg-surface-2" : ""}`}
             >
-              <span className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight">
-                {weekMark}
-              </span>
+              {/* The week gutter is only reserved when week numbers are on —
+                  otherwise every row carries 36 px of dead left margin. */}
+              {showWeekNumbers && (
+                <span className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight">
+                  {weekMark}
+                </span>
+              )}
               <span
                 className={`cal-serif w-7 shrink-0 text-right text-lg leading-tight ${
                   red ? "cal-red" : "text-fg"

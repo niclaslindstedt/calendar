@@ -22,6 +22,26 @@ differs is bundled into one **country pack** per country under
 The UI language is a **separate** setting: a Swede abroad can run the English
 UI over the Swedish calendar, or vice versa.
 
+## Which pack a fresh install starts on
+
+There is no fixed default: `matchLocaleId()` in `src/app/locale/index.ts`
+picks the pack from the device's own preferred languages
+(`navigator.languages`), most-preferred first. Each tag is tried in turn,
+strongest match first:
+
+1. the **exact** pack id — `sv-SE` → `sv-SE`;
+2. the **country** — `en-SE` → `sv-SE`, because an English speaker living in
+   Sweden still wants the Swedish wall calendar;
+3. the **language** — `en-US` → `en-GB`, `sv-FI` → `sv-SE`.
+
+The first tag that matches anything wins, so a device asking for `sv-SE, en`
+never falls through to the English pack. When nothing matches (a German
+phone, say) the pack is `FALLBACK_LOCALE_ID` — `en-GB`.
+
+This only seeds the setting. Once the user picks a country in Settings →
+General the choice is persisted, and the device's locale is never consulted
+again.
+
 ## Current packs
 
 | Pack    | Week start | Week numbers | Name days            | Red days |
@@ -68,6 +88,8 @@ Packs are deliberately self-contained — adding one is a copy-paste:
 3. Register the export in `src/app/locale/index.ts` (`LOCALES` array).
 4. Add a test block in `tests/locale_test.ts`.
 
-No other code changes: the country picker, the views, and the toggles all
-read the registry. **Never** add country conditionals outside
+No other code changes: the country picker, the views, the toggles, and the
+device-locale match above all read the registry — a new pack starts being
+auto-selected for matching devices the moment it is registered. **Never** add
+country conditionals outside
 `src/app/locale/` — that's what keeps packs copy-pasteable.

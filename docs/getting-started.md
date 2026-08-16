@@ -32,8 +32,10 @@ The switcher in the top bar toggles:
   day's name days beside the number. In Settings → Entries you can choose
   whether rows keep a fixed height or grow with their text.
 
-The arrows and **Today** in the top bar page between months (or weeks, in the
-week view).
+The **‹ ›** arrows flanking the month heading page between months (or weeks,
+in the week view); **Today** in the top bar jumps back to the current day.
+The arrows sit on the heading rather than in the top bar so the view switcher
+has room on a portrait phone.
 
 ## Settings (the cogwheel, top right)
 
@@ -45,8 +47,12 @@ stock look without touching your storage connections or developer switches.
 
 - **General** — UI language (English / Svenska), the country calendar
   (United Kingdom / Sverige — sets start of week, week numbers, red days,
-  name days), the week-number and name-day toggles, and developer mode.
+  name days), the week-number and name-day toggles, and developer mode. A
+  fresh install picks the country calendar from your device's language
+  settings; changing it here pins your choice.
 - **Appearance** — themes (light/dark/custom), font, UI text size, density.
+  A fresh install starts on **System**, which follows your device's light /
+  dark preference until you pick a concrete theme.
 - **Entries** — how your day text is sized, and the day-list row height.
 - **Storage** — where your calendar lives. See [storage.md](storage.md).
 - **Developer** — demo data, log capture, build info, update check (visible

@@ -13,6 +13,7 @@ export const en = {
     previous: "Previous",
     next: "Next",
     settings: "Settings",
+    viewSwitcher: "View",
     viewMonth: "Month",
     viewWeek: "Week",
     viewList: "Day list",

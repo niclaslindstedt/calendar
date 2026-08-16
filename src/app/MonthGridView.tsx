@@ -15,6 +15,8 @@ import {
 import { DayEntry } from "./DayEntry.tsx";
 import { MONTH_CELL_FONT, type EntryTextSize } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
+import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { PeriodHeading } from "./PeriodHeading.tsx";
 import {
   holidayFor,
   isRedDay,
@@ -41,6 +43,8 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 };
 
 export function MonthGridView({
@@ -55,6 +59,8 @@ export function MonthGridView({
   editingDay,
   onEditDay,
   onCommit,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useT();
   const weeks = buildMonthGrid(year, month, {
@@ -83,19 +89,22 @@ export function MonthGridView({
       )}
 
       <section
-        className="flex flex-col px-3 pb-3 sm:px-6"
+        className="flex flex-col px-3 sm:px-6"
         style={{
           minHeight: image ? "100svh" : undefined,
           flex: image ? undefined : "1",
+          paddingBottom: CONTENT_BOTTOM_PAD,
         }}
       >
-        {/* The serif month title, wall-calendar style. */}
-        <h2 className="cal-serif py-4 text-center text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl">
-          {monthName(pack, month)}
-          <span className="text-muted ml-3 text-xl tracking-normal sm:text-2xl">
-            {year}
-          </span>
-        </h2>
+        {/* The serif month title, wall-calendar style, between the arrows. */}
+        <PeriodHeading
+          title={monthName(pack, month)}
+          meta={String(year)}
+          titleClass="cal-serif text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl"
+          metaClass="text-xl tracking-normal sm:text-2xl"
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
 
         {/* Weekday headers. */}
         <div className="grid" style={gridCols}>
