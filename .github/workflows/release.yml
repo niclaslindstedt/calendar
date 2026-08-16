@@ -1,0 +1,68 @@
+name: release
+
+# Stage 2 of the release pipeline: triggered by the `v*` tag push that
+# version-bump performs. That upstream tag push is authenticated with
+# RELEASE_TOKEN — the default GITHUB_TOKEN deliberately suppresses downstream
+# workflow triggers, so a tag pushed with it would not fire this workflow.
+#
+# This workflow itself uses the default GITHUB_TOKEN for its commit-to-main
+# and retag steps. That same trigger suppression is what prevents the
+# force-pushed tag from re-firing this workflow on itself and starting a
+# duplicate release run. See OSS_SPEC §10.3.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# Default to no permissions; every job declares its own least-privilege
+# `permissions:` block (see OSS_SPEC §10.3).
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # contents: write — pushes the release commit and force-pushes the
+    #                   rewritten tag to `main`.
+    # packages: read  — npm ci resolves @niclaslindstedt/oss-framework from
+    #                   GitHub Packages.
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Resolve tag
+        id: tag
+        run: echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+      - name: Generate changelog
+        run: ./scripts/generate-changelog.sh "${{ steps.tag.outputs.tag }}"
+      - name: Update versions
+        run: ./scripts/update-versions.sh "${{ steps.tag.outputs.tag }}"
+      - name: Commit + retag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "chore(release): update changelog and versions for ${{ steps.tag.outputs.tag }}"
+          git tag -f "${{ steps.tag.outputs.tag }}" HEAD
+          git push origin HEAD:main
+          git push origin "${{ steps.tag.outputs.tag }}" --force
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@niclaslindstedt"
+      - run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Sanity build: the app is deployed by pages.yml, not published to a
+      # package registry, so the release artifact is the GitHub Release itself.
+      - run: npm run build
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          generate_release_notes: true
