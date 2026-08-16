@@ -1,0 +1,71 @@
+/* SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0 */
+
+/* App stylesheet.
+
+     1. Tailwind v4 base + utilities.
+     2. The framework's prebuilt stylesheet — the theme-token map, component
+        flavours, and every preset palette (baked in — no runtime
+        `installPresetTokens()` call needed).
+     3. `@source` — scan the installed framework package so the utility
+        classes its components use are emitted into this app's CSS.
+     4. App-shell layout + the wall-calendar look: the serif display face for
+        month titles and day numbers, and the "red day" colour. */
+
+@import "tailwindcss";
+@import "@niclaslindstedt/oss-framework/styles.css";
+
+@source "../node_modules/@niclaslindstedt/oss-framework/dist";
+
+:root {
+  /* The classic wall-calendar red — red Sundays, red week titles. One hue in
+     both light and dark themes; it is print red, not a theme accent. */
+  --cal-red: #c12c26;
+  /* The display face for month titles and day numbers (image 1's look):
+     a bookish serif with wide fallbacks, no webfont payload. */
+  --cal-serif:
+    "Iowan Old Style", "Palatino Linotype", Palatino, Georgia,
+    "Times New Roman", serif;
+}
+
+/* Full-viewport, app-like shell. The month view manages its own scroll. */
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  overscroll-behavior-y: none;
+}
+
+/* The wall-calendar display face. */
+.cal-serif {
+  font-family: var(--cal-serif);
+}
+
+/* Red days (Sundays) and other red accents. */
+.cal-red {
+  color: var(--cal-red);
+}
+
+/* A day cell's entry text: preserve the user's line breaks, break long
+   words rather than overflowing the cell. */
+.cal-entry {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+/* The in-cell editor inherits the cell's typography so entering edit mode
+   doesn't jump. */
+.cal-entry-editor {
+  resize: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  color: inherit;
+  font: inherit;
+  line-height: 1.25;
+}

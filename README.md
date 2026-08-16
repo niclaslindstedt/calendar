@@ -1,1 +1,134 @@
 # calendar
+
+> A wall-calendar PWA that doesn't nag you. A monthly view in the style of a
+> classic Swedish wall calendar — week numbers, red Sundays, name days — where
+> you click a date and type a short note ("Dinner Ada 18:00") that's meant to
+> be **read by you later**, not turned into a reminder.
+
+[![ci](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml)
+[![release](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml)
+[![pages](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml)
+[![seo](https://github.com/niclaslindstedt/calendar/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/seo.yml)
+[![spec](https://img.shields.io/badge/OSS__SPEC-v2.9.0-blueviolet)](OSS_SPEC.md)
+[![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
+
+## What it is
+
+A frontend-only, local-first calendar PWA built on
+[`@niclaslindstedt/oss-framework`](https://github.com/niclaslindstedt/oss-framework).
+Three views, all month-scoped:
+
+- **Month grid** — the whole month on one screen, like a paper wall calendar:
+  weekday headers, ISO week numbers in the margin, Sundays in red, name days
+  small in each cell, your note text in the cell (it shrinks as it grows, so
+  every word counts).
+- **Week planner** — one row per weekday for the current week, with room to
+  read longer notes.
+- **Day list** — the month as a vertical scroll, one row per day with the name
+  days beside the number — more space per day when you need it.
+
+## Why
+
+Calendar apps want to _remind_ you. This one doesn't: it's a surface you
+glance at, like the calendar on the kitchen wall. No notifications, no
+accounts, no server — your entries are a small JSON document on your device,
+optionally synced to a storage backend you control.
+
+- **Local-first**: works offline, installable as a PWA.
+- **Internationalized properly**: country packs (UK & Sweden today) adjust the
+  start of week, week numbers, and name days — each pack is one
+  self-contained file that's easy to copy for a new country.
+- **Storage your way**: browser storage, a local folder, Dropbox, or Google
+  Drive.
+
+## Prerequisites
+
+- Node.js ≥ 22 (`.nvmrc` pins 24), npm ≥ 10
+- A GitHub personal access token with `read:packages` (for the
+  `@niclaslindstedt/oss-framework` dependency — see Install)
+
+## Install
+
+The framework dependency resolves from the GitHub Packages npm registry, which
+requires auth even for public packages. Put a `read:packages` token in your
+`~/.npmrc`:
+
+```sh
+echo "//npm.pkg.github.com/:_authToken=YOUR_TOKEN" >> ~/.npmrc
+git clone https://github.com/niclaslindstedt/calendar.git
+cd calendar
+npm install
+```
+
+## Quick start
+
+```sh
+npm run dev
+```
+
+Open the printed URL. Click any date and type — the text lands on the calendar
+and persists in your browser. The cogwheel (top right) opens Settings.
+
+## Usage
+
+- **Click a date** to type into it. Enter/Escape or clicking away closes the
+  editor. The text is plain text; keep it short — it shrinks to fit.
+- **Arrows / Today** in the top bar page between months (or weeks, in the
+  week planner).
+- **View switcher** in the top bar toggles Month grid / Week planner / Day
+  list.
+- **Settings (cogwheel)**: country (UK / Sweden), language (English /
+  Swedish), week numbers and name days on/off, themes and appearance, storage
+  backend, developer mode, and logs.
+
+## Configuration
+
+All configuration is optional build-time environment (`.env`, see
+[`.env.example`](.env.example)):
+
+| Variable                  | Purpose                                                      |
+| ------------------------- | ------------------------------------------------------------ |
+| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key; unset hides the Dropbox backend        |
+| `VITE_GOOGLE_CLIENT_ID`   | Google OAuth client id; unset hides the Google Drive backend |
+| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `Calendar`)                 |
+| `VITE_GDRIVE_APP_FOLDER`  | Drive folder name (default `Calendar`)                       |
+| `VITE_BASE`               | Deploy base path (set by CI; default `/`)                    |
+
+See [`docs/configuration.md`](docs/configuration.md).
+
+## Examples
+
+[`examples/`](examples/) contains a sample calendar document
+(`calendar-document.json`) in the exact shape the app stores — useful for
+seeding a storage backend by hand or inspecting the format.
+
+## Troubleshooting
+
+- **`npm install` fails with 401 on `@niclaslindstedt/oss-framework`** — your
+  `~/.npmrc` lacks a `read:packages` token for `npm.pkg.github.com`.
+- **The Dropbox / Google Drive backends don't appear in Settings → Storage** —
+  the corresponding `VITE_*` env var wasn't set at build time.
+- **"Local folder" backend is missing** — it needs the File System Access API
+  (Chromium browsers only).
+
+More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
+
+## Documentation
+
+- [Getting started](docs/getting-started.md)
+- [Architecture](docs/architecture.md)
+- [Configuration](docs/configuration.md)
+- [Storage & sync](docs/storage.md)
+- [Locale packs (adding a country)](docs/features/locales.md)
+- [Troubleshooting](docs/troubleshooting.md)
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). This repo conforms to
+[`OSS_SPEC.md`](OSS_SPEC.md); run the
+[validate script](https://github.com/niclaslindstedt/oss-spec/blob/main/scripts/validate.sh)
+before opening a PR.
+
+## License
+
+[PolyForm Noncommercial 1.0.0](LICENSE) © Niclas Lindstedt

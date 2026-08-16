@@ -1,0 +1,19 @@
+# Calendar
+
+> A local-first wall-calendar PWA built on @niclaslindstedt/oss-framework.
+> A monthly view in the style of a classic Swedish wall calendar — week
+> numbers, red Sundays, name days (UK & Sweden) — where clicking a date lets
+> you type a short note meant to be read by you later. No reminders, no
+> accounts, no server.
+
+- App: https://niclaslindstedt.github.io/calendar/
+- Source: https://github.com/niclaslindstedt/calendar
+- Framework: https://github.com/niclaslindstedt/oss-framework
+
+## Features
+
+- Month grid, week planner, and one-row-per-day list views
+- Per-day plain-text entries that shrink to fit the cell
+- Country packs: start of week, ISO week numbers, name days (en-GB, sv-SE)
+- Storage backends: browser, local folder, Dropbox, Google Drive
+- Themes, English/Swedish UI, installable offline PWA

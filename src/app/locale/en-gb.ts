@@ -1,0 +1,110 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// United Kingdom country pack. UK wall calendars start the week on Monday,
+// use ISO week numbers when they print them at all (business diaries — off
+// by default here), mark Sundays red, name the bank holidays, and have no
+// name-day tradition.
+//
+// This file is the template for new country packs: copy it, adjust the
+// fields, and register the export in `./index.ts`.
+
+import {
+  addToDate,
+  easterSunday,
+  lastWeekdayOfMonth,
+  nthWeekdayOfMonth,
+  weekdayOf,
+} from "./computus.ts";
+import type { Holiday, LocalePack } from "./types.ts";
+
+// England & Wales bank holidays. Fixed-date holidays falling on a weekend
+// are observed on a substitute weekday (Christmas/Boxing Day roll to the
+// next Monday + Tuesday; New Year's Day to the next Monday). Bank holidays
+// are named on the calendar but — unlike Swedish red days — UK calendars
+// keep only Sundays red, so `red` stays false.
+function holidays(year: number): readonly Holiday[] {
+  const easter = easterSunday(year);
+  const list: Holiday[] = [];
+
+  const newYear = { month: 1, day: 1 };
+  const nyWeekday = weekdayOf(year, 1, 1);
+  if (nyWeekday === 6 || nyWeekday === 0) {
+    list.push({
+      ...addToDate(year, 1, 1, nyWeekday === 6 ? 2 : 1),
+      name: "New Year's Day (substitute)",
+      red: false,
+    });
+  } else {
+    list.push({ ...newYear, name: "New Year's Day", red: false });
+  }
+
+  list.push(
+    {
+      ...addToDate(year, easter.month, easter.day, -2),
+      name: "Good Friday",
+      red: false,
+    },
+    {
+      ...addToDate(year, easter.month, easter.day, 1),
+      name: "Easter Monday",
+      red: false,
+    },
+    {
+      ...nthWeekdayOfMonth(year, 5, 1, 1),
+      name: "Early May bank holiday",
+      red: false,
+    },
+    {
+      ...lastWeekdayOfMonth(year, 5, 1),
+      name: "Spring bank holiday",
+      red: false,
+    },
+    {
+      ...lastWeekdayOfMonth(year, 8, 1),
+      name: "Summer bank holiday",
+      red: false,
+    },
+  );
+
+  // Christmas Day + Boxing Day, with weekend substitutes: whichever of the
+  // two lands on a weekend rolls onto the next free weekday(s).
+  const xmasWeekday = weekdayOf(year, 12, 25);
+  if (xmasWeekday === 5) {
+    // Fri 25 + Sat 26 → Boxing Day substitute Monday 28.
+    list.push(
+      { month: 12, day: 25, name: "Christmas Day", red: false },
+      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false },
+    );
+  } else if (xmasWeekday === 6) {
+    // Sat 25 + Sun 26 → substitutes Monday 27 + Tuesday 28.
+    list.push(
+      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false },
+      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false },
+    );
+  } else if (xmasWeekday === 0) {
+    // Sun 25 → Boxing Day Monday 26, Christmas substitute Tuesday 27.
+    list.push(
+      { month: 12, day: 26, name: "Boxing Day", red: false },
+      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false },
+    );
+  } else {
+    list.push(
+      { month: 12, day: 25, name: "Christmas Day", red: false },
+      { month: 12, day: 26, name: "Boxing Day", red: false },
+    );
+  }
+
+  return list;
+}
+
+export const enGB: LocalePack = {
+  id: "en-GB",
+  label: "United Kingdom",
+  bcp47: "en-GB",
+  weekStartsOn: 1,
+  weekNumbering: "iso",
+  showWeekNumbersDefault: false,
+  showNameDaysDefault: false,
+  redWeekdays: [0],
+  nameDays: null,
+  holidays,
+};
