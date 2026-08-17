@@ -6,7 +6,7 @@
 // the margin, red Sundays, name days small in each cell, and the user's note
 // text shrinking to fit its cell.
 
-import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
+import type { DayKey, GridCell } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildMonthGrid,
   parseDayKey,
@@ -29,8 +29,10 @@ import {
   weekdayOrder,
   type LocalePack,
 } from "./locale/index.ts";
+import { MonthCellFrame } from "./monthCell.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import type { CalendarDoc } from "./types.ts";
+import type { MonthCellLayout } from "./useAppSettings.ts";
 
 type Props = {
   year: number;
@@ -39,6 +41,8 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Where the number, the captions and the note sit in a cell. */
+  layout: MonthCellLayout;
   textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
@@ -57,6 +61,7 @@ export function MonthGridView({
   pack,
   showWeekNumbers,
   showNameDays,
+  layout,
   textSize,
   doc,
   editingDay,
@@ -161,133 +166,148 @@ export function MonthGridView({
                   {weekNumber(pack, week[0].key)}
                 </div>
               )}
-              {week.map((cell) => {
-                const parts = parseDayKey(cell.key);
-                const weekday = parts
-                  ? new Date(`${cell.key}T12:00:00Z`).getUTCDay()
-                  : 1;
-                const holiday = parts
-                  ? holidayFor(pack, parts.year, parts.month, parts.day)
-                  : null;
-                const red = parts
-                  ? isRedDay(pack, parts.year, parts.month, parts.day, weekday)
-                  : false;
-                const names =
-                  showNameDays && parts
-                    ? nameDaysFor(pack, parts.month, parts.day)
-                    : [];
-                const entry = doc.entries[cell.key] ?? "";
-                return (
-                  <div
-                    key={cell.key}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={cell.key}
-                    onClick={() => onEditDay(cell.key)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && editingDay !== cell.key) {
-                        e.preventDefault();
-                        onEditDay(cell.key);
-                      }
-                    }}
-                    className={`relative flex min-w-0 cursor-text flex-col overflow-hidden border-l border-line px-1 pt-0.5 pb-1 last:border-r focus-visible:outline-2 ${
-                      cell.inMonth ? "" : "opacity-35"
-                    } ${cell.isToday ? "bg-surface-2" : ""}`}
-                  >
-                    {/* The date **floats** right so the holiday and the name
-                        days flow around it: a short name ("Ada") sits beside
-                        the number on the first line, a long one drops under
-                        it, and neither is ever truncated to "B…" the way a
-                        shared flex row forced at ~48 px of cell width.
-                        `overflow-hidden` does double duty — it contains the
-                        float (a block holding only a float has no height, so
-                        the number would otherwise overlap the note below)
-                        and it caps the block at `max-h`, keeping a day with
-                        a long holiday and three names from crowding the note
-                        surface out of the cell. It is also why the text
-                        can't use `line-clamp-*`: that sets
-                        `display: -webkit-box`, whose line boxes ignore a
-                        float instead of wrapping around it. */}
-                    <div className="-mx-1 max-h-[3.5rem] shrink-0 overflow-hidden">
-                      <span
-                        className={`cal-serif float-right pr-1 pl-1 text-base leading-none sm:text-lg ${
-                          red ? "cal-red" : "text-fg"
-                        } ${cell.isToday ? "font-bold" : ""}`}
-                      >
-                        {cell.day}
-                      </span>
-                      {/* The holiday name clears the float: Swedish holiday
-                          names are long compounds ("Midsommarafton" is 60 px
-                          at a 43 px line) that have to break somewhere, and
-                          starting below the date gives them a full line to
-                          break on. Where they still do not fit, `hyphenate`
-                          has seeded soft hyphens at the syllable boundaries
-                          the language permits, so the break reads
-                          "Midsom-marafton" rather than the "Midsommaraft-on"
-                          that `break-words` produced by splitting against
-                          whatever happened to be left on the line. */}
-                      {/* The holiday name is also the way into the holidays
-                          screen — it is already on screen and it is exactly
-                          what you are asking about. `stopPropagation` keeps
-                          the tap off the cell's own click-to-type. */}
-                      {holiday && (
-                        <span
-                          role="button"
-                          tabIndex={0}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onOpenHolidays();
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key !== "Enter" && e.key !== " ") return;
-                            e.preventDefault();
-                            e.stopPropagation();
-                            onOpenHolidays();
-                          }}
-                          className={`clear-right block cursor-pointer px-0.5 text-[7.5px] leading-[1.25] focus-visible:outline-2 ${
-                            holiday.red ? "cal-red" : "text-muted"
-                          }`}
-                        >
-                          {hyphenate(holiday.name, pack.hyphenation)}
-                        </span>
-                      )}
-                      {/* Name days flow around the date, so "Ada" shares its
-                          line. Still deliberately NO `break-words` — that
-                          splits against whatever is left on the current line
-                          and shatters a name into "Mart" / "a". Instead
-                          `hyphenate` seeds soft hyphens at the syllable
-                          boundaries the language allows, so a name that will
-                          not fit beside the date breaks as "Henri-etta"
-                          rather than dropping below whole and leaving the
-                          first line half empty. Every name still fits a full
-                          line unaided — at 7.5 px on the 43 px line this
-                          block gets (the cell's own padding is cancelled by
-                          the `-mx-1` bleed), all 627 names in the Swedish
-                          almanac do, the widest being "Bartolomeus" at
-                          42 px. Re-measure before growing this font. */}
-                      {names.length > 0 && (
-                        <span className="text-muted block px-0.5 text-[7.5px] leading-[1.25]">
-                          {hyphenate(names.join(", "), pack.hyphenation)}
-                        </span>
-                      )}
-                    </div>
-                    <div className="min-h-0 flex-1">
-                      <DayEntry
-                        text={entry}
-                        editing={editingDay === cell.key}
-                        font={MONTH_CELL_FONT}
-                        size={textSize}
-                        onCommit={(text) => onCommit(cell.key, text)}
-                        onClose={() => onEditDay(null)}
-                      />
-                    </div>
-                  </div>
-                );
-              })}
+              {week.map((cell) => (
+                <DayCell
+                  key={cell.key}
+                  cell={cell}
+                  pack={pack}
+                  layout={layout}
+                  showNameDays={showNameDays}
+                  textSize={textSize}
+                  entry={doc.entries[cell.key] ?? ""}
+                  editing={editingDay === cell.key}
+                  onEditDay={onEditDay}
+                  onCommit={onCommit}
+                  onOpenHolidays={onOpenHolidays}
+                />
+              ))}
             </div>
           ))}
         </div>
       </section>
+    </div>
+  );
+}
+
+/** One day of the grid. Where each piece sits — which corner takes the
+ *  number, the holiday and the day's names, and where the note starts —
+ *  comes from Settings → Calendar, so the cell is assembled by
+ *  {@link MonthCellFrame} from those choices rather than hard-coded.
+ *
+ *  What stays fixed is the typography. The captions never use `break-words` —
+ *  that splits against whatever is left on the current line and shatters a
+ *  name into "Mart" / "a". `hyphenate` seeds soft hyphens at the syllable
+ *  boundaries the language allows instead, and only in words too long to fit a
+ *  caption line whole, so "Elsa, Isabella" breaks after the comma while
+ *  "Midsom-marafton" breaks inside. Every name fits a full line unaided — at
+ *  7.5 px on the 45.8 px line a band gets, all 627 names in the Swedish
+ *  almanac do, the widest being "Bartolomeus" at 42.1 px. Re-measure before
+ *  growing this font. */
+function DayCell({
+  cell,
+  pack,
+  layout,
+  showNameDays,
+  textSize,
+  entry,
+  editing,
+  onEditDay,
+  onCommit,
+  onOpenHolidays,
+}: {
+  cell: GridCell;
+  pack: LocalePack;
+  layout: MonthCellLayout;
+  showNameDays: boolean;
+  textSize: EntryTextSize;
+  entry: string;
+  editing: boolean;
+  onEditDay: (day: DayKey | null) => void;
+  onCommit: (day: DayKey, text: string) => void;
+  onOpenHolidays: () => void;
+}) {
+  const parts = parseDayKey(cell.key);
+  const weekday = parts ? new Date(`${cell.key}T12:00:00Z`).getUTCDay() : 1;
+  const holiday = parts
+    ? holidayFor(pack, parts.year, parts.month, parts.day)
+    : null;
+  const red = parts
+    ? isRedDay(pack, parts.year, parts.month, parts.day, weekday)
+    : false;
+  const names =
+    showNameDays && parts ? nameDaysFor(pack, parts.month, parts.day) : [];
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={cell.key}
+      onClick={() => onEditDay(cell.key)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !editing) {
+          e.preventDefault();
+          onEditDay(cell.key);
+        }
+      }}
+      className={`relative min-w-0 cursor-text overflow-hidden border-l border-line px-1 pt-0.5 pb-1 last:border-r focus-visible:outline-2 ${
+        cell.inMonth ? "" : "opacity-35"
+      } ${cell.isToday ? "bg-surface-2" : ""}`}
+    >
+      <MonthCellFrame
+        className="h-full"
+        layout={layout}
+        content={{
+          day: (
+            <span
+              className={`cal-serif text-base leading-none sm:text-lg ${
+                red ? "cal-red" : "text-fg"
+              } ${cell.isToday ? "font-bold" : ""}`}
+            >
+              {cell.day}
+            </span>
+          ),
+          // The holiday name is also the way into the holidays screen — it is
+          // already on screen and it is exactly what you are asking about.
+          // `stopPropagation` keeps the tap off the cell's click-to-type.
+          holidays: holiday ? (
+            <span
+              role="button"
+              tabIndex={0}
+              onClick={(e) => {
+                e.stopPropagation();
+                onOpenHolidays();
+              }}
+              onKeyDown={(e) => {
+                if (e.key !== "Enter" && e.key !== " ") return;
+                e.preventDefault();
+                e.stopPropagation();
+                onOpenHolidays();
+              }}
+              className={`block cursor-pointer text-[7.5px] leading-[1.25] focus-visible:outline-2 ${
+                holiday.red ? "cal-red" : "text-muted"
+              }`}
+            >
+              {hyphenate(holiday.name, pack.hyphenation)}
+            </span>
+          ) : null,
+          nameDays:
+            names.length > 0 ? (
+              <span className="text-muted block text-[7.5px] leading-[1.25]">
+                {hyphenate(names.join(", "), pack.hyphenation)}
+              </span>
+            ) : null,
+          note: (
+            <DayEntry
+              text={entry}
+              editing={editing}
+              font={MONTH_CELL_FONT}
+              size={textSize}
+              onCommit={(text) => onCommit(cell.key, text)}
+              onClose={() => onEditDay(null)}
+            />
+          ),
+        }}
+      />
     </div>
   );
 }

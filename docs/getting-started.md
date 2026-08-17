@@ -32,10 +32,12 @@ The switcher in the top bar toggles:
   day's name days beside the number. In Settings → Entries you can choose
   whether rows keep a fixed height or grow with their text.
 
-**Swipe left or right** in the month and week views to turn the page — the
-neighbouring period follows your finger and settles into place. Those two
-views fill the screen exactly and never scroll, which is what frees the
-sideways gesture; the day list scrolls as before.
+**Swipe left or right** in any of the three views to turn the page — the
+neighbouring period follows your finger and settles into place. The month and
+week views fill the screen exactly and never scroll at all; the day list still
+scrolls up and down, and a clearly vertical drag there scrolls it instead of
+turning the page. The holidays screen pages between years the same way, with
+its header staying put while only the year's list moves.
 
 The **‹ ›** arrows flanking the month heading do the same thing with the same
 animation, and **Today** in the top bar jumps back to the current day. The
@@ -65,6 +67,9 @@ stock look without touching your storage connections or developer switches.
   fresh install picks the country calendar from your device's language
   settings; changing it here pins your choice. **Vacation days a year**
   (default 25) is the allowance the vacation planner spends.
+- **Calendar** — the month cell's layout, arranged on a sample day: tap a
+  corner and pick what belongs in it. See
+  [Month cell layout](#month-cell-layout).
 - **Appearance** — themes (light/dark/custom), font, UI text size, density.
   A fresh install starts on **System**, which follows your device's light /
   dark preference until you pick a concrete theme.
@@ -73,6 +78,27 @@ stock look without touching your storage connections or developer switches.
 - **Developer** — demo data, log capture, build info, update check (visible
   in developer mode).
 - **Logs** — the in-app log (visible once log capture is on).
+
+### Month cell layout
+
+**Settings → Calendar → Month view** shows a sample day with all four pieces
+on it. Tap any of its four corners and pick which piece goes there — the
+sample rearranges itself immediately, and so does the calendar behind the
+dialog. The defaults reproduce a printed wall calendar: the date large in the
+**top-right** corner, the holiday name and the day's names stacked in the
+**bottom-right** one (holiday first), and your note filling the space between.
+
+- **Day number**, **Holiday name** and **Name days** each live in one of the
+  four corners; pieces sharing a corner stack in that order.
+- The day number **floats**, so a caption sharing its corner's band flows
+  around it — a short name sits beside the number, a long one drops under it.
+- **Your note** has no corner: it takes the room the corners leave, and its
+  own control puts it at the top of that space, centred in it, or at the
+  bottom.
+
+Captions wrap rather than truncate, and a name is only broken across lines
+when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while
+"Midsommarafton" breaks at a syllable boundary with a hyphen.
 
 ### Entry text size
 

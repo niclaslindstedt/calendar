@@ -20,6 +20,29 @@
 /** The soft hyphen inserted at each permitted break point. */
 export const SOFT_HYPHEN = "­";
 
+/**
+ * The shortest word that is offered break points at all, in letters.
+ *
+ * A soft hyphen is an *opportunity*, and a greedy line breaker takes the last
+ * one that fits — so a word carrying hyphens it does not need gets split
+ * anyway to top up the line before it: "Elsa, Isa-bella" instead of the
+ * "Elsa," / "Isabella" a printed calendar prints. Offering hyphens only where
+ * the word genuinely cannot fit a line of its own leaves the comma as the
+ * last break that fits, which is exactly where the break belongs.
+ *
+ * Measured, like the caption font itself, against the month cell's caption
+ * line — 45.8 px at 393 px of viewport, the narrowest phone the app targets.
+ * Every word of 11 letters or fewer in both packs fits it whole (the widest,
+ * "Bartolomeus", is 42.1 px); the words that do not fit start at 12
+ * ("Långfredagen" is 46.3 px, "Midsommardagen" 60.0 px). A 12-letter word
+ * that happens to fit is unharmed: the breaker still prefers the later
+ * break — the space after it — over any hyphen inside it.
+ *
+ * Re-measure this together with the caption font size; `tests/hyphenate_test`
+ * pins the letter counts the constant assumes.
+ */
+export const MIN_HYPHENATED_LETTERS = 12;
+
 /** The longest consonant cluster considered as a syllable onset ("str"). */
 const MAX_ONSET = 3;
 
@@ -129,10 +152,21 @@ function hyphenateWord(word: string, rules: HyphenationRules): string {
 }
 
 /**
- * Soft-hyphenate every word in a string, leaving punctuation and spacing
- * exactly as they were — "Karin, Kajsa" keeps its comma and its space, and
- * only the names themselves gain break points.
+ * Soft-hyphenate the words in a string that are long enough to need it,
+ * leaving punctuation and spacing exactly as they were — "Karin, Kajsa" keeps
+ * its comma and its space, and neither name gains a break point it would only
+ * be split at to fill the line before it.
+ *
+ * `minWordLength` is the letter count below which a word is left whole; it
+ * defaults to {@link MIN_HYPHENATED_LETTERS}, measured against the month
+ * cell's caption line. Pass a smaller one for a narrower line.
  */
-export function hyphenate(text: string, rules: HyphenationRules): string {
-  return text.replace(/\p{L}+/gu, (word) => hyphenateWord(word, rules));
+export function hyphenate(
+  text: string,
+  rules: HyphenationRules,
+  { minWordLength = MIN_HYPHENATED_LETTERS }: { minWordLength?: number } = {},
+): string {
+  return text.replace(/\p{L}+/gu, (word) =>
+    word.length < minWordLength ? word : hyphenateWord(word, rules),
+  );
 }

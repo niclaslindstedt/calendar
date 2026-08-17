@@ -28,6 +28,11 @@ import { useMediaQuery } from "@niclaslindstedt/oss-framework/hooks";
  *  enough that a deliberate swipe engages immediately, high enough that a tap
  *  on a day cell with a shaky thumb still opens the editor. */
 const AXIS_LOCK_PX = 10;
+/** How much more vertical than horizontal a drag must be before it counts as
+ *  scrolling rather than paging, on the decks whose pane actually scrolls. A
+ *  thumb swiping across a phone travels in an arc, so a plain
+ *  `|dy| >= |dx|` test hands far too many honest side-swipes to the list. */
+const SCROLL_BIAS = 1.4;
 /** A drag past this share of the width commits even if it ends slowly. */
 const COMMIT_FRACTION = 0.22;
 /** …and a flick faster than this (px/ms) commits however short it was. */
@@ -57,6 +62,17 @@ type Props = {
   /** Draws one pane. `rel` is -1/0/1 relative to the current period; only the
    *  `0` pane is interactive. */
   renderItem: (rel: -1 | 0 | 1, nav: DeckNav) => ReactNode;
+  /** Chrome drawn above the track and left out of the animation: a screen
+   *  whose header is the same in every period should not have three copies of
+   *  it sliding past each other. It still gets `nav`, so its arrows page the
+   *  content the way a swipe does. */
+  renderChrome?: (nav: DeckNav) => ReactNode;
+  /** Whether the pane scrolls vertically. The default — false — is the month
+   *  and week views, which fill exactly one screen: there the vertical axis is
+   *  taken away from the browser entirely (`touch-action: pan-x`), so a swipe
+   *  can never be lost to a rubber-band scroll of a page that has nowhere to
+   *  go. A scrolling pane keeps `pan-y` and leans on the biased axis lock. */
+  scrolls?: boolean;
 };
 
 type Drag = {
@@ -71,7 +87,14 @@ type Drag = {
   velocity: number;
 };
 
-export function SwipeDeck({ itemKey, onPrevious, onNext, renderItem }: Props) {
+export function SwipeDeck({
+  itemKey,
+  onPrevious,
+  onNext,
+  renderItem,
+  renderChrome,
+  scrolls = false,
+}: Props) {
   // Where the track sits: `settle` counts whole panes (the committed step) and
   // `dx` the pixels the finger has added on top.
   const [settle, setSettle] = useState<-1 | 0 | 1>(0);
@@ -166,11 +189,14 @@ export function SwipeDeck({ itemKey, onPrevious, onNext, renderItem }: Props) {
     if (d.axis === null) {
       const vertical = Math.abs(e.clientY - d.y);
       if (Math.abs(moved) < AXIS_LOCK_PX && vertical < AXIS_LOCK_PX) return;
-      if (Math.abs(moved) <= vertical) {
+      // Only a pane that scrolls has anything to give the gesture up for, and
+      // even then it takes a clearly vertical drag to win it.
+      if (scrolls && vertical > Math.abs(moved) * SCROLL_BIAS) {
         // Vertical intent — hand the gesture back to the page.
         drag.current = null;
         return;
       }
+      if (Math.abs(moved) < AXIS_LOCK_PX) return;
       d.axis = "x";
       swiped.current = true;
       setAnimating(false);
@@ -226,41 +252,46 @@ export function SwipeDeck({ itemKey, onPrevious, onNext, renderItem }: Props) {
   return (
     <div
       ref={host}
-      className="h-full overflow-hidden"
-      // `pan-y` rather than `none`: the browser keeps vertical gestures (and
-      // pinch-zoom), we take the horizontal axis without a preventDefault race.
-      style={{ touchAction: "pan-y" }}
+      className="flex h-full flex-col overflow-hidden"
+      // A scrolling pane keeps `pan-y` so the browser still owns the vertical
+      // axis (and pinch-zoom) without a preventDefault race; a pane that fills
+      // one screen has no vertical axis worth keeping, and giving it up means
+      // no bounce competes with the swipe.
+      style={{ touchAction: scrolls ? "pan-y" : "pan-x" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerCancel={onPointerCancel}
       onClickCapture={onClickCapture}
     >
-      <div
-        className="flex h-full w-full"
-        style={{
-          transform: `translate3d(calc(${-100 * (1 + settle)}% + ${dx}px), 0, 0)`,
-          transition: animating
-            ? `transform ${SETTLE_MS}ms ${SETTLE_EASING}`
-            : "none",
-          willChange: active ? "transform" : "auto",
-        }}
-      >
-        {RELATIVE.map((rel) => (
-          // Keyed by position, not by period: the centre node is reused as the
-          // anchor moves, so committing a swipe swaps the content in place
-          // instead of remounting three views.
-          <div
-            key={rel}
-            className="h-full w-full shrink-0"
-            // The neighbours carry focusable day cells and heading arrows;
-            // `inert` keeps them out of the tab order and the a11y tree while
-            // they are parked off screen.
-            {...(rel === 0 ? {} : ({ inert: "" } as Record<string, string>))}
-          >
-            {renderItem(rel, nav)}
-          </div>
-        ))}
+      {renderChrome && <div className="shrink-0">{renderChrome(nav)}</div>}
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <div
+          className="flex h-full w-full"
+          style={{
+            transform: `translate3d(calc(${-100 * (1 + settle)}% + ${dx}px), 0, 0)`,
+            transition: animating
+              ? `transform ${SETTLE_MS}ms ${SETTLE_EASING}`
+              : "none",
+            willChange: active ? "transform" : "auto",
+          }}
+        >
+          {RELATIVE.map((rel) => (
+            // Keyed by position, not by period: the centre node is reused as
+            // the anchor moves, so committing a swipe swaps the content in
+            // place instead of remounting three views.
+            <div
+              key={rel}
+              className="h-full w-full shrink-0"
+              // The neighbours carry focusable day cells and heading arrows;
+              // `inert` keeps them out of the tab order and the a11y tree
+              // while they are parked off screen.
+              {...(rel === 0 ? {} : ({ inert: "" } as Record<string, string>))}
+            >
+              {renderItem(rel, nav)}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

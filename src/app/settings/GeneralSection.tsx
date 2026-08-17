@@ -11,6 +11,7 @@ import {
   Field,
   LabeledInput,
   Section,
+  SegmentedControl,
   SelectPicker,
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
@@ -27,6 +28,17 @@ type UpdateLook = <K extends keyof LookSettings>(
   key: K,
   value: LookSettings[K],
 ) => void;
+
+/** A flag emoji as decoration: it repeats what the label beside it already
+ *  says, so it is hidden from assistive tech, and it is pinned a shade larger
+ *  than the label because emoji render small against text of the same size. */
+function Flag({ emoji }: { emoji: string }) {
+  return (
+    <span aria-hidden="true" className="text-base leading-none">
+      {emoji}
+    </span>
+  );
+}
 
 export function GeneralSection({
   look,
@@ -45,28 +57,58 @@ export function GeneralSection({
 
   return (
     <>
+      {/* Both languages side by side under their flags, the way the sibling
+          apps present it: two choices are a pair of buttons, not a dropdown
+          that hides one of them behind a tap. */}
       <Section title={t("settings.language")}>
         <Field label={t("settings.languageChoose")}>
-          <SelectPicker
+          <SegmentedControl
             value={lang}
             onChange={(next) => setLanguage(next)}
             ariaLabel={t("settings.language")}
             options={[
-              { value: "en", label: t("settings.languageEnglish") },
-              { value: "sv", label: t("settings.languageSwedish") },
+              {
+                value: "en",
+                label: (
+                  <>
+                    <Flag emoji="🇬🇧" /> {t("settings.languageEnglish")}
+                  </>
+                ),
+              },
+              {
+                value: "sv",
+                label: (
+                  <>
+                    <Flag emoji="🇸🇪" /> {t("settings.languageSwedish")}
+                  </>
+                ),
+              },
             ]}
           />
         </Field>
         <p className="text-muted text-xs">{t("settings.languageHint")}</p>
       </Section>
 
+      {/* The country list stays a dropdown — it grows with every pack — but
+          each entry leads with its flag, so the picker reads at a glance and
+          matches the language buttons above. */}
       <Section title={t("settings.country")}>
         <Field label={t("settings.countryChoose")}>
           <SelectPicker
             value={look.localeId}
             onChange={(next) => onUpdate("localeId", next)}
             ariaLabel={t("settings.country")}
-            options={LOCALES.map((l) => ({ value: l.id, label: l.label }))}
+            options={LOCALES.map((l) => ({
+              value: l.id,
+              label: (
+                <>
+                  <Flag emoji={l.flag} /> {l.label}
+                </>
+              ),
+              // The trigger and the typeahead both want plain text; the label
+              // above is markup, so spell the searchable form out.
+              typeaheadLabel: l.label,
+            }))}
           />
         </Field>
         <p className="text-muted text-xs">{t("settings.countryHint")}</p>

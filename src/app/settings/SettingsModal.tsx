@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   Button,
+  CalendarIcon,
   CodeIcon,
   DatabaseIcon,
   Modal,
@@ -45,6 +46,7 @@ import {
   type LookSettings,
 } from "../useAppSettings.ts";
 import { AppearanceSection } from "./AppearanceSection.tsx";
+import { CalendarSection } from "./CalendarSection.tsx";
 import { DeveloperSection } from "./DeveloperSection.tsx";
 import { EntriesSection } from "./EntriesSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
@@ -61,11 +63,18 @@ export type SettingsDraft = {
 };
 
 type TabId =
-  "general" | "appearance" | "entries" | "storage" | "developer" | "logs";
+  | "general"
+  | "appearance"
+  | "calendar"
+  | "entries"
+  | "storage"
+  | "developer"
+  | "logs";
 
 const BASE_TABS: readonly TabDef<TabId>[] = [
   { id: "general", labelKey: "settings.tabGeneral", Icon: SlidersIcon },
   { id: "appearance", labelKey: "settings.tabAppearance", Icon: PaletteIcon },
+  { id: "calendar", labelKey: "settings.tabCalendar", Icon: CalendarIcon },
   { id: "entries", labelKey: "settings.tabEntries", Icon: PencilIcon },
   { id: "storage", labelKey: "settings.tabStorage", Icon: DatabaseIcon },
 ];
@@ -244,6 +253,9 @@ export function SettingsModal({
                 appearance={draft.appearance}
                 onChange={updateDraftAppearance}
               />
+            )}
+            {activeTab === "calendar" && (
+              <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
             )}
             {activeTab === "entries" && (
               <EntriesSection look={draft.look} onUpdate={updateDraftLook} />

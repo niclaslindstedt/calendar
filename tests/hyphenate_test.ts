@@ -7,6 +7,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MIN_HYPHENATED_LETTERS,
   SOFT_HYPHEN,
   hyphenPoints,
   hyphenate,
@@ -16,9 +17,11 @@ import { getLocale } from "../src/app/locale/index.ts";
 const sv = getLocale("sv-SE");
 const en = getLocale("en-GB");
 
-/** The word split at its offered break points, for readable assertions. */
+/** The word split at its offered break points, for readable assertions. The
+ *  length gate is off here: these cases are about which boundaries the rules
+ *  permit, not about which words are long enough to be offered them. */
 function pieces(word: string, rules = sv.hyphenation): string[] {
-  return hyphenate(word, rules).split(SOFT_HYPHEN);
+  return hyphenate(word, rules, { minWordLength: 0 }).split(SOFT_HYPHEN);
 }
 
 /** Every name in the pack's table, deduplicated. */
@@ -83,9 +86,9 @@ describe("hyphenPoints (Swedish)", () => {
   it("never splits a diphthong", () => {
     // "eu" spells one sound; breaking it would read as a misspelling.
     expect(pieces("Bartolomeus").some((p) => p.endsWith("e"))).toBe(false);
-    expect(hyphenate("Bartolomeus", sv.hyphenation)).not.toContain(
-      `e${SOFT_HYPHEN}u`,
-    );
+    expect(
+      hyphenate("Bartolomeus", sv.hyphenation, { minWordLength: 0 }),
+    ).not.toContain(`e${SOFT_HYPHEN}u`);
   });
 
   it("leaves short words alone", () => {
@@ -163,17 +166,56 @@ describe("break points are legal across the whole almanac", () => {
   });
 });
 
+// The gate that keeps a greedy line breaker from splitting a name it could
+// have moved whole: a soft hyphen is an opportunity, and the breaker takes the
+// last one that fits. "Elsa, Isabella" must break at the comma.
+describe("only words too long for a caption line are offered breaks", () => {
+  it("leaves every name in the Swedish almanac whole", () => {
+    for (const name of allNames()) {
+      expect(hyphenate(name, sv.hyphenation)).toBe(name);
+    }
+  });
+
+  it("breaks a pair of names after the comma, not inside the second", () => {
+    expect(hyphenate("Elsa, Isabella", sv.hyphenation)).toBe("Elsa, Isabella");
+    expect(hyphenate("Marika, Marita", sv.hyphenation)).toBe("Marika, Marita");
+  });
+
+  it("still breaks the long holiday compounds", () => {
+    for (const name of [
+      "Midsommarafton",
+      "Midsommardagen",
+      "Långfredagen",
+      "Trettondedag jul",
+    ]) {
+      expect(hyphenate(name, sv.hyphenation)).toContain(SOFT_HYPHEN);
+    }
+  });
+
+  it("keeps the measured assumption honest", () => {
+    // The constant is only sound while no name-day word reaches the gate:
+    // words of that length are measured to fit a caption line whole, and the
+    // holiday compounds that do not fit are all longer. ("Gustav Adolf" is
+    // two words, and it is words that get broken, not entries.)
+    for (const word of allNames().flatMap((name) => name.split(/\P{L}+/u))) {
+      expect(word.length).toBeLessThan(MIN_HYPHENATED_LETTERS);
+    }
+  });
+});
+
 describe("English rules", () => {
   it("keeps vowel digraphs together", () => {
     // "ea" spells one sound; breaking it would read as a misspelling.
-    expect(hyphenate("Easter", en.hyphenation)).not.toContain(
-      `e${SOFT_HYPHEN}a`,
-    );
+    expect(
+      hyphenate("Easter", en.hyphenation, { minWordLength: 0 }),
+    ).not.toContain(`e${SOFT_HYPHEN}a`);
   });
 
   it("keeps x with the vowel before it", () => {
     // "x" spells /ks/ and cannot open a syllable in either language.
-    expect(hyphenate("Boxing", en.hyphenation)).toBe(`Box${SOFT_HYPHEN}ing`);
+    expect(hyphenate("Boxing", en.hyphenation, { minWordLength: 0 })).toBe(
+      `Box${SOFT_HYPHEN}ing`,
+    );
     expect(pieces("Alexander")).toEqual(["Alex", "an", "der"]);
     expect(pieces("Alexandra")).toEqual(["Alex", "an", "dra"]);
   });

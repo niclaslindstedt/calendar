@@ -71,8 +71,10 @@ export function DayListView({
   const count = daysInMonth(year, month);
 
   return (
+    // The list is the one paged view that scrolls, so it owns the vertical
+    // axis inside its pane while the deck around it owns the horizontal one.
     <div
-      className="mx-auto w-full max-w-2xl px-3 sm:px-6"
+      className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
       style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
     >
       {/* The slim artwork band (smaller than the month view's). */}
@@ -109,10 +111,13 @@ export function DayListView({
           const entry = doc.entries[key] ?? "";
           const fixed = rowMode === "fixed" && editingDay !== key;
           // A small week marker on the first day of each week (and on the
-          // 1st), the way Swedish wall calendars badge their week rows.
+          // 1st), the way Swedish wall calendars badge their week rows. Bare
+          // number, like the month grid's gutter: once the marker has a lane
+          // of its own the column says "week" by itself, and the prefix was
+          // portrait width spent repeating it.
           const weekMark =
             showWeekNumbers && (weekday === pack.weekStartsOn || day === 1)
-              ? `${t("weekdays.weekShort")}${weekNumber(pack, key)}`
+              ? String(weekNumber(pack, key))
               : "";
           return (
             <div
@@ -134,7 +139,14 @@ export function DayListView({
               {/* The week gutter is only reserved when week numbers are on —
                   otherwise every row carries 36 px of dead left margin. */}
               {showWeekNumbers && (
-                <span className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight">
+                <span
+                  className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight"
+                  aria-label={
+                    weekMark
+                      ? t("topbar.week", { n: weekNumber(pack, key) })
+                      : undefined
+                  }
+                >
                   {weekMark}
                 </span>
               )}
@@ -152,7 +164,12 @@ export function DayListView({
               >
                 {weekdayName(pack, weekday, "short")}
               </span>
-              <span className="w-24 shrink-0 truncate pt-1 text-[10px] leading-tight sm:w-36">
+              {/* The holiday and the day's names share this column and
+                  **wrap** rather than truncate: "Trettondedag jul · Kasper,
+                  Melker" ending in an ellipsis tells you a name is there and
+                  refuses to say which. Two lines of 10 px still clear a fixed
+                  44 px row. */}
+              <span className="w-24 shrink-0 pt-1 text-[10px] leading-tight sm:w-36">
                 {/* Also the way into the holidays screen — see the same tap
                     target in the month view. */}
                 {holiday && (

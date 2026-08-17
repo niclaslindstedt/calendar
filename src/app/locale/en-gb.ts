@@ -199,6 +199,7 @@ const hyphenation: HyphenationRules = {
 export const enGB: LocalePack = {
   id: "en-GB",
   label: "United Kingdom",
+  flag: "🇬🇧",
   bcp47: "en-GB",
   weekStartsOn: 1,
   weekNumbering: "iso",

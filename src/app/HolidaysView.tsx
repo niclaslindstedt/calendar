@@ -21,6 +21,7 @@ import { useT } from "./i18n/index.ts";
 import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { monthName, weekdayName, type LocalePack } from "./locale/index.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
+import { SwipeDeck } from "./SwipeDeck.tsx";
 import {
   holidaysInYear,
   planVacation,
@@ -37,8 +38,7 @@ type Props = {
   /** The allowance from Settings. */
   vacationDays: number;
   onBack: () => void;
-  onPrevious: () => void;
-  onNext: () => void;
+  onYearChange: (year: number) => void;
 };
 
 /** "tor 1 jan" — the compact form the list and the plan both use. */
@@ -85,17 +85,63 @@ export function HolidaysView({
   onModeChange,
   vacationDays,
   onBack,
+  onYearChange,
+}: Props) {
+  return (
+    // Years page as months do, so the gesture is the same wherever you are —
+    // but only the year's own content travels. The way back, the mode switch
+    // and the year heading are the same furniture in every year, so they are
+    // deck chrome: sliding three copies of them past each other made the
+    // screen look like it was changing more than the year.
+    <SwipeDeck
+      itemKey={String(year)}
+      scrolls
+      onPrevious={() => onYearChange(year - 1)}
+      onNext={() => onYearChange(year + 1)}
+      renderChrome={(nav) => (
+        <HolidaysChrome
+          year={year}
+          mode={mode}
+          onModeChange={onModeChange}
+          onBack={onBack}
+          onPrevious={nav.previous}
+          onNext={nav.next}
+        />
+      )}
+      renderItem={(rel) => (
+        <YearPanel
+          year={year + rel}
+          pack={pack}
+          mode={mode}
+          vacationDays={vacationDays}
+        />
+      )}
+    />
+  );
+}
+
+/** The static furniture: back, the list/planner switch, and the year heading
+ *  whose arrows page the deck. */
+function HolidaysChrome({
+  year,
+  mode,
+  onModeChange,
+  onBack,
   onPrevious,
   onNext,
-}: Props) {
+}: {
+  year: number;
+  mode: HolidayMode;
+  onModeChange: (mode: HolidayMode) => void;
+  onBack: () => void;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
   const t = useT();
 
   return (
-    <div
-      className="mx-auto flex h-full w-full max-w-2xl flex-col px-3 sm:px-6"
-      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
-    >
-      <div className="flex shrink-0 items-center gap-2 pt-3">
+    <div className="mx-auto w-full max-w-2xl px-3 sm:px-6">
+      <div className="flex items-center gap-2 pt-3">
         <button
           type="button"
           aria-label={t("holidays.back")}
@@ -128,16 +174,36 @@ export function HolidaysView({
         onPrevious={onPrevious}
         onNext={onNext}
       />
+    </div>
+  );
+}
 
-      {/* The one scrolling surface on this screen: a year of holidays does not
-          fit a phone, and unlike the calendar there is no grid to preserve. */}
-      <div className="min-h-0 flex-1 overflow-y-auto">
-        {mode === "list" ? (
-          <HolidayList year={year} pack={pack} />
-        ) : (
-          <PlannerList year={year} pack={pack} budget={vacationDays} />
-        )}
-      </div>
+/** One year of content — the only thing a swipe moves. */
+function YearPanel({
+  year,
+  pack,
+  mode,
+  vacationDays,
+}: {
+  year: number;
+  pack: LocalePack;
+  mode: HolidayMode;
+  vacationDays: number;
+}) {
+  return (
+    // The one scrolling surface on this screen: a year of holidays does not
+    // fit a phone, and unlike the calendar there is no grid to preserve.
+    // `overscroll-contain` keeps a flick that runs off the end of the list
+    // from bouncing the screen behind it mid-swipe.
+    <div
+      className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
+      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
+    >
+      {mode === "list" ? (
+        <HolidayList year={year} pack={pack} />
+      ) : (
+        <PlannerList year={year} pack={pack} budget={vacationDays} />
+      )}
     </div>
   );
 }
