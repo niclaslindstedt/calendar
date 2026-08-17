@@ -38,6 +38,8 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Tapping a holiday's name opens the holidays screen for its year. */
+  onOpenHolidays: () => void;
 };
 
 export function WeekPlannerView({
@@ -52,6 +54,7 @@ export function WeekPlannerView({
   onCommit,
   onPrevious,
   onNext,
+  onOpenHolidays,
 }: Props) {
   const t = useT();
   const days = buildWeekStrip(anchor, {
@@ -62,7 +65,7 @@ export function WeekPlannerView({
 
   return (
     <div
-      className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 sm:px-6"
+      className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden px-3 sm:px-6"
       style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
     >
       <PeriodHeading
@@ -74,7 +77,10 @@ export function WeekPlannerView({
         onNext={onNext}
       />
 
-      <div className="flex flex-1 flex-col border-t border-line">
+      {/* Seven equal rows sharing the screen. No min-height: the view does not
+          scroll, so on a short viewport the rows give ground rather than push
+          the last weekday past the bottom edge. */}
+      <div className="flex min-h-0 flex-1 flex-col border-t border-line">
         {days.map((cell) => {
           const parts = parseDayKey(cell.key);
           const weekday = new Date(`${cell.key}T12:00:00Z`).getUTCDay();
@@ -102,7 +108,7 @@ export function WeekPlannerView({
                   onEditDay(cell.key);
                 }
               }}
-              className={`flex min-h-[5.5rem] flex-1 cursor-text flex-col border-b border-line px-2 py-1.5 focus-visible:outline-2 ${
+              className={`flex min-h-0 flex-1 cursor-text flex-col overflow-hidden border-b border-line px-2 py-1.5 focus-visible:outline-2 ${
                 cell.isToday ? "bg-surface-2" : ""
               }`}
             >
@@ -115,9 +121,23 @@ export function WeekPlannerView({
                 <span className="text-muted cal-serif text-sm">
                   {parts?.day}
                 </span>
+                {/* Also the way into the holidays screen — see the same tap
+                    target in the month view. */}
                 {holiday && (
                   <span
-                    className={`truncate text-[11px] ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    className={`cursor-pointer truncate text-[11px] focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
                     }`}
                   >

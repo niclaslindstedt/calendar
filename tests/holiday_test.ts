@@ -58,15 +58,39 @@ describe("Swedish red days (rule engine, not year tables)", () => {
     expect(holidayFor(sv, 2025, 11, 1)?.name).toBe("Alla helgons dag");
   });
 
-  it("keeps the eves named but not red", () => {
+  it("keeps the eves named but neither red nor off", () => {
     expect(holidayFor(sv, 2026, 12, 24)).toEqual({
       month: 12,
       day: 24,
       name: "Julafton",
       red: false,
+      off: false,
     });
     expect(holidayFor(sv, 2026, 12, 31)?.red).toBe(false);
     expect(holidayFor(sv, 2026, 6, 19)?.red).toBe(false);
+    // Workdays by law, so the vacation planner may offer them.
+    for (const [m, d] of [
+      [12, 24],
+      [12, 31],
+      [6, 19],
+    ]) {
+      expect(holidayFor(sv, 2026, m, d)?.off).toBe(false);
+    }
+  });
+
+  it("separates ink from time off across the packs", () => {
+    // `red` is what the calendar prints, `off` is whether anyone works. Sweden
+    // prints its public holidays red; the UK prints none of them red but shuts
+    // for all of them. A planner reading `red` would find no UK holidays.
+    for (const h of sv.holidays(2026)) {
+      expect(h.off).toBe(h.red);
+    }
+    const uk = en.holidays(2026);
+    expect(uk.length).toBeGreaterThan(0);
+    for (const h of uk) {
+      expect(h.red).toBe(false);
+      expect(h.off).toBe(true);
+    }
   });
 
   it("red-day resolution combines Sundays and holidays", () => {

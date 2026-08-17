@@ -41,6 +41,8 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Tapping a holiday's name opens the holidays screen for its year. */
+  onOpenHolidays: () => void;
 };
 
 function daysInMonth(year: number, month: number): number {
@@ -62,6 +64,7 @@ export function DayListView({
   onCommit,
   onPrevious,
   onNext,
+  onOpenHolidays,
 }: Props) {
   const t = useT();
   const image = monthImageUrl(year, month, "small");
@@ -150,8 +153,26 @@ export function DayListView({
                 {weekdayName(pack, weekday, "short")}
               </span>
               <span className="w-24 shrink-0 truncate pt-1 text-[10px] leading-tight sm:w-36">
+                {/* Also the way into the holidays screen — see the same tap
+                    target in the month view. */}
                 {holiday && (
-                  <span className={holiday.red ? "cal-red" : "text-muted"}>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    className={`cursor-pointer focus-visible:outline-2 ${
+                      holiday.red ? "cal-red" : "text-muted"
+                    }`}
+                  >
                     {holiday.name}
                   </span>
                 )}

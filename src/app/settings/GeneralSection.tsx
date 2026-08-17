@@ -9,6 +9,7 @@
 
 import {
   Field,
+  LabeledInput,
   Section,
   SelectPicker,
   ToggleRow,
@@ -16,7 +17,11 @@ import {
 
 import { setLanguage, useLang, useT } from "../i18n/index.ts";
 import { LOCALES, getLocale } from "../locale/index.ts";
-import { effectiveToggles, type LookSettings } from "../useAppSettings.ts";
+import {
+  clampVacationDays,
+  effectiveToggles,
+  type LookSettings,
+} from "../useAppSettings.ts";
 
 type UpdateLook = <K extends keyof LookSettings>(
   key: K,
@@ -79,6 +84,23 @@ export function GeneralSection({
             onChange={(next) => onUpdate("nameDays", next)}
           />
         )}
+      </Section>
+
+      {/* The allowance the vacation planner spends. It sits here rather than
+          on the planner screen so that screen is pure output — you read a
+          plan, you don't configure one. */}
+      <Section title={t("settings.vacation")}>
+        <LabeledInput
+          label={t("settings.vacationDays")}
+          type="number"
+          min={0}
+          max={365}
+          step={1}
+          inputMode="numeric"
+          value={String(look.vacationDays)}
+          onCommit={(next) => onUpdate("vacationDays", clampVacationDays(next))}
+        />
+        <p className="text-muted text-xs">{t("settings.vacationDaysHint")}</p>
       </Section>
 
       <Section title={t("settings.tabDeveloper")}>

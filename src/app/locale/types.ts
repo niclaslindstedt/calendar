@@ -13,6 +13,8 @@ import type {
   DayKey,
   WeekStart,
 } from "@niclaslindstedt/oss-framework/calendar";
+
+import type { HyphenationRules } from "./hyphenate.ts";
 import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
 
 /** `"MM-DD"` → the day's celebrated names, in display order. */
@@ -28,6 +30,18 @@ export type Holiday = {
   day: number;
   name: string;
   red: boolean;
+  /** Whether nobody works this day.
+   *
+   *  Separate from `red` for the same reason `restWeekdays` is separate from
+   *  `redWeekdays`: `red` is ink, `off` is time. The two come apart in both
+   *  directions. A UK bank holiday closes the country but is printed black, so
+   *  it is `off` and not `red`. Swedish Julafton and Nyårsafton are named on
+   *  every wall calendar and are workdays by law, so they are `red: false`
+   *  *and* `off: false` — which is what lets the planner offer them as the
+   *  cheap, high-value days they are.
+   *
+   *  The vacation planner reads this and never `red`. */
+  off: boolean;
 };
 
 export type LocalePack = {
@@ -50,6 +64,18 @@ export type LocalePack = {
   readonly showNameDaysDefault: boolean;
   /** Weekdays printed in red, `Date.getDay()` numbering (0 = Sunday). */
   readonly redWeekdays: readonly number[];
+  /** The weekend — weekdays nobody works, `Date.getDay()` numbering.
+   *
+   *  Deliberately NOT the same list as `redWeekdays`, which is about ink: a
+   *  Swedish wall calendar prints Sunday red and Saturday black, but both are
+   *  days off. Printing is `redWeekdays`; the vacation planner asks this. A
+   *  country whose weekend is not Sat/Sun says so here rather than anywhere
+   *  else in the app. */
+  readonly restWeekdays: readonly number[];
+  /** How the language breaks a word across lines, for names too long for a
+   *  month cell's line. Shared machinery, per-language rules — see
+   *  `hyphenate.ts`. */
+  readonly hyphenation: HyphenationRules;
   /** The name-day table, or null when the country has no tradition. */
   readonly nameDays: NameDayTable | null;
   /** The country's holidays for a year — fixed dates plus computed rules
@@ -117,9 +143,13 @@ function referenceWeekday(weekday: number): Date {
 }
 
 /** The pack-language name of a month (1-based), e.g. "januari" for sv-SE. */
-export function monthName(pack: LocalePack, month: number): string {
+export function monthName(
+  pack: LocalePack,
+  month: number,
+  style: "long" | "short" = "long",
+): string {
   return new Intl.DateTimeFormat(pack.bcp47, {
-    month: "long",
+    month: style,
     timeZone: "UTC",
   }).format(new Date(Date.UTC(2023, month - 1, 1, 12)));
 }

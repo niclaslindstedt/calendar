@@ -54,6 +54,10 @@ export const en = {
     weekNumbersHint: "Show ISO week numbers in the month grid.",
     nameDays: "Name days",
     nameDaysHint: "Show the day's names on the calendar.",
+    vacation: "Vacation",
+    vacationDays: "Vacation days a year",
+    vacationDaysHint:
+      "Your paid annual leave. The vacation planner spends it on the days that buy the most time off.",
     entryText: "Entry text",
     textSize: "Text size",
     textSizeHint:
@@ -109,6 +113,29 @@ export const en = {
     slot: "Slot",
     sourceBranch: "Source branch",
     checkForUpdates: "Check for updates",
+  },
+  holidays: {
+    /** Title of the holidays screen. */
+    title: "Holidays",
+    tabList: "Holidays",
+    tabPlanner: "Planner",
+    back: "Back to the calendar",
+    empty: "No holidays this year.",
+    workday: "Workday",
+    /** e.g. "4 days off" */
+    daysOff: "{n} days off",
+    oneDayOff: "1 day off",
+    /** The planner's summary line. */
+    summary: "{spent} days booked buys {off} days off",
+    longest: "Longest break {n} days",
+    unspent: "{n} days left to spend as you like",
+    allowance: "Allowance {n} days",
+    noBudget: "Set your vacation days in Settings to plan the year.",
+    nothingToPlan: "This year's holidays already fall on your days off.",
+    /** Heading above the days to request in one break. */
+    book: "Book",
+    bookOne: "Book 1 day",
+    bookMany: "Book {n} days",
   },
   logs: {
     heading: "In-app log",

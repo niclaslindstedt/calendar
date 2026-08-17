@@ -44,10 +44,10 @@ again.
 
 ## Current packs
 
-| Pack    | Week start | Week numbers | Name days            | Red days |
-| ------- | ---------- | ------------ | -------------------- | -------- |
-| `en-GB` | Monday     | off          | none                 | Sundays  |
-| `sv-SE` | Monday     | on           | Swedish almanac list | Sundays  |
+| Pack    | Week start | Week numbers | Name days            | Red days | Weekend |
+| ------- | ---------- | ------------ | -------------------- | -------- | ------- |
+| `en-GB` | Monday     | off          | none                 | Sundays  | Sat–Sun |
+| `sv-SE` | Monday     | on           | Swedish almanac list | Sundays  | Sat–Sun |
 
 The Swedish name-day table follows the modern almanac list (including the
 2022 additions — Maja, Saga, William, Fatima, Kevin, Tim, Cornelia, …). Days
@@ -77,6 +77,53 @@ A day is red when its weekday is in `redWeekdays` **or** a holiday with
 `red: true` falls on it (`isRedDay`). Holiday names render in the pack's own
 language — like a printed calendar.
 
+### Ink vs. time off
+
+Two pairs of fields look alike and mean different things. Getting them
+confused is the classic bug in this area, so the packs keep them apart:
+
+| Question                      | Field                         |
+| ----------------------------- | ----------------------------- |
+| Is the day _printed_ red?     | `redWeekdays`, `Holiday.red`  |
+| Does anybody _work_ that day? | `restWeekdays`, `Holiday.off` |
+
+They come apart in both directions. A UK bank holiday shuts the country but
+is printed black (`off: true`, `red: false`) — a vacation planner reading
+`red` would conclude Britain has no holidays at all. Swedish Julafton and
+Nyårsafton are named on every wall calendar and are working days by law
+(`red: false`, `off: false`), which is what lets the planner offer them as
+the cheap, high-value days they are. Saturday is a day off everywhere but
+printed black, which is why `restWeekdays` is `[0, 6]` while `redWeekdays`
+is `[0]`.
+
+The [vacation planner](vacation-planner.md) reads `off` and `restWeekdays`,
+never `red`.
+
+## Hyphenation
+
+Names too long for a month cell's line are broken at a syllable boundary
+with a hyphen — "Henri-etta", never "Henrie-tta". The machinery is shared
+(`src/app/locale/hyphenate.ts`, which seeds U+00AD soft hyphens at every
+permitted break); the **rules** are per-language and live in the pack:
+
+| Field         | Meaning                                                                                      |
+| ------------- | -------------------------------------------------------------------------------------------- |
+| `vowels`      | The language's vowel letters.                                                                |
+| `diphthongs`  | Vowel pairs spelling one sound, never split ("eu" in Bartolomeus).                           |
+| `onsets`      | Consonant clusters that may open a syllable — consulted **only** for runs of three or more.  |
+| `inseparable` | Two-letter clusters spelling one sound, moved whole ("ch").                                  |
+| `neverOnset`  | Consonants that cannot open a syllable, so they close the previous one ("x" → "Alex-ander"). |
+
+The important subtlety is that `onsets` is _not_ applied to two-consonant
+runs. Both languages simply divide those — "Mag-nus", not "Ma-gnus", even
+though "gn" opens _gnaga_. Applying the maximal-onset principle everywhere is
+what a naive implementation gets wrong; restricting it to longer runs is what
+recovers compound boundaries like "Lång-fredagen" and "Alexan-dra" for free.
+
+`hyphens: auto` is deliberately not used: it needs the engine to ship a
+hyphenation dictionary for the language and silently does nothing without
+one, which would make line breaking vary by device.
+
 ## Adding a country
 
 Packs are deliberately self-contained — adding one is a copy-paste:
@@ -84,7 +131,9 @@ Packs are deliberately self-contained — adding one is a copy-paste:
 1. Copy `src/app/locale/en-gb.ts` to `src/app/locale/<bcp47>.ts` (e.g.
    `de-de.ts`).
 2. Fill in the fields. If the country has name days, add the table (see
-   `sv-se.ts` for the shape).
+   `sv-se.ts` for the shape). Note `restWeekdays` and each holiday's `off`
+   flag — see "Ink vs. time off" above — and the `hyphenation` rules for the
+   language.
 3. Register the export in `src/app/locale/index.ts` (`LOCALES` array).
 4. Add a test block in `tests/locale_test.ts`.
 

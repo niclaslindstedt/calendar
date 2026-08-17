@@ -9,6 +9,7 @@
 // revision of the official list lands here without touching any code.
 
 import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import type { HyphenationRules } from "./hyphenate.ts";
 import type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 
 const NAME_DAYS: NameDayTable = {
@@ -385,32 +386,92 @@ function holidays(year: number): readonly Holiday[] {
     ...addToDate(year, easter.month, easter.day, offset),
     name,
     red: true,
+    off: true,
   });
   const midsommardagen = weekdayOnOrAfter(year, 6, 20, 6);
   const allaHelgon = weekdayOnOrAfter(year, 10, 31, 6);
   return [
-    { month: 1, day: 1, name: "Nyårsdagen", red: true },
-    { month: 1, day: 6, name: "Trettondedag jul", red: true },
+    { month: 1, day: 1, name: "Nyårsdagen", red: true, off: true },
+    { month: 1, day: 6, name: "Trettondedag jul", red: true, off: true },
     chain(-2, "Långfredagen"),
     chain(0, "Påskdagen"),
     chain(1, "Annandag påsk"),
-    { month: 5, day: 1, name: "Första maj", red: true },
+    { month: 5, day: 1, name: "Första maj", red: true, off: true },
     chain(39, "Kristi himmelsfärdsdag"),
     chain(49, "Pingstdagen"),
-    { month: 6, day: 6, name: "Sveriges nationaldag", red: true },
+    { month: 6, day: 6, name: "Sveriges nationaldag", red: true, off: true },
     {
       ...addToDate(year, midsommardagen.month, midsommardagen.day, -1),
       name: "Midsommarafton",
       red: false,
+      off: false,
     },
-    { ...midsommardagen, name: "Midsommardagen", red: true },
-    { ...allaHelgon, name: "Alla helgons dag", red: true },
-    { month: 12, day: 24, name: "Julafton", red: false },
-    { month: 12, day: 25, name: "Juldagen", red: true },
-    { month: 12, day: 26, name: "Annandag jul", red: true },
-    { month: 12, day: 31, name: "Nyårsafton", red: false },
+    { ...midsommardagen, name: "Midsommardagen", red: true, off: true },
+    { ...allaHelgon, name: "Alla helgons dag", red: true, off: true },
+    { month: 12, day: 24, name: "Julafton", red: false, off: false },
+    { month: 12, day: 25, name: "Juldagen", red: true, off: true },
+    { month: 12, day: 26, name: "Annandag jul", red: true, off: true },
+    { month: 12, day: 31, name: "Nyårsafton", red: false, off: false },
   ];
 }
+
+// Swedish hyphenation. The onset list is what makes a compound like
+// "Långfredagen" break as "Lång-fredagen": "fr" can begin a syllable, so it
+// travels with the following vowel instead of stranding an "f" behind.
+const hyphenation: HyphenationRules = {
+  vowels: "aeiouy\u00e5\u00e4\u00f6",
+  // "eu" spells one sound in "Bartolomeus"; "au" likewise in "Paul".
+  diphthongs: ["au", "eu"],
+  onsets: [
+    "bj",
+    "bl",
+    "br",
+    "dj",
+    "dr",
+    "dv",
+    "fj",
+    "fl",
+    "fr",
+    "gj",
+    "gl",
+    "gn",
+    "gr",
+    "hj",
+    "kl",
+    "kn",
+    "kr",
+    "kv",
+    "lj",
+    "pl",
+    "pr",
+    "sc",
+    "sj",
+    "sk",
+    "sl",
+    "sm",
+    "sn",
+    "sp",
+    "st",
+    "sv",
+    "tj",
+    "tr",
+    "tv",
+    "vr",
+    "ch",
+    "ph",
+    "th",
+    "skr",
+    "spl",
+    "spr",
+    "str",
+    "skv",
+    "sch",
+  ],
+  inseparable: ["ch"],
+  neverOnset: "x",
+  minLeading: 2,
+  minTrailing: 2,
+};
 
 export const svSE: LocalePack = {
   id: "sv-SE",
@@ -421,6 +482,8 @@ export const svSE: LocalePack = {
   showWeekNumbersDefault: true,
   showNameDaysDefault: true,
   redWeekdays: [0],
+  restWeekdays: [0, 6],
+  hyphenation,
   nameDays: NAME_DAYS,
   holidays,
 };
