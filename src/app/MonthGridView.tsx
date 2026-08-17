@@ -76,12 +76,14 @@ export function MonthGridView({
   //
   // The lane is a measured constant, like the cell font: at the gutter's
   // computed 10 px the widest of the 53 possible labels is 11.12 px, and the
-  // week number is never three digits, so 13 px holds every value with ~1.9 px
-  // to spare. That width also squares the margins — the number's left edge
-  // lands ~12.9 px from the screen edge against the section's 12 px right
-  // padding, so the grid sits centred rather than shoved right.
+  // week number is never three digits. The number is left-aligned in a 20 px
+  // lane, which spends the width in the two places it is visible — the number
+  // starts at the section's 12 px padding, matching the 12 px the grid leaves
+  // on the right, and the ~9 px left over becomes the gap between the number
+  // and the first day column. Sizing the lane to the digits alone squared the
+  // margins but pressed the number against the grid.
   const gridCols = showWeekNumbers
-    ? "grid-template-columns: 0.8125rem repeat(7, minmax(0, 1fr))"
+    ? "grid-template-columns: 1.25rem repeat(7, minmax(0, 1fr))"
     : "grid-template-columns: repeat(7, minmax(0, 1fr))";
 
   return (
@@ -143,10 +145,11 @@ export function MonthGridView({
               style={gridCols}
             >
               {showWeekNumbers && (
-                // Bare number, centred in its lane. The prefix survives in the
-                // accessible name, where there is no width to pay for it.
+                // Bare number, flush to the lane's left edge. The prefix
+                // survives in the accessible name, where there is no width to
+                // pay for it.
                 <div
-                  className="text-muted pt-1 text-center text-[10px]"
+                  className="text-muted pt-1 text-[10px]"
                   aria-label={t("topbar.week", {
                     n: weekNumber(pack, week[0].key),
                   })}

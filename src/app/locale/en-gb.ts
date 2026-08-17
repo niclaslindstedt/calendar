@@ -32,9 +32,10 @@ function holidays(year: number): readonly Holiday[] {
       ...addToDate(year, 1, 1, nyWeekday === 6 ? 2 : 1),
       name: "New Year's Day (substitute)",
       red: false,
+      off: true,
     });
   } else {
-    list.push({ ...newYear, name: "New Year's Day", red: false });
+    list.push({ ...newYear, name: "New Year's Day", red: false, off: true });
   }
 
   list.push(
@@ -42,26 +43,31 @@ function holidays(year: number): readonly Holiday[] {
       ...addToDate(year, easter.month, easter.day, -2),
       name: "Good Friday",
       red: false,
+      off: true,
     },
     {
       ...addToDate(year, easter.month, easter.day, 1),
       name: "Easter Monday",
       red: false,
+      off: true,
     },
     {
       ...nthWeekdayOfMonth(year, 5, 1, 1),
       name: "Early May bank holiday",
       red: false,
+      off: true,
     },
     {
       ...lastWeekdayOfMonth(year, 5, 1),
       name: "Spring bank holiday",
       red: false,
+      off: true,
     },
     {
       ...lastWeekdayOfMonth(year, 8, 1),
       name: "Summer bank holiday",
       red: false,
+      off: true,
     },
   );
 
@@ -71,25 +77,25 @@ function holidays(year: number): readonly Holiday[] {
   if (xmasWeekday === 5) {
     // Fri 25 + Sat 26 → Boxing Day substitute Monday 28.
     list.push(
-      { month: 12, day: 25, name: "Christmas Day", red: false },
-      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false },
+      { month: 12, day: 25, name: "Christmas Day", red: false, off: true },
+      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false, off: true },
     );
   } else if (xmasWeekday === 6) {
     // Sat 25 + Sun 26 → substitutes Monday 27 + Tuesday 28.
     list.push(
-      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false },
-      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false },
+      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false, off: true },
+      { month: 12, day: 28, name: "Boxing Day (substitute)", red: false, off: true },
     );
   } else if (xmasWeekday === 0) {
     // Sun 25 → Boxing Day Monday 26, Christmas substitute Tuesday 27.
     list.push(
-      { month: 12, day: 26, name: "Boxing Day", red: false },
-      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false },
+      { month: 12, day: 26, name: "Boxing Day", red: false, off: true },
+      { month: 12, day: 27, name: "Christmas Day (substitute)", red: false, off: true },
     );
   } else {
     list.push(
-      { month: 12, day: 25, name: "Christmas Day", red: false },
-      { month: 12, day: 26, name: "Boxing Day", red: false },
+      { month: 12, day: 25, name: "Christmas Day", red: false, off: true },
+      { month: 12, day: 26, name: "Boxing Day", red: false, off: true },
     );
   }
 
@@ -105,6 +111,7 @@ export const enGB: LocalePack = {
   showWeekNumbersDefault: false,
   showNameDaysDefault: false,
   redWeekdays: [0],
+  restWeekdays: [0, 6],
   nameDays: null,
   holidays,
 };

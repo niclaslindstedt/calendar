@@ -385,30 +385,32 @@ function holidays(year: number): readonly Holiday[] {
     ...addToDate(year, easter.month, easter.day, offset),
     name,
     red: true,
+    off: true,
   });
   const midsommardagen = weekdayOnOrAfter(year, 6, 20, 6);
   const allaHelgon = weekdayOnOrAfter(year, 10, 31, 6);
   return [
-    { month: 1, day: 1, name: "Nyårsdagen", red: true },
-    { month: 1, day: 6, name: "Trettondedag jul", red: true },
+    { month: 1, day: 1, name: "Nyårsdagen", red: true, off: true },
+    { month: 1, day: 6, name: "Trettondedag jul", red: true, off: true },
     chain(-2, "Långfredagen"),
     chain(0, "Påskdagen"),
     chain(1, "Annandag påsk"),
-    { month: 5, day: 1, name: "Första maj", red: true },
+    { month: 5, day: 1, name: "Första maj", red: true, off: true },
     chain(39, "Kristi himmelsfärdsdag"),
     chain(49, "Pingstdagen"),
-    { month: 6, day: 6, name: "Sveriges nationaldag", red: true },
+    { month: 6, day: 6, name: "Sveriges nationaldag", red: true, off: true },
     {
       ...addToDate(year, midsommardagen.month, midsommardagen.day, -1),
       name: "Midsommarafton",
       red: false,
+      off: false,
     },
-    { ...midsommardagen, name: "Midsommardagen", red: true },
-    { ...allaHelgon, name: "Alla helgons dag", red: true },
-    { month: 12, day: 24, name: "Julafton", red: false },
-    { month: 12, day: 25, name: "Juldagen", red: true },
-    { month: 12, day: 26, name: "Annandag jul", red: true },
-    { month: 12, day: 31, name: "Nyårsafton", red: false },
+    { ...midsommardagen, name: "Midsommardagen", red: true, off: true },
+    { ...allaHelgon, name: "Alla helgons dag", red: true, off: true },
+    { month: 12, day: 24, name: "Julafton", red: false, off: false },
+    { month: 12, day: 25, name: "Juldagen", red: true, off: true },
+    { month: 12, day: 26, name: "Annandag jul", red: true, off: true },
+    { month: 12, day: 31, name: "Nyårsafton", red: false, off: false },
   ];
 }
 
@@ -421,6 +423,7 @@ export const svSE: LocalePack = {
   showWeekNumbersDefault: true,
   showNameDaysDefault: true,
   redWeekdays: [0],
+  restWeekdays: [0, 6],
   nameDays: NAME_DAYS,
   holidays,
 };
