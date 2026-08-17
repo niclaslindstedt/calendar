@@ -17,6 +17,30 @@ import type { BackendId } from "./storage/backends.ts";
 export type ViewMode = "month" | "week" | "list";
 export type ListRowMode = "fixed" | "dynamic";
 
+/** A month cell has four corners a piece can be parked in. The top pair share
+ *  a band with the day number (which floats, so a short caption sits beside it
+ *  and a long one drops under it); the bottom pair caption the cell's bottom
+ *  edge. Two pieces in the same corner stack, in reading order. */
+export type CellCorner =
+  "top-left" | "top-right" | "bottom-left" | "bottom-right";
+
+/** Where the note sits in the room the corners leave it. */
+export type NotePlacement = "top" | "middle" | "bottom";
+
+/** The month cell's layout — what goes where in the 47 px column. */
+export type MonthCellLayout = {
+  day: CellCorner;
+  nameDays: CellCorner;
+  holidays: CellCorner;
+  note: NotePlacement;
+};
+
+/** The pieces a cell can arrange, in the order they stack when they share a
+ *  corner: the number reads first, then the holiday, then the day's names. */
+export const CELL_PIECES = ["day", "holidays", "nameDays"] as const;
+
+export type CellPiece = (typeof CELL_PIECES)[number];
+
 export type AppSettings = {
   /** Country pack id (`src/app/locale/`). */
   localeId: string;
@@ -29,6 +53,14 @@ export type AppSettings = {
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
   textSize: EntryTextSize;
+  /** Month cell: the corner the day number takes. */
+  monthDayCorner: CellCorner;
+  /** Month cell: the corner the day's names take. */
+  monthNameDayCorner: CellCorner;
+  /** Month cell: the corner the holiday name takes. */
+  monthHolidayCorner: CellCorner;
+  /** Month cell: where the note sits in what is left. */
+  monthNote: NotePlacement;
   /** Paid vacation days a year, spent by the vacation planner. 25 is the
    *  Swedish statutory minimum and the usual UK full-time allowance, so it is
    *  the right default in both shipped packs. */
@@ -46,6 +78,14 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nameDays: null,
   listRows: "fixed",
   textSize: "dynamic",
+  // The printed wall-calendar arrangement, straight off a Swedish almanac:
+  // the number large in the top-right corner, the day's writing space under
+  // it, and the captions stacked in the bottom-right corner — the holiday
+  // first, the name days beneath it.
+  monthDayCorner: "top-right",
+  monthNameDayCorner: "bottom-right",
+  monthHolidayCorner: "bottom-right",
+  monthNote: "top",
   vacationDays: 25,
   backend: "browser",
   devMode: false,
@@ -63,6 +103,10 @@ export const LOOK_KEYS = [
   "nameDays",
   "listRows",
   "textSize",
+  "monthDayCorner",
+  "monthNameDayCorner",
+  "monthHolidayCorner",
+  "monthNote",
   "vacationDays",
 ] as const;
 
@@ -75,9 +119,36 @@ export function pickLook(settings: AppSettings): LookSettings {
     nameDays: settings.nameDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
+    monthDayCorner: settings.monthDayCorner,
+    monthNameDayCorner: settings.monthNameDayCorner,
+    monthHolidayCorner: settings.monthHolidayCorner,
+    monthNote: settings.monthNote,
     vacationDays: settings.vacationDays,
   };
 }
+
+/** The month cell layout the views read, gathered from the look. */
+export function monthCellLayout(
+  look: Pick<
+    AppSettings,
+    "monthDayCorner" | "monthNameDayCorner" | "monthHolidayCorner" | "monthNote"
+  >,
+): MonthCellLayout {
+  return {
+    day: look.monthDayCorner,
+    nameDays: look.monthNameDayCorner,
+    holidays: look.monthHolidayCorner,
+    note: look.monthNote,
+  };
+}
+
+/** The look key that parks a given piece, so the settings grid can move one
+ *  by name without a switch at every call site. */
+export const CELL_PIECE_KEY = {
+  day: "monthDayCorner",
+  holidays: "monthHolidayCorner",
+  nameDays: "monthNameDayCorner",
+} as const satisfies Record<CellPiece, keyof LookSettings>;
 
 export const DEFAULT_LOOK: LookSettings = pickLook(DEFAULT_SETTINGS);
 

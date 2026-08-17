@@ -120,6 +120,17 @@ though "gn" opens _gnaga_. Applying the maximal-onset principle everywhere is
 what a naive implementation gets wrong; restricting it to longer runs is what
 recovers compound boundaries like "Lång-fredagen" and "Alexan-dra" for free.
 
+A word is only offered break points when it cannot fit a caption line whole —
+words shorter than `MIN_HYPHENATED_LETTERS` (12, measured against the month
+cell's 45.8 px caption line at 393 px of viewport) are left alone. A soft
+hyphen is an _opportunity_, and a greedy line breaker takes the last one that
+fits, so a name carrying hyphens it does not need gets split to top up the
+line before it: "Elsa, Isa-bella" instead of the "Elsa," / "Isabella" a
+printed calendar prints. Every name in both packs fits a caption line whole
+(the widest, "Bartolomeus", is 42.1 px); the words that need breaking start at
+"Långfredagen" and "Midsommarafton". Re-measure the constant together with the
+caption font size — `tests/hyphenate_test.ts` pins what it assumes.
+
 `hyphens: auto` is deliberately not used: it needs the engine to ship a
 hyphenation dictionary for the language and silently does nothing without
 one, which would make line breaking vary by device.
@@ -130,7 +141,9 @@ Packs are deliberately self-contained — adding one is a copy-paste:
 
 1. Copy `src/app/locale/en-gb.ts` to `src/app/locale/<bcp47>.ts` (e.g.
    `de-de.ts`).
-2. Fill in the fields. If the country has name days, add the table (see
+2. Fill in the fields, including `flag` (the country's regional-indicator
+   emoji pair, shown beside the label in the picker). If the country has name
+   days, add the table (see
    `sv-se.ts` for the shape). Note `restWeekdays` and each holiday's `off`
    flag — see "Ink vs. time off" above — and the `hyphenation` rules for the
    language.

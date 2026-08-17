@@ -476,6 +476,7 @@ const hyphenation: HyphenationRules = {
 export const svSE: LocalePack = {
   id: "sv-SE",
   label: "Sverige",
+  flag: "🇸🇪",
   bcp47: "sv-SE",
   weekStartsOn: 1,
   weekNumbering: "iso",

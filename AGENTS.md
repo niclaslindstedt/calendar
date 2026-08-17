@@ -306,8 +306,19 @@ infer from the diff.
   moves down whole. That only works while every value fits a full line, so
   **the font size is a measured constant, not a taste call** — measure with
   `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in the
-  cell's computed font before changing it. Today: 7.5 px, widest name
-  "Bartolomeus" at 42 px on a 43 px line.
+  cell's computed font before changing it. Today: 7.5 px on the 45.8 px line a
+  band gets at 393 px, widest name "Bartolomeus" at 42.1 px.
+- **A soft hyphen is an opportunity, and a greedy line breaker takes the last
+  one that fits.** So `hyphenate` only seeds them into words that cannot fit a
+  caption line whole (`MIN_HYPHENATED_LETTERS`, also measured): a name carrying
+  hyphens it does not need gets split to top up the line before it, and
+  "Elsa, Isa-bella" is wrong where "Elsa," / "Isabella" is right. Re-measure
+  the constant with the font.
+- **The month cell's arrangement is a setting, not a layout.** Which corner
+  holds the number, the holiday and the name days comes from
+  Settings → Calendar; `MonthCellFrame` (`src/app/monthCell.tsx`) is the one
+  place that turns those choices into bands, and the settings preview renders
+  through it too — so a change there has to be checked in both.
 - **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
   header-action size.
 - **The safe areas are respected.** The top menu adds

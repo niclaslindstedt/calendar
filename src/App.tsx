@@ -51,6 +51,7 @@ import { useCalendarStore } from "./app/useCalendarStore.ts";
 import {
   clampVacationDays,
   effectiveToggles,
+  monthCellLayout,
   useAppSettings,
 } from "./app/useAppSettings.ts";
 import { status } from "./output.ts";
@@ -154,11 +155,11 @@ export function App() {
 
   const pack = getLocale(live.localeId);
   const toggles = effectiveToggles(live);
-  // The month and week views page horizontally, so each renders three periods
-  // at a time: the one on screen and the two waiting either side of it.
-  const paged =
-    holidayYear === null &&
-    (settings.view === "month" || settings.view === "week");
+  // Every view pages horizontally, so each renders three periods at a time:
+  // the one on screen and the two waiting either side of it. The month and
+  // week views fill exactly one screen; the day list scrolls inside its own
+  // pane, which the deck is told about so a vertical drag still scrolls it.
+  const paged = holidayYear === null;
 
   /** The anchor `rel` periods away — a week in week view, a month otherwise. */
   const shiftAnchor = (rel: -1 | 0 | 1): DayKey =>
@@ -178,6 +179,27 @@ export function App() {
     const onEditDay = interactive ? setEditingDay : () => {};
     const onCommit = interactive ? store.setEntry : () => {};
     const onOpenHolidays = () => openHolidays(on.year);
+    if (settings.view === "list") {
+      return (
+        <DayListView
+          year={on.year}
+          month={on.month}
+          today={today}
+          pack={pack}
+          showWeekNumbers={toggles.weekNumbers}
+          showNameDays={toggles.nameDays}
+          rowMode={live.listRows}
+          textSize={live.textSize}
+          doc={store.doc}
+          editingDay={editing}
+          onEditDay={onEditDay}
+          onCommit={onCommit}
+          onPrevious={nav.previous}
+          onNext={nav.next}
+          onOpenHolidays={onOpenHolidays}
+        />
+      );
+    }
     return settings.view === "week" ? (
       <WeekPlannerView
         anchor={at}
@@ -201,6 +223,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        layout={monthCellLayout(live)}
         textSize={live.textSize}
         doc={store.doc}
         editingDay={editing}
@@ -212,21 +235,6 @@ export function App() {
       />
     );
   };
-
-  /** One year of the holidays screen — the deck pages between years exactly as
-   *  it pages between months. */
-  const renderHolidayYear = (rel: -1 | 0 | 1, nav: DeckNav) => (
-    <HolidaysView
-      year={(holidayYear ?? parts.year) + rel}
-      pack={pack}
-      mode={holidayMode}
-      onModeChange={setHolidayMode}
-      vacationDays={clampVacationDays(live.vacationDays)}
-      onBack={closeHolidays}
-      onPrevious={nav.previous}
-      onNext={nav.next}
-    />
-  );
 
   return (
     <div className="flex h-[100svh] flex-col overflow-hidden bg-page-bg text-fg">
@@ -245,23 +253,21 @@ export function App() {
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
-      {/* The paged views own their screen exactly and never scroll — that is
-          what frees the horizontal axis for the swipe. The day list is a list,
-          so it keeps its scroll. */}
-      <main
-        className={`min-h-0 flex-1 ${
-          paged || holidayYear !== null ? "overflow-hidden" : "overflow-y-auto"
-        }`}
-      >
+      {/* Every screen is a deck, and a deck owns its own scrolling: the month
+          and week panes fill the screen exactly, the day list and the holidays
+          list scroll inside their pane. So the shell itself never scrolls. */}
+      <main className="min-h-0 flex-1 overflow-hidden">
         {holidayYear !== null && (
-          <SwipeDeck
-            // Years page exactly as months do, so the gesture is the same
-            // wherever you are.
-            key="holidays"
-            itemKey={String(holidayYear)}
-            onPrevious={() => setHolidayYear(holidayYear - 1)}
-            onNext={() => setHolidayYear(holidayYear + 1)}
-            renderItem={renderHolidayYear}
+          // The holidays screen brings its own deck: its header stays put and
+          // only the year's list pages.
+          <HolidaysView
+            year={holidayYear}
+            pack={pack}
+            mode={holidayMode}
+            onModeChange={setHolidayMode}
+            vacationDays={clampVacationDays(live.vacationDays)}
+            onBack={closeHolidays}
+            onYearChange={setHolidayYear}
           />
         )}
         {paged && (
@@ -270,28 +276,10 @@ export function App() {
             // re-centres, rather than carrying a month's drag into a week.
             key={settings.view}
             itemKey={anchor}
+            scrolls={settings.view === "list"}
             onPrevious={() => step(-1)}
             onNext={() => step(1)}
             renderItem={renderPeriod}
-          />
-        )}
-        {holidayYear === null && settings.view === "list" && (
-          <DayListView
-            year={parts.year}
-            month={parts.month}
-            today={today}
-            pack={pack}
-            showWeekNumbers={toggles.weekNumbers}
-            showNameDays={toggles.nameDays}
-            rowMode={live.listRows}
-            textSize={live.textSize}
-            doc={store.doc}
-            editingDay={editingDay}
-            onEditDay={setEditingDay}
-            onCommit={store.setEntry}
-            onOpenHolidays={() => openHolidays(parts.year)}
-            onPrevious={() => step(-1)}
-            onNext={() => step(1)}
           />
         )}
       </main>

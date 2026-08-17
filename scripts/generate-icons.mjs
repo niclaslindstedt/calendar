@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 // Generate the PWA install icons, the favicon, and the social-preview image
-// from the same geometry as public/icons/icon.svg — a paper wall-calendar
-// card: red month band on top, a light day grid below, one red day. Pure Node
-// (zlib + a minimal PNG encoder), so the pipeline needs no native image
-// dependencies. Rerun with `npm run icons` / `make icons` after changing the
-// mark.
+// from the same geometry as public/icons/icon.svg — a stylised calendar page
+// (two hangers, a solid header band, one marked day) in mint green on a
+// near-black tile, the family look the sibling checklist and notes apps wear
+// on a home screen. Pure Node (zlib + a minimal PNG encoder), so the pipeline
+// needs no native image dependencies. Rerun with `npm run icons` /
+// `make icons` after changing the mark.
 import { deflateSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -14,11 +15,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const iconsDir = join(root, "public", "icons");
 mkdirSync(iconsDir, { recursive: true });
 
-// The mark's palette — warm calendar paper, the classic red-day red, soft
-// grid ink. Kept in lockstep with the fills in public/icons/icon.svg.
-const PAPER = [246, 242, 234]; // #f6f2ea
-const RED = [193, 44, 38]; // #c12c26
-const GRID = [214, 207, 194]; // #d6cfc2
+// The mark's palette — the near-black tile and the mint green of the glyph.
+// Kept in lockstep with the fills in public/icons/icon.svg.
+const INK = [27, 32, 39]; // #1b2027
+const GREEN = [111, 227, 163]; // #6fe3a3
+const MUTED = [122, 134, 148]; // #7a8694 — only the OG card's body bars
 
 // --- minimal PNG encoder ----------------------------------------------------
 
@@ -90,36 +91,42 @@ function encodePng(width, height, rgba) {
 // Sub-pixel sample offsets, used on both axes (a 4×4 grid per pixel).
 const SAMPLES = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
 
-// The day grid in unit space: 7 columns × 5 rows of squares under the month
-// band, with one red day (Sunday of week 3 — the rightmost column, matching
-// the red-Sundays convention the app renders).
-const GRID_X0 = 0.1;
-const GRID_X1 = 0.9;
-const GRID_Y0 = 0.42;
-const GRID_Y1 = 0.9;
-const COLS = 7;
-const ROWS = 5;
-const GAP = 0.25; // fraction of a cell left as gutter
-const RED_DAY = { col: 6, row: 2 };
+// The mark in unit space, mirroring the rects in public/icons/icon.svg
+// (divided by 100). The body is filled, the panel is punched back out to the
+// tile colour, and the day sits inside the hole.
+const HANGER_L = [0.31, 0.1, 0.41, 0.3, 0.05];
+const HANGER_R = [0.59, 0.1, 0.69, 0.3, 0.05];
+const BODY = [0.14, 0.26, 0.86, 0.9, 0.14];
+const PANEL = [0.22, 0.48, 0.78, 0.82, 0.06];
+const DAY = [0.44, 0.59, 0.56, 0.71, 0.03];
 
-// The colour of unit-space point (x, y) on the mark, or null for paper.
-function markColor(x, y) {
-  // The month band.
-  if (y >= 0.1 && y <= 0.3 && x >= GRID_X0 && x <= GRID_X1) return RED;
-  // The day grid.
-  if (x < GRID_X0 || x > GRID_X1 || y < GRID_Y0 || y > GRID_Y1) return null;
-  const cw = (GRID_X1 - GRID_X0) / COLS;
-  const ch = (GRID_Y1 - GRID_Y0) / ROWS;
-  const col = Math.min(COLS - 1, Math.floor((x - GRID_X0) / cw));
-  const row = Math.min(ROWS - 1, Math.floor((y - GRID_Y0) / ch));
-  const fx = (x - GRID_X0 - col * cw) / cw;
-  const fy = (y - GRID_Y0 - row * ch) / ch;
-  if (fx > 1 - GAP || fy > 1 - GAP) return null; // gutter
-  return col === RED_DAY.col && row === RED_DAY.row ? RED : GRID;
+// Inside a rounded rectangle, from the signed distance at (x, y). Sampling the
+// sign 4×4 per pixel is what antialiases the mark's curves down to 16 px.
+function inRoundRect(x, y, [x0, y0, x1, y1, r]) {
+  const qx = Math.abs(x - (x0 + x1) / 2) - ((x1 - x0) / 2 - r);
+  const qy = Math.abs(y - (y0 + y1) / 2) - ((y1 - y0) / 2 - r);
+  return (
+    Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) +
+      Math.min(Math.max(qx, qy), 0) -
+      r <
+    0
+  );
 }
 
-// Render size×size RGBA: a paper rounded square carrying the mark. `pad`
-// insets the mark for the maskable safe zone; `radius` rounds the paper
+// Whether unit-space point (x, y) is green — the glyph — rather than tile.
+function inMark(x, y) {
+  const onPage =
+    inRoundRect(x, y, BODY) ||
+    inRoundRect(x, y, HANGER_L) ||
+    inRoundRect(x, y, HANGER_R);
+  if (!onPage) return false;
+  // The punched-out grid area keeps only the marked day.
+  if (inRoundRect(x, y, PANEL)) return inRoundRect(x, y, DAY);
+  return true;
+}
+
+// Render size×size RGBA: the dark rounded tile carrying the green glyph.
+// `pad` insets the mark for the maskable safe zone; `radius` rounds the tile
 // corners (0 = square).
 function renderIcon(size, { pad = 0, radius = 0.18 } = {}) {
   const rgba = Buffer.alloc(size * size * 4);
@@ -127,8 +134,8 @@ function renderIcon(size, { pad = 0, radius = 0.18 } = {}) {
   for (let py = 0; py < size; py++) {
     for (let px = 0; px < size; px++) {
       const i = (py * size + px) * 4;
-      // Rounded-rect background coverage from the signed distance at the
-      // pixel centre (negative inside).
+      // Rounded-rect tile coverage from the signed distance at the pixel
+      // centre (negative inside).
       const qx = Math.abs(px + 0.5 - size / 2) - (size / 2 - r);
       const qy = Math.abs(py + 0.5 - size / 2) - (size / 2 - r);
       const outside =
@@ -136,27 +143,20 @@ function renderIcon(size, { pad = 0, radius = 0.18 } = {}) {
         Math.min(Math.max(qx, qy), 0) -
         r;
       const bgAlpha = Math.max(0, Math.min(1, 0.5 - outside));
-      // Mark coverage, 4×4 supersampled per colour so the band and grid edges
-      // stay crisp down to 16 px.
-      let hitRed = 0;
-      let hitGrid = 0;
+      // Glyph coverage, 4×4 supersampled so the hangers' caps and the punched
+      // grid area stay clean down to 16 px.
+      let hit = 0;
       const unit = 1 / (SAMPLES.length * SAMPLES.length);
       for (const oy of SAMPLES) {
         for (const ox of SAMPLES) {
           const sx = ((px + ox) / size - pad) / (1 - 2 * pad);
           const sy = ((py + oy) / size - pad) / (1 - 2 * pad);
-          const c = markColor(sx, sy);
-          if (c === RED) hitRed += unit;
-          else if (c === GRID) hitGrid += unit;
+          if (inMark(sx, sy)) hit += unit;
         }
       }
-      let [cr, cg, cb] = PAPER;
-      cr += (RED[0] - cr) * hitRed + (GRID[0] - cr) * hitGrid;
-      cg += (RED[1] - cg) * hitRed + (GRID[1] - cg) * hitGrid;
-      cb += (RED[2] - cb) * hitRed + (GRID[2] - cb) * hitGrid;
-      rgba[i] = Math.round(cr);
-      rgba[i + 1] = Math.round(cg);
-      rgba[i + 2] = Math.round(cb);
+      rgba[i] = Math.round(INK[0] + (GREEN[0] - INK[0]) * hit);
+      rgba[i + 1] = Math.round(INK[1] + (GREEN[1] - INK[1]) * hit);
+      rgba[i + 2] = Math.round(INK[2] + (GREEN[2] - INK[2]) * hit);
       rgba[i + 3] = Math.round(bgAlpha * 255);
     }
   }
@@ -164,7 +164,7 @@ function renderIcon(size, { pad = 0, radius = 0.18 } = {}) {
 }
 
 // The 1200×630 Open Graph card: the calendar mark on the left, title bars on
-// the right, on the paper ground.
+// the right, on the same near-black ground the tile is cut from.
 function renderOg() {
   const w = 1200;
   const h = 630;
@@ -173,23 +173,33 @@ function renderOg() {
   const markX = 130;
   const markY = (h - markSize) / 2;
   const rows = [
-    { x: 640, y: 210, w: 400, h: 30, c: RED, a: 1 },
-    { x: 640, y: 290, w: 330, h: 18, c: GRID, a: 1 },
-    { x: 640, y: 340, w: 370, h: 18, c: GRID, a: 1 },
-    { x: 640, y: 390, w: 290, h: 18, c: GRID, a: 1 },
+    { x: 640, y: 210, w: 400, h: 30, c: GREEN },
+    { x: 640, y: 290, w: 330, h: 18, c: MUTED },
+    { x: 640, y: 340, w: 370, h: 18, c: MUTED },
+    { x: 640, y: 390, w: 290, h: 18, c: MUTED },
   ];
+  const unit = 1 / (SAMPLES.length * SAMPLES.length);
   for (let py = 0; py < h; py++) {
     for (let px = 0; px < w; px++) {
       const i = (py * w + px) * 4;
-      let [cr, cg, cb] = PAPER;
+      let [cr, cg, cb] = INK;
       if (
         px >= markX &&
         px < markX + markSize &&
         py >= markY &&
         py < markY + markSize
       ) {
-        const c = markColor((px - markX) / markSize, (py - markY) / markSize);
-        if (c) [cr, cg, cb] = c;
+        let hit = 0;
+        for (const oy of SAMPLES) {
+          for (const ox of SAMPLES) {
+            const sx = (px + ox - markX) / markSize;
+            const sy = (py + oy - markY) / markSize;
+            if (inMark(sx, sy)) hit += unit;
+          }
+        }
+        cr = Math.round(cr + (GREEN[0] - cr) * hit);
+        cg = Math.round(cg + (GREEN[1] - cg) * hit);
+        cb = Math.round(cb + (GREEN[2] - cb) * hit);
       }
       for (const rrow of rows) {
         if (

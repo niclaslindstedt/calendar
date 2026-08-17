@@ -22,6 +22,13 @@ describe("locale registry", () => {
     expect(getLocale("nope").id).toBe(FALLBACK_LOCALE_ID);
   });
 
+  it("every pack carries a flag for the picker", () => {
+    for (const pack of LOCALES) {
+      // A regional-indicator pair — what every platform draws as a flag.
+      expect(pack.flag).toMatch(/^[\u{1F1E6}-\u{1F1FF}]{2}$/u);
+    }
+  });
+
   it("packs have unique ids", () => {
     const ids = LOCALES.map((l) => l.id);
     expect(new Set(ids).size).toBe(ids.length);

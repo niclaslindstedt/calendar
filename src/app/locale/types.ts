@@ -49,6 +49,10 @@ export type LocalePack = {
   readonly id: string;
   /** Native-language display label for the country picker ("Sverige"). */
   readonly label: string;
+  /** The country's flag, as a regional-indicator emoji pair, shown beside the
+   *  label in the picker. Every platform the app runs on draws these as the
+   *  actual flag, so no image asset is needed. */
+  readonly flag: string;
   /** BCP-47 tag driving `Intl` month/weekday names and date formatting. */
   readonly bcp47: string;
   /** First day of the week, `Date.getDay()` numbering (1 = Monday). */
