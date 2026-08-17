@@ -21,6 +21,8 @@ import {
   weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
+import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { PeriodHeading } from "./PeriodHeading.tsx";
 import type { CalendarDoc } from "./types.ts";
 
 type Props = {
@@ -34,6 +36,8 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 };
 
 export function WeekPlannerView({
@@ -46,6 +50,8 @@ export function WeekPlannerView({
   editingDay,
   onEditDay,
   onCommit,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useT();
   const days = buildWeekStrip(anchor, {
@@ -55,13 +61,18 @@ export function WeekPlannerView({
   const first = parseDayKey(days[0].key);
 
   return (
-    <div className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 pb-3 sm:px-6">
-      <h2 className="cal-serif py-4 text-center text-2xl tracking-wide sm:text-3xl">
-        {t("topbar.week", { n: weekNumber(pack, days[0].key) })}
-        <span className="text-muted ml-3 text-lg">
-          {first ? `${monthName(pack, first.month)} ${first.year}` : ""}
-        </span>
-      </h2>
+    <div
+      className="mx-auto flex min-h-full w-full max-w-3xl flex-col px-3 sm:px-6"
+      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
+    >
+      <PeriodHeading
+        title={t("topbar.week", { n: weekNumber(pack, days[0].key) })}
+        meta={first ? `${monthName(pack, first.month)} ${first.year}` : ""}
+        titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
+        metaClass="text-lg"
+        onPrevious={onPrevious}
+        onNext={onNext}
+      />
 
       <div className="flex flex-1 flex-col border-t border-line">
         {days.map((cell) => {

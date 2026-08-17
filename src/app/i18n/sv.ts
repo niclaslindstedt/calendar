@@ -13,6 +13,7 @@ export const sv: Catalog = {
     previous: "Föregående",
     next: "Nästa",
     settings: "Inställningar",
+    viewSwitcher: "Vy",
     viewMonth: "Månad",
     viewWeek: "Vecka",
     viewList: "Daglista",

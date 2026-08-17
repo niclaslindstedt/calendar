@@ -15,6 +15,8 @@ import {
 import { DayEntry } from "./DayEntry.tsx";
 import { MONTH_CELL_FONT, type EntryTextSize } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
+import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { PeriodHeading } from "./PeriodHeading.tsx";
 import {
   holidayFor,
   isRedDay,
@@ -41,6 +43,8 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 };
 
 export function MonthGridView({
@@ -55,6 +59,8 @@ export function MonthGridView({
   editingDay,
   onEditDay,
   onCommit,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useT();
   const weeks = buildMonthGrid(year, month, {
@@ -83,19 +89,22 @@ export function MonthGridView({
       )}
 
       <section
-        className="flex flex-col px-3 pb-3 sm:px-6"
+        className="flex flex-col px-3 sm:px-6"
         style={{
           minHeight: image ? "100svh" : undefined,
           flex: image ? undefined : "1",
+          paddingBottom: CONTENT_BOTTOM_PAD,
         }}
       >
-        {/* The serif month title, wall-calendar style. */}
-        <h2 className="cal-serif py-4 text-center text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl">
-          {monthName(pack, month)}
-          <span className="text-muted ml-3 text-xl tracking-normal sm:text-2xl">
-            {year}
-          </span>
-        </h2>
+        {/* The serif month title, wall-calendar style, between the arrows. */}
+        <PeriodHeading
+          title={monthName(pack, month)}
+          meta={String(year)}
+          titleClass="cal-serif text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl"
+          metaClass="text-xl tracking-normal sm:text-2xl"
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
 
         {/* Weekday headers. */}
         <div className="grid" style={gridCols}>
@@ -168,30 +177,66 @@ export function MonthGridView({
                       cell.inMonth ? "" : "opacity-35"
                     } ${cell.isToday ? "bg-surface-2" : ""}`}
                   >
-                    <div className="flex items-baseline justify-between gap-1">
-                      {/* Name days, small at the left like the printed lists. */}
-                      <span className="text-muted min-w-0 flex-1 truncate text-[9px]">
-                        {names.join(", ")}
-                      </span>
+                    {/* The date **floats** right so the holiday and the name
+                        days flow around it: a short name ("Ada") sits beside
+                        the number on the first line, a long one drops under
+                        it, and neither is ever truncated to "B…" the way a
+                        shared flex row forced at ~48 px of cell width.
+                        `overflow-hidden` does double duty — it contains the
+                        float (a block holding only a float has no height, so
+                        the number would otherwise overlap the note below)
+                        and it caps the block at `max-h`, keeping a day with
+                        a long holiday and three names from crowding the note
+                        surface out of the cell. It is also why the text
+                        can't use `line-clamp-*`: that sets
+                        `display: -webkit-box`, whose line boxes ignore a
+                        float instead of wrapping around it. */}
+                    <div className="-mx-1 max-h-[3.5rem] shrink-0 overflow-hidden">
                       <span
-                        className={`cal-serif text-base leading-none sm:text-lg ${
+                        className={`cal-serif float-right pr-1 pl-1 text-base leading-none sm:text-lg ${
                           red ? "cal-red" : "text-fg"
                         } ${cell.isToday ? "font-bold" : ""}`}
                       >
                         {cell.day}
                       </span>
+                      {/* The holiday name clears the float: Swedish holiday
+                          names are long compounds ("Midsommarafton" is 60 px
+                          at a 43 px line) that have to break somewhere, and
+                          breaking them against the ~20 px left beside the
+                          date shatters them into three fragments. Starting
+                          below the date costs the ~13 holidays a year one
+                          line and breaks the word at most once. The 7.5 px
+                          matches the names, and is also what keeps
+                          "Nyårsdagen" (43.1 px at 8 px) on one line instead
+                          of stranding its last letter. */}
+                      {holiday && (
+                        <span
+                          className={`clear-right block px-0.5 text-[7.5px] leading-[1.25] break-words ${
+                            holiday.red ? "cal-red" : "text-muted"
+                          }`}
+                        >
+                          {holiday.name}
+                        </span>
+                      )}
+                      {/* Name days flow around the date, so "Ada" shares its
+                          line and only a name too wide for the gap drops
+                          below. Deliberately NO `break-words`: the default
+                          never splits a word, so a name that does not fit
+                          beside the date moves down whole instead of
+                          shattering into "Mart" / "a", and "Bernhard," can
+                          never leave its comma stranded at the head of the
+                          next line. That only holds if every name fits a
+                          full line — at 7.5 px on the 43 px line this block
+                          gets (the cell's own padding is cancelled by the
+                          `-mx-1` bleed), all 627 names in the Swedish
+                          almanac do, the widest being "Bartolomeus" at
+                          42 px. Re-measure before growing this font. */}
+                      {names.length > 0 && (
+                        <span className="text-muted block px-0.5 text-[7.5px] leading-[1.25]">
+                          {names.join(", ")}
+                        </span>
+                      )}
                     </div>
-                    {/* The holiday name, red for official red days — the
-                        kalender.se convention. */}
-                    {holiday && (
-                      <div
-                        className={`truncate text-[9px] leading-tight ${
-                          holiday.red ? "cal-red" : "text-muted"
-                        }`}
-                      >
-                        {holiday.name}
-                      </div>
-                    )}
                     <div className="min-h-0 flex-1">
                       <DayEntry
                         text={entry}

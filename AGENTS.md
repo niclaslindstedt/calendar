@@ -255,6 +255,73 @@ range if a newer one exists, reinstall, and work against that.
 | LLM prompt       | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)     |
 | Changelog entry  | `.changes/unreleased/<unix-ts>-<slug>.md` (never `CHANGELOG.md` directly) |
 
+## Portrait mobile is the primary target
+
+This is a phone-first PWA — most people open it one-handed, in **portrait**,
+installed to the home screen. A desktop browser at 1400 px wide will hide
+every layout bug that actually matters here, so **any change that touches
+layout, chrome, spacing, or typography is not done until it has been looked at
+in a portrait phone viewport.** That includes changes that "obviously" only
+affect one view: the three views share the top menu, the period heading, and
+the layout constants in `src/app/layout.ts`.
+
+### How to verify
+
+Drive the dev server with Playwright (Chromium is preinstalled at
+`/opt/pw-browsers/chromium`; do **not** run `playwright install`) and
+screenshot each view:
+
+```js
+const ctx = await browser.newContext({
+  viewport: { width: 393, height: 852 }, // iPhone 15/16 portrait
+  deviceScaleFactor: 2,
+  isMobile: true,
+  hasTouch: true,
+  colorScheme: "dark", // and again with "light"
+  locale: "sv-SE", // and again with "en-GB"
+});
+```
+
+Check **all three views** (month, week, day list) in **both themes** and
+**both country packs** — the packs differ in whether week numbers and name
+days are on, which changes the column count in the day list and the grid
+template in the month view. Screenshot, then _look at the screenshot_; do not
+infer from the diff.
+
+### What to check
+
+- **Nothing overflows or overlaps.** 393 px is the budget. The top menu is the
+  usual casualty — a label that wraps to two lines there (or a control that
+  slides under the cogwheel) is a bug, not a cosmetic nit.
+- **No dead gutters.** A fixed-width column that is empty under the current
+  settings must not be rendered at all — an always-reserved `w-7` week gutter
+  is 36 px of wasted left margin on every row when week numbers are off.
+- **Nothing meaningful is truncated, and no word is split.** A month cell is
+  47 px wide in portrait. `truncate` there renders a name day as "B…";
+  `break-words` is barely better, because it splits eagerly against whatever
+  is left on the current line ("Mart" / "a") and strands the comma of
+  `"Bernhard, Bernt"` at the head of line two. The month cell's answer is to
+  **float** the date so short text flows beside it and long text drops below,
+  and to leave `overflow-wrap` at its default so a word that doesn't fit
+  moves down whole. That only works while every value fits a full line, so
+  **the font size is a measured constant, not a taste call** — measure with
+  `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in the
+  cell's computed font before changing it. Today: 7.5 px, widest name
+  "Bartolomeus" at 42 px on a 43 px line.
+- **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
+  header-action size.
+- **The safe areas are respected.** The top menu adds
+  `env(safe-area-inset-top)` on top of its own padding, so on a notched phone
+  the gap from the status-bar island down to the buttons matches the gap from
+  the buttons down to the hairline. Every view's bottom gutter is
+  `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`) so the last row clears the home
+  indicator.
+- **The month grid still fills exactly one screen** — six week rows, no
+  scrollbar, nothing clipped.
+
+Landscape and desktop must not be _broken_, but portrait is what gets
+optimised when the two pull against each other.
+
 ## Test conventions
 
 - **All tests live in separate files** in `tests/` — never inline in source

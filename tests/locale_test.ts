@@ -2,9 +2,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  DEFAULT_LOCALE_ID,
+  FALLBACK_LOCALE_ID,
   LOCALES,
   getLocale,
+  matchLocaleId,
   isRedWeekday,
   monthName,
   nameDaysFor,
@@ -18,12 +19,46 @@ const en = getLocale("en-GB");
 describe("locale registry", () => {
   it("resolves known packs and falls back for unknown ids", () => {
     expect(getLocale("sv-SE").id).toBe("sv-SE");
-    expect(getLocale("nope").id).toBe(DEFAULT_LOCALE_ID);
+    expect(getLocale("nope").id).toBe(FALLBACK_LOCALE_ID);
   });
 
   it("packs have unique ids", () => {
     const ids = LOCALES.map((l) => l.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+});
+
+describe("matching the device's locale", () => {
+  it("takes an exact pack id", () => {
+    expect(matchLocaleId(["sv-SE"])).toBe("sv-SE");
+    expect(matchLocaleId(["en-GB"])).toBe("en-GB");
+  });
+
+  it("matches on country before language", () => {
+    // An English-speaking resident of Sweden gets the Swedish calendar.
+    expect(matchLocaleId(["en-SE"])).toBe("sv-SE");
+  });
+
+  it("matches a bare language tag", () => {
+    expect(matchLocaleId(["sv"])).toBe("sv-SE");
+    expect(matchLocaleId(["en"])).toBe("en-GB");
+  });
+
+  it("falls back to the language pack for an unknown country", () => {
+    expect(matchLocaleId(["en-US"])).toBe("en-GB");
+    expect(matchLocaleId(["sv-FI"])).toBe("sv-SE");
+  });
+
+  it("honours the preference order and ignores script subtags", () => {
+    expect(matchLocaleId(["sv-SE", "en-GB"])).toBe("sv-SE");
+    expect(matchLocaleId(["de-DE", "sv-SE"])).toBe("sv-SE");
+    expect(matchLocaleId(["sr-Latn-SE"])).toBe("sv-SE");
+  });
+
+  it("falls back when nothing matches", () => {
+    expect(matchLocaleId([])).toBe(FALLBACK_LOCALE_ID);
+    expect(matchLocaleId(["de-DE", "fr-FR"])).toBe(FALLBACK_LOCALE_ID);
+    expect(matchLocaleId(["", "  "])).toBe(FALLBACK_LOCALE_ID);
   });
 });
 

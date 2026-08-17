@@ -49,12 +49,12 @@ import { useCalendarStore } from "./app/useCalendarStore.ts";
 import { effectiveToggles, useAppSettings } from "./app/useAppSettings.ts";
 import { status } from "./output.ts";
 
-// The wall-calendar default look: the light "paper" theme family; everything
-// else follows the framework defaults. Users change it in Settings →
-// Appearance, persisted per device.
+// The default look follows the device: `"system"` tracks the OS light/dark
+// preference, so a phone in dark mode opens a dark calendar. Users pin a
+// concrete theme in Settings → Appearance, persisted per device.
 const DEFAULT_APPEARANCE: ThemeAppearance = {
   ...DEFAULT_THEME_APPEARANCE,
-  theme: "githubLight",
+  theme: "system",
 };
 
 export function App() {
@@ -142,8 +142,6 @@ export function App() {
           setEditingDay(null);
           update("view", view);
         }}
-        onPrevious={() => step(-1)}
-        onNext={() => step(1)}
         onToday={() => {
           setEditingDay(null);
           setAnchor(dayKeyOf(new Date()));
@@ -165,6 +163,8 @@ export function App() {
             editingDay={editingDay}
             onEditDay={setEditingDay}
             onCommit={store.setEntry}
+            onPrevious={() => step(-1)}
+            onNext={() => step(1)}
           />
         )}
         {settings.view === "week" && (
@@ -178,6 +178,8 @@ export function App() {
             editingDay={editingDay}
             onEditDay={setEditingDay}
             onCommit={store.setEntry}
+            onPrevious={() => step(-1)}
+            onNext={() => step(1)}
           />
         )}
         {settings.view === "list" && (
@@ -194,6 +196,8 @@ export function App() {
             editingDay={editingDay}
             onEditDay={setEditingDay}
             onCommit={store.setEntry}
+            onPrevious={() => step(-1)}
+            onNext={() => step(1)}
           />
         )}
       </main>
