@@ -1,19 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <!-- The app mark: a stylised calendar page — two hangers, a solid header
-       band, one marked day — in mint green on a near-black tile, the same
-       family look as the sibling checklist and notes apps.
+  <!-- The app mark: a stylised calendar page — two thin hanger pins, a solid
+       header band, a thin page frame around a grid of day cells with one
+       marked day — in mint green on a near-black tile, the same family look
+       as the sibling checklist and notes apps.
        scripts/generate-icons.mjs mirrors this geometry for the PNG icons;
        keep the two in lockstep. -->
   <rect width="100" height="100" rx="18" fill="#1b2027" />
   <g fill="#6fe3a3">
-    <!-- The hangers, drawn first so the body's top edge swallows their feet. -->
-    <rect x="31" y="10" width="10" height="20" rx="5" />
-    <rect x="59" y="10" width="10" height="20" rx="5" />
-    <rect x="14" y="26" width="72" height="64" rx="14" />
+    <!-- The hanger pins, drawn first so the header band swallows their feet. -->
+    <rect x="31" y="9" width="6" height="16" rx="3" />
+    <rect x="63" y="9" width="6" height="16" rx="3" />
+    <!-- The page. The punch below carves it into a header band and a frame. -->
+    <rect x="14" y="21" width="72" height="69" rx="10" />
   </g>
   <!-- The grid area, punched back out to the tile colour: what is left of the
-       green body reads as a header band and an even frame. -->
-  <rect x="22" y="48" width="56" height="34" rx="6" fill="#1b2027" />
-  <!-- The marked day. -->
-  <rect x="44" y="59" width="12" height="12" rx="3" fill="#6fe3a3" />
+       green page reads as a solid header band and a thin, even frame. -->
+  <rect x="19" y="38" width="62" height="47" rx="5" fill="#1b2027" />
+  <!-- The day cells, dimmed so the marked day carries the accent. The cell at
+       column 2, row 2 is missing because the marked day sits in its place. -->
+  <g fill="#6fe3a3" fill-opacity="0.45">
+    <rect x="26" y="44" width="8" height="8" rx="2" />
+    <rect x="39.33" y="44" width="8" height="8" rx="2" />
+    <rect x="52.67" y="44" width="8" height="8" rx="2" />
+    <rect x="66" y="44" width="8" height="8" rx="2" />
+    <rect x="26" y="57.5" width="8" height="8" rx="2" />
+    <rect x="52.67" y="57.5" width="8" height="8" rx="2" />
+    <rect x="66" y="57.5" width="8" height="8" rx="2" />
+    <rect x="26" y="71" width="8" height="8" rx="2" />
+    <rect x="39.33" y="71" width="8" height="8" rx="2" />
+    <rect x="52.67" y="71" width="8" height="8" rx="2" />
+    <rect x="66" y="71" width="8" height="8" rx="2" />
+  </g>
+  <!-- The marked day: full-strength green, a step larger than its peers. -->
+  <rect x="36.83" y="55" width="13" height="13" rx="3" fill="#6fe3a3" />
 </svg>

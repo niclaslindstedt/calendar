@@ -68,10 +68,11 @@ type Props = {
    *  content the way a swipe does. */
   renderChrome?: (nav: DeckNav) => ReactNode;
   /** Whether the pane scrolls vertically. The default — false — is the month
-   *  and week views, which fill exactly one screen: there the vertical axis is
-   *  taken away from the browser entirely (`touch-action: pan-x`), so a swipe
-   *  can never be lost to a rubber-band scroll of a page that has nowhere to
-   *  go. A scrolling pane keeps `pan-y` and leans on the biased axis lock. */
+   *  and week views, which fill exactly one screen: there the browser is not
+   *  allowed to claim the gesture on either axis (`touch-action: none`), so a
+   *  swipe can never be lost to a rubber-band scroll of a page that has
+   *  nowhere to go. A scrolling pane keeps `pan-y` and leans on the biased
+   *  axis lock. */
   scrolls?: boolean;
 };
 
@@ -113,6 +114,22 @@ export function SwipeDeck({
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  // Once a drag locks to the horizontal axis the browser must not reclaim it:
+  // on a scrolling deck `pan-y` would otherwise let a downward drift start a
+  // native scroll mid-swipe, which fires `pointercancel` and drops the page
+  // turn. Swallowing the touchmoves while locked keeps the gesture ours, so
+  // only the finger's horizontal travel is measured. Native listener because
+  // it must be non-passive to call `preventDefault`.
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    const onTouchMove = (e: TouchEvent) => {
+      if (drag.current?.axis === "x" && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+    return () => el.removeEventListener("touchmove", onTouchMove);
+  }, []);
 
   // The anchor moved while a settle was in flight, which can only mean it moved
   // from outside the deck (our own commit clears `settling` first). Drop the
@@ -214,11 +231,10 @@ export function SwipeDeck({
     setDx(Math.max(-d.width, Math.min(d.width, moved)));
   };
 
-  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
-    const d = drag.current;
-    drag.current = null;
-    if (!d || d.axis !== "x") return;
-    const moved = Math.max(-d.width, Math.min(d.width, e.clientX - d.x));
+  /** Ends an x-locked drag: commit if it went far or fast, spring back if
+   *  not. `x` is the pointer's final position. */
+  const finish = (d: Drag, x: number) => {
+    const moved = Math.max(-d.width, Math.min(d.width, x - d.x));
     const far = Math.abs(moved) > d.width * COMMIT_FRACTION;
     const flicked =
       Math.abs(d.velocity) > COMMIT_VELOCITY &&
@@ -227,10 +243,22 @@ export function SwipeDeck({
     else rest();
   };
 
-  const onPointerCancel = () => {
-    if (!drag.current) return;
+  const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
     drag.current = null;
-    rest();
+    if (!d || d.axis !== "x") return;
+    finish(d, e.clientX);
+  };
+
+  const onPointerCancel = () => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d) return;
+    // A cancel after the axis lock means the browser stole a gesture that was
+    // already a swipe. Finish it from the last sample rather than snapping
+    // back — the finger asked for a page turn.
+    if (d.axis === "x") finish(d, d.sampleX);
+    else rest();
   };
 
   const onClickCapture = (e: ReactMouseEvent<HTMLDivElement>) => {
@@ -254,10 +282,11 @@ export function SwipeDeck({
       ref={host}
       className="flex h-full flex-col overflow-hidden"
       // A scrolling pane keeps `pan-y` so the browser still owns the vertical
-      // axis (and pinch-zoom) without a preventDefault race; a pane that fills
-      // one screen has no vertical axis worth keeping, and giving it up means
-      // no bounce competes with the swipe.
-      style={{ touchAction: scrolls ? "pan-y" : "pan-x" }}
+      // axis before the axis lock decides; a pane that fills one screen has no
+      // native gesture worth keeping on either axis, and `none` means the
+      // browser can never claim the drag (a claim fires `pointercancel` and
+      // eats the page turn — `pan-x` invited exactly that).
+      style={{ touchAction: scrolls ? "pan-y" : "none" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
