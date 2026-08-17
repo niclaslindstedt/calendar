@@ -49,6 +49,7 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
+import { pinShell } from "./app/shellScroll.ts";
 import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
   calFonts,
@@ -110,6 +111,10 @@ export function App() {
   // …and when the OS preference flips under the "system" theme, which moves
   // the background without moving any state of ours.
   useEffect(() => watchSystemThemeColor(), []);
+
+  // Put the shell back if iOS's keyboard handling leaves it riding up under
+  // the status bar (see `shellScroll.ts`).
+  useEffect(() => pinShell(), []);
 
   // The in-app log records only in developer mode; the capture toggle
   // additionally mirrors it to localStorage.
