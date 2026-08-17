@@ -11,6 +11,13 @@ import { useCallback } from "react";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
 import type { EntryTextSize } from "./entryFont.ts";
+import {
+  CAL_FONT_PIECES,
+  DEFAULT_CAL_FONTS,
+  type CalFontId,
+  type CalFontPiece,
+  type CalFonts,
+} from "./fonts.ts";
 import { DEFAULT_LOCALE_ID, getLocale } from "./locale/index.ts";
 import type { BackendId } from "./storage/backends.ts";
 
@@ -53,6 +60,14 @@ export type AppSettings = {
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
   textSize: EntryTextSize;
+  /** The face the day number is set in. */
+  fontDay: CalFontId;
+  /** The face a holiday's name is set in. */
+  fontHolidays: CalFontId;
+  /** The face the day's names are set in. */
+  fontNameDays: CalFontId;
+  /** The face your own text is set in. */
+  fontEntry: CalFontId;
   /** Month cell: the corner the day number takes. */
   monthDayCorner: CellCorner;
   /** Month cell: the corner the day's names take. */
@@ -78,6 +93,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nameDays: null,
   listRows: "fixed",
   textSize: "dynamic",
+  fontDay: DEFAULT_CAL_FONTS.day,
+  fontHolidays: DEFAULT_CAL_FONTS.holidays,
+  fontNameDays: DEFAULT_CAL_FONTS.nameDays,
+  fontEntry: DEFAULT_CAL_FONTS.entry,
   // The printed wall-calendar arrangement, straight off a Swedish almanac:
   // the number large in the top-right corner, the day's writing space under
   // it, and the captions stacked in the bottom-right corner — the holiday
@@ -103,6 +122,10 @@ export const LOOK_KEYS = [
   "nameDays",
   "listRows",
   "textSize",
+  "fontDay",
+  "fontHolidays",
+  "fontNameDays",
+  "fontEntry",
   "monthDayCorner",
   "monthNameDayCorner",
   "monthHolidayCorner",
@@ -119,6 +142,10 @@ export function pickLook(settings: AppSettings): LookSettings {
     nameDays: settings.nameDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
+    fontDay: settings.fontDay,
+    fontHolidays: settings.fontHolidays,
+    fontNameDays: settings.fontNameDays,
+    fontEntry: settings.fontEntry,
     monthDayCorner: settings.monthDayCorner,
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
@@ -149,6 +176,24 @@ export const CELL_PIECE_KEY = {
   holidays: "monthHolidayCorner",
   nameDays: "monthNameDayCorner",
 } as const satisfies Record<CellPiece, keyof LookSettings>;
+
+/** The look key that sets each piece's face — the same "move one by name"
+ *  idiom as {@link CELL_PIECE_KEY}, for the font pickers. */
+export const CAL_FONT_KEY = {
+  day: "fontDay",
+  holidays: "fontHolidays",
+  nameDays: "fontNameDays",
+  entry: "fontEntry",
+} as const satisfies Record<CalFontPiece, keyof LookSettings>;
+
+/** The faces the views paint with, gathered from the look. */
+export function calFonts(look: LookSettings): CalFonts {
+  const fonts = {} as CalFonts;
+  for (const piece of CAL_FONT_PIECES) {
+    fonts[piece] = look[CAL_FONT_KEY[piece]];
+  }
+  return fonts;
+}
 
 export const DEFAULT_LOOK: LookSettings = pickLook(DEFAULT_SETTINGS);
 

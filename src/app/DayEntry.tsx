@@ -58,7 +58,7 @@ export function DayEntry({
     if (text === "") return null;
     return (
       <div
-        className={`cal-entry ${className ?? ""}`}
+        className={`cal-entry cal-font-entry ${className ?? ""}`}
         style={{ fontSize: `${resolveEntryFontPx(text.length, font, size)}px` }}
       >
         {text}
@@ -74,7 +74,7 @@ export function DayEntry({
   return (
     <textarea
       ref={ref}
-      className="cal-entry-editor cal-entry"
+      className="cal-entry-editor cal-entry cal-font-entry"
       style={{ fontSize: `${resolveEntryFontPx(draft.length, font, size)}px` }}
       value={draft}
       placeholder={t("editor.placeholder")}

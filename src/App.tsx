@@ -22,6 +22,7 @@ import {
 } from "@niclaslindstedt/oss-framework/theme";
 
 import { DayListView } from "./app/DayListView.tsx";
+import { calFontVars, loadCalFonts } from "./app/fonts.ts";
 import { HolidaysView, type HolidayMode } from "./app/HolidaysView.tsx";
 import { MonthGridView } from "./app/MonthGridView.tsx";
 import {
@@ -48,7 +49,9 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
+import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
+  calFonts,
   clampVacationDays,
   effectiveToggles,
   monthCellLayout,
@@ -76,7 +79,37 @@ export function App() {
   // preview clears and the persisted look reasserts itself.
   const [preview, setPreview] = useState<SettingsDraft | null>(null);
   const live = preview ? { ...settings, ...preview.look } : settings;
-  useApplyTheme(preview?.appearance ?? appearance);
+  const liveAppearance = preview?.appearance ?? appearance;
+  useApplyTheme(liveAppearance);
+
+  // The calendar's four faces, projected onto `<html>` as CSS variables (the
+  // `.cal-font-*` classes in `src/styles.css` read them). On `<html>` rather
+  // than on the shell below so the settings dialog's cell preview — which
+  // renders through the same `MonthCellFrame` — is painted in the faces it is
+  // previewing, wherever the modal ends up in the tree.
+  const fonts = calFonts(live);
+  useEffect(() => {
+    const vars = calFontVars(fonts);
+    const root = document.documentElement;
+    for (const [name, stack] of Object.entries(vars)) {
+      root.style.setProperty(name, stack);
+    }
+    loadCalFonts(fonts);
+    // Compared by value: the four ids are what matter, not the object.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fonts.day, fonts.holidays, fonts.nameDays, fonts.entry]);
+
+  // Keep `theme-color` on the resolved page background. The installed iOS app
+  // paints its own status-bar band (the body background in `src/styles.css`
+  // covers that), but Android's task switcher and Chrome's toolbar read this
+  // meta — and with a dozen presets plus "follow the device" a static value in
+  // the HTML shell is wrong for most of them.
+  useEffect(() => {
+    syncThemeColor();
+  }, [liveAppearance]);
+  // …and when the OS preference flips under the "system" theme, which moves
+  // the background without moving any state of ours.
+  useEffect(() => watchSystemThemeColor(), []);
 
   // The in-app log records only in developer mode; the capture toggle
   // additionally mirrors it to localStorage.
@@ -237,7 +270,11 @@ export function App() {
   };
 
   return (
-    <div className="flex h-[100svh] flex-col overflow-hidden bg-page-bg text-fg">
+    // `h-full` — not `100svh`: the shell fills `html`/`body`, which
+    // `src/styles.css` pins to the viewport (and, in the installed iOS app,
+    // to `100vh` so the page reaches under the status bar instead of being
+    // letterboxed with a pale band above the top menu).
+    <div className="flex h-full flex-col overflow-hidden bg-page-bg text-fg">
       <TopBar
         view={settings.view}
         onViewChange={(view) => {

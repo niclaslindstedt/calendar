@@ -6,7 +6,7 @@
 // Save on the right.
 //
 // The look settings the dialog owns (country calendar, the display toggles,
-// the entry sizing, and the whole theme appearance) are edited against a
+// the calendar's faces and entry sizing, and the theme) are edited against a
 // local `draft` and only committed on Save: while open the draft streams to
 // the app through `onPreview`, so the calendar behind the dialog previews
 // live; Cancel drops it (the persisted look snaps back) and Save writes it.
@@ -28,7 +28,6 @@ import {
   DatabaseIcon,
   Modal,
   PaletteIcon,
-  PencilIcon,
   ScrollTextIcon,
   SlidersIcon,
 } from "@niclaslindstedt/oss-framework/components";
@@ -48,7 +47,7 @@ import {
 import { AppearanceSection } from "./AppearanceSection.tsx";
 import { CalendarSection } from "./CalendarSection.tsx";
 import { DeveloperSection } from "./DeveloperSection.tsx";
-import { EntriesSection } from "./EntriesSection.tsx";
+import { FontsSection } from "./FontsSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
 import { StorageSection, type StorageActions } from "./StorageSection.tsx";
@@ -63,19 +62,12 @@ export type SettingsDraft = {
 };
 
 type TabId =
-  | "general"
-  | "appearance"
-  | "calendar"
-  | "entries"
-  | "storage"
-  | "developer"
-  | "logs";
+  "general" | "appearance" | "calendar" | "storage" | "developer" | "logs";
 
 const BASE_TABS: readonly TabDef<TabId>[] = [
   { id: "general", labelKey: "settings.tabGeneral", Icon: SlidersIcon },
   { id: "appearance", labelKey: "settings.tabAppearance", Icon: PaletteIcon },
   { id: "calendar", labelKey: "settings.tabCalendar", Icon: CalendarIcon },
-  { id: "entries", labelKey: "settings.tabEntries", Icon: PencilIcon },
   { id: "storage", labelKey: "settings.tabStorage", Icon: DatabaseIcon },
 ];
 
@@ -254,11 +246,13 @@ export function SettingsModal({
                 onChange={updateDraftAppearance}
               />
             )}
+            {/* One tab for how the calendar reads: the cell's arrangement,
+                the day list's rows, and the faces each piece is set in. */}
             {activeTab === "calendar" && (
-              <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
-            )}
-            {activeTab === "entries" && (
-              <EntriesSection look={draft.look} onUpdate={updateDraftLook} />
+              <>
+                <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
+                <FontsSection look={draft.look} onUpdate={updateDraftLook} />
+              </>
             )}
             {activeTab === "storage" && (
               <StorageSection

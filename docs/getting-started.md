@@ -29,8 +29,10 @@ The switcher in the top bar toggles:
 - **Week** — one week at a time, one generous row per weekday, with more room
   to read and write.
 - **Day list** — the month as a vertical scroll, one row per day with the
-  day's name days beside the number. In Settings → Entries you can choose
-  whether rows keep a fixed height or grow with their text.
+  day's name days beside the number. In Settings → Calendar you can choose
+  whether rows keep a fixed height or grow with their text. The month heading
+  stays pinned to the top of the list as you scroll, so which month you are
+  reading is never off screen.
 
 **Swipe left or right** in any of the three views to turn the page — the
 neighbouring period follows your finger and settles into place. The month and
@@ -67,13 +69,14 @@ stock look without touching your storage connections or developer switches.
   fresh install picks the country calendar from your device's language
   settings; changing it here pins your choice. **Vacation days a year**
   (default 25) is the allowance the vacation planner spends.
-- **Calendar** — the month cell's layout, arranged on a sample day: tap a
-  corner and pick what belongs in it. See
-  [Month cell layout](#month-cell-layout).
-- **Appearance** — themes (light/dark/custom), font, UI text size, density.
-  A fresh install starts on **System**, which follows your device's light /
-  dark preference until you pick a concrete theme.
-- **Entries** — how your day text is sized, and the day-list row height.
+- **Calendar** — the month cell's layout (arranged on a sample day: tap a
+  corner and pick what belongs in it), the day-list row height, and the face
+  each part of a day is set in. See [Month cell layout](#month-cell-layout)
+  and [Type](#type).
+- **Appearance** — the theme, and only the theme: **Follow device** (the
+  default, which tracks your device's light / dark preference), **Light**,
+  **Dark**, or **Custom**, plus the palette variant within the light and dark
+  families.
 - **Storage** — where your calendar lives. See [storage.md](storage.md).
 - **Developer** — demo data, log capture, build info, update check (visible
   in developer mode).
@@ -100,10 +103,33 @@ Captions wrap rather than truncate, and a name is only broken across lines
 when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while
 "Midsommarafton" breaks at a syllable boundary with a hyphen.
 
+### Type
+
+A printed calendar doesn't set its whole page in one font, and neither does
+this one. **Settings → Calendar → Type** picks a face for each part of a day
+independently, previewed in the face itself:
+
+- **Day number** — the date. Defaults to **Almanac**, the bookish serif a
+  printed calendar sets its dates in.
+- **Holiday name** and **Name days** — the almanac's captions. Both default
+  to **Mono**, the app's own font.
+- **Your text** — what you write on a day. Also **Mono** by default.
+
+The five faces are **Almanac** (system serifs, no download), **Mono**,
+**Sans**, **Serif** and **Dyslexic** (OpenDyslexic). Everything else — the
+month title, the weekday headers, the app's own buttons and dialogs — keeps
+the app font, so changing a face restyles the calendar rather than the
+program around it.
+
+A month cell is only 47 px wide, so the caption sizes there are measured
+rather than chosen: a face wider than the default gives the difference back
+automatically, and the longest name day still holds a full line instead of
+being clipped.
+
 ### Entry text size
 
-**Settings → Entries → Text size** chooses how the text you write on a day is
-sized:
+**Settings → Calendar → Your text → Text size** chooses how the text you
+write on a day is sized:
 
 - **Dynamic** (the default) — a note shrinks as you write, so it always fits
   its day instead of clipping.

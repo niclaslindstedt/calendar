@@ -32,14 +32,78 @@ html,
 body {
   height: 100%;
 }
+
+/* Installed iOS PWA, edge-to-edge: iOS only extends the page under the status
+   bar and the home indicator when the *root* element carries a fixed `100vh`
+   height. With a percentage height (the `height: 100%` above — or `100svh`,
+   or any percentage) the document stops at the letterboxed viewport and iOS
+   paints the bands outside it from the canvas background instead of from the
+   app's own chrome: the top menu then reads as a white strip under the status
+   bar on a dark theme, because the canvas is white until `body` claims it
+   (see the background below). Scoped to iOS via the `-webkit-touch-callout`
+   probe (no other engine supports it) and to `display-mode: standalone`, so a
+   normal Safari tab keeps the percentage-height shell and its dynamic
+   toolbars. Same fix, same reasoning, as the sibling `notes` app. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    html,
+    body {
+      height: 100vh;
+    }
+  }
+}
+
 body {
   margin: 0;
   overscroll-behavior-y: none;
+  /* The shell paints `bg-page-bg` itself, but the *canvas* behind it — what
+     iOS fills the safe-area bands with, and what a browser paints beyond the
+     document — defaults to white regardless of the theme. Claiming it here
+     with the theme's own tokens is what keeps the status-bar band dark on a
+     dark theme. Both slots come from the framework's palette blocks on
+     `<html data-theme>`, so they follow the active preset. */
+  background: var(--page-bg);
+  color: var(--fg);
 }
 
-/* The wall-calendar display face. */
+#root {
+  height: 100%;
+}
+
+/* The wall-calendar display face — the month title and the weekday headers,
+   which are the printed page's furniture rather than a day's content. */
 .cal-serif {
   font-family: var(--cal-serif);
+}
+
+/* The four settable faces (Settings → Calendar). `App.tsx` writes each
+   variable onto `<html>` from the chosen face; the fallback in each `var()`
+   is what the piece was set in before the faces became a setting, so a
+   document from an older build renders unchanged until it is edited. */
+.cal-font-day {
+  font-family: var(--cal-font-day, var(--cal-serif));
+}
+.cal-font-holiday {
+  font-family: var(--cal-font-holiday, inherit);
+}
+.cal-font-nameday {
+  font-family: var(--cal-font-nameday, inherit);
+}
+.cal-font-entry {
+  font-family: var(--cal-font-entry, inherit);
+}
+
+/* The month cell's two caption bands. The size is a measured constant, not a
+   taste call — 7.5 px is what lets the widest name ("Bartolomeus") hold a
+   full 47 px line — so a face wider than the mono baseline gives the
+   difference back through its scale (`CAPTION_SCALE` in `src/app/fonts.ts`)
+   instead of clipping. The size lives here rather than in a `text-[7.5px]`
+   utility so the two can't fight over which wins. */
+.cal-cell-nameday {
+  font-size: calc(7.5px * var(--cal-nameday-scale, 1));
+}
+.cal-cell-holiday {
+  font-size: calc(7.5px * var(--cal-holiday-scale, 1));
 }
 
 /* Red days (Sundays) and other red accents. */
@@ -48,7 +112,10 @@ body {
 }
 
 /* A day cell's entry text: preserve the user's line breaks, break long
-   words rather than overflowing the cell. */
+   words rather than overflowing the cell.
+
+   The face rides on `.cal-font-entry` alongside it, so the settings preview
+   can show the chosen face without inheriting the editor's wrapping. */
 .cal-entry {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
@@ -67,5 +134,8 @@ body {
   height: 100%;
   color: inherit;
   font: inherit;
+  /* After the `font` shorthand, which would otherwise reset the family back
+     to the cell's (the shorthand resets every longhand it doesn't name). */
+  font-family: var(--cal-font-entry, inherit);
   line-height: 1.25;
 }
