@@ -42,3 +42,11 @@ day list, which give each day more room.
 **The app doesn't update** — updates wait for your OK: look for the "a new
 version is ready" prompt, or Settings → Developer → Check for updates. In
 dev (`npm run dev`) no service worker registers at all.
+
+**The app sits up under the status bar / Dynamic Island** — it should settle
+back within a moment on its own. This was iOS's doing: opening the keyboard
+scrolls the page to reveal the field even though the app itself never
+scrolls, and closing the dialog over a still-focused field (Settings →
+General → Vacation days) left that offset stranded. The dialog now lets go of
+the keyboard before it closes, and the shell pins itself back if anything
+else shifts it. If one ever sticks, closing and reopening the app clears it.

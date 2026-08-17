@@ -35,6 +35,7 @@ import type { ThemeAppearance } from "@niclaslindstedt/oss-framework/theme";
 import type { PwaUpdateCheckResult } from "@niclaslindstedt/oss-framework/pwa";
 
 import { useT, type TFunction } from "../i18n/index.ts";
+import { blurActiveField } from "../shellScroll.ts";
 import type { SaveState } from "../useCalendarStore.ts";
 import type { BackendId } from "../storage/backends.ts";
 import {
@@ -179,7 +180,19 @@ export function SettingsModal({
     [],
   );
 
+  // Every exit from the dialog goes through here. The blur is load-bearing on
+  // iOS: closing over a focused field (Settings → General has the "Vacation
+  // days" number input) tears the field down mid keyboard-dismiss, and the
+  // page keeps the offset WebKit scrolled it by — the whole app then sits up
+  // under the Dynamic Island. Blurring first lets the keyboard close against
+  // a field that still exists, which is the path WebKit undoes cleanly.
+  const closeDialog = useCallback(() => {
+    blurActiveField();
+    onClose();
+  }, [onClose]);
+
   const handleSave = useCallback(() => {
+    blurActiveField();
     commitLook(draft.look);
     onAppearanceChange(draft.appearance);
     onClose();
@@ -195,14 +208,14 @@ export function SettingsModal({
   return (
     <Modal
       open={open}
-      onClose={onClose}
+      onClose={closeDialog}
       labelledBy="settings-title"
       closeLabel={t("settings.close")}
       footer={
         <SettingsFooter
           t={t}
           onReset={handleReset}
-          onCancel={onClose}
+          onCancel={closeDialog}
           onSave={handleSave}
         />
       }
@@ -211,7 +224,7 @@ export function SettingsModal({
         tabs={tabs}
         activeTab={activeTab}
         onSelectTab={setActiveTab}
-        onClose={onClose}
+        onClose={closeDialog}
       />
 
       <div className="flex flex-1 overflow-hidden">
