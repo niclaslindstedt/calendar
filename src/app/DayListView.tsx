@@ -87,16 +87,23 @@ export function DayListView({
         />
       )}
 
+      {/* Pinned to the top of the list's own scroller: this is the one view
+          that scrolls far enough to lose sight of which month you are in, and
+          the arrows come along so paging never means scrolling back up. The
+          background is opaque — rows pass underneath it — and the hairline it
+          carries is the one the rows below used to start with, so the heading
+          keeps the list's top border rather than adding a second line. */}
       <PeriodHeading
         title={monthName(pack, month)}
         meta={String(year)}
         titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
         metaClass="text-lg"
+        className="bg-page-bg sticky top-0 z-10 border-b border-line"
         onPrevious={onPrevious}
         onNext={onNext}
       />
 
-      <div className="border-t border-line">
+      <div>
         {Array.from({ length: count }, (_, i) => {
           const day = i + 1;
           const key = toDayKey({ year, month, day });
@@ -151,7 +158,7 @@ export function DayListView({
                 </span>
               )}
               <span
-                className={`cal-serif w-7 shrink-0 text-right text-lg leading-tight ${
+                className={`cal-font-day w-7 shrink-0 text-right text-lg leading-tight ${
                   red ? "cal-red" : "text-fg"
                 }`}
               >
@@ -186,7 +193,7 @@ export function DayListView({
                       e.stopPropagation();
                       onOpenHolidays();
                     }}
-                    className={`cursor-pointer focus-visible:outline-2 ${
+                    className={`cal-font-holiday cursor-pointer focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
                     }`}
                   >
@@ -196,7 +203,9 @@ export function DayListView({
                 {holiday && names.length > 0 && (
                   <span className="text-muted"> · </span>
                 )}
-                <span className="text-muted">{names.join(", ")}</span>
+                <span className="cal-font-nameday text-muted">
+                  {names.join(", ")}
+                </span>
               </span>
               <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
                 <DayEntry

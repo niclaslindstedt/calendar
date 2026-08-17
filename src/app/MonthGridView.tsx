@@ -259,7 +259,7 @@ function DayCell({
         content={{
           day: (
             <span
-              className={`cal-serif text-base leading-none sm:text-lg ${
+              className={`cal-font-day text-base leading-none sm:text-lg ${
                 red ? "cal-red" : "text-fg"
               } ${cell.isToday ? "font-bold" : ""}`}
             >
@@ -283,7 +283,7 @@ function DayCell({
                 e.stopPropagation();
                 onOpenHolidays();
               }}
-              className={`block cursor-pointer text-[7.5px] leading-[1.25] focus-visible:outline-2 ${
+              className={`cal-font-holiday cal-cell-holiday block cursor-pointer leading-[1.25] focus-visible:outline-2 ${
                 holiday.red ? "cal-red" : "text-muted"
               }`}
             >
@@ -292,7 +292,7 @@ function DayCell({
           ) : null,
           nameDays:
             names.length > 0 ? (
-              <span className="text-muted block text-[7.5px] leading-[1.25]">
+              <span className="cal-font-nameday cal-cell-nameday text-muted block leading-[1.25]">
                 {hyphenate(names.join(", "), pack.hyphenation)}
               </span>
             ) : null,

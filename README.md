@@ -82,8 +82,9 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
   list.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
-  (English / Swedish), week numbers and name days on/off, themes and
-  appearance, entry text size (dynamic, or fixed small / medium / large),
+  (English / Swedish), week numbers and name days on/off, the month cell's
+  layout, a face per part of a day (date, holiday, name days, your text),
+  entry text size (dynamic, or fixed small / medium / large), the theme,
   storage backend, developer mode, and logs. Look changes preview live behind
   the dialog and are kept with Save; Cancel drops them.
 

@@ -70,8 +70,8 @@ export function buildManifest(base: string, slot: DeploySlot): string {
     scope: base,
     display: "standalone",
     orientation: "any",
-    background_color: "#f6f2ea",
-    theme_color: "#f6f2ea",
+    background_color: "#f6f8fa",
+    theme_color: "#f6f8fa",
     icons: [
       {
         src: `${base}icons/pwa-192.png`,
@@ -292,9 +292,27 @@ export function appPwa({ base, version }: AppPwaOptions): Plugin {
           },
           injectTo: "head",
         },
+        // A light/dark pair rather than one value: before the app mounts, the
+        // only thing known about the theme is the device preference, and a
+        // single light colour would tint a dark-mode browser's toolbar white.
+        // Once mounted, `syncThemeColor` (src/app/themeColor.ts) rewrites both
+        // to whatever `--page-bg` actually resolves to for the chosen preset.
         {
           tag: "meta",
-          attrs: { name: "theme-color", content: "#f6f2ea" },
+          attrs: {
+            name: "theme-color",
+            content: "#f6f8fa",
+            media: "(prefers-color-scheme: light)",
+          },
+          injectTo: "head",
+        },
+        {
+          tag: "meta",
+          attrs: {
+            name: "theme-color",
+            content: "#010409",
+            media: "(prefers-color-scheme: dark)",
+          },
           injectTo: "head",
         },
         {

@@ -22,6 +22,9 @@ type Props = {
   titleClass: string;
   /** Typography for `meta`, matched to the title's size. */
   metaClass: string;
+  /** Extra classes on the heading row — how the day list pins it to the top
+   *  of its own scroller. */
+  className?: string;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -34,12 +37,13 @@ export function PeriodHeading({
   meta,
   titleClass,
   metaClass,
+  className = "",
   onPrevious,
   onNext,
 }: Props) {
   const t = useT();
   return (
-    <div className="flex shrink-0 items-center gap-1 py-4">
+    <div className={`flex shrink-0 items-center gap-1 py-4 ${className}`}>
       <button
         type="button"
         aria-label={t("topbar.previous")}
