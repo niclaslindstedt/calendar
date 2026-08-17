@@ -27,6 +27,7 @@ import {
   SettingsModal,
   type SettingsDraft,
 } from "./app/settings/SettingsModal.tsx";
+import { SwipeDeck, type DeckNav } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
@@ -133,6 +134,59 @@ export function App() {
 
   const pack = getLocale(live.localeId);
   const toggles = effectiveToggles(live);
+  // The month and week views page horizontally, so each renders three periods
+  // at a time: the one on screen and the two waiting either side of it.
+  const paged = settings.view === "month" || settings.view === "week";
+
+  /** The anchor `rel` periods away — a week in week view, a month otherwise. */
+  const shiftAnchor = (rel: -1 | 0 | 1): DayKey =>
+    rel === 0
+      ? anchor
+      : settings.view === "week"
+        ? addDays(anchor, 7 * rel)
+        : addMonths(anchor, rel);
+
+  const renderPeriod = (rel: -1 | 0 | 1, nav: DeckNav) => {
+    const at = shiftAnchor(rel);
+    const on = parseDayKey(at) ?? parts;
+    // Only the pane on screen takes input: a tap that lands on a parked
+    // neighbour mid-swipe must not open an editor in an off-screen month.
+    const interactive = rel === 0;
+    const editing = interactive ? editingDay : null;
+    const onEditDay = interactive ? setEditingDay : () => {};
+    const onCommit = interactive ? store.setEntry : () => {};
+    return settings.view === "week" ? (
+      <WeekPlannerView
+        anchor={at}
+        today={today}
+        pack={pack}
+        showNameDays={toggles.nameDays}
+        textSize={live.textSize}
+        doc={store.doc}
+        editingDay={editing}
+        onEditDay={onEditDay}
+        onCommit={onCommit}
+        onPrevious={nav.previous}
+        onNext={nav.next}
+      />
+    ) : (
+      <MonthGridView
+        year={on.year}
+        month={on.month}
+        today={today}
+        pack={pack}
+        showWeekNumbers={toggles.weekNumbers}
+        showNameDays={toggles.nameDays}
+        textSize={live.textSize}
+        doc={store.doc}
+        editingDay={editing}
+        onEditDay={onEditDay}
+        onCommit={onCommit}
+        onPrevious={nav.previous}
+        onNext={nav.next}
+      />
+    );
+  };
 
   return (
     <div className="flex h-[100svh] flex-col overflow-hidden bg-page-bg text-fg">
@@ -149,37 +203,21 @@ export function App() {
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
-      <main className="min-h-0 flex-1 overflow-y-auto">
-        {settings.view === "month" && (
-          <MonthGridView
-            year={parts.year}
-            month={parts.month}
-            today={today}
-            pack={pack}
-            showWeekNumbers={toggles.weekNumbers}
-            showNameDays={toggles.nameDays}
-            textSize={live.textSize}
-            doc={store.doc}
-            editingDay={editingDay}
-            onEditDay={setEditingDay}
-            onCommit={store.setEntry}
+      {/* The paged views own their screen exactly and never scroll — that is
+          what frees the horizontal axis for the swipe. The day list is a list,
+          so it keeps its scroll. */}
+      <main
+        className={`min-h-0 flex-1 ${paged ? "overflow-hidden" : "overflow-y-auto"}`}
+      >
+        {paged && (
+          <SwipeDeck
+            // Remounting on a view switch drops any half-finished gesture and
+            // re-centres, rather than carrying a month's drag into a week.
+            key={settings.view}
+            itemKey={anchor}
             onPrevious={() => step(-1)}
             onNext={() => step(1)}
-          />
-        )}
-        {settings.view === "week" && (
-          <WeekPlannerView
-            anchor={anchor}
-            today={today}
-            pack={pack}
-            showNameDays={toggles.nameDays}
-            textSize={live.textSize}
-            doc={store.doc}
-            editingDay={editingDay}
-            onEditDay={setEditingDay}
-            onCommit={store.setEntry}
-            onPrevious={() => step(-1)}
-            onNext={() => step(1)}
+            renderItem={renderPeriod}
           />
         )}
         {settings.view === "list" && (

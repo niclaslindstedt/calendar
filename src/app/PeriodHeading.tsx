@@ -39,7 +39,7 @@ export function PeriodHeading({
 }: Props) {
   const t = useT();
   return (
-    <div className="flex items-center gap-1 py-4">
+    <div className="flex shrink-0 items-center gap-1 py-4">
       <button
         type="button"
         aria-label={t("topbar.previous")}

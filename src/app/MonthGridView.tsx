@@ -70,31 +70,37 @@ export function MonthGridView({
   const order = weekdayOrder(pack);
   const image = monthImageUrl(year, month, "large");
 
+  // The week gutter carries a bare number — the column is self-evidently the
+  // week once it has a header-less lane of its own, so the "v."/"w." prefix
+  // was portrait width spent saying so.
+  //
+  // The lane is a measured constant, like the cell font: at the gutter's
+  // computed 10 px the widest of the 53 possible labels is 11.12 px, and the
+  // week number is never three digits, so 13 px holds every value with ~1.9 px
+  // to spare. That width also squares the margins — the number's left edge
+  // lands ~12.9 px from the screen edge against the section's 12 px right
+  // padding, so the grid sits centred rather than shoved right.
   const gridCols = showWeekNumbers
-    ? "grid-template-columns: 2.25rem repeat(7, minmax(0, 1fr))"
+    ? "grid-template-columns: 0.8125rem repeat(7, minmax(0, 1fr))"
     : "grid-template-columns: repeat(7, minmax(0, 1fr))";
 
   return (
-    <div className="flex min-h-full flex-col">
-      {/* The artwork band. Absent until a month-image pack ships; then the
-          calendar section below still fills a viewport of its own, so the
-          page reads image-first and scrolls to a fullscreen calendar. */}
+    <div className="flex h-full flex-col overflow-hidden">
+      {/* The artwork band. Absent until a month-image pack ships. The view no
+          longer scrolls, so the image shares the one screen with the grid
+          rather than hanging above a viewport of its own. */}
       {image && (
         <img
           src={image}
           alt=""
-          className="h-[60svh] w-full object-cover"
+          className="h-[28svh] w-full shrink-0 object-cover"
           loading="lazy"
         />
       )}
 
       <section
-        className="flex flex-col px-3 sm:px-6"
-        style={{
-          minHeight: image ? "100svh" : undefined,
-          flex: image ? undefined : "1",
-          paddingBottom: CONTENT_BOTTOM_PAD,
-        }}
+        className="flex min-h-0 flex-1 flex-col px-3 sm:px-6"
+        style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
       >
         {/* The serif month title, wall-calendar style, between the arrows. */}
         <PeriodHeading
@@ -107,7 +113,7 @@ export function MonthGridView({
         />
 
         {/* Weekday headers. */}
-        <div className="grid" style={gridCols}>
+        <div className="grid shrink-0" style={gridCols}>
           {showWeekNumbers && <div aria-hidden="true" />}
           {order.map((wd) => (
             <div
@@ -125,22 +131,26 @@ export function MonthGridView({
         </div>
 
         {/* The week rows. `flex-1` + per-row `flex: 1` keeps the grid filling
-            the section, so the month always covers one screen. */}
-        <div className="flex flex-1 flex-col">
+            the section, so the month always covers one screen. The rows carry
+            no min-height: the view does not scroll, so on a short viewport six
+            rows have to share whatever is there rather than push past the
+            bottom of a container that would clip them. */}
+        <div className="flex min-h-0 flex-1 flex-col">
           {weeks.map((week) => (
             <div
               key={week[0].key}
-              className="grid min-h-[4.5rem] flex-1 border-b border-line"
+              className="grid min-h-0 flex-1 border-b border-line"
               style={gridCols}
             >
               {showWeekNumbers && (
+                // Bare number, centred in its lane. The prefix survives in the
+                // accessible name, where there is no width to pay for it.
                 <div
-                  className="text-muted pt-1 pl-1 text-[10px]"
+                  className="text-muted pt-1 text-center text-[10px]"
                   aria-label={t("topbar.week", {
                     n: weekNumber(pack, week[0].key),
                   })}
                 >
-                  {t("weekdays.weekShort")}
                   {weekNumber(pack, week[0].key)}
                 </div>
               )}
