@@ -305,8 +305,11 @@ export function appPwa({ base, version }: AppPwaOptions): Plugin {
         {
           tag: "meta",
           attrs: {
+            // `black-translucent` lets the installed app paint under the iOS
+            // status bar (edge-to-edge, like the sibling contacts app); the
+            // top menu pads with `env(safe-area-inset-top)` to stay clear.
             name: "apple-mobile-web-app-status-bar-style",
-            content: "default",
+            content: "black-translucent",
           },
           injectTo: "head",
         },
