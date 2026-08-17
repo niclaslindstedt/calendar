@@ -104,7 +104,7 @@ export function HolidaysView({
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </button>
-        <div className="min-w-0 flex-1">
+        <div className="flex min-w-0 flex-1 justify-center">
           <SegmentedControl
             value={mode}
             onChange={(next) => onModeChange(next as HolidayMode)}
@@ -115,6 +115,10 @@ export function HolidaysView({
             ]}
           />
         </div>
+        {/* Balances the back button, so the switcher centres on the screen
+            rather than on the space left over beside it — the same trick the
+            period heading uses to keep its title between the arrows. */}
+        <div className="h-9 w-9 shrink-0" aria-hidden="true" />
       </div>
 
       <PeriodHeading
