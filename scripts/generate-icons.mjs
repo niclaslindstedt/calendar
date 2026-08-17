@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // Generate the PWA install icons, the favicon, and the social-preview image
 // from the same geometry as public/icons/icon.svg — a stylised calendar page
-// (two hangers, a solid header band, one marked day) in mint green on a
-// near-black tile, the family look the sibling checklist and notes apps wear
-// on a home screen. Pure Node (zlib + a minimal PNG encoder), so the pipeline
+// (two thin hanger pins, a solid header band, a thin frame around a grid of
+// day cells with one marked day) in mint green on a near-black tile, the
+// family look the sibling checklist and notes apps wear on a home screen.
+// Pure Node (zlib + a minimal PNG encoder), so the pipeline
 // needs no native image dependencies. Rerun with `npm run icons` /
 // `make icons` after changing the mark.
 import { deflateSync } from "node:zlib";
@@ -92,13 +93,28 @@ function encodePng(width, height, rgba) {
 const SAMPLES = [1 / 8, 3 / 8, 5 / 8, 7 / 8];
 
 // The mark in unit space, mirroring the rects in public/icons/icon.svg
-// (divided by 100). The body is filled, the panel is punched back out to the
-// tile colour, and the day sits inside the hole.
-const HANGER_L = [0.31, 0.1, 0.41, 0.3, 0.05];
-const HANGER_R = [0.59, 0.1, 0.69, 0.3, 0.05];
-const BODY = [0.14, 0.26, 0.86, 0.9, 0.14];
-const PANEL = [0.22, 0.48, 0.78, 0.82, 0.06];
-const DAY = [0.44, 0.59, 0.56, 0.71, 0.03];
+// (divided by 100). The page is filled, the panel is punched back out to the
+// tile colour, and the day cells sit inside the hole.
+const HANGER_L = [0.31, 0.09, 0.37, 0.25, 0.03];
+const HANGER_R = [0.63, 0.09, 0.69, 0.25, 0.03];
+const BODY = [0.14, 0.21, 0.86, 0.9, 0.1];
+const PANEL = [0.19, 0.38, 0.81, 0.85, 0.05];
+const DAY = [0.3683, 0.55, 0.4983, 0.68, 0.03];
+
+// The dimmed day cells: a 4×3 grid, minus the slot the marked day occupies.
+// Dim factor kept in lockstep with the group's fill-opacity in the SVG.
+const CELL_DIM = 0.45;
+const CELL_COLS = [0.26, 0.3933, 0.5267, 0.66];
+const CELL_ROWS = [0.44, 0.575, 0.71];
+const CELLS = CELL_ROWS.flatMap((y, row) =>
+  CELL_COLS.filter((_, col) => !(row === 1 && col === 1)).map((x) => [
+    x,
+    y,
+    x + 0.08,
+    y + 0.08,
+    0.02,
+  ]),
+);
 
 // Inside a rounded rectangle, from the signed distance at (x, y). Sampling the
 // sign 4×4 per pixel is what antialiases the mark's curves down to 16 px.
@@ -113,16 +129,22 @@ function inRoundRect(x, y, [x0, y0, x1, y1, r]) {
   );
 }
 
-// Whether unit-space point (x, y) is green — the glyph — rather than tile.
-function inMark(x, y) {
+// Green strength at unit-space point (x, y): 1 for the glyph proper (pins,
+// header band, frame, marked day), CELL_DIM for the dimmed day cells, 0 for
+// the tile.
+function markAt(x, y) {
   const onPage =
     inRoundRect(x, y, BODY) ||
     inRoundRect(x, y, HANGER_L) ||
     inRoundRect(x, y, HANGER_R);
-  if (!onPage) return false;
-  // The punched-out grid area keeps only the marked day.
-  if (inRoundRect(x, y, PANEL)) return inRoundRect(x, y, DAY);
-  return true;
+  if (!onPage) return 0;
+  // Inside the punched-out grid area only the day cells survive.
+  if (inRoundRect(x, y, PANEL)) {
+    if (inRoundRect(x, y, DAY)) return 1;
+    for (const cell of CELLS) if (inRoundRect(x, y, cell)) return CELL_DIM;
+    return 0;
+  }
+  return 1;
 }
 
 // Render size×size RGBA: the dark rounded tile carrying the green glyph.
@@ -143,15 +165,15 @@ function renderIcon(size, { pad = 0, radius = 0.18 } = {}) {
         Math.min(Math.max(qx, qy), 0) -
         r;
       const bgAlpha = Math.max(0, Math.min(1, 0.5 - outside));
-      // Glyph coverage, 4×4 supersampled so the hangers' caps and the punched
-      // grid area stay clean down to 16 px.
+      // Glyph coverage, 4×4 supersampled so the pins' caps, the thin frame
+      // and the day cells stay clean down to 16 px.
       let hit = 0;
       const unit = 1 / (SAMPLES.length * SAMPLES.length);
       for (const oy of SAMPLES) {
         for (const ox of SAMPLES) {
           const sx = ((px + ox) / size - pad) / (1 - 2 * pad);
           const sy = ((py + oy) / size - pad) / (1 - 2 * pad);
-          if (inMark(sx, sy)) hit += unit;
+          hit += markAt(sx, sy) * unit;
         }
       }
       rgba[i] = Math.round(INK[0] + (GREEN[0] - INK[0]) * hit);
@@ -194,7 +216,7 @@ function renderOg() {
           for (const ox of SAMPLES) {
             const sx = (px + ox - markX) / markSize;
             const sy = (py + oy - markY) / markSize;
-            if (inMark(sx, sy)) hit += unit;
+            hit += markAt(sx, sy) * unit;
           }
         }
         cr = Math.round(cr + (GREEN[0] - cr) * hit);
