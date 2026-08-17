@@ -9,6 +9,7 @@
 // revision of the official list lands here without touching any code.
 
 import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import type { HyphenationRules } from "./hyphenate.ts";
 import type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 
 const NAME_DAYS: NameDayTable = {
@@ -414,6 +415,64 @@ function holidays(year: number): readonly Holiday[] {
   ];
 }
 
+// Swedish hyphenation. The onset list is what makes a compound like
+// "Långfredagen" break as "Lång-fredagen": "fr" can begin a syllable, so it
+// travels with the following vowel instead of stranding an "f" behind.
+const hyphenation: HyphenationRules = {
+  vowels: "aeiouy\u00e5\u00e4\u00f6",
+  // "eu" spells one sound in "Bartolomeus"; "au" likewise in "Paul".
+  diphthongs: ["au", "eu"],
+  onsets: [
+    "bj",
+    "bl",
+    "br",
+    "dj",
+    "dr",
+    "dv",
+    "fj",
+    "fl",
+    "fr",
+    "gj",
+    "gl",
+    "gn",
+    "gr",
+    "hj",
+    "kl",
+    "kn",
+    "kr",
+    "kv",
+    "lj",
+    "pl",
+    "pr",
+    "sc",
+    "sj",
+    "sk",
+    "sl",
+    "sm",
+    "sn",
+    "sp",
+    "st",
+    "sv",
+    "tj",
+    "tr",
+    "tv",
+    "vr",
+    "ch",
+    "ph",
+    "th",
+    "skr",
+    "spl",
+    "spr",
+    "str",
+    "skv",
+    "sch",
+  ],
+  inseparable: ["ch"],
+  neverOnset: "x",
+  minLeading: 2,
+  minTrailing: 2,
+};
+
 export const svSE: LocalePack = {
   id: "sv-SE",
   label: "Sverige",
@@ -424,6 +483,7 @@ export const svSE: LocalePack = {
   showNameDaysDefault: true,
   redWeekdays: [0],
   restWeekdays: [0, 6],
+  hyphenation,
   nameDays: NAME_DAYS,
   holidays,
 };

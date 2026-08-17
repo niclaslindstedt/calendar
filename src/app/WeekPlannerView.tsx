@@ -38,6 +38,8 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Tapping a holiday's name opens the holidays screen for its year. */
+  onOpenHolidays: () => void;
 };
 
 export function WeekPlannerView({
@@ -52,6 +54,7 @@ export function WeekPlannerView({
   onCommit,
   onPrevious,
   onNext,
+  onOpenHolidays,
 }: Props) {
   const t = useT();
   const days = buildWeekStrip(anchor, {
@@ -118,9 +121,23 @@ export function WeekPlannerView({
                 <span className="text-muted cal-serif text-sm">
                   {parts?.day}
                 </span>
+                {/* Also the way into the holidays screen — see the same tap
+                    target in the month view. */}
                 {holiday && (
                   <span
-                    className={`truncate text-[11px] ${
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Enter" && e.key !== " ") return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onOpenHolidays();
+                    }}
+                    className={`cursor-pointer truncate text-[11px] focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
                     }`}
                   >

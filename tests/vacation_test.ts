@@ -23,7 +23,8 @@ function blockFor(
   ...days: string[]
 ): BridgeBlock | undefined {
   return blocks.find(
-    (b) => b.days.length === days.length && days.every((d, i) => b.days[i] === d),
+    (b) =>
+      b.days.length === days.length && days.every((d, i) => b.days[i] === d),
   );
 }
 
@@ -89,9 +90,7 @@ describe("bridgeBlocks", () => {
     // Kristi himmelsfärdsdag 2026 is Thursday 14 May. Booking Friday the 15th
     // buys Thu–Sun: the user's own example.
     expect(
-      holidaysInYear(sv, 2026).find(
-        (h) => h.name === "Kristi himmelsfärdsdag",
-      ),
+      holidaysInYear(sv, 2026).find((h) => h.name === "Kristi himmelsfärdsdag"),
     ).toMatchObject({ key: "2026-05-14", weekday: 4 });
     const friday = blockFor(blocks, "2026-05-15");
     expect(friday).toBeDefined();
@@ -142,8 +141,10 @@ describe("bridgeBlocks", () => {
   });
 
   it("offers nothing longer than a working week to bridge", () => {
-    for (const b of bridgeBlocks(sv, 2026)) expect(b.cost).toBeLessThanOrEqual(5);
-    for (const b of bridgeBlocks(gb, 2026)) expect(b.cost).toBeLessThanOrEqual(5);
+    for (const b of bridgeBlocks(sv, 2026))
+      expect(b.cost).toBeLessThanOrEqual(5);
+    for (const b of bridgeBlocks(gb, 2026))
+      expect(b.cost).toBeLessThanOrEqual(5);
   });
 
   it("works for a pack with different holidays", () => {
@@ -158,9 +159,7 @@ describe("planVacation", () => {
     for (const budget of [0, 1, 3, 7, 12, 25, 40]) {
       const plan = planVacation(sv, 2026, budget);
       expect(plan.spent).toBeLessThanOrEqual(budget);
-      expect(plan.spent).toBe(
-        plan.breaks.reduce((sum, b) => sum + b.cost, 0),
-      );
+      expect(plan.spent).toBe(plan.breaks.reduce((sum, b) => sum + b.cost, 0));
       expect(plan.spent + plan.unspent).toBe(budget);
     }
   });

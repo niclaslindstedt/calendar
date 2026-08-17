@@ -19,6 +19,7 @@ import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import {
   holidayFor,
+  hyphenate,
   isRedDay,
   isRedWeekday,
   monthName,
@@ -45,6 +46,8 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
+  /** Tapping a holiday's name opens the holidays screen for its year. */
+  onOpenHolidays: () => void;
 };
 
 export function MonthGridView({
@@ -61,6 +64,7 @@ export function MonthGridView({
   onCommit,
   onPrevious,
   onNext,
+  onOpenHolidays,
 }: Props) {
   const t = useT();
   const weeks = buildMonthGrid(year, month, {
@@ -215,38 +219,55 @@ export function MonthGridView({
                       {/* The holiday name clears the float: Swedish holiday
                           names are long compounds ("Midsommarafton" is 60 px
                           at a 43 px line) that have to break somewhere, and
-                          breaking them against the ~20 px left beside the
-                          date shatters them into three fragments. Starting
-                          below the date costs the ~13 holidays a year one
-                          line and breaks the word at most once. The 7.5 px
-                          matches the names, and is also what keeps
-                          "Nyårsdagen" (43.1 px at 8 px) on one line instead
-                          of stranding its last letter. */}
+                          starting below the date gives them a full line to
+                          break on. Where they still do not fit, `hyphenate`
+                          has seeded soft hyphens at the syllable boundaries
+                          the language permits, so the break reads
+                          "Midsom-marafton" rather than the "Midsommaraft-on"
+                          that `break-words` produced by splitting against
+                          whatever happened to be left on the line. */}
+                      {/* The holiday name is also the way into the holidays
+                          screen — it is already on screen and it is exactly
+                          what you are asking about. `stopPropagation` keeps
+                          the tap off the cell's own click-to-type. */}
                       {holiday && (
                         <span
-                          className={`clear-right block px-0.5 text-[7.5px] leading-[1.25] break-words ${
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onOpenHolidays();
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key !== "Enter" && e.key !== " ") return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onOpenHolidays();
+                          }}
+                          className={`clear-right block cursor-pointer px-0.5 text-[7.5px] leading-[1.25] focus-visible:outline-2 ${
                             holiday.red ? "cal-red" : "text-muted"
                           }`}
                         >
-                          {holiday.name}
+                          {hyphenate(holiday.name, pack.hyphenation)}
                         </span>
                       )}
                       {/* Name days flow around the date, so "Ada" shares its
-                          line and only a name too wide for the gap drops
-                          below. Deliberately NO `break-words`: the default
-                          never splits a word, so a name that does not fit
-                          beside the date moves down whole instead of
-                          shattering into "Mart" / "a", and "Bernhard," can
-                          never leave its comma stranded at the head of the
-                          next line. That only holds if every name fits a
-                          full line — at 7.5 px on the 43 px line this block
-                          gets (the cell's own padding is cancelled by the
-                          `-mx-1` bleed), all 627 names in the Swedish
+                          line. Still deliberately NO `break-words` — that
+                          splits against whatever is left on the current line
+                          and shatters a name into "Mart" / "a". Instead
+                          `hyphenate` seeds soft hyphens at the syllable
+                          boundaries the language allows, so a name that will
+                          not fit beside the date breaks as "Henri-etta"
+                          rather than dropping below whole and leaving the
+                          first line half empty. Every name still fits a full
+                          line unaided — at 7.5 px on the 43 px line this
+                          block gets (the cell's own padding is cancelled by
+                          the `-mx-1` bleed), all 627 names in the Swedish
                           almanac do, the widest being "Bartolomeus" at
                           42 px. Re-measure before growing this font. */}
                       {names.length > 0 && (
                         <span className="text-muted block px-0.5 text-[7.5px] leading-[1.25]">
-                          {names.join(", ")}
+                          {hyphenate(names.join(", "), pack.hyphenation)}
                         </span>
                       )}
                     </div>

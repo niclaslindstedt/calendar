@@ -29,6 +29,10 @@ export type AppSettings = {
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
   textSize: EntryTextSize;
+  /** Paid vacation days a year, spent by the vacation planner. 25 is the
+   *  Swedish statutory minimum and the usual UK full-time allowance, so it is
+   *  the right default in both shipped packs. */
+  vacationDays: number;
   backend: BackendId;
   devMode: boolean;
   captureLogs: boolean;
@@ -42,6 +46,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nameDays: null,
   listRows: "fixed",
   textSize: "dynamic",
+  vacationDays: 25,
   backend: "browser",
   devMode: false,
   captureLogs: false,
@@ -58,6 +63,7 @@ export const LOOK_KEYS = [
   "nameDays",
   "listRows",
   "textSize",
+  "vacationDays",
 ] as const;
 
 export type LookSettings = Pick<AppSettings, (typeof LOOK_KEYS)[number]>;
@@ -69,6 +75,7 @@ export function pickLook(settings: AppSettings): LookSettings {
     nameDays: settings.nameDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
+    vacationDays: settings.vacationDays,
   };
 }
 
@@ -88,6 +95,15 @@ export function updateLook<K extends keyof LookSettings>(
     next.nameDays = null;
   }
   return next;
+}
+
+/** A vacation allowance the planner can actually work with. The field is a
+ *  free-text number, and a stored document can be hand-edited, so every read
+ *  goes through here: whole days, never negative, never more than a year. */
+export function clampVacationDays(value: unknown): number {
+  const n = Math.floor(Number(value));
+  if (!Number.isFinite(n)) return DEFAULT_SETTINGS.vacationDays;
+  return Math.max(0, Math.min(365, n));
 }
 
 const STORAGE_KEY = "calendar:settings";

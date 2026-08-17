@@ -22,7 +22,11 @@
 // hide the year's best suggestions.
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
-import { addDays, daysBetween, toDayKey } from "@niclaslindstedt/oss-framework/calendar";
+import {
+  addDays,
+  daysBetween,
+  toDayKey,
+} from "@niclaslindstedt/oss-framework/calendar";
 
 import { holidayFor, type Holiday, type LocalePack } from "./locale/index.ts";
 
@@ -159,7 +163,10 @@ function yearWindow(year: number): { first: DayKey; last: DayKey } {
 }
 
 /** The window as a free/working bitmap, indexed from `first`. */
-function freeMap(pack: LocalePack, year: number): {
+function freeMap(
+  pack: LocalePack,
+  year: number,
+): {
   first: DayKey;
   free: boolean[];
 } {

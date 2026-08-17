@@ -13,6 +13,8 @@ import type {
   DayKey,
   WeekStart,
 } from "@niclaslindstedt/oss-framework/calendar";
+
+import type { HyphenationRules } from "./hyphenate.ts";
 import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
 
 /** `"MM-DD"` → the day's celebrated names, in display order. */
@@ -70,6 +72,10 @@ export type LocalePack = {
    *  country whose weekend is not Sat/Sun says so here rather than anywhere
    *  else in the app. */
   readonly restWeekdays: readonly number[];
+  /** How the language breaks a word across lines, for names too long for a
+   *  month cell's line. Shared machinery, per-language rules — see
+   *  `hyphenate.ts`. */
+  readonly hyphenation: HyphenationRules;
   /** The name-day table, or null when the country has no tradition. */
   readonly nameDays: NameDayTable | null;
   /** The country's holidays for a year — fixed dates plus computed rules
@@ -137,9 +143,13 @@ function referenceWeekday(weekday: number): Date {
 }
 
 /** The pack-language name of a month (1-based), e.g. "januari" for sv-SE. */
-export function monthName(pack: LocalePack, month: number): string {
+export function monthName(
+  pack: LocalePack,
+  month: number,
+  style: "long" | "short" = "long",
+): string {
   return new Intl.DateTimeFormat(pack.bcp47, {
-    month: "long",
+    month: style,
     timeZone: "UTC",
   }).format(new Date(Date.UTC(2023, month - 1, 1, 12)));
 }

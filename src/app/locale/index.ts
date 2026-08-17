@@ -8,6 +8,8 @@ import { svSE } from "./sv-se.ts";
 import type { LocalePack } from "./types.ts";
 
 export type { Holiday, LocalePack, NameDayTable } from "./types.ts";
+export type { HyphenationRules } from "./hyphenate.ts";
+export { hyphenate, hyphenPoints, SOFT_HYPHEN } from "./hyphenate.ts";
 export {
   holidayFor,
   isRedDay,
