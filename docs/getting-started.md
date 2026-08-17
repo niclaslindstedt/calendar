@@ -32,10 +32,24 @@ The switcher in the top bar toggles:
   day's name days beside the number. In Settings → Entries you can choose
   whether rows keep a fixed height or grow with their text.
 
-The **‹ ›** arrows flanking the month heading page between months (or weeks,
-in the week view); **Today** in the top bar jumps back to the current day.
-The arrows sit on the heading rather than in the top bar so the view switcher
-has room on a portrait phone.
+**Swipe left or right** in the month and week views to turn the page — the
+neighbouring period follows your finger and settles into place. Those two
+views fill the screen exactly and never scroll, which is what frees the
+sideways gesture; the day list scrolls as before.
+
+The **‹ ›** arrows flanking the month heading do the same thing with the same
+animation, and **Today** in the top bar jumps back to the current day. The
+arrows sit on the heading rather than in the top bar so the view switcher has
+room on a portrait phone.
+
+## Holidays and vacation planning
+
+Tap a **holiday's name** in any view to open the holidays screen for that
+year: the year's public holidays, and a planner that works out which days to
+book to get the most time off — the Friday after a Thursday holiday, the days
+that bridge Easter into a ten-day break. Set your allowance in
+Settings → General → Vacation. See
+[the vacation planner](features/vacation-planner.md).
 
 ## Settings (the cogwheel, top right)
 
@@ -49,7 +63,8 @@ stock look without touching your storage connections or developer switches.
   (United Kingdom / Sverige — sets start of week, week numbers, red days,
   name days), the week-number and name-day toggles, and developer mode. A
   fresh install picks the country calendar from your device's language
-  settings; changing it here pins your choice.
+  settings; changing it here pins your choice. **Vacation days a year**
+  (default 25) is the allowance the vacation planner spends.
 - **Appearance** — themes (light/dark/custom), font, UI text size, density.
   A fresh install starts on **System**, which follows your device's light /
   dark preference until you pick a concrete theme.
