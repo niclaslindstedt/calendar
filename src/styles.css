@@ -53,6 +53,34 @@ body {
   }
 }
 
+/* The top menu's vertical rhythm. Everywhere except an installed iOS PWA the
+   top padding *adds* to the safe-area inset, which is what keeps the bar off
+   a notch in a browser tab (where the inset is 0 in portrait, so the bar
+   simply gets its `py-3`).
+
+   An installed iOS PWA is the exception: there the inset is the whole status
+   bar band (59 px on a Dynamic Island phone, 20 px on a phone without one),
+   and it already leaves room below the island. Adding the pad on top of it
+   made the gap above the buttons read as roughly double the gap below them —
+   top-heavy chrome. Taking the `max()` instead drops exactly one `py-3`
+   (12 px) off the top, so the island-to-buttons gap matches the
+   buttons-to-hairline gap, while still flooring the pad if a device ever
+   reports a smaller inset than the padding itself. Scoped with the same
+   iOS-standalone probe as the shell height above. */
+.cal-topbar {
+  --cal-header-pad: 0.75rem;
+  padding-top: calc(var(--cal-header-pad) + env(safe-area-inset-top));
+  padding-bottom: var(--cal-header-pad);
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    .cal-topbar {
+      padding-top: max(var(--cal-header-pad), env(safe-area-inset-top));
+    }
+  }
+}
+
 body {
   margin: 0;
   overscroll-behavior-y: none;
