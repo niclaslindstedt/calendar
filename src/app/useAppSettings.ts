@@ -19,6 +19,14 @@ import {
   type CalFonts,
 } from "./fonts.ts";
 import { DEFAULT_LOCALE_ID, getLocale } from "./locale/index.ts";
+import {
+  DEFAULT_PAST_MARK,
+  pastMarkScope,
+  pastMarkStyle,
+  type PastMark,
+  type PastMarkScope,
+  type PastMarkStyle,
+} from "./pastDays.ts";
 import type { BackendId } from "./storage/backends.ts";
 import {
   DEFAULT_TEXT_SCALE,
@@ -91,6 +99,11 @@ export type AppSettings = {
   monthHolidayCorner: CellCorner;
   /** Month cell: where the note sits in what is left. */
   monthNote: NotePlacement;
+  /** The stroke drawn over a day that has passed — off by default: not
+   *  everyone wants their calendar written on. */
+  pastMark: PastMarkStyle;
+  /** How much of a passed day that stroke covers. */
+  pastMarkScope: PastMarkScope;
   /** Paid vacation days a year, spent by the vacation planner. 25 is the
    *  Swedish statutory minimum and the usual UK full-time allowance, so it is
    *  the right default in both shipped packs. */
@@ -124,6 +137,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   monthNameDayCorner: "bottom-right",
   monthHolidayCorner: "bottom-right",
   monthNote: "top",
+  pastMark: DEFAULT_PAST_MARK.style,
+  pastMarkScope: DEFAULT_PAST_MARK.scope,
   vacationDays: 25,
   backend: "browser",
   devMode: false,
@@ -153,6 +168,8 @@ export const LOOK_KEYS = [
   "monthNameDayCorner",
   "monthHolidayCorner",
   "monthNote",
+  "pastMark",
+  "pastMarkScope",
   "vacationDays",
 ] as const;
 
@@ -177,6 +194,8 @@ export function pickLook(settings: AppSettings): LookSettings {
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
     monthNote: settings.monthNote,
+    pastMark: settings.pastMark,
+    pastMarkScope: settings.pastMarkScope,
     vacationDays: settings.vacationDays,
   };
 }
@@ -193,6 +212,18 @@ export function monthCellLayout(
     nameDays: look.monthNameDayCorner,
     holidays: look.monthHolidayCorner,
     note: look.monthNote,
+  };
+}
+
+/** The passed-day mark the views draw, gathered from the look and snapped
+ *  back onto the known values — a stored document can carry anything, and an
+ *  unrecognised one must not put a stroke on the calendar. */
+export function pastMarkOf(
+  look: Pick<AppSettings, "pastMark" | "pastMarkScope">,
+): PastMark {
+  return {
+    style: pastMarkStyle(look.pastMark),
+    scope: pastMarkScope(look.pastMarkScope),
   };
 }
 

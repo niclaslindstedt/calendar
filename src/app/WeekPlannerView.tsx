@@ -23,6 +23,8 @@ import {
 } from "./locale/index.ts";
 import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import type { CalendarDoc } from "./types.ts";
 
@@ -32,6 +34,8 @@ type Props = {
   today: DayKey;
   pack: LocalePack;
   showNameDays: boolean;
+  /** The stroke drawn over the days that have passed, if any. */
+  pastMark: PastMarkSetting;
   textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
@@ -50,6 +54,7 @@ export function WeekPlannerView({
   today,
   pack,
   showNameDays,
+  pastMark,
   textSize,
   doc,
   editingDay,
@@ -99,6 +104,7 @@ export function WeekPlannerView({
               ? nameDaysFor(pack, parts.month, parts.day)
               : [];
           const entry = doc.entries[cell.key] ?? "";
+          const marked = pastMarkSlot(pastMark, cell.key, today);
           return (
             <div
               key={cell.key}
@@ -112,7 +118,7 @@ export function WeekPlannerView({
                   onEditDay(cell.key);
                 }
               }}
-              className={`flex min-h-0 flex-1 cursor-text flex-col overflow-hidden border-b border-line px-2 py-1.5 focus-visible:outline-2 ${
+              className={`relative flex min-h-0 flex-1 cursor-text flex-col overflow-hidden border-b border-line px-2 py-1.5 focus-visible:outline-2 ${
                 cell.isToday ? "bg-surface-2" : ""
               }`}
             >
@@ -122,9 +128,11 @@ export function WeekPlannerView({
                 >
                   {weekdayName(pack, weekday)}
                 </span>
-                <span className="cal-font-day cal-size-day text-muted [--cal-base:0.875rem]">
-                  {parts?.day}
-                </span>
+                <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
+                  <span className="cal-font-day cal-size-day text-muted [--cal-base:0.875rem]">
+                    {parts?.day}
+                  </span>
+                </MarkedDate>
                 {/* Also the way into the holidays screen — see the same tap
                     target in the month view. */}
                 {holiday && (
@@ -168,6 +176,10 @@ export function WeekPlannerView({
                   onClose={() => onEditDay(null)}
                 />
               </div>
+
+              {/* The whole-row stroke — drawn over the row's content, and
+                  transparent to taps so the day still opens under it. */}
+              {marked === "cell" && <PastMark style={pastMark.style} />}
             </div>
           );
         })}

@@ -30,6 +30,8 @@ import {
   type LocalePack,
 } from "./locale/index.ts";
 import { MonthCellFrame } from "./monthCell.tsx";
+import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import { minHyphenatedLetters, type TextScales } from "./textSize.ts";
@@ -45,6 +47,8 @@ type Props = {
   showNameDays: boolean;
   /** Where the number, the captions and the note sit in a cell. */
   layout: MonthCellLayout;
+  /** The stroke drawn over the days that have passed, if any. */
+  pastMark: PastMarkSetting;
   textSize: EntryTextSize;
   /** How big each of the almanac's own pieces is set (Settings → Calendar →
    *  Text size). Only the captions' scales are read here — the sizes
@@ -71,6 +75,7 @@ export function MonthGridView({
   showWeekNumbers,
   showNameDays,
   layout,
+  pastMark,
   textSize,
   scales,
   doc,
@@ -182,7 +187,9 @@ export function MonthGridView({
                   key={cell.key}
                   cell={cell}
                   pack={pack}
+                  today={today}
                   layout={layout}
+                  pastMark={pastMark}
                   showNameDays={showNameDays}
                   textSize={textSize}
                   scales={scales}
@@ -221,7 +228,9 @@ export function MonthGridView({
 function DayCell({
   cell,
   pack,
+  today,
   layout,
+  pastMark,
   showNameDays,
   textSize,
   scales,
@@ -234,7 +243,9 @@ function DayCell({
 }: {
   cell: GridCell;
   pack: LocalePack;
+  today: DayKey;
   layout: MonthCellLayout;
+  pastMark: PastMarkSetting;
   showNameDays: boolean;
   textSize: EntryTextSize;
   scales: TextScales;
@@ -255,6 +266,8 @@ function DayCell({
     : false;
   const names =
     showNameDays && parts ? nameDaysFor(pack, parts.month, parts.day) : [];
+  // Asked once per day, handed to whichever box carries the stroke.
+  const marked = pastMarkSlot(pastMark, cell.key, today);
 
   return (
     <div
@@ -277,13 +290,15 @@ function DayCell({
         layout={layout}
         content={{
           day: (
-            <span
-              className={`cal-font-day cal-size-day leading-none [--cal-base:1rem] sm:[--cal-base:1.125rem] ${
-                red ? "cal-red" : "text-fg"
-              } ${cell.isToday ? "font-bold" : ""}`}
-            >
-              {cell.day}
-            </span>
+            <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
+              <span
+                className={`cal-font-day cal-size-day leading-none [--cal-base:1rem] sm:[--cal-base:1.125rem] ${
+                  red ? "cal-red" : "text-fg"
+                } ${cell.isToday ? "font-bold" : ""}`}
+              >
+                {cell.day}
+              </span>
+            </MarkedDate>
           ),
           // The holiday name is also the way into the holidays screen — it is
           // already on screen and it is exactly what you are asking about.
@@ -340,6 +355,11 @@ function DayCell({
           ),
         }}
       />
+
+      {/* The whole-cell stroke, over the day rather than in it: last in the
+          cell so it sits above the note, and `pointer-events-none` so the
+          cell is still a tap target underneath. */}
+      {marked === "cell" && <PastMark style={pastMark.style} />}
     </div>
   );
 }
