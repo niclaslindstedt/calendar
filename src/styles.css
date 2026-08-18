@@ -98,12 +98,51 @@ body {
    full 47 px line — so a face wider than the mono baseline gives the
    difference back through its scale (`CAPTION_SCALE` in `src/app/fonts.ts`)
    instead of clipping. The size lives here rather than in a `text-[7.5px]`
-   utility so the two can't fight over which wins. */
+   utility so the two can't fight over which wins.
+
+   The third factor is the reader's own call (Settings → Calendar → Text
+   size): the measurement is what the caption ships at, not a ceiling. Past
+   1 the band stops holding the longest names whole, which is why the month
+   cell reseeds its hyphens from the same scale (`minHyphenatedLetters`). */
 .cal-cell-nameday {
-  font-size: calc(7.5px * var(--cal-nameday-scale, 1));
+  font-size: calc(
+    7.5px * var(--cal-nameday-scale, 1) * var(--cal-size-nameday, 1)
+  );
 }
 .cal-cell-holiday {
-  font-size: calc(7.5px * var(--cal-holiday-scale, 1));
+  font-size: calc(
+    7.5px * var(--cal-holiday-scale, 1) * var(--cal-size-holiday, 1)
+  );
+}
+
+/* The same setting, everywhere else a piece is drawn. A site's own size is
+   the *base* — the week planner's day number is not the day list's — so it
+   sets `--cal-base` (as a `[--cal-base:…]` utility, which keeps a responsive
+   variant possible) and the scale multiplies it here. One rule per piece
+   rather than a shared one, so a site names the piece it is drawing and
+   can't pick up a neighbour's scale. */
+.cal-size-day {
+  font-size: calc(var(--cal-base, 1rem) * var(--cal-size-day, 1));
+}
+.cal-size-holiday {
+  font-size: calc(var(--cal-base, 0.6875rem) * var(--cal-size-holiday, 1));
+}
+.cal-size-nameday {
+  font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-nameday, 1));
+}
+.cal-size-week {
+  font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-week, 1));
+}
+
+/* The size sliders in Settings. `accent-color` themes the native track and
+   thumb from the active preset, so the control needs no rebuild to follow a
+   theme; the height is the app's 36 px touch target rather than the ~20 px a
+   bare range input takes. */
+.cal-slider {
+  accent-color: var(--accent);
+  width: 100%;
+  height: 36px;
+  cursor: pointer;
 }
 
 /* Red days (Sundays) and other red accents. */

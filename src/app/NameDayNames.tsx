@@ -18,9 +18,20 @@ type Props = {
   /** Soft-hyphenate each name — for the month cell, whose line is 46 px wide.
    *  The wider views leave names whole. */
   hyphenated?: boolean;
+  /** The letter count below which a name is left whole. Defaults to the
+   *  measured constant; the month cell derives it from the size the reader
+   *  has the captions set at (`minHyphenatedLetters`), because the band the
+   *  names have to fit does not grow with them. */
+  minWordLength?: number;
 };
 
-export function NameDayNames({ names, pack, onOpen, hyphenated }: Props) {
+export function NameDayNames({
+  names,
+  pack,
+  onOpen,
+  hyphenated,
+  minWordLength,
+}: Props) {
   return (
     <>
       {names.map((name, i) => (
@@ -46,7 +57,9 @@ export function NameDayNames({ names, pack, onOpen, hyphenated }: Props) {
           >
             {/* Hyphenated a name at a time, which is what `hyphenate` does
                 inside a joined string anyway — it works word by word. */}
-            {hyphenated ? hyphenateText(name, pack.hyphenation) : name}
+            {hyphenated
+              ? hyphenateText(name, pack.hyphenation, { minWordLength })
+              : name}
           </span>
         </span>
       ))}

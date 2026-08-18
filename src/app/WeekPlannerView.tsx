@@ -122,7 +122,7 @@ export function WeekPlannerView({
                 >
                   {weekdayName(pack, weekday)}
                 </span>
-                <span className="cal-font-day text-muted text-sm">
+                <span className="cal-font-day cal-size-day text-muted [--cal-base:0.875rem]">
                   {parts?.day}
                 </span>
                 {/* Also the way into the holidays screen — see the same tap
@@ -141,14 +141,14 @@ export function WeekPlannerView({
                       e.stopPropagation();
                       onOpenHolidays();
                     }}
-                    className={`cal-font-holiday cursor-pointer truncate text-[11px] focus-visible:outline-2 ${
+                    className={`cal-font-holiday cal-size-holiday cursor-pointer truncate [--cal-base:11px] focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
                     }`}
                   >
                     {holiday.name}
                   </span>
                 )}
-                <span className="cal-font-nameday text-muted min-w-0 flex-1 truncate text-right text-[10px]">
+                <span className="cal-font-nameday cal-size-nameday text-muted min-w-0 flex-1 truncate text-right [--cal-base:10px]">
                   {/* Every name is also the way into the name-day search. */}
                   <NameDayNames
                     names={names}

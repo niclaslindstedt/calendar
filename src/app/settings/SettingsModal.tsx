@@ -6,7 +6,7 @@
 // Save on the right.
 //
 // The look settings the dialog owns (country calendar, the display toggles,
-// the calendar's faces and entry sizing, and the theme) are edited against a
+// the calendar's faces and text sizes, and the theme) are edited against a
 // local `draft` and only committed on Save: while open the draft streams to
 // the app through `onPreview`, so the calendar behind the dialog previews
 // live; Cancel drops it (the persisted look snaps back) and Save writes it.
@@ -52,6 +52,7 @@ import { FontsSection } from "./FontsSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
 import { StorageSection, type StorageActions } from "./StorageSection.tsx";
+import { TextSizeSection } from "./TextSizeSection.tsx";
 import { TabSidebar, SettingsHeader, type TabDef } from "./tabs.tsx";
 
 export type { StorageActions };
@@ -273,11 +274,13 @@ export function SettingsModal({
               />
             )}
             {/* One tab for how the calendar reads: the cell's arrangement,
-                the day list's rows, and the faces each piece is set in. */}
+                the day list's rows, the faces each piece is set in, and how
+                big each of them is printed. */}
             {activeTab === "calendar" && (
               <>
                 <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
                 <FontsSection look={draft.look} onUpdate={updateDraftLook} />
+                <TextSizeSection look={draft.look} onUpdate={updateDraftLook} />
               </>
             )}
             {activeTab === "storage" && (

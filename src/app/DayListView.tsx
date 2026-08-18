@@ -155,7 +155,7 @@ export function DayListView({
                   otherwise every row carries 36 px of dead left margin. */}
               {showWeekNumbers && (
                 <span
-                  className="text-muted w-7 shrink-0 pt-1 text-right text-[9px] leading-tight"
+                  className="text-muted cal-size-week w-7 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
                   aria-label={
                     weekMark
                       ? t("topbar.week", { n: weekNumber(pack, key) })
@@ -166,7 +166,7 @@ export function DayListView({
                 </span>
               )}
               <span
-                className={`cal-font-day w-7 shrink-0 text-right text-lg leading-tight ${
+                className={`cal-font-day cal-size-day w-7 shrink-0 text-right leading-tight [--cal-base:1.125rem] ${
                   red ? "cal-red" : "text-fg"
                 }`}
               >
@@ -201,7 +201,7 @@ export function DayListView({
                       e.stopPropagation();
                       onOpenHolidays();
                     }}
-                    className={`cal-font-holiday cursor-pointer focus-visible:outline-2 ${
+                    className={`cal-font-holiday cal-size-holiday cursor-pointer [--cal-base:10px] focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
                     }`}
                   >
@@ -211,7 +211,7 @@ export function DayListView({
                 {holiday && names.length > 0 && (
                   <span className="text-muted"> · </span>
                 )}
-                <span className="cal-font-nameday text-muted">
+                <span className="cal-font-nameday cal-size-nameday text-muted [--cal-base:10px]">
                   {/* Every name is also the way into the name-day search. */}
                   <NameDayNames
                     names={names}

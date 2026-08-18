@@ -85,9 +85,10 @@ stock look without touching your storage connections or developer switches.
   vacation planner** saves the dialog and jumps to the planner for the year on
   display.
 - **Calendar** — the month cell's layout (arranged on a sample day: tap a
-  corner and pick what belongs in it), the day-list row height, and the face
-  each part of a day is set in. See [Month cell layout](#month-cell-layout)
-  and [Type](#type).
+  corner and pick what belongs in it), the day-list row height, the face each
+  part of a day is set in, and how big each of them is printed. See
+  [Month cell layout](#month-cell-layout), [Type](#type) and
+  [Text size](#text-size).
 - **Appearance** — the theme, and only the theme: **Follow device** (the
   default, which tracks your device's light / dark preference), **Light**,
   **Dark**, or **Custom**, plus the palette variant within the light and dark
@@ -139,17 +140,24 @@ program around it.
 A month cell is only 47 px wide, so the caption sizes there are measured
 rather than chosen: a face wider than the default gives the difference back
 automatically, and the longest name day still holds a full line instead of
-being clipped.
+being clipped. That measurement is the size each caption _ships_ at — see
+[Text size](#text-size) to change it.
 
-### Entry text size
+### Text size
 
-**Settings → Calendar → Your text → Text size** chooses how the text you
-write on a day is sized:
+**Settings → Calendar → Text size** is one slider per part of a day. All five
+read the same way: left is smaller, right is bigger, and the calendar behind
+the dialog re-sets itself as you drag.
 
-- **Dynamic** (the default) — a note shrinks as you write, so it always fits
-  the room the day has left over after its number, holiday and name days.
-  Once it is as small as that view allows, the day is full: the next keystroke
-  is refused rather than pushed out of sight. Deleting always works.
+**Your text** — what you write on a day — has its own ladder, because it is
+sized against the room a view actually leaves it rather than against a fixed
+size:
+
+- **Dynamic** (the default, the slider's left end) — a note shrinks as you
+  write, so it always fits the room the day has left over after its number,
+  holiday and name days. Once it is as small as that view allows, the day is
+  full: the next keystroke is refused rather than pushed out of sight.
+  Deleting always works.
 - **Small / Medium / Large** — the text stays at that size no matter how much
   you write, and the day fills up sooner because it never shrinks. Each step
   is scaled to the view it renders in, so a month cell stays legible while the
@@ -159,6 +167,18 @@ A note that no longer fits — because you pinned a bigger step, or because it
 was written in a view with more room — is cut off at the last line that fits
 and ends in an ellipsis, so it stops short of the day's captions instead of
 running under them.
+
+The **day number**, **holiday name**, **name days** and **week number** are
+the almanac's own printing, and their sliders read as percentages of the size
+each was measured at. **100%** is that measurement — the middle stop, and
+what a fresh install uses — with two steps down to 80% and three up to 140%.
+
+The sizes apply in all three views at once, each scaled from what that view
+prints the piece at, so making the date bigger does not turn the month grid
+into the day list. In the month view the captions have only a 47 px column to
+sit in, so past 100% names start breaking across two lines — the calendar
+re-picks its hyphenation points for the size you chose, so a long name breaks
+at a syllable rather than being clipped.
 
 ## Install as an app
 
