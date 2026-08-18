@@ -203,6 +203,59 @@ body {
   font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-week, 1));
 }
 
+/* The week planner's almanac lane. Its base width comes from the view (as a
+   `[--cal-lane:…]` utility, so it can keep a responsive variant and a narrower
+   value for a pack that prints no name days); the scale the reader has the
+   captions set at multiplies it here.
+
+   The lane *has* to grow with them, unlike the month cell's caption band: a
+   week row's height is fixed by the seven-way split of the screen, so a name
+   run that wraps to a second line at 140% is a line the row cannot show. The
+   month cell answers that by re-seeding hyphens (`minHyphenatedLetters`); the
+   lane answers it by getting wider, which costs the note width the reader
+   asked to spend. Whichever caption is set largest sets the width — they share
+   the lane, and it is the widest one that decides whether a line wraps. */
+.cal-week-lane {
+  width: calc(
+    var(--cal-lane, 7rem) *
+      max(var(--cal-size-nameday, 1), var(--cal-size-holiday, 1))
+  );
+}
+
+/* The week planner's almanac lane, lying back down on a short screen.
+   `WeekPlannerView` sets the date big with the weekday, the holiday and the
+   day's names stacked under it in a lane down the left — a shape measured
+   against the ~98 px row a portrait phone gives it (AGENTS.md: portrait is
+   what gets optimised). A landscape phone shares ~390 px between seven rows,
+   so a row is barely taller than the date itself and everything under it
+   would be clipped away. Below that height the lane becomes a line again —
+   the same pieces in the same order, read across rather than down, with the
+   note under them at full width — which is the layout this view shipped
+   before the lane. It lives here rather than in the view because only a media
+   query knows the screen is that short. 700 px is where it flips: seven rows
+   plus the app's own chrome need that much for a row to clear the ~76 px the
+   stack occupies, so a landscape tablet keeps the lane and a landscape phone
+   does not. */
+@media (orientation: landscape) and (max-height: 700px) {
+  .cal-week-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .cal-week-lane {
+    width: auto;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 0.375rem;
+  }
+  /* A date that is a heading in the lane is just the day number again on a
+     line — the size the other views print it at. */
+  .cal-week-lane .cal-size-day {
+    --cal-base: 1rem;
+  }
+}
+
 /* The size sliders in Settings. `accent-color` themes the native track and
    thumb from the active preset, so the control needs no rebuild to follow a
    theme; the height is the app's 36 px touch target rather than the ~20 px a
