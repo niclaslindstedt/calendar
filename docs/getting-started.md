@@ -29,8 +29,12 @@ The switcher in the top bar toggles:
 
 - **Month** — the whole month, one screen, wall-calendar style. When a month
   image pack is installed, the artwork hangs above the grid.
-- **Week** — one week at a time, one generous row per weekday, with more room
-  to read and write.
+- **Week** — one week at a time, one generous row per weekday. The date is set
+  big at the head of a lane down the left, with the weekday, the holiday and
+  the day's name days stacked under it; the rest of the row is yours to write
+  in, with more room to read and write than a month cell. (On a landscape
+  phone, where seven rows leave no height for a lane, those four pieces lie
+  back down into a line with the note under them.)
 - **Day list** — the month as a vertical scroll, one row per day with the
   day's name days beside the number. In Settings → Calendar you can choose
   whether rows keep a fixed height or grow with their text. The month heading
@@ -234,7 +238,10 @@ prints the piece at, so making the date bigger does not turn the month grid
 into the day list. In the month view the captions have only a 47 px column to
 sit in, so past 100% names start breaking across two lines — the calendar
 re-picks its hyphenation points for the size you chose, so a long name breaks
-at a syllable rather than being clipped.
+at a syllable rather than being clipped. The week planner has the opposite
+freedom: its date lane widens with the holiday and name-day sliders, so bigger
+captions keep the same number of lines and the note beside them gives up the
+width instead.
 
 ## Install as an app
 
