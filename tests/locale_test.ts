@@ -29,6 +29,18 @@ describe("locale registry", () => {
     }
   });
 
+  it("every pack declares its holiday eves", () => {
+    // Part of the pack contract, and an empty list is a real answer (the UK
+    // names none) — but it has to be *declared*, or the settings section and
+    // the vacation planner both read `undefined`.
+    for (const pack of LOCALES) {
+      expect(Array.isArray(pack.eves)).toBe(true);
+      // Ids are the persisted settings key, so they have to be unique.
+      const ids = pack.eves.map((eve) => eve.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    }
+  });
+
   it("every pack carries name-spelling rules", () => {
     // Part of the pack contract, like `hyphenation`: the name-day search
     // folds spellings with these, and a pack that forgot them would quietly

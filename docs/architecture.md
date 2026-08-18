@@ -21,7 +21,8 @@ src/
 ├── App.tsx               shell: top bar, active view, settings, update toast
 ├── output.ts             §19.4 central output module (semantic log helpers)
 └── app/
-    ├── locale/           country packs (en-GB, sv-SE) — see features/locales.md
+    ├── locale/           country packs (en-GB, sv-SE) + eves.ts (which
+    │                     holiday eves are worked) — see features/locales.md
     ├── i18n/             UI-string catalogs (framework createI18n)
     ├── storage/          backend registry + OAuth flows + demo adapter
     ├── types.ts          CalendarDoc: { version, entries: { "YYYY-MM-DD": text } }
