@@ -29,6 +29,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
+import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { monthName, type LocalePack } from "./locale/index.ts";
 import {
   allNames,
@@ -178,7 +179,13 @@ function NameList({
   }, [at]);
 
   return (
-    <ul className="m-0 list-none p-0 pb-[env(safe-area-inset-bottom)]">
+    // The gutter under the last name, matching the calendar views' own
+    // (`LIST_BOTTOM_PAD`): the inset alone is the home indicator's band, so
+    // spending it leaves the last row butted against the swipe bar.
+    <ul
+      className="m-0 list-none p-0"
+      style={{ paddingBottom: LIST_BOTTOM_PAD }}
+    >
       {rows.map((row) => {
         const here = at !== undefined && row.entry.name === at;
         return (
