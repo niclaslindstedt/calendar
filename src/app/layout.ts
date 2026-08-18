@@ -10,3 +10,14 @@
  *  sibling `notes` app, which likewise floors its bottom gutter rather than
  *  relying on the safe-area inset alone. */
 export const CONTENT_BOTTOM_PAD = "max(15px, env(safe-area-inset-bottom))";
+
+/** The day list's own bottom gutter. It is the one view whose last row has to
+ *  be *scrolled* into view rather than laid out on screen, which costs it
+ *  twice: the row arrives flush against the bottom edge with nothing under it
+ *  to read as an end, and a scroll container's trailing padding is not
+ *  reliably counted into the scrollable overflow by every engine — so on a
+ *  phone the last day could not be brought fully into view at all. Hence a
+ *  20 px floor *on top of* the home indicator's inset rather than the larger
+ *  of the two, and a real spacer element rather than padding (see
+ *  `DayListView`). */
+export const LIST_BOTTOM_PAD = "calc(20px + env(safe-area-inset-bottom))";
