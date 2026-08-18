@@ -17,9 +17,17 @@
 // Nyårsafton are named on every wall calendar and are workdays by law. Reading
 // `red` here would give Britain a planner with no holidays in it at all.
 //
-// Leaving the Swedish eves bookable is deliberate: they are exactly the cheap,
-// high-value days to spend an allowance on, and treating them as free would
-// hide the year's best suggestions.
+// Which of a country's holiday eves are `off` is not a fact about the country
+// but about the reader's workplace, so it is a setting (see `locale/eves.ts`):
+// the pack ships what most collective agreements say, and `withEveChoices`
+// hands the planner the pack the reader actually works under. That matters
+// here more than anywhere else in the app — an eve the reader does not work
+// must not be offered as a day to book, and an eve they do work is one of the
+// cheapest, highest-value days in the year to spend an allowance on.
+//
+// A half day is a workday to this file. You still spend a whole vacation day
+// to take one off, so counting it as free would overstate every break it
+// touches.
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {

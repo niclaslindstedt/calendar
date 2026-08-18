@@ -9,6 +9,7 @@
 // revision of the official list lands here without touching any code.
 
 import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import { eveHolidays, type Eve } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
 import type { Holiday, LocalePack, NameDayTable } from "./types.ts";
@@ -375,12 +376,93 @@ const NAME_DAYS: NameDayTable = {
   "12-31": ["Sylvester"],
 };
 
-// The Swedish holidays for a year: the thirteen official "röda dagar"
-// (lagen om allmänna helgdagar) plus the three eves every Swedish wall
-// calendar names — Midsommarafton, Julafton, Nyårsafton — which are not red
-// by law (though treated as holidays in practice). Midsommardagen is the
-// Saturday 20–26 June; Alla helgons dag the Saturday 31 Oct–6 Nov; the
-// Easter chain moves with the computus.
+/** Midsommardagen: the Saturday 20–26 June. */
+function midsommardagen(year: number) {
+  return weekdayOnOrAfter(year, 6, 20, 6);
+}
+
+/** Alla helgons dag: the Saturday 31 October – 6 November. */
+function allaHelgonsDag(year: number) {
+  return weekdayOnOrAfter(year, 10, 31, 6);
+}
+
+/** The day before a movable holiday — how every "afton" is defined. */
+function dayBefore(at: (year: number) => { month: number; day: number }) {
+  return (year: number) => {
+    const day = at(year);
+    return addToDate(year, day.month, day.day, -1);
+  };
+}
+
+// The Swedish helgdagsaftnar, in date order, each with what most collective
+// agreements make of it. Not one of them is a public holiday: by law all seven
+// are ordinary working days, which is exactly why the setting exists — the law
+// is the wrong answer for almost everyone, and "what your kollektivavtal says"
+// is the right one for most.
+//
+// Påskafton and Pingstafton are deliberately absent. Both always fall on a
+// Saturday, so they are already in `restWeekdays` and a switch for them would
+// be a control that does nothing.
+const EVES: readonly Eve[] = [
+  // Often a half day or shortened hours, depending on the agreement.
+  {
+    id: "trettondagsafton",
+    name: "Trettondagsafton",
+    date: () => ({ month: 1, day: 5 }),
+    collective: "half",
+  },
+  // An ordinary working day; some workplaces count it as a half day.
+  {
+    id: "skartorsdagen",
+    name: "Skärtorsdagen",
+    date: (year) => {
+      const easter = easterSunday(year);
+      return addToDate(year, easter.month, easter.day, -3);
+    },
+    collective: "work",
+  },
+  // An ordinary working day, though some agreements shorten it.
+  {
+    id: "valborgsmassoafton",
+    name: "Valborgsmässoafton",
+    date: () => ({ month: 4, day: 30 }),
+    collective: "work",
+  },
+  // Free under most agreements — Midsommardagen is the red day.
+  {
+    id: "midsommarafton",
+    name: "Midsommarafton",
+    date: dayBefore(midsommardagen),
+    collective: "off",
+  },
+  // The Friday before Alla helgons dag: an ordinary working day, sometimes
+  // finished early.
+  {
+    id: "allhelgonaafton",
+    name: "Allhelgonaafton",
+    date: dayBefore(allaHelgonsDag),
+    collective: "work",
+  },
+  // Free under most agreements — Juldagen is the red day.
+  {
+    id: "julafton",
+    name: "Julafton",
+    date: () => ({ month: 12, day: 24 }),
+    collective: "off",
+  },
+  // Free under most agreements — Nyårsdagen is the red day.
+  {
+    id: "nyarsafton",
+    name: "Nyårsafton",
+    date: () => ({ month: 12, day: 31 }),
+    collective: "off",
+  },
+];
+
+// The Swedish holidays for a year: the thirteen official "röda dagar" (lagen
+// om allmänna helgdagar), plus the eves above at their collective default.
+// Midsommardagen is the Saturday 20–26 June; Alla helgons dag the Saturday
+// 31 Oct–6 Nov; the Easter chain moves with the computus.
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string): Holiday => ({
@@ -389,8 +471,6 @@ function holidays(year: number): readonly Holiday[] {
     red: true,
     off: true,
   });
-  const midsommardagen = weekdayOnOrAfter(year, 6, 20, 6);
-  const allaHelgon = weekdayOnOrAfter(year, 10, 31, 6);
   return [
     { month: 1, day: 1, name: "Nyårsdagen", red: true, off: true },
     { month: 1, day: 6, name: "Trettondedag jul", red: true, off: true },
@@ -401,18 +481,11 @@ function holidays(year: number): readonly Holiday[] {
     chain(39, "Kristi himmelsfärdsdag"),
     chain(49, "Pingstdagen"),
     { month: 6, day: 6, name: "Sveriges nationaldag", red: true, off: true },
-    {
-      ...addToDate(year, midsommardagen.month, midsommardagen.day, -1),
-      name: "Midsommarafton",
-      red: false,
-      off: false,
-    },
-    { ...midsommardagen, name: "Midsommardagen", red: true, off: true },
-    { ...allaHelgon, name: "Alla helgons dag", red: true, off: true },
-    { month: 12, day: 24, name: "Julafton", red: false, off: false },
+    { ...midsommardagen(year), name: "Midsommardagen", red: true, off: true },
+    { ...allaHelgonsDag(year), name: "Alla helgons dag", red: true, off: true },
     { month: 12, day: 25, name: "Juldagen", red: true, off: true },
     { month: 12, day: 26, name: "Annandag jul", red: true, off: true },
-    { month: 12, day: 31, name: "Nyårsafton", red: false, off: false },
+    ...eveHolidays(EVES, year),
   ];
 }
 
@@ -508,4 +581,5 @@ export const svSE: LocalePack = {
   nameSpelling,
   nameDays: NAME_DAYS,
   holidays,
+  eves: EVES,
 };

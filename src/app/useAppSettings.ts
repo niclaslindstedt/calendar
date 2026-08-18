@@ -18,7 +18,12 @@ import {
   type CalFontPiece,
   type CalFonts,
 } from "./fonts.ts";
-import { DEFAULT_LOCALE_ID, getLocale } from "./locale/index.ts";
+import {
+  DEFAULT_LOCALE_ID,
+  coerceEveChoices,
+  getLocale,
+  type EveChoices,
+} from "./locale/index.ts";
 import type { BackendId } from "./storage/backends.ts";
 import {
   DEFAULT_TEXT_SCALE,
@@ -63,6 +68,11 @@ export type AppSettings = {
   weekNumbers: boolean | null;
   /** null = follow the country pack's default. */
   nameDays: boolean | null;
+  /** Which of the country's holiday eves are worked, eve id → status. An
+   *  eve that is not in here follows the country's collective agreements —
+   *  so an untouched install stores nothing, and a pack that gains an eve in
+   *  a later build ships it at its own default rather than at a stale one. */
+  eveDays: EveChoices;
   /** Day-list rows: same height, or grown per row by its text. */
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
@@ -106,6 +116,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   view: "month",
   weekNumbers: null,
   nameDays: null,
+  eveDays: {},
   listRows: "fixed",
   textSize: "dynamic",
   sizeDay: DEFAULT_TEXT_SCALE,
@@ -139,6 +150,7 @@ export const LOOK_KEYS = [
   "localeId",
   "weekNumbers",
   "nameDays",
+  "eveDays",
   "listRows",
   "textSize",
   "sizeDay",
@@ -163,6 +175,7 @@ export function pickLook(settings: AppSettings): LookSettings {
     localeId: settings.localeId,
     weekNumbers: settings.weekNumbers,
     nameDays: settings.nameDays,
+    eveDays: settings.eveDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
     sizeDay: settings.sizeDay,
@@ -255,6 +268,10 @@ export function updateLook<K extends keyof LookSettings>(
   if (key === "localeId") {
     next.weekNumbers = null;
     next.nameDays = null;
+    // Eve ids are a country's own vocabulary, so a Swedish workplace's answers
+    // mean nothing in another pack. Switching country hands the new one its
+    // collective defaults, exactly as it hands over its display conventions.
+    next.eveDays = {};
   }
   return next;
 }
@@ -283,6 +300,7 @@ export function useAppSettings() {
         if (key === "localeId") {
           next.weekNumbers = null;
           next.nameDays = null;
+          next.eveDays = {};
         }
         // Leaving developer mode also leaves demo data and log capture, so
         // neither the demo backend nor the Logs tab outlives the mode that
@@ -303,6 +321,15 @@ export function useAppSettings() {
   );
 
   return { settings, update, commitLook };
+}
+
+/** The eve choices the calendar is drawn under: the stored map, filtered to
+ *  the ids the chosen pack actually has. Settings are a plain JSON blob in
+ *  localStorage, so this is the one door the views read them through. */
+export function eveChoices(
+  settings: Pick<AppSettings, "localeId" | "eveDays">,
+): EveChoices {
+  return coerceEveChoices(settings.eveDays, getLocale(settings.localeId).eves);
 }
 
 /** The effective display toggles: the stored override, or the pack default.

@@ -30,10 +30,11 @@ as the month and week views move between periods.
 A segmented control at the top switches between them.
 
 **Holidays** lists the year's holidays with their weekday. Names print red
-when the calendar prints them red. A holiday that is _named_ but is still a
-working day by law — Swedish Midsommarafton, Julafton, Nyårsafton — is marked
-**Arbetsdag / Workday**, because that is the difference between a day you are
-given and a day you have to book.
+when the calendar prints them red. A day that is _named_ but is still one you
+work — a [holiday eve](locales.md#holiday-eves) your agreement does not hand
+back — is marked **Arbetsdag / Workday**, or **Halvdag / Half day** where it
+is one, because that is the difference between a day you are given and a day
+you have to book.
 
 **Planner** turns those holidays into a plan for the year.
 
@@ -49,6 +50,12 @@ Rules the planner follows:
 - **A free day** is a weekend (`restWeekdays`) or a public holiday
   (`Holiday.off`). It reads `off`, never `red` — see
   [ink vs. time off](locales.md#ink-vs-time-off).
+- **Which eves are free is your setting, not the country's.** The planner
+  reads the pack as your workplace sees it (Settings → Calendar → **Holiday
+  eves**), so it never offers to spend an allowance day on a Julafton you do
+  not work — and goes straight back to offering it if you say you do. A
+  **half day counts as a workday**: you still book a whole vacation day to
+  take one off. See [holiday eves](locales.md#holiday-eves).
 - **Every suggestion must involve a public holiday.** Without this rule the
   planner is technically correct and practically useless: any Friday of the
   year returns three days off for one, there are 52 of them, and they bury the

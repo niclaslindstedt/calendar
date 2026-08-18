@@ -16,6 +16,9 @@ differs is bundled into one **country pack** per country under
 - `redWeekdays` — which weekdays print red (Sundays in both).
 - `holidays(year)` — a **rule engine**, not a year table: the pack computes
   its holidays for any year from rules (see below).
+- `eves` — the holiday **eves** the country names, and what most of its
+  collective agreements make of each. Empty for a country with no such
+  tradition (see below).
 - `nameSpelling` — how the language writes the same sound, so the name-day
   search finds a name spelled the searcher's way (see below).
 - `bcp47` — drives month/weekday names via `Intl`, so packs carry no month
@@ -67,9 +70,8 @@ between…"); each pack expresses its national rules with them:
   Nyårsdagen / Första maj / Nationaldagen / Juldagen; the Easter chain
   Långfredagen → Annandag påsk → Kristi himmelsfärdsdag → Pingstdagen;
   Midsommardagen = the Saturday 20–26 June; Alla helgons dag = the Saturday
-  31 Oct–6 Nov), rendered **red** with their names — plus the three eves
-  every wall calendar names (Midsommarafton, Julafton, Nyårsafton), named
-  but not red.
+  31 Oct–6 Nov), rendered **red** with their names — plus the seven
+  _helgdagsaftnar_ (see below), named but never red.
 - **United Kingdom** — the England & Wales bank holidays (Good Friday /
   Easter Monday from the computus, the three movable Mondays, New Year /
   Christmas / Boxing Day **with weekend substitute rules**), named on the
@@ -91,15 +93,66 @@ confused is the classic bug in this area, so the packs keep them apart:
 
 They come apart in both directions. A UK bank holiday shuts the country but
 is printed black (`off: true`, `red: false`) — a vacation planner reading
-`red` would conclude Britain has no holidays at all. Swedish Julafton and
-Nyårsafton are named on every wall calendar and are working days by law
-(`red: false`, `off: false`), which is what lets the planner offer them as
-the cheap, high-value days they are. Saturday is a day off everywhere but
+`red` would conclude Britain has no holidays at all. Swedish Julafton is
+named on every wall calendar and is a working day by law, yet almost nobody
+works it (`red: false`, `off: true`). Saturday is a day off everywhere but
 printed black, which is why `restWeekdays` is `[0, 6]` while `redWeekdays`
 is `[0]`.
 
 The [vacation planner](vacation-planner.md) reads `off` and `restWeekdays`,
 never `red`.
+
+## Holiday eves
+
+An eve is the one part of a wall calendar that is not a fact about the
+country but a fact about your **employer**. Swedish law names thirteen red
+days and stops there: Julafton, Midsommarafton and Nyårsafton are, by law,
+ordinary working days. In practice almost nobody works them, because almost
+every _kollektivavtal_ hands them back — and the ones the agreements do not
+hand back are just as consistently worked.
+
+So a pack declares its eves (`src/app/locale/eves.ts`) with what most
+agreements say, and the reader overrides the ones their workplace treats
+differently in **Settings → Calendar → Holiday eves**. Each eve carries:
+
+| Field        | Meaning                                                               |
+| ------------ | --------------------------------------------------------------------- |
+| `id`         | Stable key, persisted in settings. Unique within the pack.            |
+| `name`       | The eve's name in the pack's own language — what the calendar prints. |
+| `date(year)` | Where it falls: fixed for Julafton, computed for the movable ones.    |
+| `collective` | `off` / `half` / `work` — what most of the country's agreements say.  |
+
+Sweden's seven, in date order:
+
+| Eve                | Falls on             | Default  |
+| ------------------ | -------------------- | -------- |
+| Trettondagsafton   | 5 January            | Half day |
+| Skärtorsdagen      | Easter − 3           | Working  |
+| Valborgsmässoafton | 30 April             | Working  |
+| Midsommarafton     | Midsommardagen − 1   | Day off  |
+| Allhelgonaafton    | Alla helgons dag − 1 | Working  |
+| Julafton           | 24 December          | Day off  |
+| Nyårsafton         | 31 December          | Day off  |
+
+Påskafton and Pingstafton are deliberately absent: both always fall on a
+Saturday, so they are already in `restWeekdays` and a switch for them would
+do nothing. The UK pack declares `eves: []` — Christmas Eve is an ordinary
+working day there with no agreement handing it back, and the settings
+section disappears entirely.
+
+`Holiday.eve` carries the resolved status, and `off` is `eve === "off"`. A
+**half day is a workday** to the [vacation planner](vacation-planner.md) —
+you still spend a whole vacation day to take one — but the holidays list
+says which it is.
+
+`withEveChoices(pack, choices)` is the seam: it returns the pack as this
+reader's workplace sees it, and hands the base pack straight back when
+nothing differs. `src/App.tsx` resolves it once so every view and the planner
+agree on the year. Choosing the shipped answer again **clears** the override
+rather than pinning it, so "unset" keeps meaning "whatever the agreements
+say" — the same rule the week-number and name-day toggles follow with their
+`null`. Switching country drops the map, because eve ids are a country's own
+vocabulary.
 
 ## Name-day spelling
 
@@ -175,8 +228,9 @@ Packs are deliberately self-contained — adding one is a copy-paste:
    emoji pair, shown beside the label in the picker). If the country has name
    days, add the table (see
    `sv-se.ts` for the shape). Note `restWeekdays` and each holiday's `off`
-   flag — see "Ink vs. time off" above — and the `hyphenation` and
-   `nameSpelling` rules for the language.
+   flag — see "Ink vs. time off" above — the `eves` list (`[]` if the country
+   names none), and the `hyphenation` and `nameSpelling` rules for the
+   language.
 3. Register the export in `src/app/locale/index.ts` (`LOCALES` array).
 4. Add a test block in `tests/locale_test.ts`.
 

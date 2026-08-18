@@ -242,13 +242,16 @@ function HolidayList({ year, pack }: { year: number; pack: LocalePack }) {
           >
             {h.name}
           </span>
-          {/* Named on every wall calendar but a working day by law — Julafton,
-              Nyårsafton, Midsommarafton. Worth saying plainly, because it is
-              the difference between a day you get and a day you book, and the
-              planner will offer to spend an allowance day on it. */}
+          {/* Named on every wall calendar but not a day off — an eve you
+              work, or one your agreement shortens rather than gives back.
+              Worth saying plainly, because it is the difference between a day
+              you get and a day you book, and the planner will offer to spend
+              an allowance day on it. A half day is a workday to the planner
+              for exactly that reason: you still book a whole day to take it.
+              Which eves land here is Settings → Calendar → Holiday eves. */}
           {!h.off && (
             <span className="text-muted shrink-0 text-[10px]">
-              {t("holidays.workday")}
+              {h.eve === "half" ? t("holidays.halfDay") : t("holidays.workday")}
             </span>
           )}
         </li>

@@ -8,9 +8,19 @@ import { svSE } from "./sv-se.ts";
 import type { LocalePack } from "./types.ts";
 
 export type { Holiday, LocalePack, NameDayTable } from "./types.ts";
+export type { Eve, EveChoices, EveStatus } from "./eves.ts";
 export type { HyphenationRules } from "./hyphenate.ts";
 export type { NameSpellingRules } from "./nameKey.ts";
 export { nameKey } from "./nameKey.ts";
+export {
+  EVE_STATUSES,
+  NO_EVE_CHOICES,
+  coerceEveChoices,
+  eveHolidays,
+  eveStatus,
+  hasEveOverrides,
+  withEveChoices,
+} from "./eves.ts";
 export {
   hyphenate,
   hyphenPoints,

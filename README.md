@@ -40,8 +40,12 @@ optionally synced to a storage backend you control.
 
 - **Local-first**: works offline, installable as a PWA.
 - **Internationalized properly**: country packs (UK & Sweden today) adjust the
-  start of week, week numbers, and name days — each pack is one
+  start of week, week numbers, name days, and the holidays — each pack is one
   self-contained file that's easy to copy for a new country.
+- **Knows which eves you actually work**: Julafton and Midsommarafton are
+  working days by law and days off under almost every collective agreement,
+  so they ship that way — and every Swedish eve can be set to a day off, a
+  half day, or a working day when your workplace differs.
 - **Finds your name day even if the almanac spells it differently**: tap a
   name to browse the almanac alphabetically, and search it by how a name
   sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
@@ -88,8 +92,8 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
   list.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
-  (English / Swedish), week numbers and name days on/off, the month cell's
-  layout, a face per part of a day (date, holiday, name days, your text),
+  (English / Swedish), week numbers and name days on/off, which holiday eves
+  you work, the month cell's layout, a face per part of a day (date, holiday, name days, your text),
   entry text size (dynamic, or fixed small / medium / large), the theme,
   storage backend, developer mode, and logs. Look changes preview live behind
   the dialog and are kept with Save; Cancel drops them.

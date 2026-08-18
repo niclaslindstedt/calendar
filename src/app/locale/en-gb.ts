@@ -227,4 +227,7 @@ export const enGB: LocalePack = {
   nameSpelling,
   nameDays: null,
   holidays,
+  // The UK names no holiday eves — Christmas Eve is an ordinary working day
+  // with no agreement handing it back, so there is nothing to configure.
+  eves: [],
 };

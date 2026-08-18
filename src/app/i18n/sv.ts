@@ -53,6 +53,14 @@ export const sv: Catalog = {
     weekNumbersHint: "Visa ISO-veckonummer i månadsvyn.",
     nameDays: "Namnsdagar",
     nameDaysHint: "Visa dagens namn i kalendern.",
+    eves: "Helgdagsaftnar",
+    evesHint:
+      "Enligt lag är en afton en vanlig arbetsdag, men de flesta kollektivavtal ger tillbaka några av dem. Här står vad avtalen brukar säga — ändra de aftnar din arbetsplats hanterar annorlunda. En ledig dag här är en dag semesterplaneraren slutar be dig ta ut.",
+    eveOff: "Ledig",
+    eveHalf: "Halvdag",
+    eveWork: "Arbetsdag",
+    evesReset: "Återställ till kollektivavtal",
+    evesFollowing: "Följer landets kollektivavtal.",
     vacation: "Semester",
     vacationDays: "Semesterdagar per år",
     vacationDaysHint:
@@ -159,6 +167,7 @@ export const sv: Catalog = {
     back: "Tillbaka till kalendern",
     empty: "Inga helgdagar i år.",
     workday: "Arbetsdag",
+    halfDay: "Halvdag",
     daysOff: "{n} lediga dagar",
     oneDayOff: "1 ledig dag",
     summary: "{spent} semesterdagar ger {off} lediga dagar",

@@ -35,7 +35,7 @@ import { SwipeDeck, type DeckNav } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
-import { getLocale } from "./app/locale/index.ts";
+import { getLocale, withEveChoices } from "./app/locale/index.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
@@ -57,6 +57,7 @@ import {
   calFonts,
   clampVacationDays,
   effectiveToggles,
+  eveChoices,
   monthCellLayout,
   textScales,
   useAppSettings,
@@ -246,7 +247,11 @@ export function App() {
     openHolidays(parts.year);
   };
 
-  const pack = getLocale(live.localeId);
+  // The country pack as this reader's workplace sees it: the eves they have
+  // told us they work are ordinary days again, and the ones they do not are
+  // days off the vacation planner stops offering to spend an allowance on.
+  // Resolved once, here, so every view and the planner agree on the year.
+  const pack = withEveChoices(getLocale(live.localeId), eveChoices(live));
   const toggles = effectiveToggles(live);
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and

@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 
 import { getLocale } from "../src/app/locale/index.ts";
+import { withEveChoices } from "../src/app/locale/index.ts";
 import {
   bridgeBlocks,
   holidaysInYear,
@@ -44,11 +45,25 @@ describe("isFreeDay", () => {
     expect(isFreeDay(sv, "2026-01-01")).toBe(true); // Nyårsdagen
   });
 
-  it("leaves a non-red observance bookable", () => {
-    // Julafton and Nyårsafton are workdays by law — the planner must be able
-    // to suggest spending a vacation day on them.
-    expect(isFreeDay(sv, "2026-12-24")).toBe(false);
-    expect(isFreeDay(sv, "2026-12-31")).toBe(false);
+  it("follows the collective agreements on the eves", () => {
+    // Julafton and Nyårsafton are working days by law but free under almost
+    // every kollektivavtal, so the shipped planner must not offer to spend an
+    // allowance day on them.
+    expect(isFreeDay(sv, "2026-12-24")).toBe(true);
+    expect(isFreeDay(sv, "2026-12-31")).toBe(true);
+    // The eves the agreements do not hand back stay bookable — they are the
+    // cheapest days in the year to buy a long weekend with.
+    expect(isFreeDay(sv, "2026-04-30")).toBe(false); // Valborgsmässoafton
+    expect(isFreeDay(sv, "2026-01-05")).toBe(false); // Trettondagsafton, half
+  });
+
+  it("takes the reader's own workplace over the agreements", () => {
+    // A reader with no kollektivavtal works Julafton, and the planner should
+    // go straight back to offering it.
+    const worked = withEveChoices(sv, { julafton: "work" });
+    expect(isFreeDay(worked, "2026-12-24")).toBe(false);
+    // …without disturbing the pack everyone else is reading.
+    expect(isFreeDay(sv, "2026-12-24")).toBe(true);
   });
 });
 
