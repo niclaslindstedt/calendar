@@ -3,8 +3,11 @@
 // toggle persists the in-app log across reloads — and turning it on is what
 // reveals the Logs tab; the demo-data toggle swaps storage for an in-memory
 // sample calendar. Beneath them sits the build identity of the running slot
-// and the manual update check. Every control here is device-local, so it
-// applies immediately rather than on Save.
+// and the manual update check, and below those the device geometry the
+// portrait-mobile layout is argued from. Every control here is device-local,
+// so it applies immediately rather than on Save.
+
+import { useEffect, useState } from "react";
 
 import { Section, ToggleRow } from "@niclaslindstedt/oss-framework/components";
 import {
@@ -14,6 +17,12 @@ import {
 
 import { useT } from "../i18n/index.ts";
 import type { AppSettings } from "../useAppSettings.ts";
+import {
+  formatInsets,
+  formatSize,
+  readViewportInfo,
+  type ViewportInfo,
+} from "../viewportInfo.ts";
 
 export function DeveloperSection({
   settings,
@@ -75,6 +84,49 @@ export function DeveloperSection({
           />
         </div>
       </Section>
+
+      <DeviceSection />
     </>
+  );
+}
+
+/** What the device says about the screen — the viewport, the four safe-area
+ *  insets, the gap a view's last row is getting, and the display mode. The
+ *  bottom gutter has been wrong twice on an installed iOS PWA and both times
+ *  the argument was about a number nobody could read; this prints it.
+ *
+ *  Measured after mount rather than during render: the insets are resolved
+ *  from a throwaway element, which is a DOM read, and they change on rotation
+ *  and when the app moves between a tab and the home screen. */
+function DeviceSection() {
+  const t = useT();
+  const [info, setInfo] = useState<ViewportInfo | null>(null);
+
+  useEffect(() => {
+    const measure = () => setInfo(readViewportInfo());
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, []);
+
+  if (!info) return null;
+
+  return (
+    <Section title={t("developer.device")}>
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+        <span className="text-muted">{t("developer.viewport")}</span>
+        <span>{formatSize(info.width, info.height)}</span>
+        <span className="text-muted">{t("developer.safeAreas")}</span>
+        <span>{formatInsets(info.insets)}</span>
+        <span className="text-muted">{t("developer.bottomGutter")}</span>
+        <span>{info.bottomGutter}</span>
+        <span className="text-muted">{t("developer.displayMode")}</span>
+        <span>{info.displayMode}</span>
+      </div>
+    </Section>
   );
 }

@@ -53,6 +53,47 @@ body {
   }
 }
 
+/* The gap under a view's last row, and the day list's taller version of it.
+   They live here rather than in `src/app/layout.ts` because the value an
+   installed iOS PWA needs cannot be written as one expression: it depends on
+   the display mode, and only a media query knows that. `layout.ts` publishes
+   the two variables to the views.
+
+   Everywhere else the home indicator does not exist, so the gutter is a plain
+   floor plus whatever the device happens to reserve.
+
+   An installed iOS PWA is the exception, twice over. The shell is pinned to
+   `100vh` there (see above) so the page reaches under the home indicator, and
+   the inset that is supposed to describe that band is not something to lean
+   on: the app has been shipped with a gutter derived from it and the bottom
+   row still came out under the swipe bar, which is what a reported inset of
+   0 looks like. So the iOS gutter does not *trust* the inset — it takes the
+   larger of the inset and the 34 px band an iPhone's home indicator actually
+   occupies, and adds the clear margin on top of that. The result is at least
+   16 px of visible breathing room below the last row whether the inset
+   reports honestly or not at all. */
+:root {
+  --cal-gutter-margin: 16px;
+  --cal-bottom-gutter: max(
+    25px,
+    calc(env(safe-area-inset-bottom, 0px) + var(--cal-gutter-margin))
+  );
+  /* The day list scrolls its last row into view instead of laying it out on
+     screen, so it carries the shared gutter plus a little more — see
+     `LIST_BOTTOM_PAD` in `src/app/layout.ts`. */
+  --cal-list-gutter: calc(var(--cal-bottom-gutter) + 20px);
+}
+
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    :root {
+      --cal-bottom-gutter: calc(
+        max(34px, env(safe-area-inset-bottom, 0px)) + var(--cal-gutter-margin)
+      );
+    }
+  }
+}
+
 /* The top menu's vertical rhythm. Everywhere except an installed iOS PWA the
    top padding *adds* to the safe-area inset, which is what keeps the bar off
    a notch in a browser tab (where the inset is 0 in portrait, so the bar

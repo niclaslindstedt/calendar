@@ -346,8 +346,16 @@ infer from the diff.
   is the whole status-bar band and already clears the island — there it takes
   the `max()` of the two instead, so the island-to-buttons gap matches the
   buttons-to-hairline gap rather than reading as double it. Every view's
-  bottom gutter is `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`) so the last row
-  clears the home indicator.
+  bottom gutter is `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`), which is a
+  handle on `--cal-bottom-gutter` in the same stylesheet — the value has to
+  live there because the installed iOS PWA needs a different one and only a
+  media query knows it is one. **On iOS the bottom inset is not evidence.**
+  The gutter has shipped twice derived from `env(safe-area-inset-bottom)` and
+  twice the bottom row still came out under the swipe bar, so the iOS value
+  takes the larger of the inset and the 34 px an iPhone's home indicator
+  occupies and adds the clear margin on top. Settings → Developer → Device
+  prints what a device actually reports — quote that rather than reasoning
+  about it.
 - **The month grid still fills exactly one screen** — six week rows, no
   scrollbar, nothing clipped.
 

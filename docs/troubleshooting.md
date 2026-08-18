@@ -53,6 +53,14 @@ back to Dynamic so it shrinks to fit instead.
 version is ready" prompt, or Settings → Developer → Check for updates. In
 dev (`npm run dev`) no service worker registers at all.
 
+**The bottom row is hidden behind the home indicator** — it should not be:
+every view keeps a clear margin below its last row, and on an installed iOS
+PWA that margin is measured against the home indicator's own band rather than
+against `env(safe-area-inset-bottom)`, which cannot be relied on to report it
+there. If a row still comes out under the swipe bar, open Settings →
+Developer → Device and quote the **Safe areas** and **Bottom gutter** lines in
+the report — those are the two numbers the gutter is derived from.
+
 **The app sits up under the status bar / Dynamic Island** — it should settle
 back within a moment on its own. This was iOS's doing: opening the keyboard
 scrolls the page to reveal the field even though the app itself never

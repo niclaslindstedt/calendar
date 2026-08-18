@@ -172,6 +172,13 @@ export const en = {
     slot: "Slot",
     sourceBranch: "Source branch",
     checkForUpdates: "Check for updates",
+    device: "Device",
+    viewport: "Viewport",
+    /** The four safe-area insets, top / right / bottom / left. */
+    safeAreas: "Safe areas",
+    /** The gap this device is giving the last row of a view. */
+    bottomGutter: "Bottom gutter",
+    displayMode: "Display mode",
   },
   holidays: {
     /** Title of the holidays screen. */

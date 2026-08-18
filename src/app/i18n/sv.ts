@@ -169,6 +169,11 @@ export const sv: Catalog = {
     slot: "Plats",
     sourceBranch: "Källgren",
     checkForUpdates: "Sök efter uppdateringar",
+    device: "Enhet",
+    viewport: "Vy",
+    safeAreas: "Säkra ytor",
+    bottomGutter: "Nedre marginal",
+    displayMode: "Visningsläge",
   },
   holidays: {
     title: "Helgdagar",

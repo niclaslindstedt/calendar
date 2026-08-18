@@ -96,8 +96,12 @@ stock look without touching your storage connections or developer switches.
   **Dark**, or **Custom**, plus the palette variant within the light and dark
   families.
 - **Storage** — where your calendar lives. See [storage.md](storage.md).
-- **Developer** — demo data, log capture, build info, update check (visible
-  in developer mode).
+- **Developer** — demo data, log capture, build info, the update check, and
+  the device's own geometry (visible in developer mode). The **Device** block
+  prints the viewport, the four safe-area insets in CSS order
+  (top / right / bottom / left), the gutter a view's last row is getting, and
+  the display mode — the numbers to quote when a layout looks wrong on a
+  phone.
 - **Logs** — the in-app log (visible once log capture is on).
 
 ### Holiday eves
