@@ -48,6 +48,7 @@ import {
 import { AppearanceSection } from "./AppearanceSection.tsx";
 import { CalendarSection } from "./CalendarSection.tsx";
 import { DeveloperSection } from "./DeveloperSection.tsx";
+import { EvesSection } from "./EvesSection.tsx";
 import { FontsSection } from "./FontsSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
@@ -273,11 +274,16 @@ export function SettingsModal({
                 onChange={updateDraftAppearance}
               />
             )}
-            {/* One tab for how the calendar reads: the cell's arrangement,
-                the day list's rows, the faces each piece is set in, and how
-                big each of them is printed. */}
+            {/* One tab for how the calendar reads: which eves the country
+                works, the cell's arrangement, the day list's rows, the faces
+                each piece is set in, and how big each of them is printed.
+                The eves lead because they are the one group whose contents
+                follow the country picked on the General tab — and the only
+                one that changes what the calendar *says* rather than how it
+                looks. */}
             {activeTab === "calendar" && (
               <>
+                <EvesSection look={draft.look} onUpdate={updateDraftLook} />
                 <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
                 <FontsSection look={draft.look} onUpdate={updateDraftLook} />
                 <TextSizeSection look={draft.look} onUpdate={updateDraftLook} />

@@ -58,31 +58,48 @@ describe("Swedish red days (rule engine, not year tables)", () => {
     expect(holidayFor(sv, 2025, 11, 1)?.name).toBe("Alla helgons dag");
   });
 
-  it("keeps the eves named but neither red nor off", () => {
+  it("keeps the eves named, never red, and off per the agreements", () => {
+    // Julafton is a working day by LAW and a day off under almost every
+    // kollektivavtal, which is the whole reason the eve is a setting: the pack
+    // ships the agreements' answer, not the statute's.
     expect(holidayFor(sv, 2026, 12, 24)).toEqual({
       month: 12,
       day: 24,
       name: "Julafton",
       red: false,
-      off: false,
+      off: true,
+      eve: "off",
     });
     expect(holidayFor(sv, 2026, 12, 31)?.red).toBe(false);
     expect(holidayFor(sv, 2026, 6, 19)?.red).toBe(false);
-    // Workdays by law, so the vacation planner may offer them.
+    // The three the agreements hand back whole.
     for (const [m, d] of [
       [12, 24],
       [12, 31],
       [6, 19],
     ]) {
-      expect(holidayFor(sv, 2026, m, d)?.off).toBe(false);
+      expect(holidayFor(sv, 2026, m, d)?.off).toBe(true);
     }
+    // …and the ones they do not: Valborgsmässoafton is worked, and
+    // Trettondagsafton is a half day, which is a workday all the same.
+    expect(holidayFor(sv, 2026, 4, 30)?.eve).toBe("work");
+    expect(holidayFor(sv, 2026, 1, 5)?.eve).toBe("half");
+    expect(holidayFor(sv, 2026, 4, 30)?.off).toBe(false);
+    expect(holidayFor(sv, 2026, 1, 5)?.off).toBe(false);
   });
 
   it("separates ink from time off across the packs", () => {
     // `red` is what the calendar prints, `off` is whether anyone works. Sweden
     // prints its public holidays red; the UK prints none of them red but shuts
     // for all of them. A planner reading `red` would find no UK holidays.
+    //
+    // The eves are where the two come apart inside Sweden too: never red,
+    // sometimes off. Every other entry keeps ink and time in step.
     for (const h of sv.holidays(2026)) {
+      if (h.eve !== undefined) {
+        expect(h.red).toBe(false);
+        continue;
+      }
       expect(h.off).toBe(h.red);
     }
     const uk = en.holidays(2026);

@@ -56,6 +56,14 @@ export const en = {
     weekNumbersHint: "Show ISO week numbers in the month grid.",
     nameDays: "Name days",
     nameDaysHint: "Show the day's names on the calendar.",
+    eves: "Holiday eves",
+    evesHint:
+      "By law an eve is an ordinary working day, and in practice most collective agreements hand some of them back. These start from what the agreements usually say — change any your workplace treats differently. A day off here is one the vacation planner stops asking you to book.",
+    eveOff: "Day off",
+    eveHalf: "Half day",
+    eveWork: "Working",
+    evesReset: "Back to the agreements",
+    evesFollowing: "Following your country's collective agreements.",
     vacation: "Vacation",
     vacationDays: "Vacation days a year",
     vacationDaysHint:
@@ -163,6 +171,7 @@ export const en = {
     back: "Back to the calendar",
     empty: "No holidays this year.",
     workday: "Workday",
+    halfDay: "Half day",
     /** e.g. "4 days off" */
     daysOff: "{n} days off",
     oneDayOff: "1 day off",

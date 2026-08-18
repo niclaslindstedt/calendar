@@ -15,5 +15,6 @@
 - Month grid, week planner, and one-row-per-day list views
 - Per-day plain-text entries that shrink to fit the cell
 - Country packs: start of week, ISO week numbers, name days (en-GB, sv-SE)
+- Holidays and a vacation planner, with per-workplace holiday-eve settings
 - Storage backends: browser, local folder, Dropbox, Google Drive
 - Themes, English/Swedish UI, installable offline PWA
