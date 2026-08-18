@@ -30,6 +30,7 @@ import {
   type LocalePack,
 } from "./locale/index.ts";
 import { MonthCellFrame } from "./monthCell.tsx";
+import { NameDayNames } from "./NameDayNames.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import type { CalendarDoc } from "./types.ts";
 import type { MonthCellLayout } from "./useAppSettings.ts";
@@ -52,6 +53,8 @@ type Props = {
   onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen for its year. */
   onOpenHolidays: () => void;
+  /** Tapping one of the day's names opens the name-day search on it. */
+  onOpenNames: (name: string) => void;
 };
 
 export function MonthGridView({
@@ -70,6 +73,7 @@ export function MonthGridView({
   onPrevious,
   onNext,
   onOpenHolidays,
+  onOpenNames,
 }: Props) {
   const t = useT();
   const weeks = buildMonthGrid(year, month, {
@@ -179,6 +183,7 @@ export function MonthGridView({
                   onEditDay={onEditDay}
                   onCommit={onCommit}
                   onOpenHolidays={onOpenHolidays}
+                  onOpenNames={onOpenNames}
                 />
               ))}
             </div>
@@ -214,6 +219,7 @@ function DayCell({
   onEditDay,
   onCommit,
   onOpenHolidays,
+  onOpenNames,
 }: {
   cell: GridCell;
   pack: LocalePack;
@@ -225,6 +231,7 @@ function DayCell({
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: () => void;
+  onOpenNames: (name: string) => void;
 }) {
   const parts = parseDayKey(cell.key);
   const weekday = parts ? new Date(`${cell.key}T12:00:00Z`).getUTCDay() : 1;
@@ -290,10 +297,19 @@ function DayCell({
               {hyphenate(holiday.name, pack.hyphenation)}
             </span>
           ) : null,
+          // Each name is its own tap target — the way into the name-day
+          // search, seeded with the name you touched. They are still one run
+          // of text: the separators sit outside the spans, so the line breaks
+          // exactly where `hyphenate` says and not at the tap targets' edges.
           nameDays:
             names.length > 0 ? (
               <span className="cal-font-nameday cal-cell-nameday text-muted block leading-[1.25]">
-                {hyphenate(names.join(", "), pack.hyphenation)}
+                <NameDayNames
+                  names={names}
+                  pack={pack}
+                  onOpen={onOpenNames}
+                  hyphenated
+                />
               </span>
             ) : null,
           note: (

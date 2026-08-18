@@ -166,6 +166,17 @@ export const sv: Catalog = {
     bookOne: "Ansök om 1 dag",
     bookMany: "Ansök om {n} dagar",
   },
+  names: {
+    title: "Namnsdagar",
+    placeholder: "Sök efter ett namn",
+    clear: "Rensa namnet",
+    close: "Stäng namnsökningen",
+    similar: "Liknande namn",
+    matches: "{n} namn",
+    oneMatch: "1 namn",
+    noResults: "Inget namn som ”{query}” i almanackan.",
+    unavailable: "Den här landskalendern har inga namnsdagar.",
+  },
   logs: {
     heading: "Appens logg",
   },

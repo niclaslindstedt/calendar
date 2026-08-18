@@ -42,6 +42,9 @@ optionally synced to a storage backend you control.
 - **Internationalized properly**: country packs (UK & Sweden today) adjust the
   start of week, week numbers, and name days — each pack is one
   self-contained file that's easy to copy for a new country.
+- **Finds your name day even if the almanac spells it differently**: tap a
+  name to browse the almanac alphabetically, and search it by how a name
+  sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
 - **Storage your way**: browser storage, a local folder, Dropbox, or Google
   Drive.
 

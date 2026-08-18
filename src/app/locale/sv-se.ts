@@ -10,6 +10,7 @@
 
 import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
+import type { NameSpellingRules } from "./nameKey.ts";
 import type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 
 const NAME_DAYS: NameDayTable = {
@@ -473,6 +474,25 @@ const hyphenation: HyphenationRules = {
   minTrailing: 2,
 };
 
+// Swedish name spelling. Every rule here is a pair of spellings the almanac
+// could have picked between: "Nicklas"/"Niklas", "Christina"/"Kristina",
+// "Sophie"/"Sofie", "Alexander"/"Aleksander", "Göran"/"Jöran". The almanac
+// prints one of each; the search has to find the name from either.
+//
+// `ck` needs no rule of its own: the `c` hardens to `k` and the doubling is
+// collapsed, which is the same journey "Nicklas" → `niklas` takes anyway.
+const nameSpelling: NameSpellingRules = {
+  // `ä` and `ö` soften a `c`/`g` in Swedish the way `e`/`i`/`y` do.
+  softVowels: "eiyäö",
+  softC: "s",
+  hardC: "k",
+  softensG: true,
+  jOnsets: ["hj", "dj", "lj", "gj"],
+  digraphs: { ch: "k", ph: "f", th: "t", rh: "r", gh: "g", qu: "kv" },
+  letters: { q: "k", w: "v", x: "ks", z: "s", y: "i" },
+  fold: { å: "a", ä: "a", ö: "o", ø: "o", æ: "a", ü: "u" },
+};
+
 export const svSE: LocalePack = {
   id: "sv-SE",
   label: "Sverige",
@@ -485,6 +505,7 @@ export const svSE: LocalePack = {
   redWeekdays: [0],
   restWeekdays: [0, 6],
   hyphenation,
+  nameSpelling,
   nameDays: NAME_DAYS,
   holidays,
 };

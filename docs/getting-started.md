@@ -55,6 +55,15 @@ that bridge Easter into a ten-day break. Set your allowance in
 Settings → General → Vacation. See
 [the vacation planner](features/vacation-planner.md).
 
+## Name days
+
+Tap **any name** in a day's name-day caption to open the almanac: every name
+in the country calendar, alphabetically, opened at the name you tapped. Type
+in the field at the top to search it — and spell the name your own way, since
+the search matches on how a name _sounds_: "Nicklas" finds Niklas, "Sophia"
+finds Sofia, "Christoffer" finds Kristoffer. Tap any row to go to that name
+day in the calendar. See [name days](features/name-days.md).
+
 ## Settings (the cogwheel, top right)
 
 Settings opens a tabbed dialog: the sections sit in a rail down the left on a
