@@ -20,7 +20,9 @@ export const en = {
     week: "Week {n}",
   },
   editor: {
-    placeholder: "Type here — keep it short…",
+    // The editor has no placeholder — a day you press is a caret on a blank
+    // cell. This is its accessible name.
+    label: "Note for this day",
     hint: "Enter saves · Esc closes",
     editDay: "Edit {date}",
   },
@@ -88,7 +90,7 @@ export const en = {
     entryText: "Your text",
     textSize: "Text size",
     textSizeHint:
-      "Dynamic shrinks a note as you write so it always fits its day; the fixed steps keep every note the same size.",
+      "Dynamic shrinks a note as you write so it always fits its day; the fixed steps keep every note the same size. Either way a day takes only what fits — once it is full it accepts no more text.",
     textSizeDynamic: "Dynamic",
     textSizeSmall: "Small",
     textSizeMedium: "Medium",

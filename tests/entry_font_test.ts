@@ -64,7 +64,27 @@ describe("the fixed text-size steps", () => {
       expect(small).toBeGreaterThanOrEqual(font.minPx);
       expect(small).toBeLessThan(medium);
       expect(medium).toBeLessThan(large);
-      expect(large).toBe(font.maxPx);
+      expect(large).toBeLessThan(font.maxPx);
+    }
+  });
+
+  it("keeps the ladder low in the band — a day cell is not a page", () => {
+    for (const font of FONTS) {
+      const mid = font.minPx + (font.maxPx - font.minPx) / 2;
+      expect(fixedEntryFontPx("medium", font)).toBeLessThan(mid);
+      expect(fixedEntryFontPx("large", font)).toBeLessThanOrEqual(
+        font.minPx + (font.maxPx - font.minPx) * 0.6,
+      );
+    }
+  });
+
+  it("puts small one point under medium, never below the floor", () => {
+    for (const font of FONTS) {
+      const small = fixedEntryFontPx("small", font);
+      const medium = fixedEntryFontPx("medium", font);
+      expect(small).toBe(
+        Math.max(font.minPx, Math.round((medium - 1) * 10) / 10),
+      );
     }
   });
 

@@ -217,6 +217,7 @@ export function DayListView({
                   editing={editingDay === key}
                   font={LIST_ROW_FONT}
                   size={textSize}
+                  bounded={fixed}
                   onCommit={(text) => onCommit(key, text)}
                   onClose={() => onEditDay(null)}
                 />

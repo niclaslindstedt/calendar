@@ -302,6 +302,7 @@ function DayCell({
               editing={editing}
               font={MONTH_CELL_FONT}
               size={textSize}
+              bounded
               onCommit={(text) => onCommit(cell.key, text)}
               onClose={() => onEditDay(null)}
             />

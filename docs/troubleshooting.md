@@ -37,6 +37,16 @@ only exists for countries whose pack carries a table (Sverige today).
 the month always fits one screen. Trim the note, or use the week planner /
 day list, which give each day more room.
 
+**The day stopped accepting text** — the day is full: the note is already at
+the smallest size that view uses and the next character would not fit. Delete
+something (deleting always works), pick a smaller step under Settings →
+Calendar → Text size, or write the day in the week planner or day list, which
+have more room.
+
+**A note ends in "…"** — it is longer than the day can show at the size it is
+pinned to. Open the day to read or edit the whole thing, or switch Text size
+back to Dynamic so it shrinks to fit instead.
+
 ## PWA
 
 **The app doesn't update** — updates wait for your OK: look for the "a new

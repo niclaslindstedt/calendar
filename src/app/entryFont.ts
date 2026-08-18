@@ -66,21 +66,36 @@ export const ENTRY_TEXT_SIZES: readonly EntryTextSize[] = [
 
 export type FixedEntryTextSize = Exclude<EntryTextSize, "dynamic">;
 
-/** Where each fixed step sits in a view's own [minPx, maxPx] band. `large`
- *  is the curve's comfortable size; `small` sits just above its floor, so
- *  even the smallest step stays readable. */
-const FIXED_STEPS: Record<FixedEntryTextSize, number> = {
-  small: 0.2,
-  medium: 0.6,
-  large: 1,
+/** Where the two upper steps sit in a view's own [minPx, maxPx] band. The
+ *  ladder deliberately stops short of the band's ceiling: a day cell is not a
+ *  page, and the sizes people actually keep are the small ones — so `large`
+ *  is what the band's middle used to be and `medium` what its `small` was.
+ *  `small` is then one point under `medium` (see {@link fixedEntryFontPx}),
+ *  which is as small as the text goes before the view's own floor takes
+ *  over. */
+const FIXED_STEPS: Record<Exclude<FixedEntryTextSize, "small">, number> = {
+  medium: 0.2,
+  large: 0.6,
 };
+
+/** One point: the gap between `small` and `medium`. A point rather than a
+ *  fraction of the band, so the smallest step reads the same distance below
+ *  the middle one in every view. */
+const SMALL_DROP_PX = 1;
 
 /** The pinned font size (px) for `size` within the view's band. */
 export function fixedEntryFontPx(
   size: FixedEntryTextSize,
   opts: EntryFontOptions,
 ): number {
-  return round1(opts.minPx + (opts.maxPx - opts.minPx) * FIXED_STEPS[size]);
+  const band = (fraction: number) =>
+    opts.minPx + (opts.maxPx - opts.minPx) * fraction;
+  if (size === "small") {
+    return round1(
+      Math.max(opts.minPx, band(FIXED_STEPS.medium) - SMALL_DROP_PX),
+    );
+  }
+  return round1(band(FIXED_STEPS[size]));
 }
 
 /** The font size (px) an entry renders at: the shrink-to-fit curve on

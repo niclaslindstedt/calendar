@@ -12,12 +12,15 @@ days in each cell. Sundays are red, like on paper.
 
 ## Write on a date
 
-Click any date and type: `Dinner Ada 18:00`. The text lands on the calendar
-as you type and is saved automatically. Enter or Esc (or clicking elsewhere)
-puts the pen down. There are no times, alarms, or notifications — the note is
-meant to be **read by you** the next time you look at the calendar.
+Pressing a date puts a caret in it — no dialog, no placeholder, just the
+blank day and a cursor. Type: `Dinner Ada 18:00`. The text lands on the
+calendar as you type and is saved automatically. Enter or Esc (or clicking
+elsewhere) puts the pen down. There are no times, alarms, or notifications —
+the note is meant to be **read by you** the next time you look at the
+calendar.
 
-Keep notes short: the text shrinks as it grows so it always fits its cell.
+Keep notes short: the text shrinks as it grows so it always fits its cell,
+and once it is as small as it goes, the day is full and takes no more text.
 If you routinely need more room, use the week planner or the day list.
 
 ## The three views
@@ -135,11 +138,18 @@ being clipped.
 write on a day is sized:
 
 - **Dynamic** (the default) — a note shrinks as you write, so it always fits
-  its day instead of clipping.
+  the room the day has left over after its number, holiday and name days.
+  Once it is as small as that view allows, the day is full: the next keystroke
+  is refused rather than pushed out of sight. Deleting always works.
 - **Small / Medium / Large** — the text stays at that size no matter how much
-  you write; a long note is clipped by its cell rather than shrunk. Each step
+  you write, and the day fills up sooner because it never shrinks. Each step
   is scaled to the view it renders in, so a month cell stays legible while the
   roomier week planner uses its extra space.
+
+A note that no longer fits — because you pinned a bigger step, or because it
+was written in a view with more room — is cut off at the last line that fits
+and ends in an ellipsis, so it stops short of the day's captions instead of
+running under them.
 
 ## Install as an app
 

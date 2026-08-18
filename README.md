@@ -75,8 +75,11 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 
 ## Usage
 
-- **Click a date** to type into it. Enter/Escape or clicking away closes the
-  editor. The text is plain text; keep it short — it shrinks to fit.
+- **Click a date** to type into it — the caret lands in the day itself, with
+  no dialog and no placeholder. Enter/Escape or clicking away closes the
+  editor. The text is plain text; keep it short — it shrinks to fit, and when
+  it can shrink no further the day is full. A note too long for the space it
+  is shown in ends in an ellipsis.
 - **Arrows / Today** in the top bar page between months (or weeks, in the
   week planner).
 - **View switcher** in the top bar toggles Month grid / Week planner / Day

@@ -30,6 +30,8 @@ src/
     ├── useAppSettings.ts    persisted app settings (country, view, dev mode…)
     ├── entryFont.ts      entry sizing: the shrink-to-fit curve and the three
     │                     fixed steps (pure, tested)
+    ├── entryFit.ts       the same sizing measured against the real box: shrink
+    │                     to fit, clamp to an ellipsis, refuse a full day
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── DayEntry.tsx      shared read/edit entry surface

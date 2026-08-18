@@ -217,7 +217,13 @@ The app owns the domain and the stores ("store stays in the app"):
   static data).
 - `src/app/MonthGridView.tsx`, `WeekPlannerView.tsx`, `DayListView.tsx` — the
   three views; `DayEntry.tsx` is the shared click-to-type entry surface with
-  the auto-shrinking text (`entryFont.ts` owns the sizing curve).
+  the auto-shrinking text. `entryFont.ts` owns the pre-layout sizing curve and
+  the three fixed steps; `entryFit.ts` measures that guess against the box the
+  view actually left (shrink to fit, clamp an overrun to an ellipsis, refuse
+  the keystroke that would overflow a full day). A view says which it is with
+  `DayEntry`'s `bounded` prop — set where the surface clips (month cells, week
+  rows, a fixed-height day-list row), clear where the row grows with its
+  text.
 - `src/app/monthImage.ts` — the month-image seam. Returns `null` today;
   yearly image packs (2026, 2027, …) plug in here later, with a `large`
   (month view) and `small` (day list) variant per month.
