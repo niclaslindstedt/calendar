@@ -9,7 +9,6 @@ export const en = {
     title: "Calendar",
   },
   topbar: {
-    today: "Today",
     previous: "Previous",
     next: "Next",
     settings: "Settings",
@@ -18,6 +17,38 @@ export const en = {
     viewWeek: "Week",
     viewList: "Day list",
     week: "Week {n}",
+  },
+  namespaces: {
+    // The top menu's left-hand button — the one that used to say "Today".
+    // The word matches the sibling `contacts` app, which ships the same
+    // feature under the same name; the blurb below says what it means here.
+    switcher: "Namespace: {name}",
+    menu: "Namespaces",
+    manage: "Manage namespaces…",
+    heading: "Namespaces",
+    blurb:
+      "Each namespace is a separate calendar with its own notes — one for home, one for work. Switch between them from the top menu, or give one an icon and a colour.",
+    newAction: "New namespace",
+    namePlaceholder: "Namespace name",
+    nameLabel: "Namespace name",
+    create: "Create",
+    nameRequired: "A name is required",
+    colorLabel: "Colour",
+    glyphLabel: "Icon",
+    glyphNone: "No icon",
+    save: "Save",
+    cancel: "Cancel",
+    close: "Close",
+    renameAction: "Rename",
+    deleteAction: "Delete namespace",
+    delete: "Delete",
+    deleteConfirm:
+      "Delete \u201c{name}\u201d and all of its notes? This can't be undone.",
+    switchTo: "Switch to {name}",
+    defaultBadge: "Default",
+    // The two namespaces a first run is seeded with (see `useNamespaces`).
+    seedPersonal: "Personal",
+    seedWork: "Work",
   },
   editor: {
     // The editor has no placeholder — a day you press is a caret on a blank

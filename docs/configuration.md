@@ -30,3 +30,18 @@ least-privilege `drive.file` scope — it can only see files it created.
 Everything the user changes at runtime (country, language, view, theme,
 storage choice, developer mode) is persisted per device in `localStorage`
 under `calendar:*` keys — no server, no account.
+
+The keys worth knowing by name:
+
+| Key                         | Holds                                                                                               |
+| --------------------------- | --------------------------------------------------------------------------------------------------- |
+| `calendar:settings`         | The settings dialog's choices.                                                                      |
+| `calendar:appearance`       | Theme, accent, font family.                                                                         |
+| `calendar:language`         | UI language (separate from the country calendar).                                                   |
+| `calendar:backend`          | The active storage backend.                                                                         |
+| `calendar:namespaces`       | The [namespace](features/namespaces.md) registry — names, icons, colours.                           |
+| `calendar:namespace:active` | Which namespace is on screen.                                                                       |
+| `calendar:document`         | The default namespace's calendar, when the browser backend is active (others are suffixed by slug). |
+
+The namespace registry is device-local by design: the _documents_ sync through
+the backend you chose, the list of them does not.

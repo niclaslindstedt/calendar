@@ -51,6 +51,8 @@ optionally synced to a storage backend you control.
   sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
 - **Storage your way**: browser storage, a local folder, Dropbox, or Google
   Drive.
+- **Separate calendars in one app**: namespaces keep home and work apart —
+  each its own notes, all in the same backend.
 
 ## Prerequisites
 
@@ -87,10 +89,12 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   editor. The text is plain text; keep it short — it shrinks to fit, and when
   it can shrink no further the day is full. A note too long for the space it
   is shown in ends in an ellipsis.
-- **Arrows / Today** in the top bar page between months (or weeks, in the
+- **Arrows** flanking the month heading page between months (or weeks, in the
   week planner).
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
-  list.
+  list — and pressing the view you are already in jumps back to today.
+- **Namespaces** (top left) are separate calendars in the same app: one for
+  home, one for work, each with its own notes in the same storage backend.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
   (English / Swedish), week numbers and name days on/off, which holiday eves
   you work, the month cell's layout, crossing off the days that have passed, a
@@ -147,6 +151,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - [Configuration](docs/configuration.md)
 - [Storage & sync](docs/storage.md)
 - [Deployment & releases](docs/deployment.md)
+- [Namespaces (separate calendars)](docs/features/namespaces.md)
 - [Locale packs (adding a country)](docs/features/locales.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
