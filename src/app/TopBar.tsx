@@ -1,9 +1,15 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The top menu — the app's only chrome (no sidebar): "Today" on the left, the
-// view switcher in the middle, and the settings cogwheel top right. Period
-// navigation is deliberately NOT here: the ‹ › arrows sit on the month
-// heading (`PeriodHeading`), which is where the eye already is and which
-// leaves the switcher room to breathe on a portrait phone.
+// The top menu — the app's only chrome (no sidebar): the namespace switcher
+// on the left, the view switcher in the middle, and the settings cogwheel top
+// right. Period navigation is deliberately NOT here: the ‹ › arrows sit on
+// the month heading (`PeriodHeading`), which is where the eye already is and
+// which leaves the switcher room to breathe on a portrait phone.
+//
+// Going back to today is not a button either. Pressing the view you are
+// already in returns to today — the gesture a segmented control invites
+// anyway (a tab bar that re-selects its own tab scrolls to the top), and the
+// only way to fit a namespace switcher into a three-slot bar without a fourth
+// control that wraps in portrait.
 //
 // The bar follows the sibling `notes` app's header: page-background with a
 // blur, one hairline underneath, `px-4 py-3`, and 36 px square icon buttons.
@@ -11,56 +17,48 @@
 // installed iOS PWA and everything else — so the vertical padding lives in
 // `.cal-topbar` (`src/styles.css`) rather than in utilities here.
 
-import type { ReactNode } from "react";
-
 import {
   CogIcon,
   SegmentedControl,
 } from "@niclaslindstedt/oss-framework/components";
+import type { Namespace } from "@niclaslindstedt/oss-framework/namespaces";
 
+import { NamespaceMenu } from "./NamespaceMenu.tsx";
+import { TopBarIconButton } from "./TopBarButton.tsx";
 import { useT } from "./i18n/index.ts";
 import type { ViewMode } from "./useAppSettings.ts";
 
-/** A 36 px square icon button, the sibling app's header-action look. */
-export function TopBarIconButton({
-  label,
-  onClick,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  children: ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-label={label}
-      onClick={onClick}
-      className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] border border-accent/40 bg-transparent text-accent transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none"
-    >
-      {children}
-    </button>
-  );
-}
-
 type Props = {
   view: ViewMode;
+  /** Called for every press of the switcher — including a press on the view
+   *  that is already showing, which is how the calendar goes back to today.
+   *  The shell owns that decision (`App.tsx`), not this bar. */
   onViewChange: (view: ViewMode) => void;
-  onToday: () => void;
+  namespaces: Namespace[];
+  activeNamespace: string;
+  onSwitchNamespace: (slug: string) => void;
+  onManageNamespaces: () => void;
   onOpenSettings: () => void;
 };
 
-export function TopBar({ view, onViewChange, onToday, onOpenSettings }: Props) {
+export function TopBar({
+  view,
+  onViewChange,
+  namespaces,
+  activeNamespace,
+  onSwitchNamespace,
+  onManageNamespaces,
+  onOpenSettings,
+}: Props) {
   const t = useT();
   return (
     <header className="cal-topbar flex items-center gap-2 border-b border-line bg-page-bg/90 px-4 backdrop-blur">
-      <button
-        type="button"
-        onClick={onToday}
-        className="inline-flex h-9 shrink-0 cursor-pointer items-center rounded-[var(--radius)] border border-accent/40 bg-transparent px-3 text-sm text-accent transition-colors hover:bg-accent/10 focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none"
-      >
-        {t("topbar.today")}
-      </button>
+      <NamespaceMenu
+        namespaces={namespaces}
+        activeSlug={activeNamespace}
+        onSwitch={onSwitchNamespace}
+        onManage={onManageNamespaces}
+      />
 
       <div className="flex min-w-0 flex-1 justify-center">
         <SegmentedControl

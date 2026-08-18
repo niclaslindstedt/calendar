@@ -10,7 +10,13 @@
 // The framework owns the actual protocol code (PKCE flows, Dropbox/Drive
 // REST, the folder file store) — this file just wires it to localStorage keys
 // and the app's env.
+//
+// Everything here is per-*namespace*: a backend is a place, and each
+// namespace is a separate document in that place. The connection state (a
+// token, a folder handle) is shared by every namespace on the device; only
+// the document's name varies, and `./paths.ts` owns that naming.
 
+import { DEFAULT_NAMESPACE_SLUG } from "@niclaslindstedt/oss-framework/namespaces";
 import {
   BrowserLocalStorageAdapter,
   clearDirectoryHandle,
@@ -18,6 +24,7 @@ import {
   createDropboxAdapter,
   createFolderAdapter,
   createGdriveAdapter,
+  deleteLocalDocument,
   hasPendingDropboxAuth,
   isFolderBackendAvailable,
   loadDirectoryHandle,
@@ -30,11 +37,12 @@ import {
 } from "@niclaslindstedt/oss-framework/storage";
 
 import { logStore } from "../log.ts";
+import { emptyDoc, serializeDoc } from "../types.ts";
 import type { BackendId } from "./demoAdapter.ts";
+import { cacheScope, documentFileName, documentKey } from "./paths.ts";
 
 export type { BackendId } from "./demoAdapter.ts";
 
-const FILE_NAME = "calendar.json";
 const ACTIVE_KEY = "calendar:backend";
 const DROPBOX_ACCESS_KEY = "calendar:dropbox:access";
 const DROPBOX_REFRESH_KEY = "calendar:dropbox:refresh";
@@ -185,17 +193,20 @@ export async function completeOauthOnBoot(): Promise<BackendId | null> {
 
 // --- adapter construction ---------------------------------------------------
 
-/** Build the adapter for a backend id, or null when it isn't connected /
- *  available (the caller falls back to "browser"). Cloud adapters are
- *  wrapped in the framework's offline mirror so the calendar still opens
- *  without a network. */
+/** Build the adapter for a backend id and namespace slug, or null when the
+ *  backend isn't connected / available (the caller falls back to "browser").
+ *  Cloud adapters are wrapped in the framework's offline mirror so the
+ *  calendar still opens without a network — one mirror per namespace, so two
+ *  namespaces can't serve each other's cached document. */
 export async function buildAdapter(
   id: BackendId,
+  slug: string = DEFAULT_NAMESPACE_SLUG,
 ): Promise<StorageAdapter | null> {
+  const fileName = documentFileName(slug);
   switch (id) {
     case "browser":
       return new BrowserLocalStorageAdapter({
-        key: "calendar:document",
+        key: documentKey(slug),
         logger: storageLog("browser"),
       });
 
@@ -203,7 +214,7 @@ export async function buildAdapter(
       const handle = await loadDirectoryHandle();
       if (!handle) return null;
       return createFolderAdapter(handle, {
-        fileName: FILE_NAME,
+        fileName,
         logger: storageLog("folder"),
       });
     }
@@ -220,13 +231,13 @@ export async function buildAdapter(
         },
         {
           appKey: DROPBOX_APP_KEY,
-          fileName: FILE_NAME,
+          fileName,
           logger: storageLog("dropbox"),
         },
       );
       return withLocalCache(adapter, {
         storage: localStorage,
-        key: localCacheKey("dropbox", "calendar"),
+        key: localCacheKey("dropbox", cacheScope(slug)),
         logger: storageLog("dropbox"),
       });
     }
@@ -236,12 +247,12 @@ export async function buildAdapter(
       if (!token) return null;
       const adapter = createGdriveAdapter(token, {
         appFolderName: GDRIVE_APP_FOLDER,
-        fileName: FILE_NAME,
+        fileName,
         logger: storageLog("gdrive"),
       });
       return withLocalCache(adapter, {
         storage: localStorage,
-        key: localCacheKey("gdrive", "calendar"),
+        key: localCacheKey("gdrive", cacheScope(slug)),
         logger: storageLog("gdrive"),
       });
     }
@@ -249,5 +260,43 @@ export async function buildAdapter(
     case "demo":
       // Built by the caller (`useCalendarStore`) so each enable is fresh.
       return null;
+  }
+}
+
+// --- namespace teardown -----------------------------------------------------
+
+/** Throw away a deleted namespace's document. The device-local copies (the
+ *  browser document, every backend's offline mirror) are removed outright;
+ *  the copy in the *active* remote backend is emptied rather than removed,
+ *  because a `StorageAdapter` can write but not delete. Either way a
+ *  namespace re-created under the same slug comes back blank instead of
+ *  inheriting the deleted one's notes.
+ *
+ *  Best-effort throughout: a namespace leaves the registry whether or not the
+ *  cloud round-trip succeeds, so a failure here is logged, not thrown. */
+export async function discardNamespaceData(
+  id: BackendId,
+  slug: string,
+): Promise<void> {
+  if (slug === DEFAULT_NAMESPACE_SLUG) return;
+
+  deleteLocalDocument(documentKey(slug));
+  for (const backend of ["dropbox", "gdrive"] as const) {
+    try {
+      localStorage.removeItem(localCacheKey(backend, cacheScope(slug)));
+    } catch {
+      // Storage unavailable — nothing cached to drop either.
+    }
+  }
+
+  if (id === "browser" || id === "demo") return;
+  try {
+    const adapter = await buildAdapter(id, slug);
+    await adapter?.save(serializeDoc(emptyDoc()));
+  } catch (err) {
+    storageLog(id).error(
+      "could not clear the deleted namespace's document",
+      err,
+    );
   }
 }

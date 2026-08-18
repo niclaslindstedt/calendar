@@ -49,9 +49,18 @@ turning the page. The holidays screen pages between years the same way, with
 its header staying put while only the year's list moves.
 
 The **‹ ›** arrows flanking the month heading do the same thing with the same
-animation, and **Today** in the top bar jumps back to the current day. The
-arrows sit on the heading rather than in the top bar so the view switcher has
-room on a portrait phone.
+animation. To jump back to the current day, **press the view you are already
+in** — Month while in Month, Week while in Week. Pressing a different view
+switches to it and keeps the period you were reading. The arrows sit on the
+heading rather than in the top bar so the view switcher has room on a portrait
+phone.
+
+## Namespaces
+
+The button at the top left is the namespace switcher: separate calendars, each
+with its own notes, one for home and one for work. Tap it to switch, or to
+open **Manage namespaces…** and create, rename, restyle or delete one. See
+[namespaces](features/namespaces.md).
 
 ## Holidays and vacation planning
 

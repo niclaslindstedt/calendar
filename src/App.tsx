@@ -15,6 +15,11 @@ import {
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
+import {
+  NamespacesModal,
+  applyFaviconHref,
+  namespaceFaviconHref,
+} from "@niclaslindstedt/oss-framework/namespaces";
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
   DEFAULT_THEME_APPEARANCE,
@@ -51,6 +56,7 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
+import { useNamespaces } from "./app/useNamespaces.ts";
 import { pinShell } from "./app/shellScroll.ts";
 import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
@@ -180,8 +186,32 @@ export function App() {
   const [nameSeed, setNameSeed] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
 
-  const store = useCalendarStore(settings.backend, settings.demoData);
+  // Namespaces: separate calendars in the same app, each its own document in
+  // the same backend. The registry and the active pointer live in the app
+  // (`useNamespaces`, the framework's "store stays in the app" seam); the
+  // document store keys off the active slug, so switching swaps the notes
+  // under the same month.
+  const namespaces = useNamespaces(settings.backend);
+  const store = useCalendarStore(
+    settings.backend,
+    settings.demoData,
+    namespaces.activeSlug,
+  );
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [namespacesOpen, setNamespacesOpen] = useState(false);
+
+  // Re-badge the browser tab with the active namespace's glyph, so a pinned
+  // work calendar and a personal one are told apart in the tab strip. A
+  // namespace that picked no glyph keeps the app's own mark.
+  const activeNamespace = namespaces.activeNamespace;
+  useEffect(() => {
+    applyFaviconHref(
+      namespaceFaviconHref(
+        activeNamespace,
+        `${import.meta.env.BASE_URL}icons/icon.svg`,
+      ),
+    );
+  }, [activeNamespace]);
 
   // Finish an inbound Dropbox OAuth redirect, then activate the backend.
   const [folderConnected, setFolderConnected] = useState(false);
@@ -388,18 +418,25 @@ export function App() {
     <div className="flex h-full flex-col overflow-hidden bg-page-bg text-fg">
       <TopBar
         view={settings.view}
+        // Pressing the view you are already in is how you get back to today —
+        // the switcher's own "you are here" slot doubles as the way home,
+        // which is what frees the left-hand button for the namespace menu.
         onViewChange={(view) => {
           setEditingDay(null);
           closeHolidays();
           closeNames();
-          update("view", view);
+          if (view === settings.view) setAnchor(dayKeyOf(new Date()));
+          else update("view", view);
         }}
-        onToday={() => {
+        namespaces={namespaces.list}
+        activeNamespace={namespaces.activeSlug}
+        onSwitchNamespace={(slug) => {
           setEditingDay(null);
           closeHolidays();
           closeNames();
-          setAnchor(dayKeyOf(new Date()));
+          namespaces.switchTo(slug);
         }}
+        onManageNamespaces={() => setNamespacesOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
@@ -445,6 +482,41 @@ export function App() {
         onQueryChange={setNameQuery}
         onClose={closeNames}
         onPick={goToNameDay}
+      />
+
+      {/* Create / switch / rename / restyle / delete a namespace. The app owns
+          the registry (`useNamespaces`); the framework owns the dialog. */}
+      <NamespacesModal
+        open={namespacesOpen}
+        onClose={() => setNamespacesOpen(false)}
+        namespaces={namespaces.list}
+        activeNamespace={namespaces.activeSlug}
+        onSwitch={namespaces.switchTo}
+        onCreate={namespaces.create}
+        onRename={namespaces.rename}
+        onSetAppearance={namespaces.setAppearance}
+        onRemove={namespaces.remove}
+        labels={{
+          heading: t("namespaces.heading"),
+          blurb: t("namespaces.blurb"),
+          newAction: t("namespaces.newAction"),
+          namePlaceholder: t("namespaces.namePlaceholder"),
+          nameLabel: t("namespaces.nameLabel"),
+          create: t("namespaces.create"),
+          nameRequired: t("namespaces.nameRequired"),
+          colorLabel: t("namespaces.colorLabel"),
+          glyphLabel: t("namespaces.glyphLabel"),
+          glyphNone: t("namespaces.glyphNone"),
+          save: t("namespaces.save"),
+          cancel: t("namespaces.cancel"),
+          renameAction: t("namespaces.renameAction"),
+          deleteAction: t("namespaces.deleteAction"),
+          delete: t("namespaces.delete"),
+          deleteConfirm: (name) => t("namespaces.deleteConfirm", { name }),
+          switchTo: (name) => t("namespaces.switchTo", { name }),
+          defaultBadge: t("namespaces.defaultBadge"),
+          close: t("namespaces.close"),
+        }}
       />
 
       <SettingsModal
