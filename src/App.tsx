@@ -4,7 +4,7 @@
 // (`useAppSettings`, `useCalendarStore`); the framework supplies the theme
 // engine, the update state machine, and the UI kit.
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   addDays,
@@ -72,6 +72,11 @@ const DEFAULT_APPEARANCE: ThemeAppearance = {
   theme: "system",
 };
 
+/** What a parked pane's handlers are. Hoisted so the two neighbours the deck
+ *  keeps off screen are handed the *same* do-nothing function every render —
+ *  a fresh `() => {}` would defeat the memoization the views rely on. */
+const NOOP = () => {};
+
 export function App() {
   const t = useT();
   const { settings, update, commitLook } = useAppSettings();
@@ -108,7 +113,14 @@ export function App() {
   // same reason: the `.cal-size-*` rules multiply each site's base size by
   // them, and the settings dialog's sample cell has to be painted at the size
   // it is previewing wherever the modal sits in the tree.
-  const scales = textScales(live);
+  // Memoized, like the layout and the toggles below: these objects are props
+  // of the memoized views, so rebuilding one on every render would re-render
+  // three periods' worth of day cells for nothing.
+  const scales = useMemo(
+    () => textScales(live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [live.sizeDay, live.sizeHolidays, live.sizeNameDays, live.sizeWeek],
+  );
   useEffect(() => {
     const root = document.documentElement;
     for (const [name, scale] of Object.entries(textScaleVars(scales))) {
@@ -211,22 +223,24 @@ export function App() {
   /** Leave the holidays screen and go back to the calendar. */
   const closeHolidays = () => setHolidayYear(null);
 
-  /** Open it on the year the tapped holiday belongs to. */
-  const openHolidays = (year: number) => {
+  /** Open it on the year the tapped holiday belongs to. Stable, because every
+   *  day cell in three periods holds a reference to it. */
+  const openHolidays = useCallback((year: number) => {
     setEditingDay(null);
     setNameSeed(null);
     setHolidayYear(year);
-  };
+  }, []);
 
   /** Leave the name-day search. */
   const closeNames = () => setNameSeed(null);
 
-  /** Open it on the name that was tapped — as a list, not a search. */
-  const openNames = (name: string) => {
+  /** Open it on the name that was tapped — as a list, not a search. Stable,
+   *  for the same reason as {@link openHolidays}. */
+  const openNames = useCallback((name: string) => {
     setEditingDay(null);
     setNameQuery("");
     setNameSeed(name);
-  };
+  }, []);
 
   /** A picked name day: go to it in the year on display, and leave the
    *  search. The almanac has no year of its own, so the day the calendar was
@@ -247,7 +261,21 @@ export function App() {
   };
 
   const pack = getLocale(live.localeId);
-  const toggles = effectiveToggles(live);
+  const toggles = useMemo(
+    () => effectiveToggles(live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [live.localeId, live.weekNumbers, live.nameDays],
+  );
+  const cellLayout = useMemo(
+    () => monthCellLayout(live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      live.monthDayCorner,
+      live.monthNameDayCorner,
+      live.monthHolidayCorner,
+      live.monthNote,
+    ],
+  );
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and
   // week views fill exactly one screen; the day list scrolls inside its own
@@ -269,10 +297,9 @@ export function App() {
     // neighbour mid-swipe must not open an editor in an off-screen month.
     const interactive = rel === 0;
     const editing = interactive ? editingDay : null;
-    const onEditDay = interactive ? setEditingDay : () => {};
-    const onCommit = interactive ? store.setEntry : () => {};
-    const onOpenHolidays = () => openHolidays(on.year);
-    const onOpenNames = interactive ? openNames : () => {};
+    const onEditDay = interactive ? setEditingDay : NOOP;
+    const onCommit = interactive ? store.setEntry : NOOP;
+    const onOpenNames = interactive ? openNames : NOOP;
     if (settings.view === "list") {
       return (
         <DayListView
@@ -290,7 +317,7 @@ export function App() {
           onCommit={onCommit}
           onPrevious={nav.previous}
           onNext={nav.next}
-          onOpenHolidays={onOpenHolidays}
+          onOpenHolidays={openHolidays}
           onOpenNames={onOpenNames}
         />
       );
@@ -308,7 +335,7 @@ export function App() {
         onCommit={onCommit}
         onPrevious={nav.previous}
         onNext={nav.next}
-        onOpenHolidays={onOpenHolidays}
+        onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
       />
     ) : (
@@ -319,7 +346,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
-        layout={monthCellLayout(live)}
+        layout={cellLayout}
         textSize={live.textSize}
         scales={scales}
         doc={store.doc}
@@ -328,7 +355,7 @@ export function App() {
         onCommit={onCommit}
         onPrevious={nav.previous}
         onNext={nav.next}
-        onOpenHolidays={onOpenHolidays}
+        onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
       />
     );

@@ -1,20 +1,33 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Horizontal period paging for the month and week views. Those two views fill
-// exactly one screen and never scroll, which frees the horizontal axis for
-// navigation: drag left or right and the neighbouring period follows your
-// finger, then springs into place. The framework ships no pager — `useRowSwipe`
-// is a per-row reveal/commit gesture and `useSwipeDownToClose` is for sheets —
-// so this is app-local.
+// Horizontal period paging for the month, week and list views. The month and
+// week views fill exactly one screen and never scroll, which frees the
+// horizontal axis for navigation: drag left or right and the neighbouring
+// period follows your finger, then springs into place. The framework ships no
+// pager — `useRowSwipe` is a per-row reveal/commit gesture and
+// `useSwipeDownToClose` is for sheets — so this is app-local.
 //
 // The track holds three panes (previous, current, next), each exactly one
 // container wide, and rests at `-100%` so the current one is on screen.
-// Committing a swipe animates the track to `0%` / `-200%`, then re-centres it
-// and moves the parent's anchor **in the same batch**, so the pane that slid in
-// is the pane that stays and there is no flash between the two.
+//
+// Two rules keep the animation smooth, and both are about *when* work happens:
+//
+//   - **The gesture never re-renders.** A drag writes the track's transform
+//     straight to the DOM rather than through state. Rendering three periods
+//     on every pointermove was costing a third of the frames on a mid-range
+//     machine; now a drag is a single style write per frame and the browser
+//     keeps the whole thing on the compositor.
+//   - **A page turn swaps first and animates second.** Committing moves the
+//     parent's anchor *immediately* and parks the track one pane off, so the
+//     period that was on screen is still the one you see; then the track runs
+//     home. The render therefore lands in the pause right after your finger
+//     lifts, and the 260 ms that follow are pure compositor work. Animating
+//     first and swapping at the end — the obvious order — puts that render
+//     exactly where the eye is watching the page settle.
 
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type MouseEvent as ReactMouseEvent,
@@ -42,9 +55,21 @@ const COMMIT_VELOCITY = 0.4;
 const SETTLE_MS = 260;
 /** Decelerating ease — fast off the finger, gentle into place. */
 const SETTLE_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
+/** Backstop for the `transitionend` that ends a settle. Generous, because the
+ *  render that precedes the animation can delay its start on a slow device —
+ *  this only cleans up, so firing late costs nothing. */
+const SETTLE_TIMEOUT_MS = SETTLE_MS * 2 + 400;
 
 /** The panes, left to right: the previous period, the current one, the next. */
 const RELATIVE: readonly (-1 | 0 | 1)[] = [-1, 0, 1];
+
+/** Where the track sits when nothing is happening: the centre pane on screen. */
+const REST = "translate3d(-100%, 0, 0)";
+
+/** The track's transform `px` away from {@link REST}. */
+function trackTransform(px: number): string {
+  return px === 0 ? REST : `translate3d(calc(-100% + ${px}px), 0, 0)`;
+}
 
 /** Marks the scrolling element inside a pane of a `scrolls` deck, so the deck
  *  can put it back to the top when the period changes. Spread onto the
@@ -65,7 +90,9 @@ type Props = {
   onPrevious: () => void;
   onNext: () => void;
   /** Draws one pane. `rel` is -1/0/1 relative to the current period; only the
-   *  `0` pane is interactive. */
+   *  `0` pane is interactive. Keep the returned tree cheap to re-render —
+   *  better, make it a memoized component with stable props, so a page turn
+   *  only renders the one period that is genuinely new. */
   renderItem: (rel: -1 | 0 | 1, nav: DeckNav) => ReactNode;
   /** Chrome drawn above the track and left out of the animation: a screen
    *  whose header is the same in every period should not have three copies of
@@ -101,100 +128,219 @@ export function SwipeDeck({
   renderChrome,
   scrolls = false,
 }: Props) {
-  // Where the track sits: `settle` counts whole panes (the committed step) and
-  // `dx` the pixels the finger has added on top.
-  const [settle, setSettle] = useState<-1 | 0 | 1>(0);
-  const [dx, setDx] = useState(0);
-  const [animating, setAnimating] = useState(false);
-
   const host = useRef<HTMLDivElement>(null);
+  const track = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
+  /** How far the finger has taken the track from rest. A ref, not state: the
+   *  whole point is that dragging renders nothing. */
+  const dx = useRef(0);
   /** Set once a gesture becomes a swipe, so the click it ends with does not
    *  also drop into the day cell it happens to land on. */
   const swiped = useRef(false);
-  /** True from a committed swipe until its settle lands — input is ignored. */
+  /** True from a committed swipe until its settle lands. New gestures are
+   *  turned away while it holds; another page turn is queued instead. */
   const settling = useRef(false);
+  /** Set just before we move the anchor ourselves, so the `itemKey` effect can
+   *  tell our own page turn from a jump made outside the deck. */
+  const stepped = useRef(false);
+  /** A page turn asked for while one was still settling. There is no fourth
+   *  pane, so the period after next cannot start sliding until the current one
+   *  has landed — but dropping the request outright makes a second tap on the
+   *  arrow feel like a miss, which is most of what "laggy" means here. Held,
+   *  and turned into a page turn the moment the track is home. One deep, last
+   *  one wins: two taps get you two periods, while leaning on the arrow paces
+   *  at one page turn per settle instead of banking a queue that keeps flying
+   *  after you stop. */
+  const queued = useRef<-1 | 1 | null>(null);
+  /** The current `commit`, so the settle's tail and the stable `nav` below can
+   *  reach it without either of them being rebuilt every render. */
+  const commitRef = useRef<(direction: -1 | 1) => void>(() => {});
   const timer = useRef<number | undefined>(undefined);
+
+  // Rotates by one per committed step, so the two panes that survive a page
+  // turn keep their key — and, with a memoized pane, their rendered tree. The
+  // month that slid in was already rendered as the neighbour; only the period
+  // that just came into range is new.
+  const [rotation, setRotation] = useState(0);
+  /** The pane whose scroll offset is genuinely its own after a page turn: it
+   *  held this period before the step too, and is currently sliding out. */
+  const keepScroll = useRef<number | null>(null);
 
   const reducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
 
+  /** Whether text under the deck can be selected. Turned off for the length
+   *  of a horizontal drag — see the axis lock. */
+  const setSelectable = (on: boolean) => {
+    const el = host.current;
+    if (!el) return;
+    el.style.userSelect = on ? "" : "none";
+    el.style.webkitUserSelect = on ? "" : "none";
+    if (!on) document.getSelection()?.removeAllRanges();
+  };
+
+  /** Park the track `px` from rest, immediately. */
+  const place = (px: number) => {
+    const el = track.current;
+    if (!el) return;
+    el.style.transition = "none";
+    el.style.transform = trackTransform(px);
+  };
+
+  /** Run the track home from wherever it currently is. The start value is
+   *  flushed first — without that the browser would resolve both ends in one
+   *  style pass and there would be nothing to animate. */
+  const runHome = () => {
+    const el = track.current;
+    if (!el) return;
+    void el.offsetWidth;
+    el.style.willChange = "transform";
+    el.style.transition = `transform ${SETTLE_MS}ms ${SETTLE_EASING}`;
+    el.style.transform = REST;
+    timer.current = window.setTimeout(endSettle, SETTLE_TIMEOUT_MS);
+  };
+
+  const endSettle = () => {
+    clearTimeout(timer.current);
+    timer.current = undefined;
+    settling.current = false;
+    const el = track.current;
+    if (el) {
+      el.style.transition = "none";
+      el.style.willChange = "auto";
+    }
+    const next = queued.current;
+    queued.current = null;
+    if (next) commitRef.current(next);
+  };
+
   useEffect(() => () => clearTimeout(timer.current), []);
+
+  // The settle is over when the track lands, not when a timer says so: the
+  // render that precedes a page turn can push the animation's start out on a
+  // slow device, and blocking input for a fixed duration from the *commit*
+  // would either unblock mid-flight or hold the next swipe long after the
+  // page had settled. The timeout in `runHome` is only a backstop for the
+  // case where no transition runs at all.
+  useEffect(() => {
+    const el = track.current;
+    if (!el) return;
+    const done = (e: TransitionEvent) => {
+      if (e.target === el && e.propertyName === "transform") endSettle();
+    };
+    el.addEventListener("transitionend", done);
+    return () => el.removeEventListener("transitionend", done);
+    // Only refs and the DOM node are touched, so the first `endSettle` is as
+    // good as any later one.
+  }, []);
 
   // Once a drag locks to the horizontal axis the browser must not reclaim it:
   // on a scrolling deck `pan-y` would otherwise let a downward drift start a
   // native scroll mid-swipe, which fires `pointercancel` and drops the page
   // turn. Swallowing the touchmoves while locked keeps the gesture ours, so
   // only the finger's horizontal travel is measured. Native listener because
-  // it must be non-passive to call `preventDefault`.
+  // it must be non-passive to call `preventDefault` — and only on a deck that
+  // scrolls, because a non-passive touchmove listener makes the compositor
+  // wait on the main thread before every scrolled frame. The other decks
+  // already deny the browser both axes with `touch-action: none`.
   useEffect(() => {
     const el = host.current;
-    if (!el) return;
+    if (!el || !scrolls) return;
     const onTouchMove = (e: TouchEvent) => {
       if (drag.current?.axis === "x" && e.cancelable) e.preventDefault();
     };
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", onTouchMove);
-  }, []);
+  }, [scrolls]);
 
-  // The anchor moved while a settle was in flight, which can only mean it moved
-  // from outside the deck (our own commit clears `settling` first). Drop the
-  // pending step rather than applying it on top of the new anchor.
+  // The centre period changed. Our own page turn has already placed the track
+  // and started its animation; anything else is a jump from outside the deck
+  // (the Today button, a picked name day) and lands with no animation at all.
   useLayoutEffect(() => {
-    if (!settling.current) return;
-    clearTimeout(timer.current);
-    settling.current = false;
-    setAnimating(false);
-    setSettle(0);
-    setDx(0);
+    if (stepped.current) {
+      stepped.current = false;
+      return;
+    }
+    // Whoever moved the anchor from outside meant *that* period, not the one
+    // a queued arrow tap was heading for.
+    queued.current = null;
+    endSettle();
+    dx.current = 0;
+    place(0);
   }, [itemKey]);
 
-  // A pane is a reused DOM node — the period swaps under it, its scroll offset
-  // does not. So paging out of a month you had scrolled halfway down used to
-  // drop you halfway down the neighbouring one, at a row the swipe never
-  // showed you: what slid in was that month's *top*. Put every pane back there
-  // in the same batch the anchor moves in, before the browser paints, so the
-  // page turn lands where it looked like it would.
+  // A pane is a reused DOM node — the period inside it swaps, its scroll
+  // offset does not. So paging out of a month you had scrolled halfway down
+  // used to drop you halfway down the neighbouring one, at a row the swipe
+  // never showed you: what slid in was that month's *top*. Put every pane whose
+  // period actually changed back there in the same batch the anchor moves in,
+  // before the browser paints. The one exception is the pane still holding the
+  // period you just left: it is on screen, sliding out, and yanking it to the
+  // top mid-animation is exactly the flash this is meant to prevent.
   useLayoutEffect(() => {
     if (!scrolls) return;
     const el = host.current;
+    const keep = keepScroll.current;
+    keepScroll.current = null;
     if (!el) return;
-    for (const pane of el.querySelectorAll("[data-deck-scroller]")) {
-      pane.scrollTop = 0;
+    for (const pane of el.querySelectorAll<HTMLElement>("[data-deck-pane]")) {
+      if (keep !== null && pane.dataset.deckPane === String(keep)) continue;
+      for (const scroller of pane.querySelectorAll("[data-deck-scroller]")) {
+        scroller.scrollTop = 0;
+      }
     }
   }, [itemKey, scrolls]);
 
+  /** Spring back to the current period: the drag did not go far enough. This
+   *  one does not block input — nothing changed, so a second try can start
+   *  before the first has finished springing. */
   const rest = () => {
-    setAnimating(true);
-    setSettle(0);
-    setDx(0);
+    dx.current = 0;
+    runHome();
   };
 
   const commit = (direction: -1 | 1) => {
-    if (settling.current) return;
+    if (settling.current) {
+      queued.current = direction;
+      return;
+    }
+    const width = host.current?.clientWidth ?? 0;
     const step = () => (direction === 1 ? onNext() : onPrevious());
-    if (reducedMotion) {
-      setAnimating(false);
-      setSettle(0);
-      setDx(0);
+
+    // Where the track has to sit, once the anchor has moved, for the period
+    // you are looking at to stay exactly where it is: one pane over, plus
+    // whatever the finger had already added.
+    const from = direction * width + dx.current;
+    dx.current = 0;
+    stepped.current = true;
+    keepScroll.current = paneKey(rotation, 0);
+    setRotation((r) => r + direction);
+
+    if (reducedMotion || width === 0) {
+      place(0);
       step();
       return;
     }
+
     settling.current = true;
-    setAnimating(true);
-    setSettle(direction);
-    setDx(0);
-    timer.current = window.setTimeout(() => {
-      // Clearing the flag first keeps the anchor change below from reading as
-      // an outside move to the effect above. Preact batches all of this into
-      // one render, so the track re-centres in the same frame the new period
-      // lands in the middle pane.
-      settling.current = false;
-      setAnimating(false);
-      setSettle(0);
-      setDx(0);
-      step();
-    }, SETTLE_MS);
+    // Order matters, and nothing paints in between: park the track as if the
+    // step had already happened, start it home, and only then move the anchor.
+    // The re-render that follows leaves the transform alone, so a slow render
+    // delays the animation rather than truncating it.
+    place(from);
+    runHome();
+    step();
   };
+
+  commitRef.current = commit;
+  // Stable across renders so a memoized pane is not invalidated by its own
+  // navigation arrows.
+  const nav = useMemo<DeckNav>(
+    () => ({
+      previous: () => commitRef.current(-1),
+      next: () => commitRef.current(1),
+    }),
+    [],
+  );
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (settling.current || e.button !== 0) return;
@@ -236,7 +382,14 @@ export function SwipeDeck({
       if (Math.abs(moved) < AXIS_LOCK_PX) return;
       d.axis = "x";
       swiped.current = true;
-      setAnimating(false);
+      const el = track.current;
+      if (el) el.style.willChange = "transform";
+      clearTimeout(timer.current);
+      // A mouse drag is also a text drag: without this, turning the page on a
+      // desktop smears a selection highlight across the days it passes over.
+      // Dropped at the moment the gesture becomes ours, and given back when
+      // the pointer lifts, so ordinary selection still works everywhere else.
+      setSelectable(false);
       e.currentTarget.setPointerCapture?.(e.pointerId);
     }
 
@@ -248,7 +401,8 @@ export function SwipeDeck({
     }
     // Capped at one period: a long drag reveals the neighbour and no further,
     // because there is no fourth pane behind it.
-    setDx(Math.max(-d.width, Math.min(d.width, moved)));
+    dx.current = Math.max(-d.width, Math.min(d.width, moved));
+    place(dx.current);
   };
 
   /** Ends an x-locked drag: commit if it went far or fast, spring back if
@@ -267,6 +421,7 @@ export function SwipeDeck({
     const d = drag.current;
     drag.current = null;
     if (!d || d.axis !== "x") return;
+    setSelectable(true);
     finish(d, e.clientX);
   };
 
@@ -274,6 +429,7 @@ export function SwipeDeck({
     const d = drag.current;
     drag.current = null;
     if (!d) return;
+    setSelectable(true);
     // A cancel after the axis lock means the browser stole a gesture that was
     // already a swipe. Finish it from the last sample rather than snapping
     // back — the finger asked for a page turn.
@@ -289,13 +445,6 @@ export function SwipeDeck({
     e.preventDefault();
     e.stopPropagation();
   };
-
-  const nav: DeckNav = {
-    previous: () => commit(-1),
-    next: () => commit(1),
-  };
-
-  const active = animating || dx !== 0;
 
   return (
     <div
@@ -316,32 +465,44 @@ export function SwipeDeck({
       {renderChrome && <div className="shrink-0">{renderChrome(nav)}</div>}
       <div className="min-h-0 flex-1 overflow-hidden">
         <div
+          ref={track}
           className="flex h-full w-full"
-          style={{
-            transform: `translate3d(calc(${-100 * (1 + settle)}% + ${dx}px), 0, 0)`,
-            transition: animating
-              ? `transform ${SETTLE_MS}ms ${SETTLE_EASING}`
-              : "none",
-            willChange: active ? "transform" : "auto",
-          }}
+          // The resting transform is the only one React writes. Every other
+          // position — the finger's, the page turn's — is set on this node
+          // directly, so no gesture ever costs a render.
+          style={{ transform: REST }}
         >
-          {RELATIVE.map((rel) => (
-            // Keyed by position, not by period: the centre node is reused as
-            // the anchor moves, so committing a swipe swaps the content in
-            // place instead of remounting three views.
-            <div
-              key={rel}
-              className="h-full w-full shrink-0"
-              // The neighbours carry focusable day cells and heading arrows;
-              // `inert` keeps them out of the tab order and the a11y tree
-              // while they are parked off screen.
-              {...(rel === 0 ? {} : ({ inert: "" } as Record<string, string>))}
-            >
-              {renderItem(rel, nav)}
-            </div>
-          ))}
+          {RELATIVE.map((rel) => {
+            const key = paneKey(rotation, rel);
+            return (
+              // Keyed by a rotating slot rather than by position: a page turn
+              // shifts every period one pane over, and this is what lets the
+              // two that were already rendered keep their tree instead of
+              // being rebuilt under a position key that never moves.
+              <div
+                key={key}
+                data-deck-pane={key}
+                className="h-full w-full shrink-0"
+                // The neighbours carry focusable day cells and heading arrows;
+                // `inert` keeps them out of the tab order and the a11y tree
+                // while they are parked off screen.
+                {...(rel === 0
+                  ? {}
+                  : ({ inert: "" } as Record<string, string>))}
+              >
+                {renderItem(rel, nav)}
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
   );
+}
+
+/** The slot a pane occupies, `rel` away from the centre at this rotation.
+ *  Three slots cycling means a step re-uses two of them and only the period
+ *  that just came into range lands in a fresh one. */
+function paneKey(rotation: number, rel: -1 | 0 | 1): number {
+  return (((rotation + rel) % 3) + 3) % 3;
 }

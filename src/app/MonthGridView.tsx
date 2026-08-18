@@ -6,6 +6,8 @@
 // the margin, red Sundays, name days small in each cell, and the user's note
 // text shrinking to fit its cell.
 
+import { memo, useMemo } from "react";
+
 import type { DayKey, GridCell } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildMonthGrid,
@@ -57,13 +59,19 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
-  /** Tapping a holiday's name opens the holidays screen for its year. */
-  onOpenHolidays: () => void;
+  /** Tapping a holiday's name opens the holidays screen. Takes the year so
+   *  the handler can stay one stable function across every day of every
+   *  period the deck holds, rather than a fresh closure per cell. */
+  onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
 };
 
-export function MonthGridView({
+/** Memoized: the deck keeps three months mounted, so an unrelated state change
+ *  (a tap on another day, a settings preview) must not re-render the two that
+ *  did not move. Every prop above is either a primitive or memoized by
+ *  `App.tsx` — keep it that way. */
+export const MonthGridView = memo(function MonthGridView({
   year,
   month,
   today,
@@ -83,10 +91,13 @@ export function MonthGridView({
   onOpenNames,
 }: Props) {
   const t = useT();
-  const weeks = buildMonthGrid(year, month, {
-    weekStartsOn: pack.weekStartsOn,
-    today,
-  });
+  // Memoized so the cells below — which are memoized in turn — are handed the
+  // same `GridCell` objects until the month itself changes.
+  const weeks = useMemo(
+    () =>
+      buildMonthGrid(year, month, { weekStartsOn: pack.weekStartsOn, today }),
+    [year, month, pack.weekStartsOn, today],
+  );
   const order = weekdayOrder(pack);
   const image = monthImageUrl(year, month, "large");
 
@@ -181,6 +192,7 @@ export function MonthGridView({
                 <DayCell
                   key={cell.key}
                   cell={cell}
+                  year={year}
                   pack={pack}
                   layout={layout}
                   showNameDays={showNameDays}
@@ -200,7 +212,7 @@ export function MonthGridView({
       </section>
     </div>
   );
-}
+});
 
 /** One day of the grid. Where each piece sits — which corner takes the
  *  number, the holiday and the day's names, and where the note starts —
@@ -217,9 +229,15 @@ export function MonthGridView({
  *  almanac do, the widest being "Bartolomeus" at 42.1 px. Re-measure before
  *  growing this font — and note that the *reader* can grow it (Settings →
  *  Calendar → Text size), which is why the threshold is derived from the
- *  live scale rather than taken as the constant. */
-function DayCell({
+ *  live scale rather than taken as the constant.
+ *
+ *  Memoized, and the reason is the tap: opening the editor on one day used to
+ *  re-render every cell of three months, which is a fifth of a second of dead
+ *  main thread on a mid-range phone. Now the day you touched is the only one
+ *  that renders. */
+const DayCell = memo(function DayCell({
   cell,
+  year,
   pack,
   layout,
   showNameDays,
@@ -233,6 +251,8 @@ function DayCell({
   onOpenNames,
 }: {
   cell: GridCell;
+  /** The month's own year — what a tapped holiday opens the screen on. */
+  year: number;
   pack: LocalePack;
   layout: MonthCellLayout;
   showNameDays: boolean;
@@ -242,7 +262,7 @@ function DayCell({
   editing: boolean;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
-  onOpenHolidays: () => void;
+  onOpenHolidays: (year: number) => void;
   onOpenNames: (name: string) => void;
 }) {
   const parts = parseDayKey(cell.key);
@@ -294,13 +314,13 @@ function DayCell({
               tabIndex={0}
               onClick={(e) => {
                 e.stopPropagation();
-                onOpenHolidays();
+                onOpenHolidays(year);
               }}
               onKeyDown={(e) => {
                 if (e.key !== "Enter" && e.key !== " ") return;
                 e.preventDefault();
                 e.stopPropagation();
-                onOpenHolidays();
+                onOpenHolidays(year);
               }}
               className={`cal-font-holiday cal-cell-holiday block cursor-pointer leading-[1.25] focus-visible:outline-2 ${
                 holiday.red ? "cal-red" : "text-muted"
@@ -342,4 +362,4 @@ function DayCell({
       />
     </div>
   );
-}
+});
