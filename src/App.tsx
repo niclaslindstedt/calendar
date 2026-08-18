@@ -59,6 +59,7 @@ import {
   effectiveToggles,
   eveChoices,
   monthCellLayout,
+  pastMarkOf,
   textScales,
   useAppSettings,
 } from "./app/useAppSettings.ts";
@@ -253,6 +254,10 @@ export function App() {
   // Resolved once, here, so every view and the planner agree on the year.
   const pack = withEveChoices(getLocale(live.localeId), eveChoices(live));
   const toggles = effectiveToggles(live);
+  // Crossing off the days that have gone — off unless it has been turned on
+  // (Settings → Calendar → Passed days). Resolved once here, from the live
+  // look, so the dialog previews the stroke as it is chosen.
+  const pastMark = pastMarkOf(live);
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and
   // week views fill exactly one screen; the day list scrolls inside its own
@@ -288,6 +293,7 @@ export function App() {
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
           rowMode={live.listRows}
+          pastMark={pastMark}
           textSize={live.textSize}
           doc={store.doc}
           editingDay={editing}
@@ -306,6 +312,7 @@ export function App() {
         today={today}
         pack={pack}
         showNameDays={toggles.nameDays}
+        pastMark={pastMark}
         textSize={live.textSize}
         doc={store.doc}
         editingDay={editing}
@@ -325,6 +332,7 @@ export function App() {
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
         layout={monthCellLayout(live)}
+        pastMark={pastMark}
         textSize={live.textSize}
         scales={scales}
         doc={store.doc}

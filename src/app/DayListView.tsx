@@ -22,6 +22,8 @@ import {
 } from "./locale/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
@@ -36,6 +38,8 @@ type Props = {
   showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
+  /** The stroke drawn over the days that have passed, if any. */
+  pastMark: PastMarkSetting;
   textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
@@ -61,6 +65,7 @@ export function DayListView({
   showWeekNumbers,
   showNameDays,
   rowMode,
+  pastMark,
   textSize,
   doc,
   editingDay,
@@ -125,6 +130,7 @@ export function DayListView({
               : [];
           const entry = doc.entries[key] ?? "";
           const fixed = rowMode === "fixed" && editingDay !== key;
+          const marked = pastMarkSlot(pastMark, key, today);
           // A small week marker on the first day of each week (and on the
           // 1st), the way Swedish wall calendars badge their week rows. Bare
           // number, like the month grid's gutter: once the marker has a lane
@@ -147,7 +153,7 @@ export function DayListView({
                   onEditDay(key);
                 }
               }}
-              className={`flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
+              className={`relative flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
                 fixed ? "h-11 overflow-hidden" : "min-h-11"
               } ${key === today ? "bg-surface-2" : ""}`}
             >
@@ -170,7 +176,9 @@ export function DayListView({
                   red ? "cal-red" : "text-fg"
                 }`}
               >
-                {day}
+                <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
+                  {day}
+                </MarkedDate>
               </span>
               <span
                 className={`w-8 shrink-0 pt-1 text-[10px] leading-tight ${
@@ -231,6 +239,9 @@ export function DayListView({
                   onClose={() => onEditDay(null)}
                 />
               </div>
+
+              {/* The whole-row stroke — over the row, transparent to taps. */}
+              {marked === "cell" && <PastMark style={pastMark.style} />}
             </div>
           );
         })}

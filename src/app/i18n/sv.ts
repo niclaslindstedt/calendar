@@ -102,6 +102,16 @@ export const sv: Catalog = {
     textSizeSmall: "Liten",
     textSizeMedium: "Mellan",
     textSizeLarge: "Stor",
+    pastDays: "Passerade dagar",
+    pastDaysHint:
+      "Kryssa av dagarna som gått, som i en papperskalender. Dagens datum kryssas aldrig — raden av kryss slutar där.",
+    pastMark: "Markering",
+    pastMarkNone: "Av",
+    pastMarkCross: "Kryss ✕",
+    pastMarkSlash: "Streck /",
+    pastMarkScope: "Täcker",
+    pastMarkScopeCell: "Hela dagen",
+    pastMarkScopeDate: "Datumet",
     dayListRows: "Daglistans rader",
     rows: "Radhöjd",
     dayListRowsHint:

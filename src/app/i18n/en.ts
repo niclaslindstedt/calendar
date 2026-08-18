@@ -105,6 +105,16 @@ export const en = {
     textSizeSmall: "Small",
     textSizeMedium: "Medium",
     textSizeLarge: "Large",
+    pastDays: "Passed days",
+    pastDaysHint:
+      "Cross off the days that have gone, the way you would on a paper calendar. Today is never crossed — the run of marks stops at it.",
+    pastMark: "Mark",
+    pastMarkNone: "Off",
+    pastMarkCross: "Cross ✕",
+    pastMarkSlash: "Slash /",
+    pastMarkScope: "Covers",
+    pastMarkScopeCell: "Whole day",
+    pastMarkScopeDate: "The date",
     dayListRows: "Day list rows",
     rows: "Row height",
     dayListRowsHint:
