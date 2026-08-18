@@ -95,6 +95,9 @@ type Props = {
   onAppearanceChange: (next: ThemeAppearance) => void;
   /** Streams the open dialog's draft to the app (null once closed). */
   onPreview: (draft: SettingsDraft | null) => void;
+  /** Leaves the dialog for the vacation planner (the Vacation section's
+   *  shortcut). Called after the draft has been saved. */
+  onOpenPlanner: () => void;
   saveState: SaveState;
   effectiveBackend: BackendId;
   storage: StorageActions;
@@ -113,6 +116,7 @@ export function SettingsModal({
   defaultAppearance,
   onAppearanceChange,
   onPreview,
+  onOpenPlanner,
   saveState,
   effectiveBackend,
   storage,
@@ -198,6 +202,14 @@ export function SettingsModal({
     onClose();
   }, [commitLook, draft, onAppearanceChange, onClose]);
 
+  // The Vacation section's shortcut saves on the way out rather than
+  // cancelling: the allowance you just typed is the one the planner you asked
+  // for should spend, and a shortcut that quietly dropped it would be a trap.
+  const handleOpenPlanner = useCallback(() => {
+    handleSave();
+    onOpenPlanner();
+  }, [handleSave, onOpenPlanner]);
+
   // Reset only the look the dialog owns — the device-local switches and the
   // storage connections are left alone, and nothing is written until Save.
   const handleReset = useCallback(
@@ -251,6 +263,7 @@ export function SettingsModal({
                 onUpdate={updateDraftLook}
                 devMode={settings.devMode}
                 onDevModeChange={(next) => update("devMode", next)}
+                onOpenPlanner={handleOpenPlanner}
               />
             )}
             {activeTab === "appearance" && (

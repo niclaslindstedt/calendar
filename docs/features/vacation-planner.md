@@ -10,6 +10,13 @@ or the day list. The name is already on screen and it is exactly what you are
 asking about, so it doubles as the way in. Tapping anywhere else in the cell
 still opens the day's note.
 
+Or take the shortcut: **Settings → General → Vacation → Open the vacation
+planner**, right under the allowance the planner spends. The gesture above is
+quick once you know it and invisible until then, so the section that sets the
+allowance also points at what spends it. The shortcut **saves** the dialog on
+its way out — the allowance you just typed is the one the plan is computed
+from — and opens the planner on the year the calendar was showing.
+
 There is deliberately no fourth segment in the top menu: a 393 px portrait bar
 does not fit one without demoting Month, Week, or Day list. Any top-menu
 action (a view switch, **Today**) leaves the screen again, as does the back

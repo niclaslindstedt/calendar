@@ -57,6 +57,9 @@ export const sv: Catalog = {
     vacationDays: "Semesterdagar per år",
     vacationDaysHint:
       "Din betalda semester. Semesterplaneraren lägger dagarna där de ger mest ledighet.",
+    vacationOpenPlanner: "Öppna semesterplaneraren",
+    vacationOpenPlannerHint:
+      "Sparar dina inställningar och öppnar planeraren för året du tittar på. Du kan också trycka på en helgdags namn i valfri vy.",
     monthCell: "Månadsvy",
     monthCellHint:
       "Tryck på ett hörn i exempeldagen för att välja vad som ska stå där. Standarden återger en tryckt väggkalender: siffran uppe till höger, helgdagen och dagens namn staplade nere till höger.",
