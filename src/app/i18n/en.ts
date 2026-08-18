@@ -58,6 +58,9 @@ export const en = {
     vacationDays: "Vacation days a year",
     vacationDaysHint:
       "Your paid annual leave. The vacation planner spends it on the days that buy the most time off.",
+    vacationOpenPlanner: "Open the vacation planner",
+    vacationOpenPlannerHint:
+      "Saves your settings and opens the planner for the year you are looking at. You can also get there by tapping a holiday's name in any view.",
     monthCell: "Month view",
     monthCellHint:
       "Tap a corner of the sample day to choose what sits there. The defaults reproduce a printed wall calendar: the number in the top-right corner, the holiday and the day's names stacked in the bottom-right one.",

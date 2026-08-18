@@ -52,7 +52,8 @@ Tap a **holiday's name** in any view to open the holidays screen for that
 year: the year's public holidays, and a planner that works out which days to
 book to get the most time off — the Friday after a Thursday holiday, the days
 that bridge Easter into a ten-day break. Set your allowance in
-Settings → General → Vacation. See
+Settings → General → Vacation, where **Open the vacation planner** takes you
+straight there (saving the dialog on the way). See
 [the vacation planner](features/vacation-planner.md).
 
 ## Name days
@@ -77,7 +78,9 @@ stock look without touching your storage connections or developer switches.
   name days), the week-number and name-day toggles, and developer mode. A
   fresh install picks the country calendar from your device's language
   settings; changing it here pins your choice. **Vacation days a year**
-  (default 25) is the allowance the vacation planner spends.
+  (default 25) is the allowance the vacation planner spends, and **Open the
+  vacation planner** saves the dialog and jumps to the planner for the year on
+  display.
 - **Calendar** — the month cell's layout (arranged on a sample day: tap a
   corner and pick what belongs in it), the day-list row height, and the face
   each part of a day is set in. See [Month cell layout](#month-cell-layout)
