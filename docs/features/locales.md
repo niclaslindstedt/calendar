@@ -16,6 +16,8 @@ differs is bundled into one **country pack** per country under
 - `redWeekdays` — which weekdays print red (Sundays in both).
 - `holidays(year)` — a **rule engine**, not a year table: the pack computes
   its holidays for any year from rules (see below).
+- `nameSpelling` — how the language writes the same sound, so the name-day
+  search finds a name spelled the searcher's way (see below).
 - `bcp47` — drives month/weekday names via `Intl`, so packs carry no month
   name tables.
 
@@ -99,6 +101,34 @@ is `[0]`.
 The [vacation planner](vacation-planner.md) reads `off` and `restWeekdays`,
 never `red`.
 
+## Name-day spelling
+
+An almanac lists one spelling per name, and the spellings people use are not
+typos — they are the same name written the way the language allows the same
+sound to be written. `nameSpelling` is the per-language table that lets the
+[name-day search](name-days.md) fold them together
+(`src/app/locale/nameKey.ts` is the shared machinery):
+
+| Field             | Meaning                                                                                      |
+| ----------------- | -------------------------------------------------------------------------------------------- |
+| `softVowels`      | Vowels that soften a preceding `c`/`g` — Swedish softens on `ä` and `ö` as well as `e i y`.  |
+| `softC` / `hardC` | What each `c` sounds like: "Cecilia" → `sesilia`, "Carl" → `karl`.                           |
+| `softensG`        | Whether a soft `g` is a `j` ("Göran"/"Jöran"). True in both current packs.                   |
+| `jOnsets`         | Word-initial clusters spoken as a bare `j` — Swedish `hj`, `dj`, `lj`, `gj`.                 |
+| `digraphs`        | Multi-letter spellings of one sound: `ch` → `k`, `ph` → `f`, `th` → `t`, `qu` → `kv`.        |
+| `letters`         | Single letters that only spell another's sound: `z` → `s`, `w` → `v`, `x` → `ks`, `y` → `i`. |
+| `fold`            | Accented letters folded last of all, so a keyboard without `å ä ö` can still type the name.  |
+
+Doubled letters are collapsed **after** the rules run, which is both the most
+common variation of all ("Filippa"/"Filipa") and what makes "Nicklas" land on
+`niklas` once its `c` has hardened.
+
+Folding is a balance: it has to pull the spellings of one name together
+without pulling two names into one. Across the 627 names of the Swedish
+almanac these rules produce 624 keys, and all three merges are pairs of the
+same name — Marit/Märit, Marta/Märta, Silvia/Sylvia. `tests/name_search_test.ts`
+pins that, so a new rule that starts merging real names fails the suite.
+
 ## Hyphenation
 
 Names too long for a month cell's line are broken at a syllable boundary
@@ -145,8 +175,8 @@ Packs are deliberately self-contained — adding one is a copy-paste:
    emoji pair, shown beside the label in the picker). If the country has name
    days, add the table (see
    `sv-se.ts` for the shape). Note `restWeekdays` and each holiday's `off`
-   flag — see "Ink vs. time off" above — and the `hyphenation` rules for the
-   language.
+   flag — see "Ink vs. time off" above — and the `hyphenation` and
+   `nameSpelling` rules for the language.
 3. Register the export in `src/app/locale/index.ts` (`LOCALES` array).
 4. Add a test block in `tests/locale_test.ts`.
 

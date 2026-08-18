@@ -11,6 +11,7 @@ import {
   addMonths,
   dayKeyOf,
   parseDayKey,
+  toDayKey,
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
@@ -25,6 +26,7 @@ import { DayListView } from "./app/DayListView.tsx";
 import { calFontVars, loadCalFonts } from "./app/fonts.ts";
 import { HolidaysView, type HolidayMode } from "./app/HolidaysView.tsx";
 import { MonthGridView } from "./app/MonthGridView.tsx";
+import { NameDaySearch } from "./app/NameDaySearch.tsx";
 import {
   SettingsModal,
   type SettingsDraft,
@@ -156,6 +158,14 @@ export function App() {
   const [holidayYear, setHolidayYear] = useState<number | null>(null);
   const [holidayMode, setHolidayMode] = useState<HolidayMode>("list");
 
+  // The name-day screen, when open: the name that was tapped (where its list
+  // opens) and the live query, which is empty until you type — an empty field
+  // is the alphabet, a filled one is an answer. Unlike the holidays screen it
+  // is a dialog over the calendar rather than a destination: you are asking
+  // about a name, not leaving the month.
+  const [nameSeed, setNameSeed] = useState<string | null>(null);
+  const [nameQuery, setNameQuery] = useState("");
+
   const store = useCalendarStore(settings.backend, settings.demoData);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -204,7 +214,26 @@ export function App() {
   /** Open it on the year the tapped holiday belongs to. */
   const openHolidays = (year: number) => {
     setEditingDay(null);
+    setNameSeed(null);
     setHolidayYear(year);
+  };
+
+  /** Leave the name-day search. */
+  const closeNames = () => setNameSeed(null);
+
+  /** Open it on the name that was tapped — as a list, not a search. */
+  const openNames = (name: string) => {
+    setEditingDay(null);
+    setNameQuery("");
+    setNameSeed(name);
+  };
+
+  /** A picked name day: go to it in the year on display, and leave the
+   *  search. The almanac has no year of its own, so the day the calendar was
+   *  already showing is the only sensible one to land in. */
+  const goToNameDay = (month: number, day: number) => {
+    setNameSeed(null);
+    setAnchor(toDayKey({ year: parts.year, month, day }));
   };
 
   /** Settings → General → Vacation offers the way in that the calendar hides:
@@ -243,6 +272,7 @@ export function App() {
     const onEditDay = interactive ? setEditingDay : () => {};
     const onCommit = interactive ? store.setEntry : () => {};
     const onOpenHolidays = () => openHolidays(on.year);
+    const onOpenNames = interactive ? openNames : () => {};
     if (settings.view === "list") {
       return (
         <DayListView
@@ -261,6 +291,7 @@ export function App() {
           onPrevious={nav.previous}
           onNext={nav.next}
           onOpenHolidays={onOpenHolidays}
+          onOpenNames={onOpenNames}
         />
       );
     }
@@ -278,6 +309,7 @@ export function App() {
         onPrevious={nav.previous}
         onNext={nav.next}
         onOpenHolidays={onOpenHolidays}
+        onOpenNames={onOpenNames}
       />
     ) : (
       <MonthGridView
@@ -297,6 +329,7 @@ export function App() {
         onPrevious={nav.previous}
         onNext={nav.next}
         onOpenHolidays={onOpenHolidays}
+        onOpenNames={onOpenNames}
       />
     );
   };
@@ -312,11 +345,13 @@ export function App() {
         onViewChange={(view) => {
           setEditingDay(null);
           closeHolidays();
+          closeNames();
           update("view", view);
         }}
         onToday={() => {
           setEditingDay(null);
           closeHolidays();
+          closeNames();
           setAnchor(dayKeyOf(new Date()));
         }}
         onOpenSettings={() => setSettingsOpen(true)}
@@ -352,6 +387,19 @@ export function App() {
           />
         )}
       </main>
+
+      {/* Tapping one of a day's names opens the almanac at that name; the
+          answer is a date in the calendar behind, so this is a dialog rather
+          than a screen of its own. */}
+      <NameDaySearch
+        open={nameSeed !== null}
+        pack={pack}
+        seed={nameSeed ?? ""}
+        query={nameQuery}
+        onQueryChange={setNameQuery}
+        onClose={closeNames}
+        onPick={goToNameDay}
+      />
 
       <SettingsModal
         open={settingsOpen}

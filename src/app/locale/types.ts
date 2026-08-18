@@ -15,6 +15,7 @@ import type {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import type { HyphenationRules } from "./hyphenate.ts";
+import type { NameSpellingRules } from "./nameKey.ts";
 import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
 
 /** `"MM-DD"` → the day's celebrated names, in display order. */
@@ -80,6 +81,9 @@ export type LocalePack = {
    *  month cell's line. Shared machinery, per-language rules — see
    *  `hyphenate.ts`. */
   readonly hyphenation: HyphenationRules;
+  /** How the language spells the same sound, so the name-day search finds
+   *  "Niklas" for someone who writes it "Nicklas" — see `nameKey.ts`. */
+  readonly nameSpelling: NameSpellingRules;
   /** The name-day table, or null when the country has no tradition. */
   readonly nameDays: NameDayTable | null;
   /** The country's holidays for a year — fixed dates plus computed rules

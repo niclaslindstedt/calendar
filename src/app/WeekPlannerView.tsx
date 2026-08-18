@@ -22,6 +22,7 @@ import {
   type LocalePack,
 } from "./locale/index.ts";
 import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { NameDayNames } from "./NameDayNames.tsx";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import type { CalendarDoc } from "./types.ts";
 
@@ -40,6 +41,8 @@ type Props = {
   onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen for its year. */
   onOpenHolidays: () => void;
+  /** Tapping one of the day's names opens the name-day search on it. */
+  onOpenNames: (name: string) => void;
 };
 
 export function WeekPlannerView({
@@ -55,6 +58,7 @@ export function WeekPlannerView({
   onPrevious,
   onNext,
   onOpenHolidays,
+  onOpenNames,
 }: Props) {
   const t = useT();
   const days = buildWeekStrip(anchor, {
@@ -145,7 +149,12 @@ export function WeekPlannerView({
                   </span>
                 )}
                 <span className="cal-font-nameday cal-size-nameday text-muted min-w-0 flex-1 truncate text-right [--cal-base:10px]">
-                  {names.join(", ")}
+                  {/* Every name is also the way into the name-day search. */}
+                  <NameDayNames
+                    names={names}
+                    pack={pack}
+                    onOpen={onOpenNames}
+                  />
                 </span>
               </div>
               <div className="min-h-0 flex-1 pt-0.5">

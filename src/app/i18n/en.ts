@@ -178,6 +178,19 @@ export const en = {
     bookOne: "Book 1 day",
     bookMany: "Book {n} days",
   },
+  names: {
+    /** Title of the name-day search. */
+    title: "Name days",
+    placeholder: "Search for a name",
+    clear: "Clear the name",
+    close: "Close the name search",
+    /** Heading above the names that only sound close to the query. */
+    similar: "Similar names",
+    matches: "{n} names",
+    oneMatch: "1 name",
+    noResults: "No name like “{query}” in the almanac.",
+    unavailable: "This country calendar has no name days.",
+  },
   logs: {
     heading: "In-app log",
   },

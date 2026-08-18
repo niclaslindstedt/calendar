@@ -21,6 +21,7 @@ import {
   type LocalePack,
 } from "./locale/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
+import { NameDayNames } from "./NameDayNames.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
@@ -44,6 +45,8 @@ type Props = {
   onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen for its year. */
   onOpenHolidays: () => void;
+  /** Tapping one of the day's names opens the name-day search on it. */
+  onOpenNames: (name: string) => void;
 };
 
 function daysInMonth(year: number, month: number): number {
@@ -66,6 +69,7 @@ export function DayListView({
   onPrevious,
   onNext,
   onOpenHolidays,
+  onOpenNames,
 }: Props) {
   const t = useT();
   const image = monthImageUrl(year, month, "small");
@@ -208,7 +212,12 @@ export function DayListView({
                   <span className="text-muted"> · </span>
                 )}
                 <span className="cal-font-nameday cal-size-nameday text-muted [--cal-base:10px]">
-                  {names.join(", ")}
+                  {/* Every name is also the way into the name-day search. */}
+                  <NameDayNames
+                    names={names}
+                    pack={pack}
+                    onOpen={onOpenNames}
+                  />
                 </span>
               </span>
               <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
