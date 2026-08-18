@@ -21,7 +21,7 @@ import { useT } from "./i18n/index.ts";
 import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { monthName, weekdayName, type LocalePack } from "./locale/index.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
-import { SwipeDeck } from "./SwipeDeck.tsx";
+import { DECK_SCROLLER, SwipeDeck } from "./SwipeDeck.tsx";
 import {
   holidaysInYear,
   planVacation,
@@ -195,7 +195,10 @@ function YearPanel({
     // fit a phone, and unlike the calendar there is no grid to preserve.
     // `overscroll-contain` keeps a flick that runs off the end of the list
     // from bouncing the screen behind it mid-swipe.
+    // `DECK_SCROLLER` puts the pane back to the top as the year changes, for
+    // the same reason the day list does: the year that slides in shows January.
     <div
+      {...DECK_SCROLLER}
       className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
       style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
     >

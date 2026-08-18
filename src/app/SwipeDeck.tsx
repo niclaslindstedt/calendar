@@ -46,6 +46,11 @@ const SETTLE_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
 /** The panes, left to right: the previous period, the current one, the next. */
 const RELATIVE: readonly (-1 | 0 | 1)[] = [-1, 0, 1];
 
+/** Marks the scrolling element inside a pane of a `scrolls` deck, so the deck
+ *  can put it back to the top when the period changes. Spread onto the
+ *  scroller: `<div {...DECK_SCROLLER} className="overflow-y-auto">`. */
+export const DECK_SCROLLER = { "data-deck-scroller": "" } as const;
+
 /** Animated period stepping, handed to whatever chrome a pane draws so the
  *  heading arrows turn the page the same way a swipe does. */
 export type DeckNav = {
@@ -142,6 +147,21 @@ export function SwipeDeck({
     setSettle(0);
     setDx(0);
   }, [itemKey]);
+
+  // A pane is a reused DOM node — the period swaps under it, its scroll offset
+  // does not. So paging out of a month you had scrolled halfway down used to
+  // drop you halfway down the neighbouring one, at a row the swipe never
+  // showed you: what slid in was that month's *top*. Put every pane back there
+  // in the same batch the anchor moves in, before the browser paints, so the
+  // page turn lands where it looked like it would.
+  useLayoutEffect(() => {
+    if (!scrolls) return;
+    const el = host.current;
+    if (!el) return;
+    for (const pane of el.querySelectorAll("[data-deck-scroller]")) {
+      pane.scrollTop = 0;
+    }
+  }, [itemKey, scrolls]);
 
   const rest = () => {
     setAnimating(true);
