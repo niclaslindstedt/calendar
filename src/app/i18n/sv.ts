@@ -20,7 +20,7 @@ export const sv: Catalog = {
     week: "Vecka {n}",
   },
   editor: {
-    placeholder: "Skriv här — håll det kort…",
+    label: "Anteckning för dagen",
     hint: "Enter sparar · Esc stänger",
     editDay: "Redigera {date}",
   },
@@ -87,7 +87,7 @@ export const sv: Catalog = {
     entryText: "Din text",
     textSize: "Textstorlek",
     textSizeHint:
-      "Dynamisk krymper texten medan du skriver så att den alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek.",
+      "Dynamisk krymper texten medan du skriver så att den alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek. Oavsett vilket tar en dag bara emot det som får plats — när den är full ryms ingen mer text.",
     textSizeDynamic: "Dynamisk",
     textSizeSmall: "Liten",
     textSizeMedium: "Mellan",

@@ -154,6 +154,7 @@ export function WeekPlannerView({
                   editing={editingDay === cell.key}
                   font={WEEK_ROW_FONT}
                   size={textSize}
+                  bounded
                   onCommit={(text) => onCommit(cell.key, text)}
                   onClose={() => onEditDay(null)}
                 />

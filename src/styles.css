@@ -111,21 +111,36 @@ body {
   color: var(--cal-red);
 }
 
-/* A day cell's entry text: preserve the user's line breaks, break long
-   words rather than overflowing the cell.
+/* A day cell's entry text: preserve the user's line breaks, and break a word
+   only when it cannot fit a line of its own — the text is measured down to a
+   size that fits (`entryFit.ts`), so a word that still doesn't fit the width
+   is genuinely too long, while everything else moves to the next line whole
+   rather than being split as "Semeste" / "r".
 
    The face rides on `.cal-font-entry` alongside it, so the settings preview
    can show the chosen face without inheriting the editor's wrapping. */
 .cal-entry {
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
   line-height: 1.25;
 }
 
+/* A note that has run out of room: clamped to the lines the cell has left
+   over after the day number and the captions, ending in an ellipsis rather
+   than sliding under them. The line count is measured (`entryFit.ts`) and set
+   inline — only the box it needs lives here. */
+.cal-entry-clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* The in-cell editor inherits the cell's typography so entering edit mode
-   doesn't jump. */
+   doesn't jump. It never scrolls: a bounded cell refuses the keystroke that
+   would overflow it, so there is nothing below the fold to scroll to. */
 .cal-entry-editor {
   resize: none;
+  overflow: hidden;
   background: transparent;
   border: none;
   outline: none;
