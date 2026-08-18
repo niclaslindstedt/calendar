@@ -14,6 +14,7 @@ import type {
   WeekStart,
 } from "@niclaslindstedt/oss-framework/calendar";
 
+import type { Eve, EveStatus } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
 import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
@@ -36,13 +37,18 @@ export type Holiday = {
    *  Separate from `red` for the same reason `restWeekdays` is separate from
    *  `redWeekdays`: `red` is ink, `off` is time. The two come apart in both
    *  directions. A UK bank holiday closes the country but is printed black, so
-   *  it is `off` and not `red`. Swedish Julafton and Nyårsafton are named on
-   *  every wall calendar and are workdays by law, so they are `red: false`
-   *  *and* `off: false` — which is what lets the planner offer them as the
-   *  cheap, high-value days they are.
+   *  it is `off` and not `red`. Swedish Julafton is named on every wall
+   *  calendar and is a working day by law, yet almost nobody works it — so it
+   *  is `red: false` and `off: true`, and a reader whose workplace differs
+   *  says so in Settings (see `eves.ts`).
    *
    *  The vacation planner reads this and never `red`. */
   off: boolean;
+  /** Set only on a holiday *eve* (`eves.ts`): how much of it is worked, once
+   *  the reader's own workplace has had its say. Undefined on every other
+   *  entry, which is also what tells the two apart when a pack's eves are
+   *  rebuilt under a different set of choices. */
+  eve?: EveStatus;
 };
 
 export type LocalePack = {
@@ -87,8 +93,15 @@ export type LocalePack = {
   /** The name-day table, or null when the country has no tradition. */
   readonly nameDays: NameDayTable | null;
   /** The country's holidays for a year — fixed dates plus computed rules
-   *  (Easter chain, "the Saturday between…", bank-holiday substitutes). */
+   *  (Easter chain, "the Saturday between…", bank-holiday substitutes).
+   *
+   *  Includes the pack's `eves` at their collective default, so a caller with
+   *  no settings to hand still gets the calendar the country prints. */
   readonly holidays: (year: number) => readonly Holiday[];
+  /** The eves the country names before a holiday, and what most of its
+   *  collective agreements make of each — see `eves.ts`. Empty for a country
+   *  with no such tradition (the UK names none). */
+  readonly eves: readonly Eve[];
 };
 
 /** The week number of a day under the pack's numbering rule. */
@@ -100,7 +113,16 @@ export function weekNumber(pack: LocalePack, key: DayKey): number {
 
 // Per-pack, per-year holiday lookup tables, built lazily — the rules run
 // once a year per pack, then day lookups are O(1).
-const holidayCache = new Map<string, Map<string, Holiday>>();
+//
+// Keyed by the pack OBJECT, not by `pack.id`: a pack carrying the reader's own
+// eve choices (`withEveChoices`) keeps the id of the country it came from, so
+// an id-keyed cache would serve one workplace's calendar to another. The
+// derived packs are memoised at their end of the seam, which is what keeps
+// this cache warm.
+const holidayCache = new WeakMap<
+  LocalePack,
+  Map<number, Map<string, Holiday>>
+>();
 
 /** The holiday falling on a day in this pack, or null. */
 export function holidayFor(
@@ -109,11 +131,15 @@ export function holidayFor(
   month: number,
   day: number,
 ): Holiday | null {
-  const cacheKey = `${pack.id}:${year}`;
-  let table = holidayCache.get(cacheKey);
+  let years = holidayCache.get(pack);
+  if (!years) {
+    years = new Map();
+    holidayCache.set(pack, years);
+  }
+  let table = years.get(year);
   if (!table) {
     table = new Map(pack.holidays(year).map((h) => [`${h.month}-${h.day}`, h]));
-    holidayCache.set(cacheKey, table);
+    years.set(year, table);
   }
   return table.get(`${month}-${day}`) ?? null;
 }

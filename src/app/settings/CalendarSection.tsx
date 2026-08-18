@@ -22,10 +22,18 @@ import {
 
 import { useT, type MessageKey } from "../i18n/index.ts";
 import { MonthCellFrame } from "../monthCell.tsx";
+import { MarkedDate, PastMark } from "../PastMark.tsx";
+import {
+  PAST_MARK_SCOPES,
+  PAST_MARK_STYLES,
+  type PastMarkScope,
+  type PastMarkStyle,
+} from "../pastDays.ts";
 import {
   CELL_PIECES,
   CELL_PIECE_KEY,
   monthCellLayout,
+  pastMarkOf,
   type CellCorner,
   type CellPiece,
   type ListRowMode,
@@ -58,6 +66,17 @@ const PIECE_LABELS: Record<CellPiece, MessageKey> = {
   nameDays: "settings.cellNameDays",
 };
 
+const PAST_MARK_LABELS: Record<PastMarkStyle, MessageKey> = {
+  none: "settings.pastMarkNone",
+  cross: "settings.pastMarkCross",
+  slash: "settings.pastMarkSlash",
+};
+
+const PAST_SCOPE_LABELS: Record<PastMarkScope, MessageKey> = {
+  cell: "settings.pastMarkScopeCell",
+  date: "settings.pastMarkScopeDate",
+};
+
 /** The sample day the preview arranges: a red day carrying every piece at
  *  once, so no corner is empty while you are deciding where things go. */
 const SAMPLE = {
@@ -79,6 +98,11 @@ export function CalendarSection({
   // good share of a 393 px preview.
   const [openCorner, setOpenCorner] = useState<CellCorner | null>(null);
   const layout = monthCellLayout(look);
+  // The sample day stands in for a day that has passed, so the stroke the
+  // Passed days section below chooses is drawn on it — the preview is the
+  // one place you can see what "the date" versus "whole day" means without
+  // scrolling the calendar back into last week.
+  const pastMark = pastMarkOf(look);
 
   const move = (piece: CellPiece, corner: CellCorner) => {
     onUpdate(CELL_PIECE_KEY[piece], corner);
@@ -101,9 +125,13 @@ export function CalendarSection({
               layout={layout}
               content={{
                 day: (
-                  <span className="cal-font-day text-2xl leading-none cal-red">
-                    {SAMPLE.day}
-                  </span>
+                  <MarkedDate
+                    style={pastMark.scope === "date" ? pastMark.style : "none"}
+                  >
+                    <span className="cal-font-day text-2xl leading-none cal-red">
+                      {SAMPLE.day}
+                    </span>
+                  </MarkedDate>
                 ),
                 holidays: (
                   <span className="cal-font-holiday cal-red block text-[10px] leading-[1.25]">
@@ -122,6 +150,8 @@ export function CalendarSection({
                 ),
               }}
             />
+
+            {pastMark.scope === "cell" && <PastMark style={pastMark.style} />}
 
             {/* The tap targets: a quadrant each, outlined faintly so the four
               corners read as places you can put something before you have
@@ -205,6 +235,40 @@ export function CalendarSection({
             ]}
           />
         </Field>
+      </Section>
+
+      {/* Crossing off what has gone. Off by default: a calendar you have
+        written on is a preference, not an improvement. */}
+      <Section title={t("settings.pastDays")}>
+        <p className="text-muted text-xs">{t("settings.pastDaysHint")}</p>
+
+        <Field label={t("settings.pastMark")}>
+          <SegmentedControl<PastMarkStyle>
+            value={pastMark.style}
+            onChange={(next) => onUpdate("pastMark", next)}
+            ariaLabel={t("settings.pastMark")}
+            options={PAST_MARK_STYLES.map((style) => ({
+              value: style,
+              label: t(PAST_MARK_LABELS[style]),
+            }))}
+          />
+        </Field>
+
+        {/* Only once there is a mark to place: with the stroke off, "whole
+          day or the date" is a question about nothing. */}
+        {pastMark.style !== "none" && (
+          <Field label={t("settings.pastMarkScope")}>
+            <SegmentedControl<PastMarkScope>
+              value={pastMark.scope}
+              onChange={(next) => onUpdate("pastMarkScope", next)}
+              ariaLabel={t("settings.pastMarkScope")}
+              options={PAST_MARK_SCOPES.map((scope) => ({
+                value: scope,
+                label: t(PAST_SCOPE_LABELS[scope]),
+              }))}
+            />
+          </Field>
+        )}
       </Section>
 
       {/* The day list's own layout question — the only one of the three views

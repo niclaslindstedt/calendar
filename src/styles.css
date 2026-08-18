@@ -221,3 +221,14 @@ body {
   font-family: var(--cal-font-entry, inherit);
   line-height: 1.25;
 }
+
+/* The stroke over a day that has passed (Settings → Calendar → Passed days).
+   It is a mark *on* the calendar rather than a part of it, so it is drawn in
+   the page's own ink at pencil strength: heavy enough to read as crossed off
+   at arm's length, light enough that the date under it is still a date. The
+   opacity carries the weight rather than a fixed grey, so the mark follows
+   every preset and both themes without a token of its own. */
+.cal-past-mark {
+  color: var(--fg);
+  opacity: 0.34;
+}

@@ -35,7 +35,7 @@ import { SwipeDeck, type DeckNav } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
-import { getLocale } from "./app/locale/index.ts";
+import { getLocale, withEveChoices } from "./app/locale/index.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import {
@@ -57,7 +57,9 @@ import {
   calFonts,
   clampVacationDays,
   effectiveToggles,
+  eveChoices,
   monthCellLayout,
+  pastMarkOf,
   textScales,
   useAppSettings,
 } from "./app/useAppSettings.ts";
@@ -260,7 +262,13 @@ export function App() {
     openHolidays(parts.year);
   };
 
-  const pack = getLocale(live.localeId);
+  // The country pack as this reader's workplace sees it: the eves they have
+  // told us they work are ordinary days again, and the ones they do not are
+  // days off the vacation planner stops offering to spend an allowance on.
+  // Resolved once, here, so every view and the planner agree on the year.
+  // `withEveChoices` caches its derived packs, so this is a stable reference
+  // for as long as the choices hold — which is what the memoized views need.
+  const pack = withEveChoices(getLocale(live.localeId), eveChoices(live));
   const toggles = useMemo(
     () => effectiveToggles(live),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -275,6 +283,14 @@ export function App() {
       live.monthHolidayCorner,
       live.monthNote,
     ],
+  );
+  // Crossing off the days that have gone — off unless it has been turned on
+  // (Settings → Calendar → Passed days). Resolved once here, from the live
+  // look, so the dialog previews the stroke as it is chosen.
+  const pastMark = useMemo(
+    () => pastMarkOf(live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [live.pastMark, live.pastMarkScope],
   );
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and
@@ -310,6 +326,7 @@ export function App() {
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
           rowMode={live.listRows}
+          pastMark={pastMark}
           textSize={live.textSize}
           doc={store.doc}
           editingDay={editing}
@@ -328,6 +345,7 @@ export function App() {
         today={today}
         pack={pack}
         showNameDays={toggles.nameDays}
+        pastMark={pastMark}
         textSize={live.textSize}
         doc={store.doc}
         editingDay={editing}
@@ -347,6 +365,7 @@ export function App() {
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
         layout={cellLayout}
+        pastMark={pastMark}
         textSize={live.textSize}
         scales={scales}
         doc={store.doc}

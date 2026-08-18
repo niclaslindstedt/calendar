@@ -24,6 +24,8 @@ import {
 } from "./locale/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
@@ -38,6 +40,8 @@ type Props = {
   showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
+  /** The stroke drawn over the days that have passed, if any. */
+  pastMark: PastMarkSetting;
   textSize: EntryTextSize;
   doc: CalendarDoc;
   editingDay: DayKey | null;
@@ -68,6 +72,7 @@ export const DayListView = memo(function DayListView({
   showWeekNumbers,
   showNameDays,
   rowMode,
+  pastMark,
   textSize,
   doc,
   editingDay,
@@ -131,7 +136,8 @@ export const DayListView = memo(function DayListView({
               pack={pack}
               showWeekNumbers={showWeekNumbers}
               showNameDays={showNameDays}
-              isToday={key === today}
+              today={today}
+              pastMark={pastMark}
               textSize={textSize}
               entry={doc.entries[key] ?? ""}
               editing={editingDay === key}
@@ -170,7 +176,8 @@ const DayRow = memo(function DayRow({
   pack,
   showWeekNumbers,
   showNameDays,
-  isToday,
+  today,
+  pastMark,
   textSize,
   entry,
   editing,
@@ -188,7 +195,8 @@ const DayRow = memo(function DayRow({
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
-  isToday: boolean;
+  today: DayKey;
+  pastMark: PastMarkSetting;
   textSize: EntryTextSize;
   entry: string;
   editing: boolean;
@@ -203,11 +211,12 @@ const DayRow = memo(function DayRow({
   const holiday = holidayFor(pack, year, month, day);
   const red = isRedDay(pack, year, month, day, weekday);
   const names = showNameDays ? nameDaysFor(pack, month, day) : [];
+  const marked = pastMarkSlot(pastMark, dayKey, today);
   // A small week marker on the first day of each week (and on the 1st), the
   // way Swedish wall calendars badge their week rows. Bare number, like the
   // month grid's gutter: once the marker has a lane of its own the column says
   // "week" by itself, and the prefix was portrait width spent repeating it.
-  const marked = weekday === pack.weekStartsOn || day === 1;
+  const startsWeek = weekday === pack.weekStartsOn || day === 1;
 
   return (
     <div
@@ -221,9 +230,9 @@ const DayRow = memo(function DayRow({
           onEditDay(dayKey);
         }
       }}
-      className={`flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
+      className={`relative flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
         fixed ? "h-11 overflow-hidden" : "min-h-11"
-      } ${isToday ? "bg-surface-2" : ""}`}
+      } ${dayKey === today ? "bg-surface-2" : ""}`}
     >
       {/* The week gutter is only reserved when week numbers are on —
           otherwise every row carries 36 px of dead left margin. */}
@@ -231,12 +240,12 @@ const DayRow = memo(function DayRow({
         <span
           className="text-muted cal-size-week w-7 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
           aria-label={
-            marked
+            startsWeek
               ? t("topbar.week", { n: weekNumber(pack, dayKey) })
               : undefined
           }
         >
-          {marked ? weekNumber(pack, dayKey) : ""}
+          {startsWeek ? weekNumber(pack, dayKey) : ""}
         </span>
       )}
       <span
@@ -244,7 +253,9 @@ const DayRow = memo(function DayRow({
           red ? "cal-red" : "text-fg"
         }`}
       >
-        {day}
+        <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
+          {day}
+        </MarkedDate>
       </span>
       <span
         className={`w-8 shrink-0 pt-1 text-[10px] leading-tight ${
@@ -298,6 +309,9 @@ const DayRow = memo(function DayRow({
           onClose={() => onEditDay(null)}
         />
       </div>
+
+      {/* The whole-row stroke — over the row, transparent to taps. */}
+      {marked === "cell" && <PastMark style={pastMark.style} />}
     </div>
   );
 });

@@ -18,7 +18,20 @@ import {
   type CalFontPiece,
   type CalFonts,
 } from "./fonts.ts";
-import { DEFAULT_LOCALE_ID, getLocale } from "./locale/index.ts";
+import {
+  DEFAULT_LOCALE_ID,
+  coerceEveChoices,
+  getLocale,
+  type EveChoices,
+} from "./locale/index.ts";
+import {
+  DEFAULT_PAST_MARK,
+  pastMarkScope,
+  pastMarkStyle,
+  type PastMark,
+  type PastMarkScope,
+  type PastMarkStyle,
+} from "./pastDays.ts";
 import type { BackendId } from "./storage/backends.ts";
 import {
   DEFAULT_TEXT_SCALE,
@@ -63,6 +76,11 @@ export type AppSettings = {
   weekNumbers: boolean | null;
   /** null = follow the country pack's default. */
   nameDays: boolean | null;
+  /** Which of the country's holiday eves are worked, eve id → status. An
+   *  eve that is not in here follows the country's collective agreements —
+   *  so an untouched install stores nothing, and a pack that gains an eve in
+   *  a later build ships it at its own default rather than at a stale one. */
+  eveDays: EveChoices;
   /** Day-list rows: same height, or grown per row by its text. */
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
@@ -91,6 +109,11 @@ export type AppSettings = {
   monthHolidayCorner: CellCorner;
   /** Month cell: where the note sits in what is left. */
   monthNote: NotePlacement;
+  /** The stroke drawn over a day that has passed — off by default: not
+   *  everyone wants their calendar written on. */
+  pastMark: PastMarkStyle;
+  /** How much of a passed day that stroke covers. */
+  pastMarkScope: PastMarkScope;
   /** Paid vacation days a year, spent by the vacation planner. 25 is the
    *  Swedish statutory minimum and the usual UK full-time allowance, so it is
    *  the right default in both shipped packs. */
@@ -106,6 +129,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   view: "month",
   weekNumbers: null,
   nameDays: null,
+  eveDays: {},
   listRows: "fixed",
   textSize: "dynamic",
   sizeDay: DEFAULT_TEXT_SCALE,
@@ -124,6 +148,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   monthNameDayCorner: "bottom-right",
   monthHolidayCorner: "bottom-right",
   monthNote: "top",
+  pastMark: DEFAULT_PAST_MARK.style,
+  pastMarkScope: DEFAULT_PAST_MARK.scope,
   vacationDays: 25,
   backend: "browser",
   devMode: false,
@@ -139,6 +165,7 @@ export const LOOK_KEYS = [
   "localeId",
   "weekNumbers",
   "nameDays",
+  "eveDays",
   "listRows",
   "textSize",
   "sizeDay",
@@ -153,6 +180,8 @@ export const LOOK_KEYS = [
   "monthNameDayCorner",
   "monthHolidayCorner",
   "monthNote",
+  "pastMark",
+  "pastMarkScope",
   "vacationDays",
 ] as const;
 
@@ -163,6 +192,7 @@ export function pickLook(settings: AppSettings): LookSettings {
     localeId: settings.localeId,
     weekNumbers: settings.weekNumbers,
     nameDays: settings.nameDays,
+    eveDays: settings.eveDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
     sizeDay: settings.sizeDay,
@@ -177,6 +207,8 @@ export function pickLook(settings: AppSettings): LookSettings {
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
     monthNote: settings.monthNote,
+    pastMark: settings.pastMark,
+    pastMarkScope: settings.pastMarkScope,
     vacationDays: settings.vacationDays,
   };
 }
@@ -193,6 +225,18 @@ export function monthCellLayout(
     nameDays: look.monthNameDayCorner,
     holidays: look.monthHolidayCorner,
     note: look.monthNote,
+  };
+}
+
+/** The passed-day mark the views draw, gathered from the look and snapped
+ *  back onto the known values — a stored document can carry anything, and an
+ *  unrecognised one must not put a stroke on the calendar. */
+export function pastMarkOf(
+  look: Pick<AppSettings, "pastMark" | "pastMarkScope">,
+): PastMark {
+  return {
+    style: pastMarkStyle(look.pastMark),
+    scope: pastMarkScope(look.pastMarkScope),
   };
 }
 
@@ -255,6 +299,10 @@ export function updateLook<K extends keyof LookSettings>(
   if (key === "localeId") {
     next.weekNumbers = null;
     next.nameDays = null;
+    // Eve ids are a country's own vocabulary, so a Swedish workplace's answers
+    // mean nothing in another pack. Switching country hands the new one its
+    // collective defaults, exactly as it hands over its display conventions.
+    next.eveDays = {};
   }
   return next;
 }
@@ -283,6 +331,7 @@ export function useAppSettings() {
         if (key === "localeId") {
           next.weekNumbers = null;
           next.nameDays = null;
+          next.eveDays = {};
         }
         // Leaving developer mode also leaves demo data and log capture, so
         // neither the demo backend nor the Logs tab outlives the mode that
@@ -303,6 +352,15 @@ export function useAppSettings() {
   );
 
   return { settings, update, commitLook };
+}
+
+/** The eve choices the calendar is drawn under: the stored map, filtered to
+ *  the ids the chosen pack actually has. Settings are a plain JSON blob in
+ *  localStorage, so this is the one door the views read them through. */
+export function eveChoices(
+  settings: Pick<AppSettings, "localeId" | "eveDays">,
+): EveChoices {
+  return coerceEveChoices(settings.eveDays, getLocale(settings.localeId).eves);
 }
 
 /** The effective display toggles: the stored override, or the pack default.

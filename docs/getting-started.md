@@ -84,11 +84,13 @@ stock look without touching your storage connections or developer switches.
   (default 25) is the allowance the vacation planner spends, and **Open the
   vacation planner** saves the dialog and jumps to the planner for the year on
   display.
-- **Calendar** — the month cell's layout (arranged on a sample day: tap a
-  corner and pick what belongs in it), the day-list row height, the face each
-  part of a day is set in, and how big each of them is printed. See
-  [Month cell layout](#month-cell-layout), [Type](#type) and
-  [Text size](#text-size).
+- **Calendar** — **Holiday eves** (which of the country's eves you actually
+  work), the month cell's layout (arranged on a sample day: tap a corner and
+  pick what belongs in it), whether the days that have passed are crossed off,
+  the day-list row height, the face each part of a day is set in, and how big
+  each of them is printed. See [Holiday eves](#holiday-eves),
+  [Month cell layout](#month-cell-layout), [Passed days](#passed-days),
+  [Type](#type) and [Text size](#text-size).
 - **Appearance** — the theme, and only the theme: **Follow device** (the
   default, which tracks your device's light / dark preference), **Light**,
   **Dark**, or **Custom**, plus the palette variant within the light and dark
@@ -97,6 +99,37 @@ stock look without touching your storage connections or developer switches.
 - **Developer** — demo data, log capture, build info, update check (visible
   in developer mode).
 - **Logs** — the in-app log (visible once log capture is on).
+
+### Holiday eves
+
+An eve — Julafton, Midsommarafton, Valborgsmässoafton — is a **working day by
+law** in Sweden, and yet almost nobody works some of them, because almost
+every _kollektivavtal_ hands those back. Which ones is a fact about your
+employer, not about the country, so it is a setting.
+
+**Settings → Calendar → Holiday eves** lists the eves the country calendar
+names, each with the date it falls on this year and three answers: **Ledig /
+Day off**, **Halvdag / Half day**, **Arbetsdag / Working**. They start on
+what most collective agreements say — for Sweden that is Julafton,
+Midsommarafton and Nyårsafton off, Trettondagsafton a half day, and
+Skärtorsdagen, Valborgsmässoafton and Allhelgonaafton worked — so if your
+workplace is ordinary you can leave the whole section alone.
+
+What it changes:
+
+- The [vacation planner](features/vacation-planner.md) stops offering to book
+  a day you do not work, and starts offering one you do. Those are the
+  cheapest days in the year to buy a long weekend with, so the difference is
+  worth getting right.
+- The holidays list marks an eve you work **Arbetsdag / Workday**, or
+  **Halvdag / Half day** where you have said so. A half day is still a
+  workday to the planner — you book a whole vacation day to take one.
+
+Picking the shipped answer again clears your override rather than pinning it,
+and **Back to the agreements** puts the whole section back at once. Changing
+the country calendar resets the list, because eve names belong to a country.
+A country without the tradition — the United Kingdom names none — has no
+section at all.
 
 ### Month cell layout
 
@@ -118,6 +151,25 @@ dialog. The defaults reproduce a printed wall calendar: the date large in the
 Captions wrap rather than truncate, and a name is only broken across lines
 when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while
 "Midsommarafton" breaks at a syllable boundary with a hyphen.
+
+### Passed days
+
+**Settings → Calendar → Passed days** crosses off the days behind you, the
+way you would on a paper calendar. It is **off** by default — a calendar you
+have written on is a preference, not an improvement — and there are two
+choices to make once it is on:
+
+- **Mark** — **Off**, **Cross ✕** (two strokes) or **Slash /** (one). The
+  slash is the cross's own diagonal, drawn once.
+- **Covers** — **Whole day** draws the mark corner to corner across the day
+  (a month cell, a week-planner row, a day-list row), while **The date**
+  crosses only the day number and leaves the holiday, the name days and
+  anything you wrote untouched.
+
+The mark applies in all three views, and **today is never marked**: the run
+of crosses stops at the day you are in, which is what makes it worth having.
+The sample day in the section above is drawn as a passed day, so the mark you
+pick is previewed there as well as on the calendar behind the dialog.
 
 ### Type
 
