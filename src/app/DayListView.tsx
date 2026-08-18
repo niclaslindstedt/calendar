@@ -5,8 +5,10 @@
 // when a pack ships one. Rows are fixed-height by default; the "dynamic"
 // setting lets a row grow with its text for people who write more.
 
+import { memo } from "react";
+
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
-import { parseDayKey, toDayKey } from "@niclaslindstedt/oss-framework/calendar";
+import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
 import { LIST_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
@@ -47,8 +49,10 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
-  /** Tapping a holiday's name opens the holidays screen for its year. */
-  onOpenHolidays: () => void;
+  /** Tapping a holiday's name opens the holidays screen. Takes the year so the
+   *  handler can stay one stable function across every row of every period the
+   *  deck holds, rather than a fresh closure per day. */
+  onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
 };
@@ -57,7 +61,10 @@ function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
-export function DayListView({
+/** Memoized for the same reason as the month grid: the deck keeps three months
+ *  mounted, and the two off screen must not be rebuilt every time something
+ *  else in the app changes. */
+export const DayListView = memo(function DayListView({
   year,
   month,
   today,
@@ -76,7 +83,6 @@ export function DayListView({
   onOpenHolidays,
   onOpenNames,
 }: Props) {
-  const t = useT();
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
 
@@ -120,129 +126,30 @@ export function DayListView({
         {Array.from({ length: count }, (_, i) => {
           const day = i + 1;
           const key = toDayKey({ year, month, day });
-          const parts = parseDayKey(key);
-          const weekday = new Date(`${key}T12:00:00Z`).getUTCDay();
-          const holiday = holidayFor(pack, year, month, day);
-          const red = isRedDay(pack, year, month, day, weekday);
-          const names =
-            showNameDays && parts
-              ? nameDaysFor(pack, parts.month, parts.day)
-              : [];
-          const entry = doc.entries[key] ?? "";
-          const fixed = rowMode === "fixed" && editingDay !== key;
-          const marked = pastMarkSlot(pastMark, key, today);
-          // A small week marker on the first day of each week (and on the
-          // 1st), the way Swedish wall calendars badge their week rows. Bare
-          // number, like the month grid's gutter: once the marker has a lane
-          // of its own the column says "week" by itself, and the prefix was
-          // portrait width spent repeating it.
-          const weekMark =
-            showWeekNumbers && (weekday === pack.weekStartsOn || day === 1)
-              ? String(weekNumber(pack, key))
-              : "";
           return (
-            <div
+            <DayRow
               key={key}
-              role="button"
-              tabIndex={0}
-              aria-label={key}
-              onClick={() => onEditDay(key)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && editingDay !== key) {
-                  e.preventDefault();
-                  onEditDay(key);
-                }
-              }}
-              className={`relative flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
-                fixed ? "h-11 overflow-hidden" : "min-h-11"
-              } ${key === today ? "bg-surface-2" : ""}`}
-            >
-              {/* The week gutter is only reserved when week numbers are on —
-                  otherwise every row carries 36 px of dead left margin. */}
-              {showWeekNumbers && (
-                <span
-                  className="text-muted cal-size-week w-7 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
-                  aria-label={
-                    weekMark
-                      ? t("topbar.week", { n: weekNumber(pack, key) })
-                      : undefined
-                  }
-                >
-                  {weekMark}
-                </span>
-              )}
-              <span
-                className={`cal-font-day cal-size-day w-7 shrink-0 text-right leading-tight [--cal-base:1.125rem] ${
-                  red ? "cal-red" : "text-fg"
-                }`}
-              >
-                <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
-                  {day}
-                </MarkedDate>
-              </span>
-              <span
-                className={`w-8 shrink-0 pt-1 text-[10px] leading-tight ${
-                  red ? "cal-red" : "text-muted"
-                }`}
-              >
-                {weekdayName(pack, weekday, "short")}
-              </span>
-              {/* The holiday and the day's names share this column and
-                  **wrap** rather than truncate: "Trettondedag jul · Kasper,
-                  Melker" ending in an ellipsis tells you a name is there and
-                  refuses to say which. Two lines of 10 px still clear a fixed
-                  44 px row. */}
-              <span className="w-24 shrink-0 pt-1 text-[10px] leading-tight sm:w-36">
-                {/* Also the way into the holidays screen — see the same tap
-                    target in the month view. */}
-                {holiday && (
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onOpenHolidays();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key !== "Enter" && e.key !== " ") return;
-                      e.preventDefault();
-                      e.stopPropagation();
-                      onOpenHolidays();
-                    }}
-                    className={`cal-font-holiday cal-size-holiday cursor-pointer [--cal-base:10px] focus-visible:outline-2 ${
-                      holiday.red ? "cal-red" : "text-muted"
-                    }`}
-                  >
-                    {holiday.name}
-                  </span>
-                )}
-                {holiday && names.length > 0 && (
-                  <span className="text-muted"> · </span>
-                )}
-                <span className="cal-font-nameday cal-size-nameday text-muted [--cal-base:10px]">
-                  {/* Every name is also the way into the name-day search. */}
-                  <NameDayNames
-                    names={names}
-                    pack={pack}
-                    onOpen={onOpenNames}
-                  />
-                </span>
-              </span>
-              <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
-                <DayEntry
-                  text={entry}
-                  editing={editingDay === key}
-                  font={LIST_ROW_FONT}
-                  size={textSize}
-                  bounded={fixed}
-                  onCommit={(text) => onCommit(key, text)}
-                  onClose={() => onEditDay(null)}
-                />
-              </div>
-
-              {/* The whole-row stroke — over the row, transparent to taps. */}
-              {marked === "cell" && <PastMark style={pastMark.style} />}
-            </div>
+              dayKey={key}
+              year={year}
+              month={month}
+              day={day}
+              pack={pack}
+              showWeekNumbers={showWeekNumbers}
+              showNameDays={showNameDays}
+              today={today}
+              pastMark={pastMark}
+              textSize={textSize}
+              entry={doc.entries[key] ?? ""}
+              editing={editingDay === key}
+              // A fixed row clips, so its note is measured against the row;
+              // the row it is being typed into grows instead, whatever the
+              // setting, so the caret is never in a box it has outgrown.
+              fixed={rowMode === "fixed" && editingDay !== key}
+              onEditDay={onEditDay}
+              onCommit={onCommit}
+              onOpenHolidays={onOpenHolidays}
+              onOpenNames={onOpenNames}
+            />
           );
         })}
       </div>
@@ -254,4 +161,157 @@ export function DayListView({
       <div aria-hidden="true" style={{ height: LIST_BOTTOM_PAD }} />
     </div>
   );
-}
+});
+
+/** One day of the list. Memoized, and given only primitives and stable
+ *  references so the memo actually holds: everything a row draws — its
+ *  weekday, its holiday, its names, its week marker — is derived from the day
+ *  and the pack in here rather than computed by the list and passed down as
+ *  fresh objects. Opening the editor then renders one row instead of ninety. */
+const DayRow = memo(function DayRow({
+  dayKey,
+  year,
+  month,
+  day,
+  pack,
+  showWeekNumbers,
+  showNameDays,
+  today,
+  pastMark,
+  textSize,
+  entry,
+  editing,
+  fixed,
+  onEditDay,
+  onCommit,
+  onOpenHolidays,
+  onOpenNames,
+}: {
+  dayKey: DayKey;
+  /** The month's own year — what a tapped holiday opens the screen on. */
+  year: number;
+  month: number;
+  day: number;
+  pack: LocalePack;
+  showWeekNumbers: boolean;
+  showNameDays: boolean;
+  today: DayKey;
+  pastMark: PastMarkSetting;
+  textSize: EntryTextSize;
+  entry: string;
+  editing: boolean;
+  fixed: boolean;
+  onEditDay: (day: DayKey | null) => void;
+  onCommit: (day: DayKey, text: string) => void;
+  onOpenHolidays: (year: number) => void;
+  onOpenNames: (name: string) => void;
+}) {
+  const t = useT();
+  const weekday = new Date(`${dayKey}T12:00:00Z`).getUTCDay();
+  const holiday = holidayFor(pack, year, month, day);
+  const red = isRedDay(pack, year, month, day, weekday);
+  const names = showNameDays ? nameDaysFor(pack, month, day) : [];
+  const marked = pastMarkSlot(pastMark, dayKey, today);
+  // A small week marker on the first day of each week (and on the 1st), the
+  // way Swedish wall calendars badge their week rows. Bare number, like the
+  // month grid's gutter: once the marker has a lane of its own the column says
+  // "week" by itself, and the prefix was portrait width spent repeating it.
+  const startsWeek = weekday === pack.weekStartsOn || day === 1;
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      aria-label={dayKey}
+      onClick={() => onEditDay(dayKey)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !editing) {
+          e.preventDefault();
+          onEditDay(dayKey);
+        }
+      }}
+      className={`relative flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
+        fixed ? "h-11 overflow-hidden" : "min-h-11"
+      } ${dayKey === today ? "bg-surface-2" : ""}`}
+    >
+      {/* The week gutter is only reserved when week numbers are on —
+          otherwise every row carries 36 px of dead left margin. */}
+      {showWeekNumbers && (
+        <span
+          className="text-muted cal-size-week w-7 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
+          aria-label={
+            startsWeek
+              ? t("topbar.week", { n: weekNumber(pack, dayKey) })
+              : undefined
+          }
+        >
+          {startsWeek ? weekNumber(pack, dayKey) : ""}
+        </span>
+      )}
+      <span
+        className={`cal-font-day cal-size-day w-7 shrink-0 text-right leading-tight [--cal-base:1.125rem] ${
+          red ? "cal-red" : "text-fg"
+        }`}
+      >
+        <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
+          {day}
+        </MarkedDate>
+      </span>
+      <span
+        className={`w-8 shrink-0 pt-1 text-[10px] leading-tight ${
+          red ? "cal-red" : "text-muted"
+        }`}
+      >
+        {weekdayName(pack, weekday, "short")}
+      </span>
+      {/* The holiday and the day's names share this column and **wrap** rather
+          than truncate: "Trettondedag jul · Kasper, Melker" ending in an
+          ellipsis tells you a name is there and refuses to say which. Two
+          lines of 10 px still clear a fixed 44 px row. */}
+      <span className="w-24 shrink-0 pt-1 text-[10px] leading-tight sm:w-36">
+        {/* Also the way into the holidays screen — see the same tap target in
+            the month view. */}
+        {holiday && (
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenHolidays(year);
+            }}
+            onKeyDown={(e) => {
+              if (e.key !== "Enter" && e.key !== " ") return;
+              e.preventDefault();
+              e.stopPropagation();
+              onOpenHolidays(year);
+            }}
+            className={`cal-font-holiday cal-size-holiday cursor-pointer [--cal-base:10px] focus-visible:outline-2 ${
+              holiday.red ? "cal-red" : "text-muted"
+            }`}
+          >
+            {holiday.name}
+          </span>
+        )}
+        {holiday && names.length > 0 && <span className="text-muted"> · </span>}
+        <span className="cal-font-nameday cal-size-nameday text-muted [--cal-base:10px]">
+          {/* Every name is also the way into the name-day search. */}
+          <NameDayNames names={names} pack={pack} onOpen={onOpenNames} />
+        </span>
+      </span>
+      <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
+        <DayEntry
+          text={entry}
+          editing={editing}
+          font={LIST_ROW_FONT}
+          size={textSize}
+          bounded={fixed}
+          onCommit={(text) => onCommit(dayKey, text)}
+          onClose={() => onEditDay(null)}
+        />
+      </div>
+
+      {/* The whole-row stroke — over the row, transparent to taps. */}
+      {marked === "cell" && <PastMark style={pastMark.style} />}
+    </div>
+  );
+});

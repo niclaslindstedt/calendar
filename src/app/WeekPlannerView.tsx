@@ -3,6 +3,8 @@
 // "Veckoplanerare" board): weekday name at the row's head, the day's date and
 // name days beside it, and real room for text below.
 
+import { memo, useMemo } from "react";
+
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildWeekStrip,
@@ -43,13 +45,17 @@ type Props = {
   onCommit: (day: DayKey, text: string) => void;
   onPrevious: () => void;
   onNext: () => void;
-  /** Tapping a holiday's name opens the holidays screen for its year. */
-  onOpenHolidays: () => void;
+  /** Tapping a holiday's name opens the holidays screen. Takes the year so the
+   *  handler can stay one stable function across every day of every period the
+   *  deck holds, rather than a fresh closure per row. */
+  onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
 };
 
-export function WeekPlannerView({
+/** Memoized for the same reason as the other two views: the deck keeps three
+ *  weeks mounted and only one of them ever changes. */
+export const WeekPlannerView = memo(function WeekPlannerView({
   anchor,
   today,
   pack,
@@ -66,11 +72,12 @@ export function WeekPlannerView({
   onOpenNames,
 }: Props) {
   const t = useT();
-  const days = buildWeekStrip(anchor, {
-    weekStartsOn: pack.weekStartsOn,
-    today,
-  });
+  const days = useMemo(
+    () => buildWeekStrip(anchor, { weekStartsOn: pack.weekStartsOn, today }),
+    [anchor, pack.weekStartsOn, today],
+  );
   const first = parseDayKey(days[0].key);
+  const year = first?.year ?? 0;
 
   return (
     <div
@@ -141,13 +148,13 @@ export function WeekPlannerView({
                     tabIndex={0}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onOpenHolidays();
+                      onOpenHolidays(year);
                     }}
                     onKeyDown={(e) => {
                       if (e.key !== "Enter" && e.key !== " ") return;
                       e.preventDefault();
                       e.stopPropagation();
-                      onOpenHolidays();
+                      onOpenHolidays(year);
                     }}
                     className={`cal-font-holiday cal-size-holiday cursor-pointer truncate [--cal-base:11px] focus-visible:outline-2 ${
                       holiday.red ? "cal-red" : "text-muted"
@@ -186,4 +193,4 @@ export function WeekPlannerView({
       </div>
     </div>
   );
-}
+});
