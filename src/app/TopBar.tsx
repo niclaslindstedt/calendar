@@ -7,7 +7,9 @@
 //
 // The bar follows the sibling `notes` app's header: page-background with a
 // blur, one hairline underneath, `px-4 py-3`, and 36 px square icon buttons.
-// The one deviation is the top inset — see `HEADER_PAD` below.
+// The one deviation is the top inset, which has to differ between an
+// installed iOS PWA and everything else — so the vertical padding lives in
+// `.cal-topbar` (`src/styles.css`) rather than in utilities here.
 
 import type { ReactNode } from "react";
 
@@ -18,13 +20,6 @@ import {
 
 import { useT } from "./i18n/index.ts";
 import type { ViewMode } from "./useAppSettings.ts";
-
-/** The bar's breathing room, in the `py-3` Tailwind step. The top padding
- *  *adds* to the safe-area inset rather than absorbing it (notes takes the
- *  `max()` of the two), so on a notched phone the gap between the status-bar
- *  island and the buttons matches the gap from the buttons down to the
- *  hairline — the bar reads centred instead of top-heavy. */
-const HEADER_PAD = "0.75rem";
 
 /** A 36 px square icon button, the sibling app's header-action look. */
 export function TopBarIconButton({
@@ -58,13 +53,7 @@ type Props = {
 export function TopBar({ view, onViewChange, onToday, onOpenSettings }: Props) {
   const t = useT();
   return (
-    <header
-      className="flex items-center gap-2 border-b border-line bg-page-bg/90 px-4 py-3 backdrop-blur"
-      style={{
-        paddingTop: `calc(${HEADER_PAD} + env(safe-area-inset-top))`,
-        paddingBottom: HEADER_PAD,
-      }}
-    >
+    <header className="cal-topbar flex items-center gap-2 border-b border-line bg-page-bg/90 px-4 backdrop-blur">
       <button
         type="button"
         onClick={onToday}

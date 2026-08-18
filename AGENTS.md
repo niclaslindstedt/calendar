@@ -340,12 +340,14 @@ infer from the diff.
   through it too — so a change there has to be checked in both.
 - **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
   header-action size.
-- **The safe areas are respected.** The top menu adds
-  `env(safe-area-inset-top)` on top of its own padding, so on a notched phone
-  the gap from the status-bar island down to the buttons matches the gap from
-  the buttons down to the hairline. Every view's bottom gutter is
-  `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`) so the last row clears the home
-  indicator.
+- **The safe areas are respected.** The top menu's vertical padding lives in
+  `.cal-topbar` (`src/styles.css`): it adds `env(safe-area-inset-top)` on top
+  of its own padding everywhere _except_ an installed iOS PWA, where the inset
+  is the whole status-bar band and already clears the island — there it takes
+  the `max()` of the two instead, so the island-to-buttons gap matches the
+  buttons-to-hairline gap rather than reading as double it. Every view's
+  bottom gutter is `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`) so the last row
+  clears the home indicator.
 - **The month grid still fills exactly one screen** — six week rows, no
   scrollbar, nothing clipped.
 
