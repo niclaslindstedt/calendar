@@ -224,6 +224,13 @@ The app owns the domain and the stores ("store stays in the app"):
   `DayEntry`'s `bounded` prop — set where the surface clips (month cells, week
   rows, a fixed-height day-list row), clear where the row grows with its
   text.
+- `src/app/textSize.ts` — how big the almanac's _own_ pieces are printed (the
+  date, a holiday's name, the day's names, the week number). Each is a scale
+  of the measured default rather than a px value, published to `<html>` as one
+  CSS variable per piece (`App.tsx`) and multiplied by the site's own base
+  size in `src/styles.css` (`.cal-size-*`, which read a `--cal-base` set at
+  the call site). Your own text is not one of them — it is sized by
+  `entryFont.ts` against the room a view leaves it.
 - `src/app/monthImage.ts` — the month-image seam. Returns `null` today;
   yearly image packs (2026, 2027, …) plug in here later, with a `large`
   (month view) and `small` (day list) variant per month.
@@ -310,16 +317,22 @@ infer from the diff.
   **float** the date so short text flows beside it and long text drops below,
   and to leave `overflow-wrap` at its default so a word that doesn't fit
   moves down whole. That only works while every value fits a full line, so
-  **the font size is a measured constant, not a taste call** — measure with
-  `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in the
-  cell's computed font before changing it. Today: 7.5 px on the 45.8 px line a
-  band gets at 393 px, widest name "Bartolomeus" at 42.1 px.
+  **the shipped font size is a measured constant, not a taste call** — measure
+  with `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in
+  the cell's computed font before changing it. Today: 7.5 px on the 45.8 px
+  line a band gets at 393 px, widest name "Bartolomeus" at 42.1 px. The reader
+  can scale that default (Settings → Calendar → Text size), which is the one
+  sanctioned way past it: the measurement is what the cell _ships_ at, so it
+  stays the ladder's middle stop and the default.
 - **A soft hyphen is an opportunity, and a greedy line breaker takes the last
   one that fits.** So `hyphenate` only seeds them into words that cannot fit a
   caption line whole (`MIN_HYPHENATED_LETTERS`, also measured): a name carrying
   hyphens it does not need gets split to top up the line before it, and
   "Elsa, Isa-bella" is wrong where "Elsa," / "Isabella" is right. Re-measure
-  the constant with the font.
+  the constant with the font. The band does not grow with the size setting, so
+  the _threshold_ is derived from the live scale
+  (`minHyphenatedLetters`) rather than taken as the constant — a month cell at
+  140% breaks "Bern-hard" where one at 100% leaves it whole.
 - **The month cell's arrangement is a setting, not a layout.** Which corner
   holds the number, the holiday and the name days comes from
   Settings → Calendar; `MonthCellFrame` (`src/app/monthCell.tsx`) is the one

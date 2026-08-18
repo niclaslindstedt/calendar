@@ -73,6 +73,7 @@ export const en = {
     cellBottomLeft: "Bottom left",
     cellHolidays: "Holiday name",
     cellNameDays: "Name days",
+    cellWeekNumber: "Week number",
     cellCloseMenu: "Close the corner menu",
     cellNote: "Your note",
     cellNoteTop: "Top",
@@ -80,16 +81,17 @@ export const en = {
     cellNoteBottom: "Bottom",
     fonts: "Type",
     fontsHint:
-      "A printed calendar sets its parts in different type. Pick a face for each; only your own text also carries a size.",
+      "A printed calendar sets its parts in different type. Pick a face for each; how big they are set is the next section.",
     fontYourText: "Your text",
     fontPrint: "Almanac",
     fontSerif: "Serif",
     fontSans: "Sans",
     fontMono: "Mono",
     fontDyslexic: "Dyslexic",
-    entryText: "Your text",
     textSize: "Text size",
     textSizeHint:
+      "How big each part of a day is printed. The almanac's own pieces are measured to fit a month cell, so 100% is that measurement — move a slider when you would rather read it than fit it.",
+    textSizeEntryHint:
       "Dynamic shrinks a note as you write so it always fits its day; the fixed steps keep every note the same size. Either way a day takes only what fits — once it is full it accepts no more text.",
     textSizeDynamic: "Dynamic",
     textSizeSmall: "Small",

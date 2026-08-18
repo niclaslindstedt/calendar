@@ -56,8 +56,10 @@ import {
   clampVacationDays,
   effectiveToggles,
   monthCellLayout,
+  textScales,
   useAppSettings,
 } from "./app/useAppSettings.ts";
+import { textScaleVars } from "./app/textSize.ts";
 import { status } from "./output.ts";
 
 // The default look follows the device: `"system"` tracks the OS light/dark
@@ -99,6 +101,20 @@ export function App() {
     // Compared by value: the four ids are what matter, not the object.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fonts.day, fonts.holidays, fonts.nameDays, fonts.entry]);
+
+  // …and the sizes those pieces are set at, on the same element and for the
+  // same reason: the `.cal-size-*` rules multiply each site's base size by
+  // them, and the settings dialog's sample cell has to be painted at the size
+  // it is previewing wherever the modal sits in the tree.
+  const scales = textScales(live);
+  useEffect(() => {
+    const root = document.documentElement;
+    for (const [name, scale] of Object.entries(textScaleVars(scales))) {
+      root.style.setProperty(name, scale);
+    }
+    // Compared by value, like the faces above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scales.day, scales.holidays, scales.nameDays, scales.week]);
 
   // Keep `theme-color` on the resolved page background. The installed iOS app
   // paints its own status-bar band (the body background in `src/styles.css`
@@ -273,6 +289,7 @@ export function App() {
         showNameDays={toggles.nameDays}
         layout={monthCellLayout(live)}
         textSize={live.textSize}
+        scales={scales}
         doc={store.doc}
         editingDay={editing}
         onEditDay={onEditDay}

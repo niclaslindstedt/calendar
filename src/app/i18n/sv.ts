@@ -70,6 +70,7 @@ export const sv: Catalog = {
     cellBottomLeft: "Nere till vänster",
     cellHolidays: "Helgdagens namn",
     cellNameDays: "Namnsdagar",
+    cellWeekNumber: "Veckonummer",
     cellCloseMenu: "Stäng hörnmenyn",
     cellNote: "Din anteckning",
     cellNoteTop: "Överst",
@@ -77,16 +78,17 @@ export const sv: Catalog = {
     cellNoteBottom: "Nederst",
     fonts: "Typsnitt",
     fontsHint:
-      "En tryckt kalender sätter sina delar i olika typsnitt. Välj ett för varje; bara din egen text har dessutom en storlek.",
+      "En tryckt kalender sätter sina delar i olika typsnitt. Välj ett för varje; hur stora de sätts bestäms i nästa avsnitt.",
     fontYourText: "Din text",
     fontPrint: "Almanacka",
     fontSerif: "Serif",
     fontSans: "Sans",
     fontMono: "Mono",
     fontDyslexic: "Dyslexi",
-    entryText: "Din text",
     textSize: "Textstorlek",
     textSizeHint:
+      "Hur stor varje del av en dag trycks. Almanackans egna delar är uppmätta för att få plats i en månadsruta, så 100 % är den uppmätta storleken — dra i ett reglage när du hellre vill läsa den än få in den.",
+    textSizeEntryHint:
       "Dynamisk krymper texten medan du skriver så att den alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek. Oavsett vilket tar en dag bara emot det som får plats — när den är full ryms ingen mer text.",
     textSizeDynamic: "Dynamisk",
     textSizeSmall: "Liten",

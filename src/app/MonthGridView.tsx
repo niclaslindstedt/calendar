@@ -31,6 +31,7 @@ import {
 } from "./locale/index.ts";
 import { MonthCellFrame } from "./monthCell.tsx";
 import { monthImageUrl } from "./monthImage.ts";
+import { minHyphenatedLetters, type TextScales } from "./textSize.ts";
 import type { CalendarDoc } from "./types.ts";
 import type { MonthCellLayout } from "./useAppSettings.ts";
 
@@ -44,6 +45,11 @@ type Props = {
   /** Where the number, the captions and the note sit in a cell. */
   layout: MonthCellLayout;
   textSize: EntryTextSize;
+  /** How big each of the almanac's own pieces is set (Settings → Calendar →
+   *  Text size). Only the captions' scales are read here — the sizes
+   *  themselves are applied in CSS — and only to re-seed the hyphens the
+   *  caption band needs at that size. */
+  scales: TextScales;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -63,6 +69,7 @@ export function MonthGridView({
   showNameDays,
   layout,
   textSize,
+  scales,
   doc,
   editingDay,
   onEditDay,
@@ -158,7 +165,7 @@ export function MonthGridView({
                 // survives in the accessible name, where there is no width to
                 // pay for it.
                 <div
-                  className="text-muted pt-1 text-[10px]"
+                  className="text-muted cal-size-week pt-1 [--cal-base:10px]"
                   aria-label={t("topbar.week", {
                     n: weekNumber(pack, week[0].key),
                   })}
@@ -174,6 +181,7 @@ export function MonthGridView({
                   layout={layout}
                   showNameDays={showNameDays}
                   textSize={textSize}
+                  scales={scales}
                   entry={doc.entries[cell.key] ?? ""}
                   editing={editingDay === cell.key}
                   onEditDay={onEditDay}
@@ -202,13 +210,16 @@ export function MonthGridView({
  *  "Midsom-marafton" breaks inside. Every name fits a full line unaided — at
  *  7.5 px on the 45.8 px line a band gets, all 627 names in the Swedish
  *  almanac do, the widest being "Bartolomeus" at 42.1 px. Re-measure before
- *  growing this font. */
+ *  growing this font — and note that the *reader* can grow it (Settings →
+ *  Calendar → Text size), which is why the threshold is derived from the
+ *  live scale rather than taken as the constant. */
 function DayCell({
   cell,
   pack,
   layout,
   showNameDays,
   textSize,
+  scales,
   entry,
   editing,
   onEditDay,
@@ -220,6 +231,7 @@ function DayCell({
   layout: MonthCellLayout;
   showNameDays: boolean;
   textSize: EntryTextSize;
+  scales: TextScales;
   entry: string;
   editing: boolean;
   onEditDay: (day: DayKey | null) => void;
@@ -259,7 +271,7 @@ function DayCell({
         content={{
           day: (
             <span
-              className={`cal-font-day text-base leading-none sm:text-lg ${
+              className={`cal-font-day cal-size-day leading-none [--cal-base:1rem] sm:[--cal-base:1.125rem] ${
                 red ? "cal-red" : "text-fg"
               } ${cell.isToday ? "font-bold" : ""}`}
             >
@@ -287,13 +299,17 @@ function DayCell({
                 holiday.red ? "cal-red" : "text-muted"
               }`}
             >
-              {hyphenate(holiday.name, pack.hyphenation)}
+              {hyphenate(holiday.name, pack.hyphenation, {
+                minWordLength: minHyphenatedLetters(scales.holidays),
+              })}
             </span>
           ) : null,
           nameDays:
             names.length > 0 ? (
               <span className="cal-font-nameday cal-cell-nameday text-muted block leading-[1.25]">
-                {hyphenate(names.join(", "), pack.hyphenation)}
+                {hyphenate(names.join(", "), pack.hyphenation, {
+                  minWordLength: minHyphenatedLetters(scales.nameDays),
+                })}
               </span>
             ) : null,
           note: (

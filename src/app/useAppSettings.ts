@@ -20,6 +20,13 @@ import {
 } from "./fonts.ts";
 import { DEFAULT_LOCALE_ID, getLocale } from "./locale/index.ts";
 import type { BackendId } from "./storage/backends.ts";
+import {
+  DEFAULT_TEXT_SCALE,
+  SCALED_PIECES,
+  clampTextScale,
+  type ScaledPiece,
+  type TextScales,
+} from "./textSize.ts";
 
 export type ViewMode = "month" | "week" | "list";
 export type ListRowMode = "fixed" | "dynamic";
@@ -60,6 +67,14 @@ export type AppSettings = {
   listRows: ListRowMode;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
   textSize: EntryTextSize;
+  /** The day number's size, as a scale of its measured default. */
+  sizeDay: number;
+  /** A holiday name's size, as a scale of its measured default. */
+  sizeHolidays: number;
+  /** The day's names' size, as a scale of their measured default. */
+  sizeNameDays: number;
+  /** The week number's size, as a scale of its measured default. */
+  sizeWeek: number;
   /** The face the day number is set in. */
   fontDay: CalFontId;
   /** The face a holiday's name is set in. */
@@ -93,6 +108,10 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nameDays: null,
   listRows: "fixed",
   textSize: "dynamic",
+  sizeDay: DEFAULT_TEXT_SCALE,
+  sizeHolidays: DEFAULT_TEXT_SCALE,
+  sizeNameDays: DEFAULT_TEXT_SCALE,
+  sizeWeek: DEFAULT_TEXT_SCALE,
   fontDay: DEFAULT_CAL_FONTS.day,
   fontHolidays: DEFAULT_CAL_FONTS.holidays,
   fontNameDays: DEFAULT_CAL_FONTS.nameDays,
@@ -122,6 +141,10 @@ export const LOOK_KEYS = [
   "nameDays",
   "listRows",
   "textSize",
+  "sizeDay",
+  "sizeHolidays",
+  "sizeNameDays",
+  "sizeWeek",
   "fontDay",
   "fontHolidays",
   "fontNameDays",
@@ -142,6 +165,10 @@ export function pickLook(settings: AppSettings): LookSettings {
     nameDays: settings.nameDays,
     listRows: settings.listRows,
     textSize: settings.textSize,
+    sizeDay: settings.sizeDay,
+    sizeHolidays: settings.sizeHolidays,
+    sizeNameDays: settings.sizeNameDays,
+    sizeWeek: settings.sizeWeek,
     fontDay: settings.fontDay,
     fontHolidays: settings.fontHolidays,
     fontNameDays: settings.fontNameDays,
@@ -193,6 +220,25 @@ export function calFonts(look: LookSettings): CalFonts {
     fonts[piece] = look[CAL_FONT_KEY[piece]];
   }
   return fonts;
+}
+
+/** The look key that sizes each piece — the same "move one by name" idiom as
+ *  {@link CELL_PIECE_KEY}, for the text-size sliders. */
+export const TEXT_SCALE_KEY = {
+  day: "sizeDay",
+  holidays: "sizeHolidays",
+  nameDays: "sizeNameDays",
+  week: "sizeWeek",
+} as const satisfies Record<ScaledPiece, keyof LookSettings>;
+
+/** The sizes the views paint at, gathered from the look and snapped back onto
+ *  the ladder — a hand-edited document can carry anything. */
+export function textScales(look: LookSettings): TextScales {
+  const scales = {} as TextScales;
+  for (const piece of SCALED_PIECES) {
+    scales[piece] = clampTextScale(look[TEXT_SCALE_KEY[piece]]);
+  }
+  return scales;
 }
 
 export const DEFAULT_LOOK: LookSettings = pickLook(DEFAULT_SETTINGS);
