@@ -20,7 +20,7 @@ import {
   weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
-import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
@@ -73,10 +73,7 @@ export function DayListView({
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
     // axis inside its pane while the deck around it owns the horizontal one.
-    <div
-      className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
-      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
-    >
+    <div className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6">
       {/* The slim artwork band (smaller than the month view's). */}
       {image && (
         <img
@@ -221,6 +218,12 @@ export function DayListView({
           );
         })}
       </div>
+
+      {/* The gutter under the last day. An in-flow spacer rather than
+          `padding-bottom` on the scroller: trailing padding is not counted
+          into the scrollable overflow by every engine, so on a phone the last
+          row could not be scrolled clear of the bottom edge. */}
+      <div aria-hidden="true" style={{ height: LIST_BOTTOM_PAD }} />
     </div>
   );
 }
