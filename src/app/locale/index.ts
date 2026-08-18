@@ -9,6 +9,8 @@ import type { LocalePack } from "./types.ts";
 
 export type { Holiday, LocalePack, NameDayTable } from "./types.ts";
 export type { HyphenationRules } from "./hyphenate.ts";
+export type { NameSpellingRules } from "./nameKey.ts";
+export { nameKey } from "./nameKey.ts";
 export {
   hyphenate,
   hyphenPoints,

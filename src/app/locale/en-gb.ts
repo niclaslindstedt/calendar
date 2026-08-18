@@ -15,6 +15,7 @@ import {
   weekdayOf,
 } from "./computus.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
+import type { NameSpellingRules } from "./nameKey.ts";
 import type { Holiday, LocalePack } from "./types.ts";
 
 // England & Wales bank holidays. Fixed-date holidays falling on a weekend
@@ -196,6 +197,21 @@ const hyphenation: HyphenationRules = {
   minTrailing: 3,
 };
 
+// English name spelling. The pack carries no name days, so nothing searches
+// these today — but the rules are part of the pack contract, and the ones
+// English needs are the familiar variant pairs: "Sophie"/"Sofie",
+// "Katherine"/"Catherine", "Alexander"/"Aleksander", "Rachael"/"Rachel".
+const nameSpelling: NameSpellingRules = {
+  softVowels: "eiy",
+  softC: "s",
+  hardC: "k",
+  softensG: true,
+  jOnsets: [],
+  digraphs: { ch: "k", ph: "f", th: "t", gh: "g", wh: "v", qu: "kv" },
+  letters: { q: "k", w: "v", x: "ks", z: "s", y: "i" },
+  fold: {},
+};
+
 export const enGB: LocalePack = {
   id: "en-GB",
   label: "United Kingdom",
@@ -208,6 +224,7 @@ export const enGB: LocalePack = {
   redWeekdays: [0],
   restWeekdays: [0, 6],
   hyphenation,
+  nameSpelling,
   nameDays: null,
   holidays,
 };

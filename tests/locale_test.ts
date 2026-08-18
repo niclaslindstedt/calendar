@@ -29,6 +29,17 @@ describe("locale registry", () => {
     }
   });
 
+  it("every pack carries name-spelling rules", () => {
+    // Part of the pack contract, like `hyphenation`: the name-day search
+    // folds spellings with these, and a pack that forgot them would quietly
+    // match nothing but exact spellings.
+    for (const pack of LOCALES) {
+      expect(pack.nameSpelling.softVowels.length).toBeGreaterThan(0);
+      expect(pack.nameSpelling.hardC).toBeTruthy();
+      expect(pack.nameSpelling.softC).toBeTruthy();
+    }
+  });
+
   it("packs have unique ids", () => {
     const ids = LOCALES.map((l) => l.id);
     expect(new Set(ids).size).toBe(ids.length);
