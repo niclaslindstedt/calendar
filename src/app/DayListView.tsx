@@ -23,6 +23,7 @@ import {
 import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
+import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
 
@@ -73,7 +74,13 @@ export function DayListView({
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
     // axis inside its pane while the deck around it owns the horizontal one.
-    <div className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6">
+    // `DECK_SCROLLER` hands that offset back to the deck: a swipe reveals the
+    // neighbouring month from its top, so that is where the page turn has to
+    // leave you — not at whatever row you had scrolled to in the month before.
+    <div
+      {...DECK_SCROLLER}
+      className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
+    >
       {/* The slim artwork band (smaller than the month view's). */}
       {image && (
         <img
