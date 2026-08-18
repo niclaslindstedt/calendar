@@ -8,6 +8,8 @@
 // mode live in their own device-local stores and apply immediately.
 
 import {
+  Button,
+  ExternalLinkIcon,
   Field,
   LabeledInput,
   Section,
@@ -45,11 +47,14 @@ export function GeneralSection({
   onUpdate,
   devMode,
   onDevModeChange,
+  onOpenPlanner,
 }: {
   look: LookSettings;
   onUpdate: UpdateLook;
   devMode: boolean;
   onDevModeChange: (next: boolean) => void;
+  /** Saves the dialog and leaves for the vacation planner. */
+  onOpenPlanner: () => void;
 }) {
   const t = useT();
   const lang = useLang();
@@ -130,7 +135,12 @@ export function GeneralSection({
 
       {/* The allowance the vacation planner spends. It sits here rather than
           on the planner screen so that screen is pure output — you read a
-          plan, you don't configure one. */}
+          plan, you don't configure one.
+
+          Which leaves the planner itself with only one way in: tapping a
+          holiday's name in a day cell. That is a fine gesture once you know
+          it, and undiscoverable until you do — so the section that owns the
+          allowance also carries the shortcut to what spends it. */}
       <Section title={t("settings.vacation")}>
         <LabeledInput
           label={t("settings.vacationDays")}
@@ -143,6 +153,19 @@ export function GeneralSection({
           onCommit={(next) => onUpdate("vacationDays", clampVacationDays(next))}
         />
         <p className="text-muted text-xs">{t("settings.vacationDaysHint")}</p>
+        {/* `py-2` over the framework's default padding: this is a phone-first
+            dialog, so the row clears the 36 px touch target. */}
+        <Button
+          variant="primary"
+          onClick={onOpenPlanner}
+          className="mt-3 flex w-full items-center justify-center gap-2 py-2"
+        >
+          <ExternalLinkIcon className="h-4 w-4" />
+          {t("settings.vacationOpenPlanner")}
+        </Button>
+        <p className="text-muted mt-2 text-xs">
+          {t("settings.vacationOpenPlannerHint")}
+        </p>
       </Section>
 
       <Section title={t("settings.tabDeveloper")}>

@@ -191,6 +191,16 @@ export function App() {
     setHolidayYear(year);
   };
 
+  /** Settings → General → Vacation offers the way in that the calendar hides:
+   *  the planner is otherwise only reachable by tapping a holiday's name, and
+   *  the section that sets the allowance is where you go looking for what
+   *  spends it. It opens on the year on display, as a tapped holiday does. */
+  const openPlanner = () => {
+    setSettingsOpen(false);
+    setHolidayMode("planner");
+    openHolidays(parts.year);
+  };
+
   const pack = getLocale(live.localeId);
   const toggles = effectiveToggles(live);
   // Every view pages horizontally, so each renders three periods at a time:
@@ -336,6 +346,7 @@ export function App() {
         defaultAppearance={DEFAULT_APPEARANCE}
         onAppearanceChange={setAppearance}
         onPreview={setPreview}
+        onOpenPlanner={openPlanner}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
         storage={{
