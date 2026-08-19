@@ -212,18 +212,25 @@ The app owns the domain and the stores ("store stays in the app"):
   catalog's type source, `sv.ts` must satisfy it.
 - `src/app/useCalendarStore.ts` — the document store over the framework's
   storage adapters (debounced save, migrations, offline cache). Which
-  document it holds is (backend, namespace); a change to either flushes any
+  document it holds is (backend, calendar); a change to either flushes any
   pending save and loads the other one.
-- `src/app/useNamespaces.ts` — the **namespace** registry and the active
+- `src/app/useCalendars.ts` — the **calendar** registry and the active
   pointer, over the framework's `namespaces` module ("store stays in the
-  app"). A namespace is a whole separate calendar: same backend, same
-  settings, its own document. The registry is device-local; the documents
-  sync. See `docs/features/namespaces.md`.
+  app"). A calendar is a whole separate set of notes: same backend, same
+  settings, its own document. The framework's generic word for the slot is a
+  "namespace"; this app files one kind of document, so the two are the same
+  thing here and the translation is made at that import (and, for the default
+  slug, in `storage/paths.ts`) — nothing downstream says "namespace". The
+  registry is device-local; the documents sync. See
+  `docs/features/calendars.md`.
 - `src/app/storage/` — backend registry + connect flows + the developer-mode
   demo-data adapter (`demoAdapter.ts`, an in-memory `StorageAdapter` with
-  static data). `paths.ts` is the one place that turns a namespace slug into
-  a storage location — pure and tested, because the **default** namespace has
-  to keep the un-suffixed names a pre-namespace calendar was written under.
+  static data). `paths.ts` is the one place that turns a calendar's slug into
+  a storage location — pure and tested, because the **default** calendar has
+  to keep the un-suffixed names a single-calendar app wrote under.
+  `registryKeys.ts` holds the two `localStorage` keys the registry lives
+  under and the one-time move off the names it shipped with — also pure, for
+  the same reason.
 - `src/app/MonthGridView.tsx`, `WeekPlannerView.tsx`, `DayListView.tsx` — the
   three views; `DayEntry.tsx` is the shared click-to-type entry surface with
   the auto-shrinking text. `entryFont.ts` owns the pre-layout sizing curve and
@@ -423,16 +430,16 @@ optimised when the two pull against each other.
 
 ## Documentation sync points
 
-| When you change…                    | Update…                                                                                                     |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| the document model / migrations     | `docs/storage.md`, `tests/migrations_test.ts`                                                               |
-| locale packs / name days            | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
-| storage backends                    | `docs/storage.md`, `docs/configuration.md`                                                                  |
-| namespaces / where a document lives | `docs/features/namespaces.md`, `docs/storage.md`, `docs/configuration.md`, `tests/namespace_paths_test.ts`  |
-| settings surface                    | `docs/getting-started.md`                                                                                   |
-| user-visible features               | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |
-| deployment slots / hosting          | `docs/deployment.md`, `tests/slot_test.ts`                                                                  |
-| the release flow / fragments        | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                       |
+| When you change…                   | Update…                                                                                                     |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| the document model / migrations    | `docs/storage.md`, `tests/migrations_test.ts`                                                               |
+| locale packs / name days           | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
+| storage backends                   | `docs/storage.md`, `docs/configuration.md`                                                                  |
+| calendars / where a document lives | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`    |
+| settings surface                   | `docs/getting-started.md`                                                                                   |
+| user-visible features              | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |
+| deployment slots / hosting         | `docs/deployment.md`, `tests/slot_test.ts`                                                                  |
+| the release flow / fragments       | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                       |
 
 ## Website staleness
 

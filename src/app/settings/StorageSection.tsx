@@ -35,16 +35,16 @@ export type StorageActions = {
 export function StorageSection({
   saveState,
   effectiveBackend,
-  namespace,
+  calendarSlug,
   storage,
   devMode,
   demoData,
 }: {
   saveState: SaveState;
   effectiveBackend: BackendId;
-  /** The active namespace's slug — Dropbox files the calendar in a folder of
+  /** The active calendar's slug — Dropbox files each calendar in a folder of
    *  its own, and the row prints which one. */
-  namespace: string;
+  calendarSlug: string;
   storage: StorageActions;
   devMode: boolean;
   demoData: boolean;
@@ -129,7 +129,7 @@ export function StorageSection({
           available: isDropboxAvailable(),
           connected: isDropboxConnected(),
           onConnect: storage.connectDropbox,
-          detail: dropboxLocation(namespace),
+          detail: dropboxLocation(calendarSlug),
         })}
         {backendRow("gdrive", t("storage.gdrive"), t("storage.gdriveHint"), {
           available: isGdriveAvailable(),

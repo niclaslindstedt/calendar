@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The namespace switcher in the top menu. The sibling `contacts` app puts
-// this in its sidebar; a wall calendar has no sidebar — the whole screen is
-// the month — so it lives where the "Today" button used to, as a 36 px button
-// carrying the active namespace's glyph in its colour. Which calendar you are
-// writing in is a thing you must be able to see without opening anything,
-// and the glyph is the only always-visible carrier of it.
+// The calendar switcher in the top menu. The sibling `contacts` app puts this
+// in its sidebar; a wall calendar has no sidebar — the whole screen is the
+// month — so it lives where the "Today" button used to, as a 36 px button
+// carrying the active calendar's glyph in its colour. Which calendar you are
+// writing in is a thing you must be able to see without opening anything, and
+// the glyph is the only always-visible carrier of it.
 //
-// Tapping it drops a list of the namespaces plus a way into the framework's
+// Tapping it drops a list of the calendars plus a way into the framework's
 // management dialog; the dialog itself is `NamespacesModal`, opened by
 // `App.tsx` (a dialog over the whole app doesn't belong inside a menu that
 // closes when you pick from it).
@@ -20,42 +20,42 @@ import {
   FloatingPanel,
 } from "@niclaslindstedt/oss-framework/components";
 import { Glyph } from "@niclaslindstedt/oss-framework/glyphs";
-import type { Namespace } from "@niclaslindstedt/oss-framework/namespaces";
 
 import { TopBarIconButton } from "./TopBarButton.tsx";
 import { useT } from "./i18n/index.ts";
+import type { Calendar } from "./useCalendars.ts";
 
-/** A namespace's mark: the glyph it chose, tinted with the colour it chose.
- *  A namespace that chose neither falls back to the app's own mark rather
- *  than the glyph catalogue's default folder — this is a calendar, and an
- *  un-badged namespace is just "the calendar". */
-function NamespaceGlyph({
-  namespace,
+/** A calendar's mark: the glyph it chose, tinted with the colour it chose. A
+ *  calendar that chose neither falls back to the app's own mark rather than
+ *  the glyph catalogue's default folder — this is a calendar, and an
+ *  un-badged one is just "the calendar". */
+function CalendarGlyph({
+  calendar,
   className,
 }: {
-  namespace: Namespace;
+  calendar: Calendar;
   className?: string;
 }) {
   return (
     <Glyph
-      name={namespace.glyph}
+      name={calendar.glyph}
       className={className}
-      style={namespace.color ? { color: namespace.color } : undefined}
+      style={calendar.color ? { color: calendar.color } : undefined}
       fallback={<CalendarIcon className={className} />}
     />
   );
 }
 
 type Props = {
-  namespaces: Namespace[];
+  calendars: Calendar[];
   activeSlug: string;
   onSwitch: (slug: string) => void;
   /** Open the management dialog (create / rename / restyle / delete). */
   onManage: () => void;
 };
 
-export function NamespaceMenu({
-  namespaces,
+export function CalendarMenu({
+  calendars,
   activeSlug,
   onSwitch,
   onManage,
@@ -63,8 +63,7 @@ export function NamespaceMenu({
   const t = useT();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const active =
-    namespaces.find((n) => n.slug === activeSlug) ?? namespaces[0]!;
+  const active = calendars.find((c) => c.slug === activeSlug) ?? calendars[0]!;
 
   const pick = (slug: string) => {
     setOpen(false);
@@ -74,12 +73,12 @@ export function NamespaceMenu({
   return (
     <>
       <TopBarIconButton
-        label={t("namespaces.switcher", { name: active.name })}
+        label={t("calendars.switcher", { name: active.name })}
         buttonRef={triggerRef}
         expanded={open}
         onClick={() => setOpen((was) => !was)}
       >
-        <NamespaceGlyph namespace={active} className="h-[18px] w-[18px]" />
+        <CalendarGlyph calendar={active} className="h-[18px] w-[18px]" />
       </TopBarIconButton>
 
       <FloatingPanel
@@ -87,7 +86,7 @@ export function NamespaceMenu({
         onClose={() => setOpen(false)}
         triggerRef={triggerRef}
         // Anchored under the button on the left, and allowed to grow with the
-        // longest name — a namespace called "Sommarstugan" must not wrap in a
+        // longest name — a calendar called "Sommarstugan" must not wrap in a
         // 393 px portrait window.
         placement={{
           width: { kind: "grow", minPx: 176 },
@@ -96,23 +95,23 @@ export function NamespaceMenu({
         }}
         className="py-1"
       >
-        <div role="menu" aria-label={t("namespaces.menu")}>
-          {namespaces.map((namespace) => {
-            const current = namespace.slug === activeSlug;
+        <div role="menu" aria-label={t("calendars.menu")}>
+          {calendars.map((calendar) => {
+            const current = calendar.slug === activeSlug;
             return (
               <button
-                key={namespace.slug}
+                key={calendar.slug}
                 type="button"
                 role="menuitemradio"
                 aria-checked={current}
-                onClick={() => pick(namespace.slug)}
+                onClick={() => pick(calendar.slug)}
                 className="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3 py-2 text-left text-sm text-fg hover:bg-surface-3"
               >
-                <NamespaceGlyph
-                  namespace={namespace}
+                <CalendarGlyph
+                  calendar={calendar}
                   className="h-4 w-4 shrink-0"
                 />
-                <span className="flex-1 truncate">{namespace.name}</span>
+                <span className="flex-1 truncate">{calendar.name}</span>
                 {current && (
                   <CheckIcon className="h-3.5 w-3.5 shrink-0 text-accent" />
                 )}
@@ -132,7 +131,7 @@ export function NamespaceMenu({
             className="flex w-full cursor-pointer items-center gap-2 border-0 bg-transparent px-3 py-2 text-left text-sm text-muted hover:bg-surface-3 hover:text-fg"
           >
             <CogIcon className="h-4 w-4 shrink-0" />
-            <span className="flex-1 truncate">{t("namespaces.manage")}</span>
+            <span className="flex-1 truncate">{t("calendars.manage")}</span>
           </button>
         </div>
       </FloatingPanel>

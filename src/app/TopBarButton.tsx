@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The top menu's icon button — 36 px square, the sibling `notes` app's
 // header-action size and the minimum comfortable touch target on a phone.
-// Its own file rather than TopBar's because the namespace menu needs the same
+// Its own file rather than TopBar's because the calendar menu needs the same
 // button for its trigger, and TopBar renders that menu (so importing it back
 // out of TopBar would be a cycle).
 
