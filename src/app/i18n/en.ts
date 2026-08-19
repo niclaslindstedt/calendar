@@ -129,13 +129,15 @@ export const en = {
     fontDyslexic: "Dyslexic",
     textSize: "Text size",
     textSizeHint:
-      "How big each part of a day is printed. The almanac's own pieces are measured to fit a month cell, so 100% is that measurement — move a slider when you would rather read it than fit it.",
+      "How big each part of a day is printed. The almanac's own pieces are measured to fit a month cell, so Medium is that measurement — pick Large when you would rather read a piece than fit it. The sample beside each row is printed at the size you chose.",
     textSizeEntryHint:
       "Dynamic shrinks a note as you write so it always fits its day; the fixed steps keep every note the same size. Either way a day takes only what fits — once it is full it accepts no more text.",
     textSizeDynamic: "Dynamic",
     textSizeSmall: "Small",
     textSizeMedium: "Medium",
     textSizeLarge: "Large",
+    textSizeSampleHoliday: "All Saints",
+    textSizeSampleNote: "Dinner 18:00",
     pastDays: "Passed days",
     pastDaysHint:
       "Cross off the days that have gone, the way you would on a paper calendar. Today is never crossed — the run of marks stops at it.",

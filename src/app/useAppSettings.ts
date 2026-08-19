@@ -267,7 +267,7 @@ export function calFonts(look: LookSettings): CalFonts {
 }
 
 /** The look key that sizes each piece — the same "move one by name" idiom as
- *  {@link CELL_PIECE_KEY}, for the text-size sliders. */
+ *  {@link CELL_PIECE_KEY}, for the text-size buttons. */
 export const TEXT_SCALE_KEY = {
   day: "sizeDay",
   holidays: "sizeHolidays",

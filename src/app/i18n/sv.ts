@@ -122,13 +122,15 @@ export const sv: Catalog = {
     fontDyslexic: "Dyslexi",
     textSize: "Textstorlek",
     textSizeHint:
-      "Hur stor varje del av en dag trycks. Almanackans egna delar är uppmätta för att få plats i en månadsruta, så 100 % är den uppmätta storleken — dra i ett reglage när du hellre vill läsa den än få in den.",
+      "Hur stor varje del av en dag trycks. Almanackans egna delar är uppmätta för att få plats i en månadsruta, så Mellan är den uppmätta storleken — välj Stor när du hellre vill läsa en del än få in den. Provet bredvid varje rad trycks i den storlek du valt.",
     textSizeEntryHint:
       "Dynamisk krymper texten medan du skriver så att den alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek. Oavsett vilket tar en dag bara emot det som får plats — när den är full ryms ingen mer text.",
     textSizeDynamic: "Dynamisk",
     textSizeSmall: "Liten",
     textSizeMedium: "Mellan",
     textSizeLarge: "Stor",
+    textSizeSampleHoliday: "Alla helgon",
+    textSizeSampleNote: "Middag 18:00",
     pastDays: "Passerade dagar",
     pastDaysHint:
       "Kryssa av dagarna som gått, som i en papperskalender. Dagens datum kryssas aldrig — raden av kryss slutar där.",

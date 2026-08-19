@@ -98,8 +98,9 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
   (English / Swedish), week numbers and name days on/off, which holiday eves
   you work, the month cell's layout, crossing off the days that have passed, a
-  face per part of a day (date, holiday, name days, your text),
-  entry text size (dynamic, or fixed small / medium / large), the theme,
+  face per part of a day (date, holiday, name days, your text), a size per
+  part of a day (small / medium / large, plus dynamic for your own text,
+  each with a sample beside the buttons), the theme,
   storage backend, developer mode, and logs. Look changes preview live behind
   the dialog and are kept with Save; Cancel drops them.
 

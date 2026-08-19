@@ -210,7 +210,7 @@ body {
 
    The lane *has* to grow with them, unlike the month cell's caption band: a
    week row's height is fixed by the seven-way split of the screen, so a name
-   run that wraps to a second line at 140% is a line the row cannot show. The
+   run that wraps to a second line on Large is a line the row cannot show. The
    month cell answers that by re-seeding hyphens (`minHyphenatedLetters`); the
    lane answers it by getting wider, which costs the note width the reader
    asked to spend. Whichever caption is set largest sets the width — they share
@@ -256,15 +256,19 @@ body {
   }
 }
 
-/* The size sliders in Settings. `accent-color` themes the native track and
-   thumb from the active preset, so the control needs no rebuild to follow a
-   theme; the height is the app's 36 px touch target rather than the ~20 px a
-   bare range input takes. */
-.cal-slider {
-  accent-color: var(--accent);
-  width: 100%;
-  height: 36px;
-  cursor: pointer;
+/* The step buttons in Settings → Calendar → Text size. The section prints a
+   sample of the piece beside every row, so its segmented controls have ~80 px
+   less width than the dialog's others — and the entry row carries a fourth
+   step ("Dynamic") on top of that, which at the control's own padding pushes
+   "Large" off the end at 393 px. Tightening the side padding and dropping the
+   label a point buys that fourth label its place; the buttons keep their
+   height, which is the dimension a thumb actually needs. It lives here rather
+   than in utilities on the section because the buttons are the framework
+   component's own, not the app's to class. */
+.cal-size-steps button {
+  padding-inline: 0.5rem;
+  font-size: 0.8125rem;
+  min-height: 30px;
 }
 
 /* Red days (Sundays) and other red accents. */
