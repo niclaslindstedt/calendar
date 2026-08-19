@@ -72,22 +72,25 @@ export function StripLane({
           : "[--cal-lane:4.25rem] sm:[--cal-lane:5.5rem]"
       } ${showDayOfYear ? "[--cal-lane-extra:1.375rem]" : ""}`}
     >
-      {/* The date sits in a box exactly as wide as it is set — one em holds
-          two digits in the lane's serif ("28" measures 24 px at 24 px) — and
-          is right-aligned inside it. That is what keeps the weekday column
-          straight down a month: left-aligned, every single-digit date pulled
-          its weekday half a digit to the left, which reads as a ragged edge
-          rather than as a narrow number. The width is the same `--cal-date`
-          the lane bills for the column, so the two can't disagree. */}
-      <div className="w-[var(--cal-date,1.5rem)] shrink-0 text-right">
+      {/* The date sits in a column wide enough for the widest day the face
+          has to set, and is right-aligned inside it. The width is a column
+          rather than a shrink-wrap because the weekday and the day's names
+          line up beside it down a whole month: left-aligned digits pulled
+          every single-digit row's weekday half a number to the left, which
+          reads as a ragged edge rather than as a narrow date. So a
+          single-digit row simply carries more air after its number than a
+          two-digit one does — that is the column being kept, not padding
+          being spent.
+
+          How wide that is comes from the face (`DATE_COLUMN_EM` in
+          `fonts.ts`, billed to the lane as `--cal-date-col`) and is floored
+          at the two digits the *resolved* face actually measures — see
+          `.cal-strip-date`. It carries the date's own face and size for that
+          reason: `ch` is only the digit's width if the box is set in the type
+          it is holding. */}
+      <div className="cal-strip-date cal-font-day cal-size-day shrink-0 text-right leading-none [--cal-base:var(--cal-date,1.5rem)]">
         <MarkedDate style={markDate}>
-          <span
-            className={`cal-font-day cal-size-day leading-none [--cal-base:var(--cal-date,1.5rem)] ${
-              red ? "cal-red" : "text-fg"
-            }`}
-          >
-            {day}
-          </span>
+          <span className={red ? "cal-red" : "text-fg"}>{day}</span>
         </MarkedDate>
       </div>
       <div className="cal-strip-names flex min-w-0 flex-1 flex-col">

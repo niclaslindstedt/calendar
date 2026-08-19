@@ -6,10 +6,12 @@ import {
   CAL_FONT_PIECES,
   CAL_FONT_VAR,
   CAPTION_SCALE,
+  DATE_COLUMN_EM,
   DEFAULT_CAL_FONTS,
   calFontStack,
   calFontVars,
   captionScale,
+  dateColumnEm,
   isCalFont,
   type CalFontId,
 } from "../src/app/fonts.ts";
@@ -71,6 +73,41 @@ describe("caption scales", () => {
   });
 });
 
+describe("the strip row's date column", () => {
+  // The column is a width the weekday lines up against down a whole month, so
+  // it has to hold the widest day the face sets — a face without a measured
+  // number would put its two digits into the weekday beside them.
+  it("carries a measured width for every face", () => {
+    for (const id of IDS) expect(DATE_COLUMN_EM[id]).toBeGreaterThan(0);
+    expect(Object.keys(DATE_COLUMN_EM).sort()).toEqual([...IDS].sort());
+  });
+
+  it("never asks for less than the two digits it is holding", () => {
+    // Half an em a digit is the printed serif's tabular figure, and the
+    // narrowest any of the shipped faces sets one at — so a face billed under
+    // one em would be billed under its own digits.
+    for (const id of IDS) expect(dateColumnEm(id)).toBeGreaterThanOrEqual(1);
+  });
+
+  it("bills the widest face for the most", () => {
+    // OpenDyslexic's "28" is 1.32 em against the printed serif's 1.00 — see
+    // the measurements in fonts.ts.
+    expect(dateColumnEm("dyslexic")).toBeCloseTo(1.32, 2);
+    expect(dateColumnEm("print")).toBeCloseTo(1, 2);
+    for (const id of IDS) {
+      expect(dateColumnEm(id)).toBeLessThanOrEqual(dateColumnEm("dyslexic"));
+    }
+  });
+
+  it("bills an unknown face generously rather than tightly", () => {
+    // A face we can't measure is better given room it doesn't need than sent
+    // into the weekday: the fallback clears every face the app ships.
+    const unknown = dateColumnEm("comic" as CalFontId);
+    for (const id of IDS)
+      expect(unknown).toBeGreaterThanOrEqual(dateColumnEm(id));
+  });
+});
+
 describe("calFontVars", () => {
   it("writes a stack for every piece, plus the caption scales", () => {
     const vars = calFontVars(DEFAULT_CAL_FONTS);
@@ -81,6 +118,12 @@ describe("calFontVars", () => {
     }
     expect(vars["--cal-nameday-scale"]).toBe("1");
     expect(vars["--cal-holiday-scale"]).toBe("1");
+    expect(vars["--cal-date-em"]).toBe("1");
+  });
+
+  it("bills the date column from the face the date is set in", () => {
+    const vars = calFontVars({ ...DEFAULT_CAL_FONTS, day: "dyslexic" });
+    expect(vars["--cal-date-em"]).toBe("1.32");
   });
 
   it("scales the caption bands from the faces they are set in", () => {
