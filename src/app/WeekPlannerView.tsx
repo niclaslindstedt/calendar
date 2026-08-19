@@ -160,7 +160,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
                   {/* 24 px is a measurement, like the month cell's caption:
                       it is the largest date that still leaves the row room for
                       the weekday, a holiday and a line of names at the *top* of
-                      the size ladder (140%), where the date grows but the row
+                      the size ladder (Large), where the date grows but the row
                       does not. */}
                   <span
                     className={`cal-font-day cal-size-day leading-none [--cal-base:1.5rem] ${

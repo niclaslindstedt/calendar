@@ -340,8 +340,8 @@ infer from the diff.
   "Elsa, Isa-bella" is wrong where "Elsa," / "Isabella" is right. Re-measure
   the constant with the font. The band does not grow with the size setting, so
   the _threshold_ is derived from the live scale
-  (`minHyphenatedLetters`) rather than taken as the constant — a month cell at
-  140% breaks "Bern-hard" where one at 100% leaves it whole.
+  (`minHyphenatedLetters`) rather than taken as the constant — a month cell on
+  Large breaks "Henri-etta" where one on Medium leaves it whole.
 - **The month cell's arrangement is a setting, not a layout.** Which corner
   holds the number, the holiday and the name days comes from
   Settings → Calendar; `MonthCellFrame` (`src/app/monthCell.tsx`) is the one

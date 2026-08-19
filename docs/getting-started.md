@@ -214,19 +214,20 @@ being clipped. That measurement is the size each caption _ships_ at — see
 
 ### Text size
 
-**Settings → Calendar → Text size** is one slider per part of a day. All five
-read the same way: left is smaller, right is bigger, and the calendar behind
-the dialog re-sets itself as you drag.
+**Settings → Calendar → Text size** is one row per part of a day: the sizes as
+buttons — **Small**, **Medium**, **Large** — and a sample of that piece
+printed at the size you picked beside them. The calendar behind the dialog
+re-sets itself as you press, so you can judge the choice on the sample, on the
+calendar, or on both.
 
-**Your text** — what you write on a day — has its own ladder, because it is
+**Your text** — what you write on a day — has a fourth button, because it is
 sized against the room a view actually leaves it rather than against a fixed
 size:
 
-- **Dynamic** (the default, the slider's left end) — a note shrinks as you
-  write, so it always fits the room the day has left over after its number,
-  holiday and name days. Once it is as small as that view allows, the day is
-  full: the next keystroke is refused rather than pushed out of sight.
-  Deleting always works.
+- **Dynamic** (the default) — a note shrinks as you write, so it always fits
+  the room the day has left over after its number, holiday and name days. Once
+  it is as small as that view allows, the day is full: the next keystroke is
+  refused rather than pushed out of sight. Deleting always works.
 - **Small / Medium / Large** — the text stays at that size no matter how much
   you write, and the day fills up sooner because it never shrinks. Each step
   is scaled to the view it renders in, so a month cell stays legible while the
@@ -238,19 +239,20 @@ and ends in an ellipsis, so it stops short of the day's captions instead of
 running under them.
 
 The **day number**, **holiday name**, **name days** and **week number** are
-the almanac's own printing, and their sliders read as percentages of the size
-each was measured at. **100%** is that measurement — the middle stop, and
-what a fresh install uses — with two steps down to 80% and three up to 140%.
+the almanac's own printing, and their three buttons are steps around the size
+each was measured at. **Medium** is that measurement — the middle button, and
+what a fresh install uses — with **Small** a fifth smaller and **Large** a
+quarter bigger.
 
 The sizes apply in all three views at once, each scaled from what that view
 prints the piece at, so making the date bigger does not turn the month grid
 into the day list. In the month view the captions have only a 47 px column to
-sit in, so past 100% names start breaking across two lines — the calendar
-re-picks its hyphenation points for the size you chose, so a long name breaks
-at a syllable rather than being clipped. The week planner has the opposite
-freedom: its date lane widens with the holiday and name-day sliders, so bigger
-captions keep the same number of lines and the note beside them gives up the
-width instead.
+sit in, so on Large the longest names start breaking across two lines — the
+calendar re-picks its hyphenation points for the size you chose, so a long
+name breaks at a syllable rather than being clipped. The week planner has the
+opposite freedom: its date lane widens with the holiday and name-day steps, so
+bigger captions keep the same number of lines and the note beside them gives
+up the width instead.
 
 ## Install as an app
 
