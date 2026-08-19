@@ -27,8 +27,9 @@ describe("the look draft", () => {
     );
   });
 
-  it("defaults the entry text to shrink-to-fit", () => {
-    expect(DEFAULT_LOOK.textSize).toBe("dynamic");
+  it("defaults the entry text to shrink-to-fit, in both views", () => {
+    expect(DEFAULT_LOOK.styles.month.entry.size).toBe("dynamic");
+    expect(DEFAULT_LOOK.styles.strip.entry.size).toBe("dynamic");
   });
 
   it("defaults the month cell to the printed wall-calendar arrangement", () => {
@@ -79,10 +80,10 @@ describe("the look draft", () => {
   });
 
   it("leaves the other look settings alone on an ordinary edit", () => {
-    const next = updateLook(DEFAULT_LOOK, "textSize", "large");
-    expect(next.textSize).toBe("large");
+    const next = updateLook(DEFAULT_LOOK, "listRows", "dynamic");
+    expect(next.listRows).toBe("dynamic");
     expect(next.localeId).toBe(DEFAULT_LOOK.localeId);
-    expect(next.listRows).toBe(DEFAULT_LOOK.listRows);
+    expect(next.headerColor).toBe(DEFAULT_LOOK.headerColor);
   });
 
   it("ships the week planner as the printed strip it was", () => {

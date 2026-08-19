@@ -3,23 +3,12 @@ import { describe, expect, it } from "vitest";
 
 import {
   CAL_FONTS,
-  CAL_FONT_PIECES,
-  CAL_FONT_VAR,
   CAPTION_SCALE,
-  DEFAULT_CAL_FONTS,
   calFontStack,
-  calFontVars,
   captionScale,
   isCalFont,
   type CalFontId,
 } from "../src/app/fonts.ts";
-import {
-  CAL_FONT_KEY,
-  DEFAULT_SETTINGS,
-  LOOK_KEYS,
-  calFonts,
-  pickLook,
-} from "../src/app/useAppSettings.ts";
 
 const IDS = CAL_FONTS.map((f) => f.id);
 
@@ -68,71 +57,5 @@ describe("caption scales", () => {
 
   it("leaves an unknown face unscaled rather than shrinking it away", () => {
     expect(captionScale("comic" as CalFontId)).toBe(1);
-  });
-});
-
-describe("calFontVars", () => {
-  it("writes a stack for every piece, plus the caption scales", () => {
-    const vars = calFontVars(DEFAULT_CAL_FONTS);
-    for (const piece of CAL_FONT_PIECES) {
-      expect(vars[CAL_FONT_VAR[piece]]).toBe(
-        calFontStack(DEFAULT_CAL_FONTS[piece]),
-      );
-    }
-    expect(vars["--cal-nameday-scale"]).toBe("1");
-    expect(vars["--cal-holiday-scale"]).toBe("1");
-  });
-
-  it("scales the caption bands from the faces they are set in", () => {
-    const vars = calFontVars({
-      ...DEFAULT_CAL_FONTS,
-      nameDays: "dyslexic",
-      entry: "dyslexic",
-    });
-    expect(vars["--cal-nameday-scale"]).toBe("0.78");
-    // Your own text shrinks to fit on its own curve, so it takes no scale.
-    expect(vars["--cal-holiday-scale"]).toBe("1");
-  });
-
-  it("gives each piece its own variable", () => {
-    const names = CAL_FONT_PIECES.map((p) => CAL_FONT_VAR[p]);
-    expect(new Set(names).size).toBe(names.length);
-  });
-});
-
-describe("the faces as settings", () => {
-  it("defaults to the printed look: the date in serif, the rest in the app font", () => {
-    expect(DEFAULT_CAL_FONTS).toEqual({
-      day: "print",
-      holidays: "mono",
-      nameDays: "mono",
-      entry: "mono",
-    });
-  });
-
-  it("seeds the app settings from those defaults", () => {
-    expect(calFonts(pickLook(DEFAULT_SETTINGS))).toEqual(DEFAULT_CAL_FONTS);
-  });
-
-  it("keeps every face in the previewed look, so Cancel drops it", () => {
-    for (const piece of CAL_FONT_PIECES) {
-      expect(LOOK_KEYS).toContain(CAL_FONT_KEY[piece]);
-    }
-  });
-
-  it("reads each piece back off the look it was written to", () => {
-    const look = pickLook({
-      ...DEFAULT_SETTINGS,
-      fontDay: "sans",
-      fontHolidays: "serif",
-      fontNameDays: "dyslexic",
-      fontEntry: "print",
-    });
-    expect(calFonts(look)).toEqual({
-      day: "sans",
-      holidays: "serif",
-      nameDays: "dyslexic",
-      entry: "print",
-    });
   });
 });

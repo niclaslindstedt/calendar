@@ -106,9 +106,16 @@ export const en = {
     vacationOpenPlanner: "Open the vacation planner",
     vacationOpenPlannerHint:
       "Saves your settings and opens the planner for the year you are looking at. You can also get there by tapping a holiday's name in any view.",
-    monthCell: "Month view",
-    monthCellHint:
-      "Tap a corner of the sample day to choose what sits there. The defaults reproduce a printed wall calendar: the number in the top-right corner, the holiday and the day's names stacked in the bottom-right one.",
+    viewStyle: "View",
+    viewStyleHint:
+      "How each view prints a day. Pick the view, then tap a quadrant of the sample to choose what is printed there and set each piece below. The sample is the real thing — every change lands in it as you make it.",
+    viewStylePicker: "View to adjust",
+    viewStyleShared:
+      "The week planner and the day list print the same row, so they share these settings — the picker changes which of the two the sample shows.",
+    stripLaneTop: "Left margin, top",
+    stripLaneBottom: "Left margin, bottom",
+    stripRailTop: "Right margin, top",
+    stripRailBottom: "Right margin, bottom",
     cellDayNumber: "Day number",
     cellTopRight: "Top right",
     cellTopLeft: "Top left",
@@ -122,20 +129,16 @@ export const en = {
     cellNoteTop: "Top",
     cellNoteMiddle: "Middle",
     cellNoteBottom: "Bottom",
-    fonts: "Type",
-    fontsHint:
-      "A printed calendar sets its parts in different type. Pick a face for each; how big they are set is the next section.",
+    fonts: "Face",
     fontYourText: "Your text",
     fontPrint: "Almanac",
     fontSerif: "Serif",
     fontSans: "Sans",
     fontMono: "Mono",
     fontDyslexic: "Dyslexic",
-    textSize: "Text size",
-    textSizeHint:
-      "How big each part of a day is printed. The almanac's own pieces are measured to fit a month cell, so Medium is that measurement — pick Large when you would rather read a piece than fit it. The sample beside each row is printed at the size you chose.",
+    textSize: "Size",
     textSizeEntryHint:
-      "Dynamic shrinks a note as you write so it always fits its day; the fixed steps keep every note the same size. Either way a day takes only what fits — once it is full it accepts no more text.",
+      "Your text on Dynamic shrinks as you write so a note always fits its day; the fixed steps keep every note the same size. Either way a day takes only what fits — once it is full it accepts no more text.",
     textSizeDynamic: "Dynamic",
     textSizeSmall: "Small",
     textSizeMedium: "Medium",

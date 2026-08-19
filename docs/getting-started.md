@@ -110,14 +110,13 @@ stock look without touching your storage connections or developer switches.
   vacation planner** saves the dialog and jumps to the planner for the year on
   display.
 - **Calendar** — **Holiday eves** (which of the country's eves you actually
-  work), the month cell's layout (arranged on a sample day: tap a corner and
-  pick what belongs in it), whether the days that have passed are crossed off,
-  the day-list row height, the week planner's own layout, the colour the
-  period heading is banded with, the face each part of a day is set in, and
-  how big each of them is printed. See [Holiday eves](#holiday-eves),
-  [Month cell layout](#month-cell-layout), [Passed days](#passed-days),
-  [Week planner](#week-planner), [Heading colour](#heading-colour),
-  [Type](#type) and [Text size](#text-size).
+  work), then **View**: how each view prints a day — what sits where, the face
+  each piece is set in, and how big it is — arranged on a live sample of the
+  view you picked. After that, the calendar's own behaviour: whether the days
+  that have passed are crossed off, the day-list row height, the week
+  planner's margin, and the colour the period heading is banded with. See
+  [Holiday eves](#holiday-eves), [View](#view), [Passed days](#passed-days),
+  [Week planner](#week-planner) and [Heading colour](#heading-colour).
 - **Appearance** — the theme, and only the theme: **Follow device** (the
   default, which tracks your device's light / dark preference), **Light**,
   **Dark**, or **Custom**, plus the palette variant within the light and dark
@@ -162,26 +161,106 @@ the country calendar resets the list, because eve names belong to a country.
 A country without the tradition — the United Kingdom names none — has no
 section at all.
 
-### Month cell layout
+### View
 
-**Settings → Calendar → Month view** shows a sample day with all four pieces
-on it. Tap any of its four corners and pick which piece goes there — the
-sample rearranges itself immediately, and so does the calendar behind the
-dialog. The defaults reproduce a printed wall calendar: the date large in the
+The three views are three different pages. A month cell is 47 px wide with
+captions measured to hold a name on one line; a week-planner row is the width
+of the screen with a lane down its left. A size that makes the month grid
+readable leaves the week planner looking half-set — so **how a day is printed
+is answered per view**, not once for the whole app.
+
+**Settings → Calendar → View** leads with a view picker — the same
+**Month / Week / Day list** control as the top menu — and everything under it
+belongs to the view you picked.
+
+> **The week planner and the day list share one answer.** They print the same
+> row from the same code, so a setting moved in one moves in the other; what
+> the third button changes is which of the two the sample shows. A week row is
+> a band and a list row is a line, and both are worth looking at.
+
+#### Where the pieces go
+
+Under the picker is a sample day with every piece on it. Tap any of its four
+quadrants and pick what belongs there — the sample rearranges immediately, and
+so does the calendar behind the dialog.
+
+In the **month view** the four quadrants are the cell's four corners. The
+defaults reproduce a printed wall calendar: the date large in the
 **top-right** corner, the holiday name and the day's names stacked in the
 **bottom-right** one (holiday first), and your note filling the space between.
 
-- **Day number**, **Holiday name** and **Name days** each live in one of the
-  four corners; pieces sharing a corner stack in that order.
+- **Day number**, **Holiday name** and **Name days** each live in one corner;
+  pieces sharing a corner stack in that order.
 - The day number **floats**, so a caption sharing its corner's band flows
   around it — a short name sits beside the number, a long one drops under it.
 - **Your note** has no corner: it takes the room the corners leave, and its
   own control puts it at the top of that space, centred in it, or at the
   bottom.
 
+In the **week planner and the day list** the four quadrants are the row's two
+margins, each with a top and a bottom end: a **lane** on the left, where a
+printed column calendar sets the date, and a **rail** on the right, where it
+sets its marginalia. The defaults are that arrangement — the date at the head
+of the lane with the day's names under it, the week number at the top of the
+rail and the holiday's name along the bottom of it — and the note always takes
+the width between the two.
+
+- The weekday's name travels with the day number wherever it goes.
+- A margin nothing is printed in is **not drawn at all**, so a plain English
+  month — no name days, no week numbers, the odd holiday — gets its full row
+  width for writing instead of a dead gutter down ninety rows.
+
 Captions wrap rather than truncate, and a name is only broken across lines
 when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while
 "Midsommarafton" breaks at a syllable boundary with a hyphen.
+
+#### Face and size
+
+Under the sample is one row per piece: the **face** on its label line, the
+**size** as buttons beneath it. Both are previewed in the sample and on the
+calendar behind the dialog as you change them.
+
+A printed calendar doesn't set its whole page in one font, and neither does
+this one. The five faces are **Almanac** (system serifs, no download),
+**Mono**, **Sans**, **Serif** and **Dyslexic** (OpenDyslexic), and each option
+in the dropdown is set in the face it offers. The defaults are the printed
+look: the date in **Almanac**, the captions and your own text in **Mono**, and
+the week number in the almanac's italic in the strip views and plain in the
+month grid's gutter. Everything else — the month title, the weekday headers,
+the app's own buttons and dialogs — keeps the app font, so changing a face
+restyles the calendar rather than the program around it.
+
+The **day number**, **holiday name**, **name days** and **week number** are
+the almanac's own printing, and their three sizes — **Small**, **Medium**,
+**Large** — are steps around the size each was measured at. **Medium** is that
+measurement (the middle button, and what a fresh install uses), with **Small**
+a fifth smaller and **Large** a quarter bigger.
+
+**Your text** — what you write on a day — has a fourth button, because it is
+sized against the room the view actually leaves it rather than against a fixed
+size:
+
+- **Dynamic** (the default) — a note shrinks as you write, so it always fits
+  the room the day has left over after its number, holiday and name days. Once
+  it is as small as that view allows, the day is full: the next keystroke is
+  refused rather than pushed out of sight. Deleting always works.
+- **Small / Medium / Large** — the text stays at that size no matter how much
+  you write, and the day fills up sooner because it never shrinks.
+
+A note that no longer fits — because you pinned a bigger step, or because it
+was written in a view with more room — is cut off at the last line that fits
+and ends in an ellipsis, so it stops short of the day's captions instead of
+running under them.
+
+A month cell is only 47 px wide, so the caption sizes there are measured
+rather than chosen: a face wider than the default gives the difference back
+automatically, and the longest name day still holds a full line instead of
+being clipped. On **Large** the longest names start breaking across two lines
+— the calendar re-picks its hyphenation points for the size you chose, so a
+long name breaks at a syllable rather than being clipped. The strip views have
+the opposite freedom: their lane widens with the name-day step, so bigger
+captions keep the same number of lines and the note beside them gives up the
+width instead.
 
 ### Passed days
 
@@ -199,8 +278,8 @@ choices to make once it is on:
 
 The mark applies in all three views, and **today is never marked**: the run
 of crosses stops at the day you are in, which is what makes it worth having.
-The sample day in the section above is drawn as a passed day, so the mark you
-pick is previewed there as well as on the calendar behind the dialog.
+The sample day in [View](#view) is drawn as a passed day, so the mark you pick
+is previewed there as well as on the calendar behind the dialog.
 
 ### Week planner
 
@@ -214,8 +293,8 @@ is previewed on the calendar behind the dialog as you change it.
   measured default (the largest date that still leaves a portrait row its
   weekday and a line of names); **Huge** is twice that — a wall-planner date,
   for a week read from across the room. This is the week strip's own step
-  ladder, and the shared **Text size → Day number** scale still applies on top
-  of it.
+  ladder, and the view's own **Day number** size ([View](#view)) still applies
+  on top of it.
 - **Week number** — how the margin phrases it: **Week 34**, **w 34** (the
   printed almanac's abbreviation, and the default) or plain **34**. The
   buttons are labelled with what they print. The number appears on the day
@@ -244,72 +323,6 @@ hairline the heading otherwise carries — a solid band is already an edge.
 The five colours are chosen to hold white text on the band and to stay legible
 as ink in both the light and the dark theme, so the choice does not have to be
 revisited when the theme changes.
-
-### Type
-
-A printed calendar doesn't set its whole page in one font, and neither does
-this one. **Settings → Calendar → Type** picks a face for each part of a day
-independently, previewed in the face itself:
-
-- **Day number** — the date. Defaults to **Almanac**, the bookish serif a
-  printed calendar sets its dates in.
-- **Holiday name** and **Name days** — the almanac's captions. Both default
-  to **Mono**, the app's own font.
-- **Your text** — what you write on a day. Also **Mono** by default.
-
-The five faces are **Almanac** (system serifs, no download), **Mono**,
-**Sans**, **Serif** and **Dyslexic** (OpenDyslexic). Everything else — the
-month title, the weekday headers, the app's own buttons and dialogs — keeps
-the app font, so changing a face restyles the calendar rather than the
-program around it.
-
-A month cell is only 47 px wide, so the caption sizes there are measured
-rather than chosen: a face wider than the default gives the difference back
-automatically, and the longest name day still holds a full line instead of
-being clipped. That measurement is the size each caption _ships_ at — see
-[Text size](#text-size) to change it.
-
-### Text size
-
-**Settings → Calendar → Text size** is one row per part of a day: the sizes as
-buttons — **Small**, **Medium**, **Large** — and a sample of that piece
-printed at the size you picked beside them. The calendar behind the dialog
-re-sets itself as you press, so you can judge the choice on the sample, on the
-calendar, or on both.
-
-**Your text** — what you write on a day — has a fourth button, because it is
-sized against the room a view actually leaves it rather than against a fixed
-size:
-
-- **Dynamic** (the default) — a note shrinks as you write, so it always fits
-  the room the day has left over after its number, holiday and name days. Once
-  it is as small as that view allows, the day is full: the next keystroke is
-  refused rather than pushed out of sight. Deleting always works.
-- **Small / Medium / Large** — the text stays at that size no matter how much
-  you write, and the day fills up sooner because it never shrinks. Each step
-  is scaled to the view it renders in, so a month cell stays legible while the
-  roomier week planner uses its extra space.
-
-A note that no longer fits — because you pinned a bigger step, or because it
-was written in a view with more room — is cut off at the last line that fits
-and ends in an ellipsis, so it stops short of the day's captions instead of
-running under them.
-
-The **day number**, **holiday name**, **name days** and **week number** are
-the almanac's own printing, and their three buttons are steps around the size
-each was measured at. **Medium** is that measurement — the middle button, and
-what a fresh install uses — with **Small** a fifth smaller and **Large** a
-quarter bigger.
-
-The sizes apply in all three views at once, each scaled from what that view
-prints the piece at, so making the date bigger does not turn the month grid
-into the day list. In the month view the captions have only a 47 px column to
-sit in, so on Large the longest names start breaking across two lines — the
-calendar re-picks its hyphenation points for the size you chose, so a long
-name breaks at a syllable rather than being clipped. The week planner has the
-opposite freedom: its date lane widens with the holiday and name-day steps, so
-bigger captions keep the same number of lines and the note beside them gives
-up the width instead.
 
 ## Install as an app
 

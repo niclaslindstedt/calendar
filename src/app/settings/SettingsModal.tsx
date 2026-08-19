@@ -6,7 +6,7 @@
 // Save on the right.
 //
 // The look settings the dialog owns (country calendar, the display toggles,
-// the calendar's faces and text sizes, and the theme) are edited against a
+// how each view prints a day, and the theme) are edited against a
 // local `draft` and only committed on Save: while open the draft streams to
 // the app through `onPreview`, so the calendar behind the dialog previews
 // live; Cancel drops it (the persisted look snaps back) and Save writes it.
@@ -49,11 +49,10 @@ import { AppearanceSection } from "./AppearanceSection.tsx";
 import { CalendarSection } from "./CalendarSection.tsx";
 import { DeveloperSection } from "./DeveloperSection.tsx";
 import { EvesSection } from "./EvesSection.tsx";
-import { FontsSection } from "./FontsSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
 import { StorageSection, type StorageActions } from "./StorageSection.tsx";
-import { TextSizeSection } from "./TextSizeSection.tsx";
+import { ViewStyleSection } from "./ViewStyleSection.tsx";
 import { TabSidebar, SettingsHeader, type TabDef } from "./tabs.tsx";
 
 export type { StorageActions };
@@ -278,18 +277,21 @@ export function SettingsModal({
               />
             )}
             {/* One tab for how the calendar reads: which eves the country
-                works, the cell's arrangement, the day list's rows, the faces
-                each piece is set in, and how big each of them is printed.
-                The eves lead because they are the one group whose contents
-                follow the country picked on the General tab — and the only
-                one that changes what the calendar *says* rather than how it
-                looks. */}
+                works, how each view prints a day, and the handful of
+                behaviours that are not a typographic choice — the passed-day
+                stroke, the two row heights, the week planner's margin, the
+                heading band. The eves lead because they are the one group
+                whose contents follow the country picked on the General tab —
+                and the only one that changes what the calendar *says* rather
+                than how it looks. */}
             {activeTab === "calendar" && (
               <>
                 <EvesSection look={draft.look} onUpdate={updateDraftLook} />
+                <ViewStyleSection
+                  look={draft.look}
+                  onUpdate={updateDraftLook}
+                />
                 <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
-                <FontsSection look={draft.look} onUpdate={updateDraftLook} />
-                <TextSizeSection look={draft.look} onUpdate={updateDraftLook} />
               </>
             )}
             {activeTab === "storage" && (

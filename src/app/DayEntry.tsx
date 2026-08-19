@@ -48,6 +48,33 @@ type Props = {
   className?: string;
 };
 
+/** The day's text as a *sample* prints it: at the size the curve (or the
+ *  pinned step) asks for, in the chosen face, with no measuring against a
+ *  slot. What the settings dialog's samples use — they are showing what a
+ *  setting does rather than what one cell has room for, so the shrink-to-fit
+ *  pass that makes {@link DayEntry} a real writing surface would only be
+ *  measuring a box nobody is looking at. */
+export function DayEntryText({
+  text,
+  font,
+  size,
+  className,
+}: {
+  text: string;
+  font: EntryFontOptions;
+  size: EntryTextSize;
+  className?: string;
+}) {
+  return (
+    <div
+      className={`cal-entry cal-font-entry ${className ?? ""}`}
+      style={{ fontSize: `${resolveEntryFontPx(text.length, font, size)}px` }}
+    >
+      {text}
+    </div>
+  );
+}
+
 export function DayEntry({
   text,
   editing,

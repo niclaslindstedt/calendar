@@ -28,7 +28,7 @@ import {
 } from "@niclaslindstedt/oss-framework/theme";
 
 import { DayListView } from "./app/DayListView.tsx";
-import { calFontVars, loadCalFonts } from "./app/fonts.ts";
+import { loadCalFonts } from "./app/fonts.ts";
 import { HolidaysView, type HolidayMode } from "./app/HolidaysView.tsx";
 import { MonthGridView } from "./app/MonthGridView.tsx";
 import { NameDaySearch } from "./app/NameDaySearch.tsx";
@@ -61,20 +61,19 @@ import { useNamespaces } from "./app/useNamespaces.ts";
 import { pinShell } from "./app/shellScroll.ts";
 import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
-  calFonts,
   clampVacationDays,
   effectiveToggles,
   eveChoices,
   headerInkOf,
   monthCellLayout,
   pastMarkOf,
-  textScales,
+  stripLayoutOf,
   useAppSettings,
   weekDateSizeFor,
   weekFormatFor,
   weekRowsOf,
 } from "./app/useAppSettings.ts";
-import { textScaleVars } from "./app/textSize.ts";
+import { facesOf, styleVars, stylesSignature } from "./app/viewStyle.ts";
 import { status } from "./output.ts";
 
 // The default look follows the device: `"system"` tracks the OS light/dark
@@ -105,43 +104,30 @@ export function App() {
   const liveAppearance = preview?.appearance ?? appearance;
   useApplyTheme(liveAppearance);
 
-  // The calendar's four faces, projected onto `<html>` as CSS variables (the
-  // `.cal-font-*` classes in `src/styles.css` read them). On `<html>` rather
-  // than on the shell below so the settings dialog's cell preview — which
-  // renders through the same `MonthCellFrame` — is painted in the faces it is
+  // How each piece of a day is set, in each view, projected onto `<html>` as
+  // CSS variables — one prefixed pair per scope, which the `.cal-scope-*`
+  // classes in `src/styles.css` map down onto the names the `.cal-font-*` /
+  // `.cal-size-*` rules paint with (see `viewStyle.ts`).
+  //
+  // On `<html>` rather than on the shell below so the settings dialog's
+  // samples — which render through the same `MonthCellFrame` and the same
+  // strip margins the views use — are painted at the settings they are
   // previewing, wherever the modal ends up in the tree.
-  const fonts = calFonts(live);
-  useEffect(() => {
-    const vars = calFontVars(fonts);
-    const root = document.documentElement;
-    for (const [name, stack] of Object.entries(vars)) {
-      root.style.setProperty(name, stack);
-    }
-    loadCalFonts(fonts);
-    // Compared by value: the four ids are what matter, not the object.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fonts.day, fonts.holidays, fonts.nameDays, fonts.entry]);
-
-  // …and the sizes those pieces are set at, on the same element and for the
-  // same reason: the `.cal-size-*` rules multiply each site's base size by
-  // them, and the settings dialog's sample cell has to be painted at the size
-  // it is previewing wherever the modal sits in the tree.
-  // Memoized, like the layout and the toggles below: these objects are props
-  // of the memoized views, so rebuilding one on every render would re-render
-  // three periods' worth of day cells for nothing.
-  const scales = useMemo(
-    () => textScales(live),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [live.sizeDay, live.sizeHolidays, live.sizeNameDays, live.sizeWeek],
-  );
+  //
+  // Keyed on the signature rather than the object: the draft is rebuilt on
+  // every edit and the views these feed are memoized, so comparing by value
+  // is what keeps an unrelated setting from re-rendering three periods' worth
+  // of day cells.
+  const styles = live.styles;
+  const signature = stylesSignature(styles);
   useEffect(() => {
     const root = document.documentElement;
-    for (const [name, scale] of Object.entries(textScaleVars(scales))) {
-      root.style.setProperty(name, scale);
+    for (const [name, value] of Object.entries(styleVars(styles))) {
+      root.style.setProperty(name, value);
     }
-    // Compared by value, like the faces above.
+    loadCalFonts(facesOf(styles));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scales.day, scales.holidays, scales.nameDays, scales.week]);
+  }, [signature]);
 
   // Keep the safe-area lengths on `<html>` current. `main.tsx` publishes them
   // before the first render; they change afterwards when the device rotates
@@ -350,6 +336,18 @@ export function App() {
       live.monthNote,
     ],
   );
+  // The strip row's arrangement, shared by the week planner and the day list
+  // — they print the same row at two heights (`stripRow.tsx`).
+  const stripLayout = useMemo(
+    () => stripLayoutOf(live),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      live.stripDaySlot,
+      live.stripNameDaySlot,
+      live.stripHolidaySlot,
+      live.stripWeekSlot,
+    ],
+  );
   // Crossing off the days that have gone — off unless it has been turned on
   // (Settings → Calendar → Passed days). Resolved once here, from the live
   // look, so the dialog previews the stroke as it is chosen.
@@ -401,11 +399,12 @@ export function App() {
           pack={pack}
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
+          layout={stripLayout}
           rowMode={live.listRows}
           weekFormat={weekFormat}
           headerInk={headerInk}
           pastMark={pastMark}
-          textSize={live.textSize}
+          textSize={styles.strip.entry.size}
           doc={store.doc}
           editingDay={editing}
           onEditDay={onEditDay}
@@ -425,12 +424,13 @@ export function App() {
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
         showDayOfYear={live.weekDayOfYear}
+        layout={stripLayout}
         rowMode={weekRows}
         weekFormat={weekFormat}
         dateSize={weekDateSize}
         headerInk={headerInk}
         pastMark={pastMark}
-        textSize={live.textSize}
+        textSize={styles.strip.entry.size}
         doc={store.doc}
         editingDay={editing}
         onEditDay={onEditDay}
@@ -451,8 +451,9 @@ export function App() {
         layout={cellLayout}
         headerInk={headerInk}
         pastMark={pastMark}
-        textSize={live.textSize}
-        scales={scales}
+        textSize={styles.month.entry.size}
+        nameDayScale={styles.month.nameDays.size}
+        holidayScale={styles.month.holidays.size}
         doc={store.doc}
         editingDay={editing}
         onEditDay={onEditDay}

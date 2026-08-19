@@ -96,9 +96,16 @@ export const sv: Catalog = {
     vacationOpenPlanner: "Öppna semesterplaneraren",
     vacationOpenPlannerHint:
       "Sparar dina inställningar och öppnar planeraren för året du tittar på. Du kan också trycka på en helgdags namn i valfri vy.",
-    monthCell: "Månadsvy",
-    monthCellHint:
-      "Tryck på ett hörn i exempeldagen för att välja vad som ska stå där. Standarden återger en tryckt väggkalender: siffran uppe till höger, helgdagen och dagens namn staplade nere till höger.",
+    viewStyle: "Vy",
+    viewStyleHint:
+      "Hur varje vy trycker en dag. Välj vy, tryck sedan på en fjärdedel av exempeldagen för att välja vad som står där, och ställ in varje del nedanför. Exemplet är den riktiga varan — varje ändring syns i det direkt.",
+    viewStylePicker: "Vy att ställa in",
+    viewStyleShared:
+      "Veckoplaneraren och daglistan trycker samma rad och delar därför dessa inställningar — väljaren byter bara vilken av dem exemplet visar.",
+    stripLaneTop: "Vänstermarginal, överst",
+    stripLaneBottom: "Vänstermarginal, nederst",
+    stripRailTop: "Högermarginal, överst",
+    stripRailBottom: "Högermarginal, nederst",
     cellDayNumber: "Datumsiffra",
     cellTopRight: "Uppe till höger",
     cellTopLeft: "Uppe till vänster",
@@ -113,19 +120,15 @@ export const sv: Catalog = {
     cellNoteMiddle: "Mitten",
     cellNoteBottom: "Nederst",
     fonts: "Typsnitt",
-    fontsHint:
-      "En tryckt kalender sätter sina delar i olika typsnitt. Välj ett för varje; hur stora de sätts bestäms i nästa avsnitt.",
     fontYourText: "Din text",
     fontPrint: "Almanacka",
     fontSerif: "Serif",
     fontSans: "Sans",
     fontMono: "Mono",
     fontDyslexic: "Dyslexi",
-    textSize: "Textstorlek",
-    textSizeHint:
-      "Hur stor varje del av en dag trycks. Almanackans egna delar är uppmätta för att få plats i en månadsruta, så Mellan är den uppmätta storleken — välj Stor när du hellre vill läsa en del än få in den. Provet bredvid varje rad trycks i den storlek du valt.",
+    textSize: "Storlek",
     textSizeEntryHint:
-      "Dynamisk krymper texten medan du skriver så att den alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek. Oavsett vilket tar en dag bara emot det som får plats — när den är full ryms ingen mer text.",
+      "Din text på Dynamisk krymper medan du skriver så att en anteckning alltid får plats i dagen; de fasta stegen ger alla anteckningar samma storlek. Oavsett vilket tar en dag bara emot det som får plats — när den är full ryms ingen mer text.",
     textSizeDynamic: "Dynamisk",
     textSizeSmall: "Liten",
     textSizeMedium: "Mellan",
