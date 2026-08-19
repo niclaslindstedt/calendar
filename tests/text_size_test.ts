@@ -1,32 +1,22 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The sizes each part of a day is set at: the three steps the buttons offer,
-// what a stored value off them resolves to, and the hyphenation the month
-// cell's caption band needs once the reader has grown it.
+// The ladder the almanac's pieces are sized on: the three steps the buttons
+// offer, what a stored value off them resolves to, and the hyphenation the
+// month cell's caption band needs once the reader has grown it. Which piece of
+// which view sits on which step is `view_style_test.ts`.
 import { describe, expect, it } from "vitest";
 
 import { MIN_HYPHENATED_LETTERS } from "../src/app/locale/hyphenate.ts";
 import {
   DEFAULT_TEXT_SCALE,
-  DEFAULT_TEXT_SCALES,
-  SCALED_PIECES,
   DEFAULT_TEXT_STEP,
   TEXT_SCALES,
-  TEXT_SCALE_VAR,
   TEXT_STEPS,
   TEXT_STEP_SCALE,
   clampTextScale,
   minHyphenatedLetters,
-  textScaleVars,
   textStepOf,
   textStepScale,
 } from "../src/app/textSize.ts";
-import {
-  DEFAULT_LOOK,
-  LOOK_KEYS,
-  TEXT_SCALE_KEY,
-  textScales,
-  updateLook,
-} from "../src/app/useAppSettings.ts";
 
 describe("the size ladder", () => {
   it("climbs, and has the measured size as a step", () => {
@@ -44,24 +34,6 @@ describe("the size ladder", () => {
     expect(TEXT_STEP_SCALE[DEFAULT_TEXT_STEP]).toBe(DEFAULT_TEXT_SCALE);
     expect(TEXT_STEP_SCALE.small).toBeLessThan(DEFAULT_TEXT_SCALE);
     expect(TEXT_STEP_SCALE.large).toBeGreaterThan(DEFAULT_TEXT_SCALE);
-  });
-
-  it("ships every piece at the measured size", () => {
-    for (const piece of SCALED_PIECES) {
-      expect(DEFAULT_TEXT_SCALES[piece]).toBe(DEFAULT_TEXT_SCALE);
-      expect(DEFAULT_LOOK[TEXT_SCALE_KEY[piece]]).toBe(DEFAULT_TEXT_SCALE);
-    }
-  });
-
-  it("previews a size rather than saving it straight away", () => {
-    // The steps are judged against the calendar behind the dialog, so every
-    // one of their keys has to travel in the draft.
-    for (const piece of SCALED_PIECES) {
-      expect(LOOK_KEYS).toContain(TEXT_SCALE_KEY[piece]);
-    }
-    const bigger = updateLook(DEFAULT_LOOK, "sizeNameDays", 1.25);
-    expect(textScales(bigger).nameDays).toBe(1.25);
-    expect(textScales(bigger).day).toBe(DEFAULT_TEXT_SCALE);
   });
 });
 
@@ -117,29 +89,6 @@ describe("the buttons", () => {
     expect(textStepOf(undefined)).toBe(DEFAULT_TEXT_STEP);
     expect(textStepOf("large")).toBe(DEFAULT_TEXT_STEP);
     expect(textStepOf(NaN)).toBe(DEFAULT_TEXT_STEP);
-  });
-});
-
-describe("textScaleVars", () => {
-  it("publishes one variable per piece", () => {
-    const vars = textScaleVars(DEFAULT_TEXT_SCALES);
-    expect(Object.keys(vars).sort()).toEqual(
-      SCALED_PIECES.map((piece) => TEXT_SCALE_VAR[piece]).sort(),
-    );
-    for (const value of Object.values(vars)) expect(value).toBe("1");
-  });
-
-  it("snaps a stored value onto the ladder on the way out", () => {
-    const vars = textScaleVars({ ...DEFAULT_TEXT_SCALES, day: 7 });
-    expect(vars[TEXT_SCALE_VAR.day]).toBe(
-      String(TEXT_SCALES[TEXT_SCALES.length - 1]),
-    );
-  });
-
-  it("names four distinct variables", () => {
-    expect(new Set(Object.values(TEXT_SCALE_VAR)).size).toBe(
-      SCALED_PIECES.length,
-    );
   });
 });
 

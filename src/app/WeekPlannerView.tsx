@@ -41,7 +41,9 @@ import { CONTENT_BOTTOM_PAD, LIST_BOTTOM_PAD } from "./layout.ts";
 import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
-import { StripLane, StripNote, StripRail } from "./stripRow.tsx";
+import { marginReserved, type StripLayout } from "./stripLayout.ts";
+import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { CalendarDoc } from "./types.ts";
 import {
@@ -62,6 +64,9 @@ type Props = {
   showNameDays: boolean;
   /** Whether each row prints the day's ordinal in the year (1–366). */
   showDayOfYear: boolean;
+  /** Which margin each piece of a row is printed in — shared with the day
+   *  list, which prints the same row (Settings → Calendar → View). */
+  layout: StripLayout;
   /** Rows all one height, or grown by what is written in them. */
   rowMode: WeekRowMode;
   /** How the margin prints a week number: "Week 34", "w 34", or "34". */
@@ -97,6 +102,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   showWeekNumbers,
   showNameDays,
   showDayOfYear,
+  layout,
   rowMode,
   weekFormat,
   dateSize,
@@ -132,25 +138,31 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   const mid = parseDayKey(days[3]?.key ?? days[0].key) ?? first;
   const grows = rowMode === "dynamic";
 
-  // Whether the right-hand rail is rendered at all, decided once for the whole
-  // week rather than per row. A rail that came and went down the strip would
-  // give the note seven different widths and seven ragged right edges — the
-  // same reason the lane on the left is a width rather than a shrink-wrap. So
-  // it is reserved when the week has anything to print in it (a week number,
-  // or any holiday among its seven days) and left out entirely when it has
+  // Whether each margin is rendered at all, decided once for the whole week
+  // rather than per row. A margin that came and went down the strip would give
+  // the note seven different widths and seven ragged edges — the same reason
+  // the lane is a width rather than a shrink-wrap. So each is reserved when
+  // the week has something to print in it and left out entirely when it has
   // not, which is what keeps a plain English week from carrying 64 px of dead
-  // right margin on every row.
-  const rail = useMemo(
-    () =>
-      showWeekNumbers ||
-      days.some((cell) => {
+  // right margin on every row. What lands in which margin is the reader's
+  // arrangement, so the question is asked of that rather than of a fixed idea
+  // of what a rail holds.
+  const has = useMemo(
+    () => ({
+      day: true,
+      nameDays: showNameDays,
+      week: showWeekNumbers,
+      holidays: days.some((cell) => {
         const parts = parseDayKey(cell.key);
         return parts
           ? holidayFor(pack, parts.year, parts.month, parts.day) !== null
           : false;
       }),
-    [days, pack, showWeekNumbers],
+    }),
+    [days, pack, showNameDays, showWeekNumbers],
   );
+  const lane = marginReserved(layout, "lane", has) || showDayOfYear;
+  const rail = marginReserved(layout, "rail", has);
 
   const heading = (
     <PeriodHeading
@@ -186,6 +198,24 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     // line: a coloured heading is a solid edge, and a rule immediately under
     // it reads as a stray hairline rather than as the start of a week.
     const bandedTop = i === 0 && headerInk !== null;
+    const stripDay: StripDay = {
+      layout,
+      dayKey: cell.key,
+      day: parts?.day ?? 0,
+      pack,
+      weekday,
+      names,
+      holiday,
+      weekNumber: showWeekNumbers && opens ? weekNumber(pack, cell.key) : null,
+      weekFormat,
+      red,
+      markDate: marked === "date" ? pastMark.style : "none",
+      dateBase: weekDateBase(dateSize),
+      ink: headerInk,
+      showDayOfYear,
+      onOpenNames,
+      onOpenHolidays: () => onOpenHolidays(year),
+    };
     return (
       <div
         key={cell.key}
@@ -209,18 +239,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
           cell.isToday ? "bg-surface-2" : ""
         }`}
       >
-        <StripLane
-          dayKey={cell.key}
-          day={parts?.day ?? 0}
-          pack={pack}
-          weekday={weekday}
-          names={names}
-          red={red}
-          markDate={marked === "date" ? pastMark.style : "none"}
-          dateBase={weekDateBase(dateSize)}
-          showDayOfYear={showDayOfYear}
-          onOpenNames={onOpenNames}
-        />
+        {lane && <StripLane day={stripDay} />}
 
         <StripNote>
           <DayEntry
@@ -237,17 +256,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
           />
         </StripNote>
 
-        {rail && (
-          <StripRail
-            weekNumber={
-              showWeekNumbers && opens ? weekNumber(pack, cell.key) : null
-            }
-            weekFormat={weekFormat}
-            holiday={holiday}
-            ink={headerInk}
-            onOpenHolidays={() => onOpenHolidays(year)}
-          />
-        )}
+        {rail && <StripRail day={stripDay} />}
 
         {/* The whole-row stroke — drawn over the row's content, and
             transparent to taps so the day still opens under it. */}
@@ -263,7 +272,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   return grows ? (
     <div
       {...DECK_SCROLLER}
-      className="mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6"
+      className={`${SCOPE_CLASS.strip} mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6`}
     >
       {heading}
       <div>{strip}</div>
@@ -271,7 +280,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     </div>
   ) : (
     <div
-      className="mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden px-3 sm:px-6"
+      className={`${SCOPE_CLASS.strip} mx-auto flex h-full w-full max-w-3xl flex-col overflow-hidden px-3 sm:px-6`}
       style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
     >
       {heading}

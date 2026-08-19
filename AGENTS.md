@@ -233,13 +233,26 @@ The app owns the domain and the stores ("store stays in the app"):
   `DayEntry`'s `bounded` prop — set where the surface clips (month cells, week
   rows, a fixed-height day-list row), clear where the row grows with its
   text.
-- `src/app/textSize.ts` — how big the almanac's _own_ pieces are printed (the
-  date, a holiday's name, the day's names, the week number). Each is a scale
-  of the measured default rather than a px value, published to `<html>` as one
-  CSS variable per piece (`App.tsx`) and multiplied by the site's own base
-  size in `src/styles.css` (`.cal-size-*`, which read a `--cal-base` set at
-  the call site). Your own text is not one of them — it is sized by
-  `entryFont.ts` against the room a view leaves it.
+- `src/app/viewStyle.ts` — how each piece of a day is _set_ (its face and its
+  size), answered **per view**: a month cell is 47 px wide and a strip row is
+  the width of the screen, so one answer could not serve both. Two **scopes**
+  — `month` for the grid, `strip` for the week planner and the day list, which
+  print the same row — each publish one prefixed CSS variable per piece to
+  `<html>` (`App.tsx`), and the `.cal-scope-*` classes in `src/styles.css` map
+  a scope's set down onto the unprefixed names `.cal-font-*` / `.cal-size-*`
+  paint with. A view carries its scope's class; so does the settings sample,
+  which is why the sample previews the view it names. **Add a piece to one
+  scope and you add it to both** — a variable a scope leaves unpublished falls
+  through to the other view's answer.
+- `src/app/textSize.ts` — the ladder those sizes sit on: three steps around
+  the measured default, as a scale rather than a px value (the shipped size of
+  a piece is a measurement — see "What to check" below). Your own text is not
+  on it — it is sized by `entryFont.ts` against the room a view leaves it.
+- `src/app/stripLayout.ts` — which margin each piece of a strip row is printed
+  in, and at which end: a `lane` on the left and a `rail` on the right, each
+  with a top and a bottom, which is what lets the settings designer be the
+  same tap-a-quadrant control the month cell uses. Shared by the two strip
+  views for the same reason their sizes are.
 - `src/app/monthImage.ts` — the month-image seam. Returns `null` today;
   yearly image packs (2026, 2027, …) plug in here later, with a `large`
   (month view) and `small` (day list) variant per month.
@@ -330,7 +343,7 @@ infer from the diff.
   with `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in
   the cell's computed font before changing it. Today: 7.5 px on the 45.8 px
   line a band gets at 393 px, widest name "Bartolomeus" at 42.1 px. The reader
-  can scale that default (Settings → Calendar → Text size), which is the one
+  can scale that default (Settings → Calendar → View), which is the one
   sanctioned way past it: the measurement is what the cell _ships_ at, so it
   stays the ladder's middle stop and the default.
 - **A soft hyphen is an opportunity, and a greedy line breaker takes the last
@@ -344,9 +357,21 @@ infer from the diff.
   Large breaks "Henri-etta" where one on Medium leaves it whole.
 - **The month cell's arrangement is a setting, not a layout.** Which corner
   holds the number, the holiday and the name days comes from
-  Settings → Calendar; `MonthCellFrame` (`src/app/monthCell.tsx`) is the one
-  place that turns those choices into bands, and the settings preview renders
-  through it too — so a change there has to be checked in both.
+  Settings → Calendar → View; `MonthCellFrame` (`src/app/monthCell.tsx`) is the
+  one place that turns those choices into bands, and the settings sample
+  renders through it too — so a change there has to be checked in both. The
+  same holds for the strip row: `stripRow.tsx` turns `stripLayout.ts`'s four
+  slots into the two margins, and the sample renders through that.
+- **A caption beside a number is aligned on its capitals, not on its line
+  box.** `align-items: start` aligns line boxes, and a line box carries the
+  font's half-leading and its ascender-to-cap gap — both a share of the font
+  size — so the strip lane's 14 px weekday floated 2 px above a 20 px date and
+  4 px above a 24 px one, drifting further as the reader grew the date (which
+  reaches 3 rem). No padding fixes it: the amount is a font metric and the
+  face is a setting. `text-box-trim: trim-start` with `text-box-edge: cap`
+  makes a box's top edge its capitals' top, so aligning the boxes aligns the
+  type; `tests/layout_test.ts` pins the rule. The trimmed element has to be a
+  block for it to apply.
 - **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
   header-action size.
 - **The safe areas are respected — and the arithmetic on them is not CSS's.**

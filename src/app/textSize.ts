@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// How big each part of a day is set — what Settings → Calendar → Text size
-// edits.
+// The ladder the almanac's pieces are sized on — the three steps the buttons
+// in Settings → Calendar → View offer, and what a stored value off them
+// resolves to. *Which* piece of *which* view is on which step is
+// `viewStyle.ts`'s question; this is only the rungs.
 //
 // The almanac's own pieces (the date, a holiday's name, the day's names, the
 // week number) each render at a *measured* default: the month cell's caption
@@ -10,9 +12,10 @@
 // value: one ladder of steps that means the same thing wherever the piece is
 // drawn, with 1 — the measured size — as its middle and its default.
 //
-// The scales reach the views as CSS variables on `<html>` (`App.tsx` writes
-// them, `src/styles.css` multiplies each site's base size by them), so a view
-// paints at the chosen size without threading a number through every cell.
+// The scales reach the views as CSS variables on `<html>` (`viewStyle.ts`
+// publishes them per view, `src/styles.css` multiplies each site's base size
+// by them), so a view paints at the chosen size without threading a number
+// through every cell.
 // The one place the number is needed in JS is the month cell's hyphenation:
 // fewer letters fit a caption line as the caption grows, and the break points
 // have to be seeded before layout (see `minHyphenatedLetters`).
@@ -22,11 +25,6 @@
 // leaves it, so its setting picks a mode on that curve, not a multiplier.
 
 import { MIN_HYPHENATED_LETTERS } from "./locale/hyphenate.ts";
-
-/** The pieces of a day whose size is a scale of a measured default. */
-export const SCALED_PIECES = ["day", "holidays", "nameDays", "week"] as const;
-
-export type ScaledPiece = (typeof SCALED_PIECES)[number];
 
 /** The steps a piece is set at, and the buttons that set them. Three, named
  *  rather than numbered, because "which of these is too small for me" is
@@ -64,25 +62,6 @@ export const TEXT_SCALES: readonly number[] = TEXT_STEPS.map(
 /** The measured size — the middle step, and what every piece ships at. */
 export const DEFAULT_TEXT_SCALE = TEXT_STEP_SCALE[DEFAULT_TEXT_STEP];
 
-/** The scale each piece is set at. */
-export type TextScales = Record<ScaledPiece, number>;
-
-export const DEFAULT_TEXT_SCALES: TextScales = {
-  day: DEFAULT_TEXT_SCALE,
-  holidays: DEFAULT_TEXT_SCALE,
-  nameDays: DEFAULT_TEXT_SCALE,
-  week: DEFAULT_TEXT_SCALE,
-};
-
-/** The CSS variable each piece's scale is published as, and `src/styles.css`
- *  multiplies the piece's base size by. */
-export const TEXT_SCALE_VAR: Record<ScaledPiece, string> = {
-  day: "--cal-size-day",
-  holidays: "--cal-size-holiday",
-  nameDays: "--cal-size-nameday",
-  week: "--cal-size-week",
-};
-
 /** The scale a stored value resolves to: the nearest step on the ladder, and
  *  the measured size for anything a hand-edited document might carry. Every
  *  read goes through here, so a scale off the ladder can never reach the CSS
@@ -110,15 +89,6 @@ export function textStepOf(value: unknown): TextStep {
 /** The scale a button sets. */
 export function textStepScale(step: TextStep): number {
   return TEXT_STEP_SCALE[step] ?? DEFAULT_TEXT_SCALE;
-}
-
-/** The `<html>` variables for a set of scales — what `App.tsx` writes. */
-export function textScaleVars(scales: TextScales): Record<string, string> {
-  const vars: Record<string, string> = {};
-  for (const piece of SCALED_PIECES) {
-    vars[TEXT_SCALE_VAR[piece]] = String(clampTextScale(scales[piece]));
-  }
-  return vars;
 }
 
 /** The letter count above which a month-cell caption word is offered soft

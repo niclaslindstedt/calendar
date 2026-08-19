@@ -138,10 +138,9 @@ body {
   font-family: var(--cal-serif);
 }
 
-/* The four settable faces (Settings → Calendar). `App.tsx` writes each
-   variable onto `<html>` from the chosen face; the fallback in each `var()`
-   is what the piece was set in before the faces became a setting, so a
-   document from an older build renders unchanged until it is edited. */
+/* The settable faces (Settings → Calendar → View). The fallback in each
+   `var()` is what the piece was set in before the faces became a setting, so
+   a page painted before the variables land renders unchanged. */
 .cal-font-day {
   font-family: var(--cal-font-day, var(--cal-serif));
 }
@@ -151,8 +150,58 @@ body {
 .cal-font-nameday {
   font-family: var(--cal-font-nameday, inherit);
 }
+.cal-font-week {
+  font-family: var(--cal-font-week, var(--cal-serif));
+}
 .cal-font-entry {
   font-family: var(--cal-font-entry, inherit);
+}
+
+/* …resolved per view. The month grid's cells and the strip views' rows are
+   different enough pages that one answer could not serve both (a caption
+   measured to fit a 47 px month cell leaves a week row looking half-set), so
+   the settings are kept per **scope** — `month` for the grid, `strip` for the
+   week planner and the day list, which print the same row at two heights.
+
+   `App.tsx` publishes one prefixed pair per scope onto `<html>`
+   (`src/app/viewStyle.ts` names them) and the two classes below map a scope's
+   pair down onto the unprefixed names every `.cal-font-*` / `.cal-size-*` rule
+   already paints with. A view carries the class of the scope it is printed
+   under, so the same cell markup renders at the grid's settings in the grid
+   and at the strip's in the week planner — and the settings dialog's sample
+   renders at the settings of whichever view it is previewing, by carrying
+   that view's class, wherever the modal sits in the tree.
+
+   Every piece is mapped in both blocks. A piece left out would fall through
+   to whatever the enclosing scope had set, which inside the settings dialog
+   is the *other* view's answer. */
+.cal-scope-month {
+  --cal-font-day: var(--cal-month-font-day, var(--cal-serif));
+  --cal-font-holiday: var(--cal-month-font-holiday, inherit);
+  --cal-font-nameday: var(--cal-month-font-nameday, inherit);
+  --cal-font-week: var(--cal-month-font-week, inherit);
+  --cal-font-entry: var(--cal-month-font-entry, inherit);
+  --cal-size-day: var(--cal-month-size-day, 1);
+  --cal-size-holiday: var(--cal-month-size-holiday, 1);
+  --cal-size-nameday: var(--cal-month-size-nameday, 1);
+  --cal-size-week: var(--cal-month-size-week, 1);
+  --cal-nameday-scale: var(--cal-month-nameday-scale, 1);
+  --cal-holiday-scale: var(--cal-month-holiday-scale, 1);
+  --cal-date-em: var(--cal-month-date-em, 1.35);
+}
+.cal-scope-strip {
+  --cal-font-day: var(--cal-strip-font-day, var(--cal-serif));
+  --cal-font-holiday: var(--cal-strip-font-holiday, inherit);
+  --cal-font-nameday: var(--cal-strip-font-nameday, inherit);
+  --cal-font-week: var(--cal-strip-font-week, var(--cal-serif));
+  --cal-font-entry: var(--cal-strip-font-entry, inherit);
+  --cal-size-day: var(--cal-strip-size-day, 1);
+  --cal-size-holiday: var(--cal-strip-size-holiday, 1);
+  --cal-size-nameday: var(--cal-strip-size-nameday, 1);
+  --cal-size-week: var(--cal-strip-size-week, 1);
+  --cal-nameday-scale: var(--cal-strip-nameday-scale, 1);
+  --cal-holiday-scale: var(--cal-strip-holiday-scale, 1);
+  --cal-date-em: var(--cal-strip-date-em, 1.35);
 }
 
 /* The month cell's two caption bands. The size is a measured constant, not a
@@ -220,7 +269,9 @@ body {
      billed for (`.cal-strip-date`), so the two can't disagree: the size the
      view sets the date at, times the reader's day-number scale, times the
      room that face's widest two-digit day needs (`DATE_COLUMN_EM` in
-     `src/app/fonts.ts`, published as `--cal-date-em`).
+     `src/app/fonts.ts`, published per view as `--cal-<scope>-date-em` and
+     mapped to `--cal-date-em` by the scope classes above — the date's face is
+     a per-view setting, so what its digits need is too).
 
      The scale belongs in here because the *font* is scaled by it: a column
      billed at one size while the digits are set at another is exactly how a
@@ -276,6 +327,47 @@ body {
    rather than the number running into the weekday. */
 .cal-strip-date {
   width: max(var(--cal-date-col), calc(2ch + 0.25em));
+}
+
+/* The lane's first line: the date with the weekday beside it — and *beside*
+   means their capitals line up.
+
+   `align-items: start` cannot do that. It aligns the two **line boxes**, and a
+   line box is not the type: it carries the font's half-leading and the gap
+   between its ascender and its capitals, and both are a share of the font
+   size. So the 14 px weekday sat 2 px above a 20 px date in the day list and
+   4 px above a 24 px one in the week planner — and the drift grew with the
+   date, which is a setting that reaches 3 rem (the week planner's Date size)
+   and is multiplied again by the day number's own scale. Measured with
+   `canvas.measureText` against each box's baseline, per AGENTS.md: at 60 px
+   the weekday floated roughly ten pixels clear of the number it belongs to.
+
+   No amount of padding fixes that, because the number to subtract is a font
+   metric — it differs per face (the date's face is a setting) and per size, so
+   any constant would be fitted to one face at one size. `text-box-trim` is the
+   feature that exists for exactly this: trimmed to `cap`, a box's top edge *is*
+   the top of its capitals, so aligning the two boxes aligns the two caps at any
+   size in any face.
+
+   Both boxes are blocks carrying the type they hold, which is what the trim
+   needs — the same reason the date's column carries its face and size for the
+   `ch` above. An inline span takes no trim, and the wrapper inside the column
+   is the passed-day stroke's box rather than the type's, so it would be the
+   wrong box to measure either way.
+
+   What is left is ~1 px of the weekday's lowercase ascenders ("Saturday") over
+   the digits' cap height — which is not drift but how a serif is drawn, and
+   what a printed almanac shows too.
+
+   Engines without `text-box-trim` (before Safari 18.2 / Chrome 133) keep the
+   line-box alignment this replaces: the same rendering the strip shipped with,
+   no worse for the wait. */
+@supports (text-box-edge: cap alphabetic) {
+  .cal-strip-date,
+  .cal-strip-weekday {
+    text-box-trim: trim-start;
+    text-box-edge: cap alphabetic;
+  }
 }
 
 /* The rule where one week ends and the next begins. In a view that shows a
@@ -359,10 +451,10 @@ body {
     justify-content: flex-end;
     column-gap: 0.5rem;
   }
-  /* The holiday is pushed to the bottom of a tall rail with `mt-auto`, and an
-     auto margin outranks the alignment above — so it is cleared here rather
-     than fought with. */
-  .cal-week-row .cal-strip-holiday {
+  /* The rail's bottom end is pushed to the bottom of a tall rail with
+     `mt-auto`, and an auto margin outranks the alignment above — so it is
+     cleared here rather than fought with. */
+  .cal-week-row .cal-strip-rail-tail {
     margin-top: 0;
   }
   /* A date that is a heading in the lane is just the day number again on a
@@ -379,15 +471,14 @@ body {
   }
 }
 
-/* The step buttons in Settings → Calendar → Text size. The section prints a
-   sample of the piece beside every row, so its segmented controls have ~80 px
-   less width than the dialog's others — and the entry row carries a fourth
-   step ("Dynamic") on top of that, which at the control's own padding pushes
-   "Large" off the end at 393 px. Tightening the side padding and dropping the
-   label a point buys that fourth label its place; the buttons keep their
-   height, which is the dimension a thumb actually needs. It lives here rather
-   than in utilities on the section because the buttons are the framework
-   component's own, not the app's to class. */
+/* The size buttons in Settings → Calendar → View. Your own text carries a
+   fourth step ("Dynamic") that the almanac's pieces do not, and at the
+   control's own padding that fourth label runs off the end of a 393 px
+   portrait panel. Tightening the side padding and dropping the label a point
+   buys it its place; the buttons keep their height, which is the dimension a
+   thumb actually needs. It lives here rather than in utilities on the section
+   because the buttons are the framework component's own, not the app's to
+   class. */
 .cal-size-steps button {
   padding-inline: 0.5rem;
   font-size: 0.8125rem;

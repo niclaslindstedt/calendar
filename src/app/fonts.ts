@@ -4,12 +4,12 @@
 // plain, and whatever you write on it in your own hand — so each of those
 // parts picks its face here rather than inheriting one app-wide font.
 //
-// The four pieces are exactly what a day cell shows: the day number, the
-// holiday, the day's names, and your own text. Settings → Calendar edits
-// them; `App.tsx` projects the choice onto `<html>` as one CSS variable per
-// piece, and `src/styles.css` has the matching `.cal-font-*` classes the
-// views paint with. Nothing else moves: the month title and the weekday
-// headers keep the display face, and the app's own chrome keeps the UI font.
+// This module is the *faces* — which typefaces exist, what they cost a
+// caption, and how they are fetched. Which piece of which view is set in
+// which of them is `viewStyle.ts`'s question, because that answer is per
+// view. Nothing outside a day moves either way: the month title and the
+// weekday headers keep the display face, and the app's own chrome keeps the
+// UI font.
 //
 // The four webfont families come from the framework (it owns the `@font-face`
 // payloads and their lazy loading); the fifth face, `print`, is the app's own
@@ -24,24 +24,6 @@ import {
 /** A face a calendar piece can be set in: the app's printed-almanac serif, or
  *  one of the framework's bundled families. */
 export type CalFontId = "print" | FontFamilyId;
-
-/** The pieces of a day that carry their own face. */
-export const CAL_FONT_PIECES = [
-  "day",
-  "holidays",
-  "nameDays",
-  "entry",
-] as const;
-
-export type CalFontPiece = (typeof CAL_FONT_PIECES)[number];
-
-/** The CSS variable each piece reads, and `src/styles.css` paints with. */
-export const CAL_FONT_VAR: Record<CalFontPiece, string> = {
-  day: "--cal-font-day",
-  holidays: "--cal-font-holiday",
-  nameDays: "--cal-font-nameday",
-  entry: "--cal-font-entry",
-};
 
 /** The faces, in the order the picker lists them: the printed look first,
  *  since it is what the calendar is imitating. */
@@ -86,7 +68,8 @@ export const CAPTION_SCALE: Record<CalFontId, number> = {
 
 /** How much room two digits need in each face, as a multiple of the size the
  *  date is set at — what the strip row's date column is billed for
- *  (`--cal-date-em`, read by `.cal-strip-lane` in `src/styles.css`).
+ *  (published per view as `--cal-<scope>-date-em` by `viewStyle.ts`, and read
+ *  as `--cal-date-em` by `.cal-strip-lane` in `src/styles.css`).
  *
  *  The column has to be a *width* rather than a shrink-wrap: the weekday and
  *  the day's names line up beside it down a whole month, so a column that
@@ -123,33 +106,6 @@ export function dateColumnEm(id: CalFontId): number {
   return DATE_COLUMN_EM[id] ?? 1.35;
 }
 
-/** The faces each piece is set in. */
-export type CalFonts = Record<CalFontPiece, CalFontId>;
-
-/** The printed-almanac defaults, and what the app looked like before the
- *  faces were settable: the date in the display serif, everything else in the
- *  UI font. */
-export const DEFAULT_CAL_FONTS: CalFonts = {
-  day: "print",
-  holidays: "mono",
-  nameDays: "mono",
-  entry: "mono",
-};
-
-/** The `<html>` variables for a set of faces — what `App.tsx` writes: a stack
- *  per piece, the month cell's caption scales, and the room the strip row's
- *  date column has to leave the day number. */
-export function calFontVars(fonts: CalFonts): Record<string, string> {
-  const vars: Record<string, string> = {};
-  for (const piece of CAL_FONT_PIECES) {
-    vars[CAL_FONT_VAR[piece]] = calFontStack(fonts[piece]);
-  }
-  vars["--cal-nameday-scale"] = String(captionScale(fonts.nameDays));
-  vars["--cal-holiday-scale"] = String(captionScale(fonts.holidays));
-  vars["--cal-date-em"] = String(dateColumnEm(fonts.day));
-  return vars;
-}
-
 /** The caption shrink a face needs in the month cell; 1 for anything a
  *  hand-edited document might carry that we don't recognise. */
 export function captionScale(id: CalFontId): number {
@@ -159,8 +115,8 @@ export function captionScale(id: CalFontId): number {
 /** Fetch the `@font-face` payload for every face in use. The stack is applied
  *  regardless, so the fallback paints immediately and the webfont swaps in
  *  when it lands; `print` and the statically-bundled default are no-ops. */
-export function loadCalFonts(fonts: CalFonts): void {
-  for (const id of new Set(Object.values(fonts))) {
+export function loadCalFonts(ids: Iterable<CalFontId>): void {
+  for (const id of new Set(ids)) {
     if (id !== "print") void loadFontFamily(id);
   }
 }

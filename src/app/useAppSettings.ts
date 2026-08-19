@@ -6,18 +6,11 @@
 // *language* is owned by the framework i18n runtime (see `i18n/index.ts`),
 // and the theme by the appearance store — neither lives here.
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 
-import type { EntryTextSize } from "./entryFont.ts";
-import {
-  CAL_FONT_PIECES,
-  DEFAULT_CAL_FONTS,
-  type CalFontId,
-  type CalFontPiece,
-  type CalFonts,
-} from "./fonts.ts";
+import type { CalFontId } from "./fonts.ts";
 import {
   DEFAULT_HEADER_COLOR,
   headerColorOf,
@@ -50,12 +43,22 @@ import {
   type WeekRowMode,
 } from "./weekPlanner.ts";
 import {
-  DEFAULT_TEXT_SCALE,
-  SCALED_PIECES,
-  clampTextScale,
-  type ScaledPiece,
-  type TextScales,
-} from "./textSize.ts";
+  DEFAULT_STRIP_LAYOUT,
+  STRIP_PIECES,
+  stripSlotOf,
+  type StripLayout,
+  type StripPiece,
+  type StripSlot,
+} from "./stripLayout.ts";
+import {
+  DEFAULT_CAL_STYLES,
+  STYLE_SCOPES,
+  resolveCalStyles,
+  stylesSignature,
+  type CalStyles,
+} from "./viewStyle.ts";
+import { clampTextScale } from "./textSize.ts";
+import type { EntryTextSize } from "./entryFont.ts";
 
 export type ViewMode = "month" | "week" | "list";
 export type ListRowMode = "fixed" | "dynamic";
@@ -110,24 +113,18 @@ export type AppSettings = {
   /** The colour the period heading is banded with, and the week numbers are
    *  printed in. `none` — the default — leaves the heading as it was. */
   headerColor: HeaderColor;
-  /** Entry text: shrink-to-fit, or pinned small / medium / large. */
-  textSize: EntryTextSize;
-  /** The day number's size, as a scale of its measured default. */
-  sizeDay: number;
-  /** A holiday name's size, as a scale of its measured default. */
-  sizeHolidays: number;
-  /** The day's names' size, as a scale of their measured default. */
-  sizeNameDays: number;
-  /** The week number's size, as a scale of its measured default. */
-  sizeWeek: number;
-  /** The face the day number is set in. */
-  fontDay: CalFontId;
-  /** The face a holiday's name is set in. */
-  fontHolidays: CalFontId;
-  /** The face the day's names are set in. */
-  fontNameDays: CalFontId;
-  /** The face your own text is set in. */
-  fontEntry: CalFontId;
+  /** How each piece of a day is set — its face and its size — answered per
+   *  view (`viewStyle.ts`): the month grid's cells and the strip views' rows
+   *  are different enough pages that one answer could not serve both. */
+  styles: CalStyles;
+  /** Strip row: the slot the date (and its weekday) takes. */
+  stripDaySlot: StripSlot;
+  /** Strip row: the slot the day's names take. */
+  stripNameDaySlot: StripSlot;
+  /** Strip row: the slot the holiday's name takes. */
+  stripHolidaySlot: StripSlot;
+  /** Strip row: the slot the week number takes. */
+  stripWeekSlot: StripSlot;
   /** Month cell: the corner the day number takes. */
   monthDayCorner: CellCorner;
   /** Month cell: the corner the day's names take. */
@@ -149,6 +146,30 @@ export type AppSettings = {
   devMode: boolean;
   captureLogs: boolean;
   demoData: boolean;
+
+  // The pre-per-view type settings, kept only so a settings blob written by
+  // an older build can be carried into `styles` on load (see
+  // {@link migrateSettings}). Nothing reads them after that, and nothing
+  // writes them — they are absent from `LOOK_KEYS`, so the first Save drops
+  // them off the look.
+  /** @deprecated folded into `styles.*.entry.size`. */
+  textSize?: EntryTextSize;
+  /** @deprecated folded into `styles.*.day.size`. */
+  sizeDay?: number;
+  /** @deprecated folded into `styles.*.holidays.size`. */
+  sizeHolidays?: number;
+  /** @deprecated folded into `styles.*.nameDays.size`. */
+  sizeNameDays?: number;
+  /** @deprecated folded into `styles.*.week.size`. */
+  sizeWeek?: number;
+  /** @deprecated folded into `styles.*.day.font`. */
+  fontDay?: CalFontId;
+  /** @deprecated folded into `styles.*.holidays.font`. */
+  fontHolidays?: CalFontId;
+  /** @deprecated folded into `styles.*.nameDays.font`. */
+  fontNameDays?: CalFontId;
+  /** @deprecated folded into `styles.*.entry.font`. */
+  fontEntry?: CalFontId;
 };
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -163,15 +184,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   weekFormat: DEFAULT_WEEK_FORMAT,
   weekDateSize: DEFAULT_WEEK_DATE_SIZE,
   headerColor: DEFAULT_HEADER_COLOR,
-  textSize: "dynamic",
-  sizeDay: DEFAULT_TEXT_SCALE,
-  sizeHolidays: DEFAULT_TEXT_SCALE,
-  sizeNameDays: DEFAULT_TEXT_SCALE,
-  sizeWeek: DEFAULT_TEXT_SCALE,
-  fontDay: DEFAULT_CAL_FONTS.day,
-  fontHolidays: DEFAULT_CAL_FONTS.holidays,
-  fontNameDays: DEFAULT_CAL_FONTS.nameDays,
-  fontEntry: DEFAULT_CAL_FONTS.entry,
+  styles: DEFAULT_CAL_STYLES,
+  stripDaySlot: DEFAULT_STRIP_LAYOUT.day,
+  stripNameDaySlot: DEFAULT_STRIP_LAYOUT.nameDays,
+  stripHolidaySlot: DEFAULT_STRIP_LAYOUT.holidays,
+  stripWeekSlot: DEFAULT_STRIP_LAYOUT.week,
   // The printed wall-calendar arrangement, straight off a Swedish almanac:
   // the number large in the top-right corner, the day's writing space under
   // it, and the captions stacked in the bottom-right corner — the holiday
@@ -204,15 +221,11 @@ export const LOOK_KEYS = [
   "weekFormat",
   "weekDateSize",
   "headerColor",
-  "textSize",
-  "sizeDay",
-  "sizeHolidays",
-  "sizeNameDays",
-  "sizeWeek",
-  "fontDay",
-  "fontHolidays",
-  "fontNameDays",
-  "fontEntry",
+  "styles",
+  "stripDaySlot",
+  "stripNameDaySlot",
+  "stripHolidaySlot",
+  "stripWeekSlot",
   "monthDayCorner",
   "monthNameDayCorner",
   "monthHolidayCorner",
@@ -236,15 +249,11 @@ export function pickLook(settings: AppSettings): LookSettings {
     weekFormat: settings.weekFormat,
     weekDateSize: settings.weekDateSize,
     headerColor: settings.headerColor,
-    textSize: settings.textSize,
-    sizeDay: settings.sizeDay,
-    sizeHolidays: settings.sizeHolidays,
-    sizeNameDays: settings.sizeNameDays,
-    sizeWeek: settings.sizeWeek,
-    fontDay: settings.fontDay,
-    fontHolidays: settings.fontHolidays,
-    fontNameDays: settings.fontNameDays,
-    fontEntry: settings.fontEntry,
+    styles: settings.styles,
+    stripDaySlot: settings.stripDaySlot,
+    stripNameDaySlot: settings.stripNameDaySlot,
+    stripHolidaySlot: settings.stripHolidaySlot,
+    stripWeekSlot: settings.stripWeekSlot,
     monthDayCorner: settings.monthDayCorner,
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
@@ -327,41 +336,27 @@ export const CELL_PIECE_KEY = {
   nameDays: "monthNameDayCorner",
 } as const satisfies Record<CellPiece, keyof LookSettings>;
 
-/** The look key that sets each piece's face — the same "move one by name"
- *  idiom as {@link CELL_PIECE_KEY}, for the font pickers. */
-export const CAL_FONT_KEY = {
-  day: "fontDay",
-  holidays: "fontHolidays",
-  nameDays: "fontNameDays",
-  entry: "fontEntry",
-} as const satisfies Record<CalFontPiece, keyof LookSettings>;
+/** The look key that parks each strip-row piece — the same "move one by
+ *  name" idiom as {@link CELL_PIECE_KEY}, for the week planner's and the day
+ *  list's shared designer. */
+export const STRIP_PIECE_KEY = {
+  day: "stripDaySlot",
+  holidays: "stripHolidaySlot",
+  nameDays: "stripNameDaySlot",
+  week: "stripWeekSlot",
+} as const satisfies Record<StripPiece, keyof LookSettings>;
 
-/** The faces the views paint with, gathered from the look. */
-export function calFonts(look: LookSettings): CalFonts {
-  const fonts = {} as CalFonts;
-  for (const piece of CAL_FONT_PIECES) {
-    fonts[piece] = look[CAL_FONT_KEY[piece]];
+/** The strip row's arrangement, gathered from the look and held to the four
+ *  slots a row has — a piece assigned to a slot that does not exist would
+ *  simply vanish from both views. */
+export function stripLayoutOf(
+  look: Pick<AppSettings, (typeof STRIP_PIECE_KEY)[StripPiece]>,
+): StripLayout {
+  const layout = {} as StripLayout;
+  for (const piece of STRIP_PIECES) {
+    layout[piece] = stripSlotOf(look[STRIP_PIECE_KEY[piece]]);
   }
-  return fonts;
-}
-
-/** The look key that sizes each piece — the same "move one by name" idiom as
- *  {@link CELL_PIECE_KEY}, for the text-size buttons. */
-export const TEXT_SCALE_KEY = {
-  day: "sizeDay",
-  holidays: "sizeHolidays",
-  nameDays: "sizeNameDays",
-  week: "sizeWeek",
-} as const satisfies Record<ScaledPiece, keyof LookSettings>;
-
-/** The sizes the views paint at, gathered from the look and snapped back onto
- *  the ladder — a hand-edited document can carry anything. */
-export function textScales(look: LookSettings): TextScales {
-  const scales = {} as TextScales;
-  for (const piece of SCALED_PIECES) {
-    scales[piece] = clampTextScale(look[TEXT_SCALE_KEY[piece]]);
-  }
-  return scales;
+  return layout;
 }
 
 export const DEFAULT_LOOK: LookSettings = pickLook(DEFAULT_SETTINGS);
@@ -395,12 +390,82 @@ export function clampVacationDays(value: unknown): number {
   return Math.max(0, Math.min(365, n));
 }
 
+/** A settings blob as it comes off disk, for {@link migrateStyles}: the
+ *  current keys plus the flat ones an older build wrote, with `styles` left
+ *  unknown because a hand-edited file can carry anything under it. */
+export type LegacyStyleSettings = Partial<Omit<AppSettings, "styles">> & {
+  styles?: unknown;
+};
+
+/** The styles a stored blob resolves to, including one written before the
+ *  type settings were per-view.
+ *
+ *  Until this build there was one face and one size per piece for the whole
+ *  app (`fontDay`, `sizeDay`, …). Those become the *starting point for both
+ *  scopes* — a reader who had set the day's names Large meant both views, and
+ *  splitting the setting must not quietly reset half of it. The week number
+ *  had no face of its own, so it keeps each scope's default (the strip's
+ *  almanac italic, the month gutter's plain number).
+ *
+ *  Pure, and taking the raw blob rather than an `AppSettings`, because the
+ *  values it reads are ones the current type no longer has: the storage hook
+ *  merges what is on disk over the defaults, so they arrive as extra keys. */
+export function migrateStyles(raw: LegacyStyleSettings): CalStyles {
+  const legacy = {} as CalStyles;
+  for (const scope of STYLE_SCOPES) {
+    const base = DEFAULT_CAL_STYLES[scope];
+    legacy[scope] = {
+      day: pieceFrom(base.day, raw.fontDay, raw.sizeDay),
+      holidays: pieceFrom(base.holidays, raw.fontHolidays, raw.sizeHolidays),
+      nameDays: pieceFrom(base.nameDays, raw.fontNameDays, raw.sizeNameDays),
+      week: pieceFrom(base.week, undefined, raw.sizeWeek),
+      entry: {
+        font: raw.fontEntry ?? base.entry.font,
+        size: raw.textSize ?? base.entry.size,
+      },
+    };
+  }
+  // The stored per-view object wins wherever it has an answer; the legacy
+  // pair fills the rest. `resolveCalStyles` holds both to their ladders, so a
+  // hand-edited blob can't reach the CSS either way.
+  return resolveCalStyles(raw.styles, legacy);
+}
+
+function pieceFrom(
+  base: { font: CalFontId; size: number },
+  font: CalFontId | undefined,
+  size: number | undefined,
+) {
+  return {
+    font: font ?? base.font,
+    size: size === undefined ? base.size : clampTextScale(size),
+  };
+}
+
 const STORAGE_KEY = "calendar:settings";
 
 export function useAppSettings() {
-  const [settings, setSettings] = useLocalStorageState<AppSettings>(
+  const [stored, setSettings] = useLocalStorageState<AppSettings>(
     STORAGE_KEY,
     DEFAULT_SETTINGS,
+  );
+
+  // The type settings, resolved once per write of the blob rather than at
+  // every read: they are validated, they may come from an older build's flat
+  // keys, and what they feed (the CSS variables, the memoized views) compares
+  // by value. Keyed on the signature so an unrelated setting — the active
+  // view, a storage switch — doesn't hand the app a new object and re-render
+  // three periods of day cells for nothing.
+  const resolved = migrateStyles(stored);
+  const signature = stylesSignature(resolved);
+  const styles = useMemo(
+    () => resolved,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [signature],
+  );
+  const settings = useMemo(
+    () => (stored.styles === styles ? stored : { ...stored, styles }),
+    [stored, styles],
   );
 
   const update = useCallback(

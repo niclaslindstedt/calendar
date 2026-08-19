@@ -104,3 +104,27 @@ describe("the stylesheet's arithmetic on the safe areas", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+describe("the strip lane's first line", () => {
+  // The date and the weekday beside it are aligned on their capitals, which
+  // takes `text-box-trim` — `align-items` aligns line boxes, and a line box
+  // carries a share of the font size as leading, so the weekday drifted
+  // further above the date the larger the reader set it (2 px at the day
+  // list's 20 px, 4 px at the week planner's 24 px, ~10 px at its 60 px
+  // ceiling). A constant cannot replace it: the amount is a font metric, and
+  // the date's face is a setting.
+  it("trims both boxes to their caps rather than padding one of them", () => {
+    const rule = css.slice(css.indexOf("@supports (text-box-edge: cap"));
+    expect(rule).toContain(".cal-strip-date");
+    expect(rule).toContain(".cal-strip-weekday");
+    expect(rule.slice(0, 400)).toContain("text-box-trim: trim-start");
+    expect(rule.slice(0, 400)).toContain("text-box-edge: cap alphabetic");
+  });
+
+  it("keeps the trim behind @supports, so an older engine is unharmed", () => {
+    // Safari before 18.2 and Chrome before 133 have no `text-box-trim`; there
+    // the lane keeps the line-box alignment this replaces rather than losing
+    // the declaration and the layout with it.
+    expect(css).toContain("@supports (text-box-edge: cap alphabetic)");
+  });
+});

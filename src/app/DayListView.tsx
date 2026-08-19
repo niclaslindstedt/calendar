@@ -32,7 +32,9 @@ import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
-import { StripLane, StripNote, StripRail } from "./stripRow.tsx";
+import { marginReserved, type StripLayout } from "./stripLayout.ts";
+import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
@@ -42,7 +44,7 @@ import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
  *  is a line of a month-long scroll rather than a band a seventh of the screen
  *  high, so its date is sized to the two caption lines beside it and stays
  *  there. The shared day-number scale still multiplies it. */
-const LIST_DATE_BASE = "1.25rem";
+export const LIST_DATE_BASE = "1.25rem";
 
 type Props = {
   year: number;
@@ -51,6 +53,9 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Which margin each piece of a row is printed in — shared with the week
+   *  planner, which prints the same row (Settings → Calendar → View). */
+  layout: StripLayout;
   rowMode: ListRowMode;
   /** How the rail prints a week number: "Week 34", "w 34", or "34" — the same
    *  setting the week planner reads, because it is the same piece of almanac
@@ -89,6 +94,7 @@ export const DayListView = memo(function DayListView({
   pack,
   showWeekNumbers,
   showNameDays,
+  layout,
   rowMode,
   weekFormat,
   headerInk,
@@ -105,19 +111,25 @@ export const DayListView = memo(function DayListView({
 }: Props) {
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
-  // Whether the rail is rendered at all, decided once for the month rather
+  // Whether each margin is rendered at all, decided once for the month rather
   // than per row — the same rule the week planner follows, and for the same
-  // reason: a rail that came and went down a ninety-row scroll would give the
-  // note a different width on every line. Reserved when the month has anything
-  // to print in it, and left out entirely when it has not.
-  const rail = useMemo(
-    () =>
-      showWeekNumbers ||
-      Array.from({ length: count }, (_, i) =>
+  // reason: a margin that came and went down a ninety-row scroll would give
+  // the note a different width on every line. Reserved when the month has
+  // something to print in it, and left out entirely when it has not; what
+  // lands in which margin is the reader's arrangement.
+  const has = useMemo(
+    () => ({
+      day: true,
+      nameDays: showNameDays,
+      week: showWeekNumbers,
+      holidays: Array.from({ length: count }, (_, i) =>
         holidayFor(pack, year, month, i + 1),
       ).some((holiday) => holiday !== null),
-    [count, month, pack, showWeekNumbers, year],
+    }),
+    [count, month, pack, showNameDays, showWeekNumbers, year],
   );
+  const lane = marginReserved(layout, "lane", has);
+  const rail = marginReserved(layout, "rail", has);
 
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
@@ -127,7 +139,7 @@ export const DayListView = memo(function DayListView({
     // leave you — not at whatever row you had scrolled to in the month before.
     <div
       {...DECK_SCROLLER}
-      className="mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6"
+      className={`${SCOPE_CLASS.strip} mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6`}
     >
       {/* The slim artwork band (smaller than the month view's). */}
       {image && (
@@ -175,6 +187,8 @@ export const DayListView = memo(function DayListView({
               showWeekNumbers={showWeekNumbers}
               showNameDays={showNameDays}
               weekFormat={weekFormat}
+              layout={layout}
+              lane={lane}
               rail={rail}
               headerInk={headerInk}
               today={today}
@@ -218,6 +232,8 @@ const DayRow = memo(function DayRow({
   showWeekNumbers,
   showNameDays,
   weekFormat,
+  layout,
+  lane,
   rail,
   headerInk,
   today,
@@ -240,7 +256,9 @@ const DayRow = memo(function DayRow({
   showWeekNumbers: boolean;
   showNameDays: boolean;
   weekFormat: WeekFormat;
-  /** Whether the month reserved a right-hand rail (decided by the list). */
+  layout: StripLayout;
+  /** Whether the month reserved each margin (decided once, by the list). */
+  lane: boolean;
   rail: boolean;
   headerInk: string | null;
   today: DayKey;
@@ -267,6 +285,24 @@ const DayRow = memo(function DayRow({
   const opens = startsWeek(weekday, pack.weekStartsOn);
   const marks = opens || day === 1;
 
+  const stripDay: StripDay = {
+    layout,
+    dayKey,
+    day,
+    pack,
+    weekday,
+    names,
+    holiday,
+    weekNumber: showWeekNumbers && marks ? weekNumber(pack, dayKey) : null,
+    weekFormat,
+    red,
+    markDate: marked === "date" ? pastMark.style : "none",
+    dateBase: LIST_DATE_BASE,
+    ink: headerInk,
+    onOpenNames,
+    onOpenHolidays: () => onOpenHolidays(year),
+  };
+
   return (
     <div
       role="button"
@@ -290,17 +326,7 @@ const DayRow = memo(function DayRow({
         dayKey === today ? "bg-surface-2" : ""
       }`}
     >
-      <StripLane
-        dayKey={dayKey}
-        day={day}
-        pack={pack}
-        weekday={weekday}
-        names={names}
-        red={red}
-        markDate={marked === "date" ? pastMark.style : "none"}
-        dateBase={LIST_DATE_BASE}
-        onOpenNames={onOpenNames}
-      />
+      {lane && <StripLane day={stripDay} />}
 
       <StripNote>
         <DayEntry
@@ -314,17 +340,7 @@ const DayRow = memo(function DayRow({
         />
       </StripNote>
 
-      {rail && (
-        <StripRail
-          weekNumber={
-            showWeekNumbers && marks ? weekNumber(pack, dayKey) : null
-          }
-          weekFormat={weekFormat}
-          holiday={holiday}
-          ink={headerInk}
-          onOpenHolidays={() => onOpenHolidays(year)}
-        />
-      )}
+      {rail && <StripRail day={stripDay} />}
 
       {/* The whole-row stroke — over the row, transparent to taps. */}
       {marked === "cell" && <PastMark style={pastMark.style} />}

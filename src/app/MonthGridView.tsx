@@ -36,7 +36,8 @@ import { MarkedDate, PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
 import { monthImageUrl } from "./monthImage.ts";
-import { minHyphenatedLetters, type TextScales } from "./textSize.ts";
+import { minHyphenatedLetters } from "./textSize.ts";
+import { SCOPE_CLASS } from "./viewStyle.ts";
 import type { CalendarDoc } from "./types.ts";
 import type { MonthCellLayout } from "./useAppSettings.ts";
 
@@ -54,11 +55,14 @@ type Props = {
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
-  /** How big each of the almanac's own pieces is set (Settings → Calendar →
-   *  Text size). Only the captions' scales are read here — the sizes
-   *  themselves are applied in CSS — and only to re-seed the hyphens the
-   *  caption band needs at that size. */
-  scales: TextScales;
+  /** How big the two caption bands are set (Settings → Calendar → View), as
+   *  scales of their measured size. The sizes themselves are applied in CSS;
+   *  these reach JS only to re-seed the hyphens the band needs at that size,
+   *  which have to be in the string before it is laid out. Two numbers rather
+   *  than the scope's whole style object, so the memo below still holds when
+   *  an unrelated piece is re-sized. */
+  nameDayScale: number;
+  holidayScale: number;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -88,7 +92,8 @@ export const MonthGridView = memo(function MonthGridView({
   headerInk,
   pastMark,
   textSize,
-  scales,
+  nameDayScale,
+  holidayScale,
   doc,
   editingDay,
   onEditDay,
@@ -126,7 +131,9 @@ export const MonthGridView = memo(function MonthGridView({
     : "grid-template-columns: repeat(7, minmax(0, 1fr))";
 
   return (
-    <div className="flex h-full flex-col overflow-hidden">
+    <div
+      className={`${SCOPE_CLASS.month} flex h-full flex-col overflow-hidden`}
+    >
       {/* The artwork band. Absent until a month-image pack ships. The view no
           longer scrolls, so the image shares the one screen with the grid
           rather than hanging above a viewport of its own. */}
@@ -189,7 +196,7 @@ export const MonthGridView = memo(function MonthGridView({
                 // survives in the accessible name, where there is no width to
                 // pay for it.
                 <div
-                  className="text-muted cal-size-week pt-1 [--cal-base:10px]"
+                  className="text-muted cal-font-week cal-size-week pt-1 [--cal-base:10px]"
                   aria-label={t("topbar.week", {
                     n: weekNumber(pack, week[0].key),
                   })}
@@ -208,7 +215,8 @@ export const MonthGridView = memo(function MonthGridView({
                   pastMark={pastMark}
                   showNameDays={showNameDays}
                   textSize={textSize}
-                  scales={scales}
+                  nameDayScale={nameDayScale}
+                  holidayScale={holidayScale}
                   entry={doc.entries[cell.key] ?? ""}
                   editing={editingDay === cell.key}
                   onEditDay={onEditDay}
@@ -239,7 +247,7 @@ export const MonthGridView = memo(function MonthGridView({
  *  7.5 px on the 45.8 px line a band gets, all 627 names in the Swedish
  *  almanac do, the widest being "Bartolomeus" at 42.1 px. Re-measure before
  *  growing this font — and note that the *reader* can grow it (Settings →
- *  Calendar → Text size), which is why the threshold is derived from the
+ *  Calendar → View), which is why the threshold is derived from the
  *  live scale rather than taken as the constant.
  *
  *  Memoized, and the reason is the tap: opening the editor on one day used to
@@ -255,7 +263,8 @@ const DayCell = memo(function DayCell({
   pastMark,
   showNameDays,
   textSize,
-  scales,
+  nameDayScale,
+  holidayScale,
   entry,
   editing,
   onEditDay,
@@ -272,7 +281,8 @@ const DayCell = memo(function DayCell({
   pastMark: PastMarkSetting;
   showNameDays: boolean;
   textSize: EntryTextSize;
-  scales: TextScales;
+  nameDayScale: number;
+  holidayScale: number;
   entry: string;
   editing: boolean;
   onEditDay: (day: DayKey | null) => void;
@@ -346,7 +356,7 @@ const DayCell = memo(function DayCell({
               }`}
             >
               {hyphenate(holiday.name, pack.hyphenation, {
-                minWordLength: minHyphenatedLetters(scales.holidays),
+                minWordLength: minHyphenatedLetters(holidayScale),
               })}
             </span>
           ) : null,
@@ -362,7 +372,7 @@ const DayCell = memo(function DayCell({
                   pack={pack}
                   onOpen={onOpenNames}
                   hyphenated
-                  minWordLength={minHyphenatedLetters(scales.nameDays)}
+                  minWordLength={minHyphenatedLetters(nameDayScale)}
                 />
               </span>
             ) : null,

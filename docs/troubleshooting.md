@@ -39,13 +39,14 @@ day list, which give each day more room.
 
 **The day stopped accepting text** — the day is full: the note is already at
 the smallest size that view uses and the next character would not fit. Delete
-something (deleting always works), pick a smaller step under Settings →
-Calendar → Text size, or write the day in the week planner or day list, which
-have more room.
+something (deleting always works), pick a smaller step for **Your text** under
+Settings → Calendar → View, or write the day in the week planner or day list,
+which have more room.
 
 **A note ends in "…"** — it is longer than the day can show at the size it is
-pinned to. Open the day to read or edit the whole thing, or switch Text size
-back to Dynamic so it shrinks to fit instead.
+pinned to. Open the day to read or edit the whole thing, or switch **Your
+text** back to Dynamic (Settings → Calendar → View) so it shrinks to fit
+instead. Sizes are per view, so check the view you are reading it in.
 
 ## PWA
 
