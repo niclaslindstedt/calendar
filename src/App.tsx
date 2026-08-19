@@ -185,6 +185,13 @@ export function App() {
   // The navigation anchor: the month (and, in week view, the week) on
   // display. Today on boot.
   const [anchor, setAnchor] = useState<DayKey>(() => dayKeyOf(new Date()));
+  // How many times the reader has asked to be put back at today. Going home
+  // is a press, not a value: the anchor can already *be* today's day and the
+  // view still not be showing it — the day list keeps the month it is on
+  // while you scroll away down it — and a `setAnchor` that lands on the value
+  // it already held puts nothing back. So the press is counted, and the deck
+  // is keyed on the count as well as the anchor.
+  const [homings, setHomings] = useState(0);
   const today = dayKeyOf(new Date());
   const parts = parseDayKey(anchor) ?? { year: 2026, month: 1, day: 1 };
 
@@ -269,6 +276,12 @@ export function App() {
         ? addDays(prev, 7 * direction)
         : addMonths(prev, direction),
     );
+  };
+
+  /** Put the calendar back at today: the current period, from its top. */
+  const goToday = () => {
+    setAnchor(dayKeyOf(new Date()));
+    setHomings((n) => n + 1);
   };
 
   /** Leave the holidays screen and go back to the calendar. */
@@ -444,7 +457,7 @@ export function App() {
           setEditingDay(null);
           closeHolidays();
           closeNames();
-          if (view === settings.view) setAnchor(dayKeyOf(new Date()));
+          if (view === settings.view) goToday();
           else update("view", view);
         }}
         namespaces={namespaces.list}
@@ -481,7 +494,7 @@ export function App() {
             // Remounting on a view switch drops any half-finished gesture and
             // re-centres, rather than carrying a month's drag into a week.
             key={settings.view}
-            itemKey={anchor}
+            itemKey={`${anchor}@${homings}`}
             scrolls={settings.view === "list"}
             onPrevious={() => step(-1)}
             onNext={() => step(1)}

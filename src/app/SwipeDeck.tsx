@@ -84,8 +84,12 @@ export type DeckNav = {
 };
 
 type Props = {
-  /** Identity of the centre period. A change from outside the deck (the Today
-   *  button, a view switch) cancels any settle in flight. */
+  /** Identity of what the centre pane is showing. A change from outside the
+   *  deck (a press of the view you are already in, a picked name day, a view
+   *  switch) cancels any settle in flight, re-centres the track and puts every
+   *  pane's scroller back to the top. It is the *showing* that is identified,
+   *  not the period alone: a caller that means "put me back" changes this even
+   *  when the period it is on has not moved. */
   itemKey: string;
   onPrevious: () => void;
   onNext: () => void;
@@ -233,24 +237,38 @@ export function SwipeDeck({
     // good as any later one.
   }, []);
 
-  // Once a drag locks to the horizontal axis the browser must not reclaim it:
-  // on a scrolling deck `pan-y` would otherwise let a downward drift start a
+  // Once a drag locks to the horizontal axis the browser must not reclaim it,
+  // and it must not keep a gesture of its own running behind ours either.
+  //
+  // On a scrolling deck `pan-y` would otherwise let a downward drift start a
   // native scroll mid-swipe, which fires `pointercancel` and drops the page
   // turn. Swallowing the touchmoves while locked keeps the gesture ours, so
-  // only the finger's horizontal travel is measured. Native listener because
-  // it must be non-passive to call `preventDefault` — and only on a deck that
-  // scrolls, because a non-passive touchmove listener makes the compositor
-  // wait on the main thread before every scrolled frame. The other decks
-  // already deny the browser both axes with `touch-action: none`.
+  // only the finger's horizontal travel is measured.
+  //
+  // `touch-action: none` looks like it should make that unnecessary on the
+  // decks that fill one screen — but it only denies the browser the *scroll*,
+  // not the fling it still ends a flick with. A fling in flight arms the
+  // engine's tap suppression: the next tap anywhere on the page is read as
+  // "stop the fling" and its `click` is never dispatched. So flicking to the
+  // next month and then reaching for the top menu cost two taps — the first
+  // one only cancelled a fling that moved nothing. Preventing the touchmoves
+  // ends the browser's gesture with the finger, so the tap after a flick is
+  // the tap the reader meant.
+  //
+  // Native listener because it must be non-passive to call `preventDefault`.
+  // The cost a non-passive touchmove listener carries — the compositor
+  // waiting on the main thread before a scrolled frame — is paid only while
+  // something under it actually scrolls, which on these decks is the day
+  // list's own pane and nothing else.
   useEffect(() => {
     const el = host.current;
-    if (!el || !scrolls) return;
+    if (!el) return;
     const onTouchMove = (e: TouchEvent) => {
       if (drag.current?.axis === "x" && e.cancelable) e.preventDefault();
     };
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", onTouchMove);
-  }, [scrolls]);
+  }, []);
 
   // The centre period changed. Our own page turn has already placed the track
   // and started its animation; anything else is a jump from outside the deck
