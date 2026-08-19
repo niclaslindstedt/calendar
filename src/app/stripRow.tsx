@@ -102,21 +102,25 @@ export function StripLane({ day: d }: { day: StripDay }) {
           : "[--cal-lane:4.25rem] sm:[--cal-lane:5.5rem]"
       } ${showDayOfYear ? "[--cal-lane-extra:1.375rem]" : ""}`}
     >
-      {/* The date sits in a box exactly as wide as it is set — one em holds
-          two digits in the lane's serif ("28" measures 24 px at 24 px) — and
-          is right-aligned inside it. That is what keeps the weekday column
-          straight down a month: left-aligned, every single-digit date pulled
-          its weekday half a digit to the left, which reads as a ragged edge
-          rather than as a narrow number. The width is the same `--cal-date`
-          the lane bills for the column, so the two can't disagree.
+      {/* The date sits in a column wide enough for the widest day the face
+          has to set, and is right-aligned inside it. The width is a column
+          rather than a shrink-wrap because the weekday and the day's names
+          line up beside it down a whole month: left-aligned digits pulled
+          every single-digit row's weekday half a number to the left, which
+          reads as a ragged edge rather than as a narrow date. So a
+          single-digit row simply carries more air after its number than a
+          two-digit one does — that is the column being kept, not padding
+          being spent.
 
-          The number itself is a `block` so that `text-box-trim` applies to it
-          (`src/styles.css`): that is what lines its capitals up with the
-          weekday's beside it, at whatever size the date is set. An inline span
-          takes no trim, and the wrapper around it is the passed-day stroke's
-          box rather than the type's, so it is the wrong box to measure. */}
+          How wide that is comes from the face (`DATE_COLUMN_EM` in
+          `fonts.ts`, billed to the lane as `--cal-date-col`) and is floored
+          at the two digits the *resolved* face actually measures — see
+          `.cal-strip-date`. It carries the date's own face and size for two
+          reasons: `ch` is only the digit's width if the box is set in the type
+          it is holding, and the cap-trim that lines the number up with the
+          weekday beside it measures the same box. */}
       {dateHere && (
-        <div className="w-[var(--cal-date,1.5rem)] shrink-0 text-right">
+        <div className="cal-strip-date cal-font-day cal-size-day shrink-0 text-right leading-none [--cal-base:var(--cal-date,1.5rem)]">
           <DateNumber day={d} />
         </div>
       )}
@@ -162,12 +166,17 @@ export function StripRail({
 }) {
   const top = piecesInSlot(d.layout, "rail-top");
   const bottom = piecesInSlot(d.layout, "rail-bottom");
+  const dateHere = inMargin(d.layout, "rail", "day");
   // A rail holding a caption needs more than the two digits of a week number.
-  const wide =
-    inMargin(d.layout, "rail", "nameDays") || inMargin(d.layout, "rail", "day");
+  const wide = inMargin(d.layout, "rail", "nameDays") || dateHere;
 
   return (
     <div
+      // The size the view sets the date at follows the date into whichever
+      // margin it is printed in; the lane publishes the same property.
+      style={
+        dateHere ? ({ "--cal-date": d.dateBase } as CSSProperties) : undefined
+      }
       className={`cal-strip-rail flex shrink-0 flex-col items-end self-stretch text-right ${
         wide ? "w-24 sm:w-32" : "w-16 sm:w-24"
       } ${className}`}
@@ -215,8 +224,11 @@ function laneStack(layout: StripLayout): StripPiece[] {
 function piecePart(piece: StripPiece, d: StripDay): ReactNode {
   switch (piece) {
     case "day":
+      // In the rail there is no column to line a month of weekdays up
+      // against — the rail is already a width — so the date simply carries
+      // its own type and stacks with its weekday.
       return (
-        <div className="flex flex-col items-end">
+        <div className="cal-font-day cal-size-day flex flex-col items-end leading-none [--cal-base:var(--cal-date,1.5rem)]">
           <DateNumber day={d} />
           <Weekday day={d} />
         </div>
@@ -230,16 +242,14 @@ function piecePart(piece: StripPiece, d: StripDay): ReactNode {
   }
 }
 
+/** Just the digits and the stroke that may cross them. The type is set on the
+ *  box around it — in the lane that box is the measured column
+ *  (`.cal-strip-date`), and both `ch` and the cap-trim need the type to be on
+ *  the box they measure. */
 function DateNumber({ day: d }: { day: StripDay }) {
   return (
     <MarkedDate style={d.markDate}>
-      <span
-        className={`cal-strip-date block cal-font-day cal-size-day leading-none [--cal-base:var(--cal-date,1.5rem)] ${
-          d.red ? "cal-red" : "text-fg"
-        }`}
-      >
-        {d.day}
-      </span>
+      <span className={d.red ? "cal-red" : "text-fg"}>{d.day}</span>
     </MarkedDate>
   );
 }

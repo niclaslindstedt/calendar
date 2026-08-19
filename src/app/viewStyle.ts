@@ -36,6 +36,7 @@ import { ENTRY_TEXT_SIZES, type EntryTextSize } from "./entryFont.ts";
 import {
   captionScale,
   calFontStack,
+  dateColumnEm,
   isCalFont,
   type CalFontId,
 } from "./fonts.ts";
@@ -182,16 +183,21 @@ export function styleVars(styles: CalStyles): Record<string, string> {
     for (const piece of SCALED_PIECES) {
       vars[sizeVar(scope, piece)] = String(style[piece].size);
     }
-    // The month cell clips its captions rather than shrinking them, so a face
-    // wider than the measured baseline gives the difference back here (see
-    // `CAPTION_SCALE` in `fonts.ts`). Published per scope like everything
-    // else, so the strip's captions are not shrunk by the month's face.
+    // The three numbers a face implies rather than states: the two caption
+    // shrinks the month cell needs from a face wider than the measured
+    // baseline (`CAPTION_SCALE` in `fonts.ts`), and the width the strip row's
+    // date column needs from the face its digits are set in. Published per
+    // scope like everything else, so one view's face never sizes another's.
     vars[`--cal-${scope}-nameday-scale`] = String(
       captionScale(style.nameDays.font),
     );
     vars[`--cal-${scope}-holiday-scale`] = String(
       captionScale(style.holidays.font),
     );
+    // The room the strip row's date column has to leave two digits, which is
+    // a fact about the face the date is set in (`DATE_COLUMN_EM`) — and so is
+    // per view too, since the face is.
+    vars[`--cal-${scope}-date-em`] = String(dateColumnEm(style.day.font));
   }
   return vars;
 }

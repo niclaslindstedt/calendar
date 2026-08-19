@@ -86,9 +86,18 @@ describe("the published variables", () => {
     // did not publish would fall through to whatever was set outside it.
     const vars = styleVars(DEFAULT_CAL_STYLES);
     const expected =
-      STYLE_SCOPES.length * (STYLED_PIECES.length + SCALED_PIECES.length + 2);
+      STYLE_SCOPES.length * (STYLED_PIECES.length + SCALED_PIECES.length + 3);
     expect(Object.keys(vars)).toHaveLength(expected);
     expect(new Set(Object.keys(vars)).size).toBe(expected);
+  });
+
+  it("bills the date column from the face that scope sets the date in", () => {
+    const styles = setPieceStyle(DEFAULT_CAL_STYLES, "strip", "day", {
+      font: "dyslexic",
+    });
+    const vars = styleVars(styles);
+    expect(vars["--cal-strip-date-em"]).toBe("1.32");
+    expect(vars["--cal-month-date-em"]).toBe("1");
   });
 
   it("scales a caption band from the face that scope has it set in", () => {

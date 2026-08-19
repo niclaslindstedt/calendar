@@ -187,6 +187,7 @@ body {
   --cal-size-week: var(--cal-month-size-week, 1);
   --cal-nameday-scale: var(--cal-month-nameday-scale, 1);
   --cal-holiday-scale: var(--cal-month-holiday-scale, 1);
+  --cal-date-em: var(--cal-month-date-em, 1.35);
 }
 .cal-scope-strip {
   --cal-font-day: var(--cal-strip-font-day, var(--cal-serif));
@@ -200,6 +201,7 @@ body {
   --cal-size-week: var(--cal-strip-size-week, 1);
   --cal-nameday-scale: var(--cal-strip-nameday-scale, 1);
   --cal-holiday-scale: var(--cal-strip-holiday-scale, 1);
+  --cal-date-em: var(--cal-strip-date-em, 1.35);
 }
 
 /* The month cell's two caption bands. The size is a measured constant, not a
@@ -263,10 +265,33 @@ body {
    length, not a bare `0` — is what keeps the multiplication valid when the
    number is off. */
 .cal-strip-lane {
+  /* The date's own column, which both the lane below and the box itself are
+     billed for (`.cal-strip-date`), so the two can't disagree: the size the
+     view sets the date at, times the reader's day-number scale, times the
+     room that face's widest two-digit day needs (`DATE_COLUMN_EM` in
+     `src/app/fonts.ts`, published per view as `--cal-<scope>-date-em` and
+     mapped to `--cal-date-em` by the scope classes above — the date's face is
+     a per-view setting, so what its digits need is too).
+
+     The scale belongs in here because the *font* is scaled by it: a column
+     billed at one size while the digits are set at another is exactly how a
+     date on Large came to sit against the weekday beside it.
+
+     The 0.25 on the end is the air after the digits, and it is part of the
+     column rather than the lane's gap because it has to grow with the *date*:
+     a quarter of an em is about a word space in these faces, which is what a
+     two-digit date needs to stop reading as one word with the weekday beside
+     it — and the flat 0.375rem the flex row adds after it is a fifth of that
+     at the week planner's largest date. A single-digit day keeps the same
+     column, so it simply shows more of it. */
+  --cal-date-col: calc(
+    var(--cal-date, 1.5rem) * var(--cal-size-day, 1) *
+      (var(--cal-date-em, 1.35) + 0.25)
+  );
   width: calc(
-    (var(--cal-date, 1.5rem) + 0.375rem) * var(--cal-size-day, 1) +
-      var(--cal-lane, 5.5rem) * var(--cal-size-nameday, 1) +
-      var(--cal-lane-extra, 0rem) * var(--cal-size-week, 1)
+    var(--cal-date-col) + 0.375rem + var(--cal-lane, 5.5rem) *
+      var(--cal-size-nameday, 1) + var(--cal-lane-extra, 0rem) *
+      var(--cal-size-week, 1)
   );
   /* …and the floor the scales can't take it below. The lane's first line is
      the date with the weekday beside it, and the weekday is *not* set at the
@@ -280,16 +305,28 @@ body {
 
      The date's own column is the same in both, and it is the one part the
      reader sizes directly: `--cal-date` is whatever step the week planner's
-     Date size is on (1.25rem–3rem, published by the view), the digits are
-     almost exactly one em wide in the lane's face — "28" measures 24 px at
-     24 px — and the 0.375rem is the gap after them. The shared day-number
-     scale multiplies the pair, so a large date on a large setting is large
-     twice, and the lane pays for both. */
+     Date size is on (1.25rem–3rem, published by the view), and `--cal-date-col`
+     above is what two digits of that need. The 0.375rem after it is the lane's
+     own gap, billed at the flat value the flex row actually renders. */
   min-width: calc(
-    (var(--cal-date, 1.5rem) + 0.375rem) * var(--cal-size-day, 1) +
-      var(--cal-lane-floor, 4.25rem) + var(--cal-lane-extra, 0rem) *
-      var(--cal-size-week, 1)
+    var(--cal-date-col) + 0.375rem + var(--cal-lane-floor, 4.25rem) +
+      var(--cal-lane-extra, 0rem) * var(--cal-size-week, 1)
   );
+}
+
+/* The date's box. `--cal-date-col` is what the lane reserved for it; the `2ch`
+   floor is the same width measured on the device rather than in the table —
+   `ch` is the advance of a `0` in the box's own type, and the box carries the
+   date's face and size, so two of them is the widest day in every face the app
+   ships (`0` is the widest digit in each), plus the same quarter-em of air
+   after them. The floor is what covers the printed face: its stack ends in the
+   generic `serif`, so the digits a device actually hands it are not knowable
+   from here. Where the two agree — every
+   measured face — the lane's reservation is exact, and where a system serif is
+   wider the column takes what the digits need and the day's names give it up,
+   rather than the number running into the weekday. */
+.cal-strip-date {
+  width: max(var(--cal-date-col), calc(2ch + 0.25em));
 }
 
 /* The lane's first line: the date with the weekday beside it — and *beside*
@@ -302,7 +339,7 @@ body {
    4 px above a 24 px one in the week planner — and the drift grew with the
    date, which is a setting that reaches 3 rem (the week planner's Date size)
    and is multiplied again by the day number's own scale. Measured with
-   `canvas.measureText` against each span's baseline, per AGENTS.md: at 60 px
+   `canvas.measureText` against each box's baseline, per AGENTS.md: at 60 px
    the weekday floated roughly ten pixels clear of the number it belongs to.
 
    No amount of padding fixes that, because the number to subtract is a font
@@ -310,8 +347,13 @@ body {
    any constant would be fitted to one face at one size. `text-box-trim` is the
    feature that exists for exactly this: trimmed to `cap`, a box's top edge *is*
    the top of its capitals, so aligning the two boxes aligns the two caps at any
-   size in any face. The date's own span has to be a block for it to apply,
-   which is why it carries `block` in `stripRow.tsx`.
+   size in any face.
+
+   Both boxes are blocks carrying the type they hold, which is what the trim
+   needs — the same reason the date's column carries its face and size for the
+   `ch` above. An inline span takes no trim, and the wrapper inside the column
+   is the passed-day stroke's box rather than the type's, so it would be the
+   wrong box to measure either way.
 
    What is left is ~1 px of the weekday's lowercase ascenders ("Saturday") over
    the digits' cap height — which is not drift but how a serif is drawn, and
@@ -419,6 +461,13 @@ body {
      line — the size the other views print it at. */
   .cal-week-row .cal-size-day {
     --cal-base: 1rem;
+  }
+  /* …and its column comes down with it. The lane is `width: auto` here, so
+     nothing is billed for the column and the box can simply measure the two
+     digits it is holding in the type it ends up set in — which is the line's
+     size above, not the step the lane was built from. */
+  .cal-week-row .cal-strip-date {
+    width: calc(2ch + 0.25em);
   }
 }
 

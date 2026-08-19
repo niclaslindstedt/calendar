@@ -66,6 +66,46 @@ export const CAPTION_SCALE: Record<CalFontId, number> = {
   dyslexic: 0.78,
 };
 
+/** How much room two digits need in each face, as a multiple of the size the
+ *  date is set at — what the strip row's date column is billed for
+ *  (published per view as `--cal-<scope>-date-em` by `viewStyle.ts`, and read
+ *  as `--cal-date-em` by `.cal-strip-lane` in `src/styles.css`).
+ *
+ *  The column has to be a *width* rather than a shrink-wrap: the weekday and
+ *  the day's names line up beside it down a whole month, so a column that
+ *  narrowed on the 1st and widened on the 10th would give every second row a
+ *  different left edge. Which means the width is the widest day the face has
+ *  to hold — measured, not assumed. One em was assumed, and it is only true
+ *  of the printed serif: every other face overran it and pushed its digits
+ *  into the weekday beside them.
+ *
+ *  Measured with `canvas.measureText` over the days 10–31 in the computed
+ *  font, as a multiple of the font size (widest day in brackets):
+ *
+ *      print 1.00 ["10"] · serif 1.06 ["10"] · mono 1.20 ["10"] ·
+ *      sans 1.25 ["30"] · dyslexic 1.32 ["28"]
+ *
+ *  `print` is the app's own system-serif stack, whose members all set tabular
+ *  half-em figures (Iowan Old Style, Palatino, Georgia, Times) — but its tail
+ *  is the generic `serif`, which is whatever the device has. That is what the
+ *  `2ch` floor in `.cal-strip-date` is for: the box measures the face that
+ *  actually resolved, so a wider system serif widens the column even though
+ *  the number billed here stayed the same. Re-measure when a face is added. */
+export const DATE_COLUMN_EM: Record<CalFontId, number> = {
+  print: 1,
+  serif: 1.06,
+  mono: 1.2,
+  sans: 1.25,
+  dyslexic: 1.32,
+};
+
+/** The room a face's two digits need; the widest shipped face for anything a
+ *  hand-edited document might carry that we don't recognise — an unknown face
+ *  is better billed generously than sent into the weekday. */
+export function dateColumnEm(id: CalFontId): number {
+  return DATE_COLUMN_EM[id] ?? 1.35;
+}
+
 /** The caption shrink a face needs in the month cell; 1 for anything a
  *  hand-edited document might carry that we don't recognise. */
 export function captionScale(id: CalFontId): number {
