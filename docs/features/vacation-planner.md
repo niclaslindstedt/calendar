@@ -19,8 +19,8 @@ from — and opens the planner on the year the calendar was showing.
 
 There is deliberately no fourth segment in the top menu: a 393 px portrait bar
 does not fit one without demoting Month, Week, or Day list. Any top-menu
-action (a view switch, **Today**) leaves the screen again, as does the back
-arrow.
+action (a view switch, a press of the view you are already in) leaves the
+screen again, as does the back arrow.
 
 Swipe left and right — or use the ‹ › arrows — to move between years, exactly
 as the month and week views move between periods.
