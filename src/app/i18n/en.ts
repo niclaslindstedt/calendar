@@ -54,7 +54,7 @@ export const en = {
     // The editor has no placeholder — a day you press is a caret on a blank
     // cell. This is its accessible name.
     label: "Note for this day",
-    hint: "Enter saves · Esc closes",
+    hint: "Enter adds a line · Esc closes",
     editDay: "Edit {date}",
   },
   weekdays: {

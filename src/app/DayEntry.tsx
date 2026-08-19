@@ -15,10 +15,15 @@
 //   - what you read is clamped to the lines that fit and ends in an ellipsis,
 //     so a long note stops at the holiday and name-day captions instead of
 //     running under them.
+//
+// Enter is a line break here, not a save — `entryKeys.ts` has the whole rule.
+// It costs a line of the day's room, so it is refused by the same measurement
+// that refuses any other keystroke once the cell is full.
 
 import { useLayoutEffect, useRef, useState } from "react";
 
 import { entryLineLimit, entrySlotHeight, fitEntryText } from "./entryFit.ts";
+import { entryEditorAction } from "./entryKeys.ts";
 import {
   resolveEntryFontPx,
   type EntryFontOptions,
@@ -212,13 +217,18 @@ export function DayEntry({
       }}
       onBlur={commit}
       onKeyDown={(e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-          e.preventDefault();
-          commit();
-        } else if (e.key === "Escape") {
-          e.preventDefault();
-          commit();
-        }
+        // Enter writes a line break — a note is prose, not a form field — so
+        // only Escape and a modified Enter put the pen down (`entryKeys.ts`).
+        // A refused newline is the same refusal any other keystroke gets: the
+        // day is full at the smallest size it has.
+        if (entryEditorAction(e) !== "close") return;
+        e.preventDefault();
+        // The closing key must not reach the cell behind the editor: closing
+        // re-renders before this event finishes bubbling, so the cell's own
+        // Enter-to-type handler would see a day that is no longer being
+        // edited and open it straight back up.
+        e.stopPropagation();
+        commit();
       }}
     />
   );
