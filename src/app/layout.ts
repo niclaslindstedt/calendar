@@ -6,17 +6,17 @@
 
 /** The gap under a view's last row.
  *
- *  The number itself lives in `src/styles.css` (`--cal-bottom-gutter`) rather
- *  than here, because an installed iOS PWA needs a different value and only a
- *  media query knows it is one: the shell is pinned to `100vh` there so the
- *  page reaches under the home indicator, and
- *  `env(safe-area-inset-bottom)` — the thing that is supposed to describe
- *  that band — cannot be trusted to report it. A gutter derived from the
- *  inset shipped once already and the bottom week still came out under the
- *  swipe bar. So the iOS value takes the larger of the inset and the 34 px an
- *  iPhone's home indicator actually occupies, and adds the clear margin on
- *  top; everywhere else the gutter is a plain floor plus whatever the device
- *  reserves. Either way the last row keeps 16 px of visible breathing room. */
+ *  The number itself is resolved at runtime by `src/app/safeArea.ts`, which
+ *  reads the device's safe-area insets and publishes this custom property on
+ *  `<html>`; `src/styles.css` carries the fallback that holds until it does.
+ *  It is computed there rather than written here — or in the stylesheet,
+ *  where it used to live — because the value needs a *comparison*: the home
+ *  indicator's band has to be floored at the 34 px it actually occupies
+ *  rather than taken on the inset's word, and `env()` inside a CSS `max()`
+ *  is precisely the expression the installed iOS app refused to compute,
+ *  leaving `padding-bottom` at its initial 0 and the last row hanging off the
+ *  bottom of the screen. Either way the last row keeps 16 px of visible
+ *  breathing room. */
 export const CONTENT_BOTTOM_PAD = "var(--cal-bottom-gutter)";
 
 /** The day list's own bottom gutter. It is the one view whose last row has to

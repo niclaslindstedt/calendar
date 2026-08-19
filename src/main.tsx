@@ -13,6 +13,7 @@ import "@fontsource/jetbrains-mono/latin-ext-700.css";
 import "./styles.css";
 import { App } from "./App.tsx";
 import { LanguageRoot } from "./app/i18n/index.ts";
+import { applySafeAreaVars } from "./app/safeArea.ts";
 
 // In dev no worker registers (`usePwaUpdate` runs disabled), but a worker
 // installed by a previous `vite preview` on this origin would keep serving
@@ -27,6 +28,14 @@ if (import.meta.env.DEV && "serviceWorker" in navigator) {
 
 const root = document.getElementById("root");
 if (!root) throw new Error("missing #root element");
+
+// Resolve the device's safe areas before the first render rather than in an
+// effect after it: the top menu's leading space and every view's bottom
+// gutter are read from these, so measuring them afterwards would paint one
+// frame of the fallback geometry and then shift the whole calendar. `App`
+// keeps them current when the device rotates or the app moves between a tab
+// and the home screen.
+applySafeAreaVars();
 
 render(
   <LanguageRoot>

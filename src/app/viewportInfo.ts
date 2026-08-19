@@ -30,6 +30,8 @@ export type ViewportInfo = {
   /** The resolved `--cal-bottom-gutter`, i.e. the gap a view's last row is
    *  actually getting on this device. */
   bottomGutter: string;
+  /** The space above the top menu's buttons, as `safeArea.ts` resolved it. */
+  topbarLead: string;
   /** `standalone` in an installed PWA, `browser` in a tab. */
   displayMode: string;
 };
@@ -77,18 +79,15 @@ export function displayModeOf(
   return "unknown";
 }
 
-/** Measure the live document. Returns `null` outside the browser. */
-export function readViewportInfo(): ViewportInfo | null {
-  if (typeof window === "undefined" || typeof document === "undefined") {
-    return null;
-  }
-
-  // One element carries both questions: the insets as padding, and the gutter
-  // as a height. The gutter has to be *resolved* rather than read off
-  // `:root` — a custom property hands back the `max()` expression it was
-  // written as, and the expression is exactly what is already known.
+/** Read the four safe-area insets off the live document.
+ *
+ *  `env()` is a value, not a property, so a throwaway element takes them as
+ *  padding — the one form of `env()` every engine has always computed, which
+ *  is why `src/app/safeArea.ts` resolves the chrome's geometry through this
+ *  rather than in the stylesheet. */
+export function readInsets(): Insets {
   const probe = document.createElement("div");
-  probe.style.cssText = `position:fixed;top:0;left:0;width:0;box-sizing:content-box;visibility:hidden;pointer-events:none;padding:${INSET_PROBE_PADDING};height:var(--cal-bottom-gutter)`;
+  probe.style.cssText = `position:fixed;top:0;left:0;width:0;height:0;box-sizing:content-box;visibility:hidden;pointer-events:none;padding:${INSET_PROBE_PADDING}`;
   document.body.appendChild(probe);
   const style = getComputedStyle(probe);
   const insets: Insets = {
@@ -97,14 +96,42 @@ export function readViewportInfo(): ViewportInfo | null {
     bottom: pxOf(style.paddingBottom),
     left: pxOf(style.paddingLeft),
   };
-  const bottomGutter = `${Math.round(pxOf(style.height))}px`;
   probe.remove();
+  return insets;
+}
+
+/** Measure the live document. Returns `null` outside the browser. */
+export function readViewportInfo(): ViewportInfo | null {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return null;
+  }
+
+  // The gutter is *resolved* rather than read off `:root`: a custom property
+  // hands back whatever it was written as, and on this device that is either
+  // a `calc()` or the plain pixel length `safeArea.ts` published — neither of
+  // which is the question. The height of a throwaway element set to it is.
+  const probe = document.createElement("div");
+  probe.style.cssText = `position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--cal-bottom-gutter)`;
+  document.body.appendChild(probe);
+  const bottomGutter = `${Math.round(pxOf(getComputedStyle(probe).height))}px`;
+  probe.remove();
+
+  // The top menu's leading space, the other half of the same story — the two
+  // numbers a chrome bug report is argued from.
+  const topbarLead = `${Math.round(
+    pxOf(
+      getComputedStyle(document.documentElement).getPropertyValue(
+        "--cal-topbar-lead",
+      ),
+    ),
+  )}px`;
 
   return {
     width: window.innerWidth,
     height: window.innerHeight,
-    insets,
+    insets: readInsets(),
     bottomGutter,
+    topbarLead,
     displayMode: displayModeOf((q) => window.matchMedia(q).matches),
   };
 }

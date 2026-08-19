@@ -202,6 +202,7 @@ export const sv: Catalog = {
     viewport: "Vy",
     safeAreas: "Säkra ytor",
     bottomGutter: "Nedre marginal",
+    topbarLead: "Övre marginal",
     displayMode: "Visningsläge",
   },
   holidays: {

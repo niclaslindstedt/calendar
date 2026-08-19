@@ -57,9 +57,18 @@ dev (`npm run dev`) no service worker registers at all.
 every view keeps a clear margin below its last row, and on an installed iOS
 PWA that margin is measured against the home indicator's own band rather than
 against `env(safe-area-inset-bottom)`, which cannot be relied on to report it
-there. If a row still comes out under the swipe bar, open Settings →
-Developer → Device and quote the **Safe areas** and **Bottom gutter** lines in
-the report — those are the two numbers the gutter is derived from.
+there. The margin is also worked out in JavaScript now rather than in the
+stylesheet: the CSS the gutter used to be written as computed to nothing at
+all on the installed app, which is why the last row could arrive with no gap
+under it whatsoever. If a row still comes out under the swipe bar, open
+Settings → Developer → Device and quote the **Safe areas** and **Bottom
+gutter** lines in the report — those are the numbers the gutter is derived
+from.
+
+**The top menu sits too far below the Dynamic Island** — the gap over the
+buttons should match the gap under them. It is resolved from the status-bar
+inset the device reports; Settings → Developer → Device prints it as **Top
+menu lead**, next to the **Safe areas** it came from.
 
 **The app sits up under the status bar / Dynamic Island** — it should settle
 back within a moment on its own. This was iOS's doing: opening the keyboard

@@ -43,6 +43,7 @@ import { useT } from "./app/i18n/index.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
+import { applySafeAreaVars } from "./app/safeArea.ts";
 import {
   completeOauthOnBoot,
   connectDropbox,
@@ -137,6 +138,24 @@ export function App() {
     // Compared by value, like the faces above.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scales.day, scales.holidays, scales.nameDays, scales.week]);
+
+  // Keep the safe-area lengths on `<html>` current. `main.tsx` publishes them
+  // before the first render; they change afterwards when the device rotates
+  // (the insets swap sides), and when the app is launched from the home
+  // screen after having been open in a tab, which is a different display mode
+  // and so a different answer for the top menu's leading space.
+  useEffect(() => {
+    const media = window.matchMedia("(display-mode: standalone)");
+    const measure = () => applySafeAreaVars();
+    window.addEventListener("resize", measure);
+    window.addEventListener("orientationchange", measure);
+    media.addEventListener("change", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("orientationchange", measure);
+      media.removeEventListener("change", measure);
+    };
+  }, []);
 
   // Keep `theme-color` on the resolved page background. The installed iOS app
   // paints its own status-bar band (the body background in `src/styles.css`
