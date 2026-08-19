@@ -235,10 +235,15 @@ const DayRow = memo(function DayRow({
       } ${dayKey === today ? "bg-surface-2" : ""}`}
     >
       {/* The week gutter is only reserved when week numbers are on —
-          otherwise every row carries 36 px of dead left margin. */}
+          otherwise every row carries dead left margin. It is sized to its
+          digits rather than to the day column: two digits are 14 px at the
+          ladder's top stop, so a 16 px lane holds the widest week number at
+          any text size, and the negative margin halves the row's gap on the
+          number's right. Both sides of the marker stay narrow so the day
+          number reads as the row's start. */}
       {showWeekNumbers && (
         <span
-          className="text-muted cal-size-week w-7 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
+          className="text-muted cal-size-week -mr-1 w-4 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
           aria-label={
             startsWeek
               ? t("topbar.week", { n: weekNumber(pack, dayKey) })
