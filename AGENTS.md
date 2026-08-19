@@ -349,22 +349,30 @@ infer from the diff.
   through it too — so a change there has to be checked in both.
 - **Touch targets are ≥ 36 px square** (`h-9 w-9`), the sibling `notes` app's
   header-action size.
-- **The safe areas are respected.** The top menu's vertical padding lives in
-  `.cal-topbar` (`src/styles.css`): it adds `env(safe-area-inset-top)` on top
-  of its own padding everywhere _except_ an installed iOS PWA, where the inset
-  is the whole status-bar band and already clears the island — there it takes
-  the `max()` of the two instead, so the island-to-buttons gap matches the
-  buttons-to-hairline gap rather than reading as double it. Every view's
-  bottom gutter is `CONTENT_BOTTOM_PAD` (`src/app/layout.ts`), which is a
-  handle on `--cal-bottom-gutter` in the same stylesheet — the value has to
-  live there because the installed iOS PWA needs a different one and only a
-  media query knows it is one. **On iOS the bottom inset is not evidence.**
-  The gutter has shipped twice derived from `env(safe-area-inset-bottom)` and
-  twice the bottom row still came out under the swipe bar, so the iOS value
-  takes the larger of the inset and the 34 px an iPhone's home indicator
-  occupies and adds the clear margin on top. Settings → Developer → Device
-  prints what a device actually reports — quote that rather than reasoning
-  about it.
+- **The safe areas are respected — and the arithmetic on them is not CSS's.**
+  The two numbers the device's insets decide are the space above the top
+  menu's buttons (`--cal-topbar-lead`) and the gap under every view's last row
+  (`--cal-bottom-gutter`, reached through `CONTENT_BOTTOM_PAD` in
+  `src/app/layout.ts`). Both are resolved in `src/app/safeArea.ts` and
+  published on `<html>`; `src/styles.css` carries only the fallback that holds
+  until it has measured. They moved out of the stylesheet because both wanted
+  a comparison, and **`env()` inside `min()`, `max()` or `clamp()` is not a
+  value the installed iOS app computes** — as a declaration it is dropped, and
+  inside a custom property it fails later at substitution and takes the whole
+  property down to its initial value. That is one bug with two faces: the top
+  menu kept stacking its `py-3` on a 59 px status-bar inset (twice the air
+  over the buttons that there is under them) and `padding-bottom` silently
+  became `0`, so the last week row ran clean off the bottom of the screen.
+  Three fixes were spent inside that expression before anyone read the
+  geometry back off a device. So: keep `env()` out of `min()`/`max()`/
+  `clamp()` — `tests/layout_test.ts` fails the build if it comes back — and
+  put any comparison in `safeArea.ts`, where it is a `Math.max` and a unit
+  test. **On iOS the bottom inset is not evidence** either: a device that
+  reports a notch-deep top inset gets the 34 px an iPhone's home indicator
+  occupies as the floor for the bottom band whatever it claims down there.
+  Settings → Developer → Device prints the insets, the resolved **Top menu
+  lead** and the resolved **Bottom gutter** — quote those rather than
+  reasoning about them.
 - **The month grid still fills exactly one screen** — six week rows, no
   scrollbar, nothing clipped.
 

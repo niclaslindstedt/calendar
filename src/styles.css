@@ -54,29 +54,31 @@ body {
 }
 
 /* The gap under a view's last row, and the day list's taller version of it.
-   They live here rather than in `src/app/layout.ts` because the value an
-   installed iOS PWA needs cannot be written as one expression: it depends on
-   the display mode, and only a media query knows that. `layout.ts` publishes
-   the two variables to the views.
+   Both are *computed in JavaScript* — `src/app/safeArea.ts` resolves the
+   device's insets and publishes these two properties on `<html>` — and what
+   is written here is only the value that holds until it does.
 
-   Everywhere else the home indicator does not exist, so the gutter is a plain
-   floor plus whatever the device happens to reserve.
+   They used to be arithmetic in this file, and the arithmetic was
+   `max(25px, calc(env(safe-area-inset-bottom, 0px) + 16px))`. A custom
+   property swallows anything at parse time, so that expression looked fine
+   here and failed where it was *used*: on the installed iOS app
+   `padding-bottom: var(--cal-bottom-gutter)` was invalid at computed-value
+   time and fell back to the property's initial value — zero — which is why
+   the last week row ran clean off the bottom of the screen instead of
+   arriving with a gutter that was merely too small. Fixing the number inside
+   that expression twice changed nothing, because the number was never what
+   was wrong.
 
-   An installed iOS PWA is the exception, twice over. The shell is pinned to
-   `100vh` there (see above) so the page reaches under the home indicator, and
-   the inset that is supposed to describe that band is not something to lean
-   on: the app has been shipped with a gutter derived from it and the bottom
-   row still came out under the swipe bar, which is what a reported inset of
-   0 looks like. So the iOS gutter does not *trust* the inset — it takes the
-   larger of the inset and the 34 px band an iPhone's home indicator actually
-   occupies, and adds the clear margin on top of that. The result is at least
-   16 px of visible breathing room below the last row whether the inset
-   reports honestly or not at all. */
+   Hence the rule this file now follows: **no `env()` inside `min()`, `max()`
+   or `clamp()`.** A plain `calc(env(…) + <length>)` is the one form every
+   engine computes, so that is what the fallback below is — the device's own
+   band plus the visible margin, with the floor built into the constant rather
+   than compared against it. Everything that needs a real comparison (the home
+   indicator's 34 px floor, the display mode) is `safeArea.ts`'s job. */
 :root {
   --cal-gutter-margin: 16px;
-  --cal-bottom-gutter: max(
-    25px,
-    calc(env(safe-area-inset-bottom, 0px) + var(--cal-gutter-margin))
+  --cal-bottom-gutter: calc(
+    env(safe-area-inset-bottom, 0px) + var(--cal-gutter-margin)
   );
   /* The day list scrolls its last row into view instead of laying it out on
      screen, so it carries the shared gutter plus a little more — see
@@ -84,42 +86,33 @@ body {
   --cal-list-gutter: calc(var(--cal-bottom-gutter) + 20px);
 }
 
-@supports (-webkit-touch-callout: none) {
-  @media (display-mode: standalone) {
-    :root {
-      --cal-bottom-gutter: calc(
-        max(34px, env(safe-area-inset-bottom, 0px)) + var(--cal-gutter-margin)
-      );
-    }
-  }
-}
+/* The top menu's vertical rhythm. The pad under the buttons is this file's;
+   the space *above* them is `--cal-topbar-lead`, which `src/app/safeArea.ts`
+   publishes on `<html>` once it has read the device's insets.
 
-/* The top menu's vertical rhythm. Everywhere except an installed iOS PWA the
-   top padding *adds* to the safe-area inset, which is what keeps the bar off
-   a notch in a browser tab (where the inset is 0 in portrait, so the bar
-   simply gets its `py-3`).
+   It has to be computed there rather than here because the two environments
+   want different arithmetic on the same inset. In a browser tab the pad adds
+   to the inset — 0 in portrait, so the bar simply gets its `py-3`, and a
+   notched phone in landscape still clears the notch. In an installed app the
+   inset is the whole status-bar band (59 px on a Dynamic Island phone, 20 px
+   without one) and it already leaves room below the island, so stacking the
+   pad on top of it put roughly twice as much air over the buttons as under
+   them; there the two are *compared* instead.
 
-   An installed iOS PWA is the exception: there the inset is the whole status
-   bar band (59 px on a Dynamic Island phone, 20 px on a phone without one),
-   and it already leaves room below the island. Adding the pad on top of it
-   made the gap above the buttons read as roughly double the gap below them —
-   top-heavy chrome. Taking the `max()` instead drops exactly one `py-3`
-   (12 px) off the top, so the island-to-buttons gap matches the
-   buttons-to-hairline gap, while still flooring the pad if a device ever
-   reports a smaller inset than the padding itself. Scoped with the same
-   iOS-standalone probe as the shell height above. */
+   That comparison shipped once, as
+   `padding-top: max(var(--cal-header-pad), env(safe-area-inset-top))`, and
+   the installed app dropped the whole declaration on the floor — `env()`
+   inside `max()` is the same thing that was quietly zeroing the bottom gutter
+   above — leaving the bar on the stacked value it was meant to replace. So
+   the comparison moved to where comparing is free, and the fallback here is
+   the plain `calc()` a browser tab wants anyway. */
 .cal-topbar {
   --cal-header-pad: 0.75rem;
-  padding-top: calc(var(--cal-header-pad) + env(safe-area-inset-top));
+  padding-top: var(
+    --cal-topbar-lead,
+    calc(var(--cal-header-pad) + env(safe-area-inset-top, 0px))
+  );
   padding-bottom: var(--cal-header-pad);
-}
-
-@supports (-webkit-touch-callout: none) {
-  @media (display-mode: standalone) {
-    .cal-topbar {
-      padding-top: max(var(--cal-header-pad), env(safe-area-inset-top));
-    }
-  }
 }
 
 body {

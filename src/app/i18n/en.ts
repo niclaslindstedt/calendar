@@ -209,6 +209,8 @@ export const en = {
     safeAreas: "Safe areas",
     /** The gap this device is giving the last row of a view. */
     bottomGutter: "Bottom gutter",
+    /** The space this device is leaving above the top menu's buttons. */
+    topbarLead: "Top menu lead",
     displayMode: "Display mode",
   },
   holidays: {

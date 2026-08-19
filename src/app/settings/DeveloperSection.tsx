@@ -91,9 +91,10 @@ export function DeveloperSection({
 }
 
 /** What the device says about the screen — the viewport, the four safe-area
- *  insets, the gap a view's last row is getting, and the display mode. The
- *  bottom gutter has been wrong twice on an installed iOS PWA and both times
- *  the argument was about a number nobody could read; this prints it.
+ *  insets, the two chrome gaps `src/app/safeArea.ts` resolved from them, and
+ *  the display mode. Both gaps have been wrong on an installed iOS PWA and
+ *  every time the argument was about a number nobody could read; this prints
+ *  them.
  *
  *  Measured after mount rather than during render: the insets are resolved
  *  from a throwaway element, which is a DOM read, and they change on rotation
@@ -122,6 +123,8 @@ function DeviceSection() {
         <span>{formatSize(info.width, info.height)}</span>
         <span className="text-muted">{t("developer.safeAreas")}</span>
         <span>{formatInsets(info.insets)}</span>
+        <span className="text-muted">{t("developer.topbarLead")}</span>
+        <span>{info.topbarLead}</span>
         <span className="text-muted">{t("developer.bottomGutter")}</span>
         <span>{info.bottomGutter}</span>
         <span className="text-muted">{t("developer.displayMode")}</span>

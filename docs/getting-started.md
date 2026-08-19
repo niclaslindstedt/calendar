@@ -112,9 +112,9 @@ stock look without touching your storage connections or developer switches.
 - **Developer** — demo data, log capture, build info, the update check, and
   the device's own geometry (visible in developer mode). The **Device** block
   prints the viewport, the four safe-area insets in CSS order
-  (top / right / bottom / left), the gutter a view's last row is getting, and
-  the display mode — the numbers to quote when a layout looks wrong on a
-  phone.
+  (top / right / bottom / left), the space above the top menu's buttons, the
+  gutter a view's last row is getting, and the display mode — the numbers to
+  quote when a layout looks wrong on a phone.
 - **Logs** — the in-app log (visible once log capture is on).
 
 ### Holiday eves
