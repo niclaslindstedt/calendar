@@ -61,7 +61,14 @@ export function PastMark({
  *  else. Inline-block so it shrink-wraps the digits — a cross over the day
  *  number's whole lane would be the cell's mark drawn small, not a date
  *  crossed out. The wrapper is rendered whether or not the day is marked, so
- *  turning the setting on doesn't shift a single digit. */
+ *  turning the setting on doesn't shift a single digit.
+ *
+ *  `w-fit` is what holds that shrink-wrap where the date is a flex item: the
+ *  week planner stacks its lane with `flex-col`, and a column flex item with
+ *  an auto width stretches to the lane's 112 px instead of the digits' ~28 px
+ *  — inline-block or not — which drew the cross four number-widths wide. A
+ *  definite `fit-content` width opts out of that stretch without picking an
+ *  alignment for the lane. */
 export function MarkedDate({
   style,
   children,
@@ -71,7 +78,7 @@ export function MarkedDate({
   children: ReactNode;
 }) {
   return (
-    <span className="relative inline-block">
+    <span className="relative inline-block w-fit">
       {children}
       {/* The box the stroke is drawn in overhangs the digits sideways, and
           is what makes a crossed-out date look crossed out: the stroke
