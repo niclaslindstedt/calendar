@@ -14,13 +14,15 @@ days in each cell. Sundays are red, like on paper.
 
 Pressing a date puts a caret in it — no dialog, no placeholder, just the
 blank day and a cursor. Type: `Dinner Ada 18:00`. The text lands on the
-calendar as you type and is saved automatically. Enter or Esc (or clicking
-elsewhere) puts the pen down. There are no times, alarms, or notifications —
-the note is meant to be **read by you** the next time you look at the
-calendar.
+calendar as you type and is saved automatically. Enter starts a **new line**
+in the note; Esc, Ctrl/⌘+Enter, or clicking elsewhere puts the pen down. There
+are no times, alarms, or notifications — the note is meant to be **read by
+you** the next time you look at the calendar.
 
 Keep notes short: the text shrinks as it grows so it always fits its cell,
-and once it is as small as it goes, the day is full and takes no more text.
+and once it is as small as it goes, the day is full and takes no more text — a
+line break costs a line of that room like any other typing, so a cell with no
+room left refuses it too.
 If you routinely need more room, use the week planner or the day list.
 
 ## The three views

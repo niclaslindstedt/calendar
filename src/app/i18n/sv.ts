@@ -48,7 +48,7 @@ export const sv: Catalog = {
   },
   editor: {
     label: "Anteckning för dagen",
-    hint: "Enter sparar · Esc stänger",
+    hint: "Enter ger ny rad · Esc stänger",
     editDay: "Redigera {date}",
   },
   weekdays: {
