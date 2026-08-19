@@ -19,6 +19,12 @@ import {
   type CalFonts,
 } from "./fonts.ts";
 import {
+  DEFAULT_HEADER_COLOR,
+  headerColorOf,
+  headerInk,
+  type HeaderColor,
+} from "./headerColor.ts";
+import {
   DEFAULT_LOCALE_ID,
   coerceEveChoices,
   getLocale,
@@ -33,6 +39,16 @@ import {
   type PastMarkStyle,
 } from "./pastDays.ts";
 import type { BackendId } from "./storage/backends.ts";
+import {
+  DEFAULT_WEEK_DATE_SIZE,
+  DEFAULT_WEEK_FORMAT,
+  weekDateSizeOf,
+  weekFormatOf,
+  weekRowModeOf,
+  type WeekDateSize,
+  type WeekFormat,
+  type WeekRowMode,
+} from "./weekPlanner.ts";
 import {
   DEFAULT_TEXT_SCALE,
   SCALED_PIECES,
@@ -83,6 +99,17 @@ export type AppSettings = {
   eveDays: EveChoices;
   /** Day-list rows: same height, or grown per row by its text. */
   listRows: ListRowMode;
+  /** Week-planner rows: the same, decided separately (see `WeekRowMode`). */
+  weekRows: WeekRowMode;
+  /** Whether the week planner prints each day's ordinal in its year. */
+  weekDayOfYear: boolean;
+  /** How the week planner's margin prints a week number. */
+  weekFormat: WeekFormat;
+  /** How big the date is set at the head of a week row. */
+  weekDateSize: WeekDateSize;
+  /** The colour the period heading is banded with, and the week numbers are
+   *  printed in. `none` — the default — leaves the heading as it was. */
+  headerColor: HeaderColor;
   /** Entry text: shrink-to-fit, or pinned small / medium / large. */
   textSize: EntryTextSize;
   /** The day number's size, as a scale of its measured default. */
@@ -131,6 +158,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nameDays: null,
   eveDays: {},
   listRows: "fixed",
+  weekRows: "fixed",
+  weekDayOfYear: false,
+  weekFormat: DEFAULT_WEEK_FORMAT,
+  weekDateSize: DEFAULT_WEEK_DATE_SIZE,
+  headerColor: DEFAULT_HEADER_COLOR,
   textSize: "dynamic",
   sizeDay: DEFAULT_TEXT_SCALE,
   sizeHolidays: DEFAULT_TEXT_SCALE,
@@ -167,6 +199,11 @@ export const LOOK_KEYS = [
   "nameDays",
   "eveDays",
   "listRows",
+  "weekRows",
+  "weekDayOfYear",
+  "weekFormat",
+  "weekDateSize",
+  "headerColor",
   "textSize",
   "sizeDay",
   "sizeHolidays",
@@ -194,6 +231,11 @@ export function pickLook(settings: AppSettings): LookSettings {
     nameDays: settings.nameDays,
     eveDays: settings.eveDays,
     listRows: settings.listRows,
+    weekRows: settings.weekRows,
+    weekDayOfYear: settings.weekDayOfYear,
+    weekFormat: settings.weekFormat,
+    weekDateSize: settings.weekDateSize,
+    headerColor: settings.headerColor,
     textSize: settings.textSize,
     sizeDay: settings.sizeDay,
     sizeHolidays: settings.sizeHolidays,
@@ -238,6 +280,43 @@ export function pastMarkOf(
     style: pastMarkStyle(look.pastMark),
     scope: pastMarkScope(look.pastMarkScope),
   };
+}
+
+/** The heading band's colour, as the CSS ink the views paint with — `null`
+ *  when the band is off. Snapped back onto the known names on the way, like
+ *  the passed-day mark above: a hand-edited setting must not reach a `style`
+ *  attribute as an arbitrary string. */
+export function headerInkOf(
+  look: Pick<AppSettings, "headerColor">,
+): string | null {
+  return headerInk(look.headerColor);
+}
+
+/** The colour the heading picker has selected, held to the known names. */
+export function headerColorFor(
+  look: Pick<AppSettings, "headerColor">,
+): HeaderColor {
+  return headerColorOf(look.headerColor);
+}
+
+/** How the week planner sizes its rows, held to the two known modes. */
+export function weekRowsOf(look: Pick<AppSettings, "weekRows">): WeekRowMode {
+  return weekRowModeOf(look.weekRows);
+}
+
+/** How big the week planner sets its date, held to the four known steps. */
+export function weekDateSizeFor(
+  look: Pick<AppSettings, "weekDateSize">,
+): WeekDateSize {
+  return weekDateSizeOf(look.weekDateSize);
+}
+
+/** How the week planner's margin prints a week number, held to the three
+ *  known formats. */
+export function weekFormatFor(
+  look: Pick<AppSettings, "weekFormat">,
+): WeekFormat {
+  return weekFormatOf(look.weekFormat);
 }
 
 /** The look key that parks a given piece, so the settings grid can move one

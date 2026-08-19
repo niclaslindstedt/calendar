@@ -25,12 +25,25 @@ type Props = {
   /** Extra classes on the heading row — how the day list pins it to the top
    *  of its own scroller. */
   className?: string;
+  /** The colour the heading is banded with (Settings → Calendar → Heading),
+   *  or `null` for the plain heading the app shipped with. A band bleeds to
+   *  the screen's edges and sets its text in white, the way a printed almanac
+   *  prints its masthead. */
+  accent?: string | null;
   onPrevious: () => void;
   onNext: () => void;
 };
 
-const ARROW_CLASS =
-  "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] text-muted transition-colors hover:bg-surface-2 hover:text-fg focus-visible:ring-2 focus-visible:ring-fg focus-visible:outline-none";
+const ARROW_BASE =
+  "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] transition-colors focus-visible:ring-2 focus-visible:outline-none";
+
+/** On the page's own ground, and on a colour band. The banded pair are white
+ *  at two strengths rather than the theme's muted/foreground tokens: the band
+ *  is one fixed colour in both themes, so the ink over it has to be too. */
+const ARROW_INK =
+  "text-muted hover:bg-surface-2 hover:text-fg focus-visible:ring-fg";
+const ARROW_ON_BAND =
+  "text-white/80 hover:bg-white/20 hover:text-white focus-visible:ring-white";
 
 export function PeriodHeading({
   title,
@@ -38,31 +51,53 @@ export function PeriodHeading({
   titleClass,
   metaClass,
   className = "",
+  accent = null,
   onPrevious,
   onNext,
 }: Props) {
   const t = useT();
+  // The band has to reach the screen's edges to read as printed furniture
+  // rather than as a rectangle drawn on the page, and every view insets its
+  // content by its own gutter — so the heading gives that gutter back with a
+  // negative margin and re-spends it as padding. Only when banded: an
+  // uncoloured heading has nothing to bleed.
+  const banded = accent !== null;
+  const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
   return (
-    <div className={`flex shrink-0 items-center gap-1 py-4 ${className}`}>
+    <div
+      className={`flex shrink-0 items-center gap-1 py-4 ${
+        banded ? "-mx-3 px-3 text-white sm:-mx-6 sm:px-6" : ""
+      } ${className}`}
+      // Inline, so it wins over whatever background the caller's `className`
+      // carries — the day list pins its heading with an opaque `bg-page-bg`
+      // so the rows pass under it, and the band has to be what shows.
+      style={banded ? { background: accent } : undefined}
+    >
       <button
         type="button"
         aria-label={t("topbar.previous")}
         onClick={onPrevious}
-        className={ARROW_CLASS}
+        className={arrow}
       >
         <ChevronLeftIcon className="h-5 w-5" />
       </button>
 
       <h2 className={`min-w-0 flex-1 text-center ${titleClass}`}>
         {title}
-        {meta && <span className={`text-muted ml-3 ${metaClass}`}>{meta}</span>}
+        {meta && (
+          <span
+            className={`ml-3 ${banded ? "text-white/80" : "text-muted"} ${metaClass}`}
+          >
+            {meta}
+          </span>
+        )}
       </h2>
 
       <button
         type="button"
         aria-label={t("topbar.next")}
         onClick={onNext}
-        className={ARROW_CLASS}
+        className={arrow}
       >
         <ChevronRightIcon className="h-5 w-5" />
       </button>

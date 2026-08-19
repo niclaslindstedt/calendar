@@ -65,10 +65,14 @@ import {
   clampVacationDays,
   effectiveToggles,
   eveChoices,
+  headerInkOf,
   monthCellLayout,
   pastMarkOf,
   textScales,
   useAppSettings,
+  weekDateSizeFor,
+  weekFormatFor,
+  weekRowsOf,
 } from "./app/useAppSettings.ts";
 import { textScaleVars } from "./app/textSize.ts";
 import { status } from "./output.ts";
@@ -354,6 +358,16 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [live.pastMark, live.pastMarkScope],
   );
+  // The heading's colour band, resolved once from the live look — so the
+  // dialog previews the band, and the week numbers printed in the same ink,
+  // as the colour is picked. `null` is the plain heading.
+  const headerInk = headerInkOf(live);
+  // How the week planner sizes its rows. Grown rows make that view a scroller,
+  // which the deck has to be told about (`scrolls` below) so a vertical drag
+  // is left to the pane instead of being taken as a page turn.
+  const weekRows = weekRowsOf(live);
+  const weekFormat = weekFormatFor(live);
+  const weekDateSize = weekDateSizeFor(live);
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and
   // week views fill exactly one screen; the day list scrolls inside its own
@@ -388,6 +402,7 @@ export function App() {
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
           rowMode={live.listRows}
+          headerInk={headerInk}
           pastMark={pastMark}
           textSize={live.textSize}
           doc={store.doc}
@@ -406,7 +421,13 @@ export function App() {
         anchor={at}
         today={today}
         pack={pack}
+        showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        showDayOfYear={live.weekDayOfYear}
+        rowMode={weekRows}
+        weekFormat={weekFormat}
+        dateSize={weekDateSize}
+        headerInk={headerInk}
         pastMark={pastMark}
         textSize={live.textSize}
         doc={store.doc}
@@ -427,6 +448,7 @@ export function App() {
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
         layout={cellLayout}
+        headerInk={headerInk}
         pastMark={pastMark}
         textSize={live.textSize}
         scales={scales}
@@ -495,7 +517,10 @@ export function App() {
             // re-centres, rather than carrying a month's drag into a week.
             key={settings.view}
             itemKey={`${anchor}@${homings}`}
-            scrolls={settings.view === "list"}
+            scrolls={
+              settings.view === "list" ||
+              (settings.view === "week" && weekRows === "dynamic")
+            }
             onPrevious={() => step(-1)}
             onNext={() => step(1)}
             renderItem={renderPeriod}

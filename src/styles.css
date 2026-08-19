@@ -199,20 +199,65 @@ body {
 /* The week planner's almanac lane. Its base width comes from the view (as a
    `[--cal-lane:…]` utility, so it can keep a responsive variant and a narrower
    value for a pack that prints no name days); the scale the reader has the
-   captions set at multiplies it here.
+   day's names set at multiplies it here.
 
    The lane *has* to grow with them, unlike the month cell's caption band: a
    week row's height is fixed by the seven-way split of the screen, so a name
    run that wraps to a second line on Large is a line the row cannot show. The
    month cell answers that by re-seeding hyphens (`minHyphenatedLetters`); the
    lane answers it by getting wider, which costs the note width the reader
-   asked to spend. Whichever caption is set largest sets the width — they share
-   the lane, and it is the widest one that decides whether a line wraps. */
+   asked to spend. The day's names are what decides that — the holiday is
+   printed in the rail on the right, not in the lane.
+
+   `--cal-lane-extra` is the room the year-day number takes when it is turned
+   on (Settings → Calendar → Week planner). It is scaled by the *week* number's
+   setting rather than the names' because that is the size it is printed at:
+   the two are the same kind of marginal number. Its default of `0rem` — a
+   length, not a bare `0` — is what keeps the multiplication valid when the
+   number is off. */
 .cal-week-lane {
   width: calc(
-    var(--cal-lane, 7rem) *
-      max(var(--cal-size-nameday, 1), var(--cal-size-holiday, 1))
+    (var(--cal-date, 1.5rem) + 0.375rem) * var(--cal-size-day, 1) +
+      var(--cal-lane, 5.5rem) * var(--cal-size-nameday, 1) +
+      var(--cal-lane-extra, 0rem) * var(--cal-size-week, 1)
   );
+  /* …and the floor the scales can't take it below. The lane's first line is
+     the date with the weekday beside it, and the weekday is *not* set at the
+     names' size — so the width the names ask for cannot be the whole answer.
+     4.25rem is that weekday measured: "Wednesday" is 64.2 px in the lane's
+     serif at 14 px, the widest in either shipped pack (the Swedish "måndag"
+     is 44.3 px). Without it, a pack that prints no name days and a reader who
+     had set the names Small multiplied the lane down until "Wednesday" ran
+     straight into the note. Measured with `canvas.measureText` in the
+     computed font, per AGENTS.md; re-measure it if the lane's face moves.
+
+     The date's own column is the same in both, and it is the one part the
+     reader sizes directly: `--cal-date` is whatever step the week planner's
+     Date size is on (1.25rem–3rem, published by the view), the digits are
+     almost exactly one em wide in the lane's face — "28" measures 24 px at
+     24 px — and the 0.375rem is the gap after them. The shared day-number
+     scale multiplies the pair, so a large date on a large setting is large
+     twice, and the lane pays for both. */
+  min-width: calc(
+    (var(--cal-date, 1.5rem) + 0.375rem) * var(--cal-size-day, 1) +
+      var(--cal-lane-floor, 4.25rem) + var(--cal-lane-extra, 0rem) *
+      var(--cal-size-week, 1)
+  );
+}
+
+/* The rule where one week ends and the next begins. In a view that shows a
+   single week it is the strip's top edge — which is the point: paging through
+   the weeks, the doubled line is the week change, the same mark a printed
+   column calendar draws across its strip.
+
+   Twice the hairline's height and the same ink: it is the *same* rule, drawn
+   heavier, which is what a printed strip does. Setting it in the page's
+   foreground colour instead read as a bar across the calendar rather than as a
+   line between two weeks, and it is deliberately not the heading's colour
+   either — the week boundary is a fact about the calendar and has to read the
+   same whether or not a band has been turned on. */
+.cal-week-row.cal-week-break {
+  border-top: 2px solid var(--line);
 }
 
 /* The week planner's almanac lane, lying back down on a short screen.
@@ -230,17 +275,56 @@ body {
    stack occupies, so a landscape tablet keeps the lane and a landscape phone
    does not. */
 @media (orientation: landscape) and (max-height: 700px) {
+  /* The week strip on a landscape phone. Seven rows share ~390 px of height
+     there, so a row is barely taller than one line of text and everything the
+     portrait row stacks has to read *across* instead: the weekday and the
+     day's names come up beside the date, and the rail's two pieces sit side by
+     side at the end of the same line.
+
+     The row itself stays a row. It used to become a column here — from when
+     the lane was a four-deep stack that a 45 px row could not show — and that
+     put the note on a second line the row had no height for, so a day with a
+     note in it was silently clipped to nothing. Now that the lane is one line,
+     the row's own order (lane, note, rail) is already the order this screen
+     wants.
+
+     It lives here rather than in the view because only a media query knows the
+     screen is that short. 700 px is where it flips: seven rows plus the app's
+     own chrome need that much for a row to clear the stacked lane, so a
+     landscape tablet keeps the portrait shape and a landscape phone does
+     not. */
   .cal-week-row {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
+    align-items: center;
   }
   .cal-week-lane {
+    /* A line, not a two-column block — so the measured widths above have
+       nothing to say here. The floor keeps the note's left edge in one place
+       down the strip for as long as the names are ordinary. */
     width: auto;
-    flex-direction: row;
+    min-width: 15rem;
     flex-wrap: wrap;
     align-items: baseline;
     column-gap: 0.375rem;
+  }
+  .cal-week-names {
+    flex-direction: row;
+    align-items: baseline;
+    column-gap: 0.375rem;
+  }
+  .cal-week-names > * {
+    margin-top: 0;
+  }
+  .cal-week-rail {
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-end;
+    column-gap: 0.5rem;
+  }
+  /* The holiday is pushed to the bottom of a tall rail with `mt-auto`, and an
+     auto margin outranks the alignment above — so it is cleared here rather
+     than fought with. */
+  .cal-week-rail .cal-week-holiday {
+    margin-top: 0;
   }
   /* A date that is a heading in the lane is just the day number again on a
      line — the size the other views print it at. */

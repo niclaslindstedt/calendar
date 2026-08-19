@@ -49,6 +49,8 @@ type Props = {
   showNameDays: boolean;
   /** Where the number, the captions and the note sit in a cell. */
   layout: MonthCellLayout;
+  /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
+  headerInk: string | null;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -83,6 +85,7 @@ export const MonthGridView = memo(function MonthGridView({
   showWeekNumbers,
   showNameDays,
   layout,
+  headerInk,
   pastMark,
   textSize,
   scales,
@@ -146,6 +149,7 @@ export const MonthGridView = memo(function MonthGridView({
           meta={String(year)}
           titleClass="cal-serif text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl"
           metaClass="text-xl tracking-normal sm:text-2xl"
+          accent={headerInk}
           onPrevious={onPrevious}
           onNext={onNext}
         />

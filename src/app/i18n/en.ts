@@ -17,6 +17,10 @@ export const en = {
     viewWeek: "Week",
     viewList: "Day list",
     week: "Week {n}",
+    // The week planner prints the number in its right-hand margin, where a
+    // printed almanac sets it: one letter and the number, in the heading's
+    // colour. Swedish calendars print "v 32"; English ones "w 32".
+    weekMark: "w {n}",
   },
   namespaces: {
     // The top menu's left-hand button — the one that used to say "Today".
@@ -136,6 +140,7 @@ export const en = {
     textSizeSmall: "Small",
     textSizeMedium: "Medium",
     textSizeLarge: "Large",
+    textSizeHuge: "Huge",
     textSizeSampleHoliday: "All Saints",
     textSizeSampleNote: "Dinner 18:00",
     pastDays: "Passed days",
@@ -154,6 +159,27 @@ export const en = {
       "Fixed keeps every row the same height; Dynamic grows a row with its text.",
     rowsFixed: "Fixed",
     rowsDynamic: "Dynamic",
+    heading: "Heading",
+    headingHint:
+      "A printed calendar sets the month over a coloured bar and prints its week numbers in the same colour. Off leaves the heading plain and the week numbers in the page's own ink.",
+    headerColor: "Colour",
+    headerColorNone: "Off",
+    headerColorRed: "Red",
+    headerColorBlue: "Blue",
+    headerColorGreen: "Green",
+    headerColorPlum: "Plum",
+    headerColorOchre: "Ochre",
+    weekPlanner: "Week planner",
+    weekPlannerHint:
+      "The week strip: the date and the day's names down the left, your notes in the middle, and the week number and the holiday's name in the right-hand margin.",
+    weekDayOfYear: "Day of year",
+    weekDayOfYearHint:
+      "Print each day's number in the year (1–366) beside the weekday.",
+    weekDateSize: "Date size",
+    weekFormat: "Week number",
+    weekRows: "Week planner rows",
+    weekRowsHint:
+      "Fixed fits the whole week on one screen; Dynamic grows a day with its text and scrolls.",
     theme: "Theme",
     themeMode: "Mode",
     themeSystem: "Follow device",

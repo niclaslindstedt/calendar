@@ -40,6 +40,8 @@ type Props = {
   showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
+  /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
+  headerInk: string | null;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -72,6 +74,7 @@ export const DayListView = memo(function DayListView({
   showWeekNumbers,
   showNameDays,
   rowMode,
+  headerInk,
   pastMark,
   textSize,
   doc,
@@ -117,6 +120,7 @@ export const DayListView = memo(function DayListView({
         meta={String(year)}
         titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
         metaClass="text-lg"
+        accent={headerInk}
         className="bg-page-bg sticky top-0 z-10 border-b border-line"
         onPrevious={onPrevious}
         onNext={onNext}

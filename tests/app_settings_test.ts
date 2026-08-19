@@ -10,10 +10,14 @@ import {
   DEFAULT_SETTINGS,
   LOOK_KEYS,
   effectiveToggles,
+  headerColorFor,
+  headerInkOf,
   monthCellLayout,
   pickLook,
   updateLook,
+  weekRowsOf,
 } from "../src/app/useAppSettings.ts";
+import { HEADER_COLOR_HEX } from "../src/app/headerColor.ts";
 import { getLocale } from "../src/app/locale/index.ts";
 
 describe("the look draft", () => {
@@ -79,6 +83,36 @@ describe("the look draft", () => {
     expect(next.textSize).toBe("large");
     expect(next.localeId).toBe(DEFAULT_LOOK.localeId);
     expect(next.listRows).toBe(DEFAULT_LOOK.listRows);
+  });
+
+  it("ships the week planner as the printed strip it was", () => {
+    // The whole week on one screen, no year-day numbers, no colour band —
+    // every one of the three is opt-in, so an install that never opens
+    // Settings renders what it always did.
+    expect(DEFAULT_LOOK.weekRows).toBe("fixed");
+    expect(DEFAULT_LOOK.weekDayOfYear).toBe(false);
+    expect(DEFAULT_LOOK.headerColor).toBe("none");
+    expect(headerInkOf(DEFAULT_LOOK)).toBeNull();
+  });
+
+  it("previews the heading band and the week strip rather than saving them", () => {
+    // All three are judged against the calendar behind the dialog, so they
+    // have to travel in the draft.
+    for (const key of [
+      "headerColor",
+      "weekRows",
+      "weekDayOfYear",
+      "weekFormat",
+      "weekDateSize",
+    ] as const) {
+      expect(LOOK_KEYS).toContain(key);
+    }
+    const banded = updateLook(DEFAULT_LOOK, "headerColor", "blue");
+    expect(headerColorFor(banded)).toBe("blue");
+    expect(headerInkOf(banded)).toBe(HEADER_COLOR_HEX.blue);
+    expect(weekRowsOf(updateLook(DEFAULT_LOOK, "weekRows", "dynamic"))).toBe(
+      "dynamic",
+    );
   });
 
   it("resolves the toggles from the draft, override before pack default", () => {
