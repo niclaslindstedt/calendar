@@ -16,9 +16,9 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import {
-  NamespacesModal,
+  NamespacesModal as CalendarsModal,
   applyFaviconHref,
-  namespaceFaviconHref,
+  namespaceFaviconHref as calendarFaviconHref,
 } from "@niclaslindstedt/oss-framework/namespaces";
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
@@ -57,7 +57,7 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
-import { useNamespaces } from "./app/useNamespaces.ts";
+import { useCalendars } from "./app/useCalendars.ts";
 import { pinShell } from "./app/shellScroll.ts";
 import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
@@ -202,32 +202,32 @@ export function App() {
   const [nameSeed, setNameSeed] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
 
-  // Namespaces: separate calendars in the same app, each its own document in
+  // Calendars: separate calendars in the same app, each its own document in
   // the same backend. The registry and the active pointer live in the app
-  // (`useNamespaces`, the framework's "store stays in the app" seam); the
+  // (`useCalendars`, the framework's "store stays in the app" seam); the
   // document store keys off the active slug, so switching swaps the notes
   // under the same month.
-  const namespaces = useNamespaces(settings.backend);
+  const calendars = useCalendars(settings.backend);
   const store = useCalendarStore(
     settings.backend,
     settings.demoData,
-    namespaces.activeSlug,
+    calendars.activeSlug,
   );
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [namespacesOpen, setNamespacesOpen] = useState(false);
+  const [calendarsOpen, setCalendarsOpen] = useState(false);
 
-  // Re-badge the browser tab with the active namespace's glyph, so a pinned
+  // Re-badge the browser tab with the active calendar's glyph, so a pinned
   // work calendar and a personal one are told apart in the tab strip. A
-  // namespace that picked no glyph keeps the app's own mark.
-  const activeNamespace = namespaces.activeNamespace;
+  // calendar that picked no glyph keeps the app's own mark.
+  const activeCalendar = calendars.activeCalendar;
   useEffect(() => {
     applyFaviconHref(
-      namespaceFaviconHref(
-        activeNamespace,
+      calendarFaviconHref(
+        activeCalendar,
         `${import.meta.env.BASE_URL}icons/icon.svg`,
       ),
     );
-  }, [activeNamespace]);
+  }, [activeCalendar]);
 
   // Finish an inbound Dropbox OAuth redirect, then activate the backend.
   const [folderConnected, setFolderConnected] = useState(false);
@@ -476,7 +476,7 @@ export function App() {
         view={settings.view}
         // Pressing the view you are already in is how you get back to today —
         // the switcher's own "you are here" slot doubles as the way home,
-        // which is what frees the left-hand button for the namespace menu.
+        // which is what frees the left-hand button for the calendar menu.
         onViewChange={(view) => {
           setEditingDay(null);
           closeHolidays();
@@ -484,15 +484,15 @@ export function App() {
           if (view === settings.view) goToday();
           else update("view", view);
         }}
-        namespaces={namespaces.list}
-        activeNamespace={namespaces.activeSlug}
-        onSwitchNamespace={(slug) => {
+        calendars={calendars.list}
+        activeCalendar={calendars.activeSlug}
+        onSwitchCalendar={(slug) => {
           setEditingDay(null);
           closeHolidays();
           closeNames();
-          namespaces.switchTo(slug);
+          calendars.switchTo(slug);
         }}
-        onManageNamespaces={() => setNamespacesOpen(true)}
+        onManageCalendars={() => setCalendarsOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
@@ -543,38 +543,41 @@ export function App() {
         onPick={goToNameDay}
       />
 
-      {/* Create / switch / rename / restyle / delete a namespace. The app owns
-          the registry (`useNamespaces`); the framework owns the dialog. */}
-      <NamespacesModal
-        open={namespacesOpen}
-        onClose={() => setNamespacesOpen(false)}
-        namespaces={namespaces.list}
-        activeNamespace={namespaces.activeSlug}
-        onSwitch={namespaces.switchTo}
-        onCreate={namespaces.create}
-        onRename={namespaces.rename}
-        onSetAppearance={namespaces.setAppearance}
-        onRemove={namespaces.remove}
+      {/* Create / switch / rename / restyle / delete a calendar. The app owns
+          the registry (`useCalendars`); the framework owns the dialog — which
+          is why the two props below still say "namespace": that is the
+          framework's generic word for the slot, and the app's word for what
+          is in it is set at the import above. */}
+      <CalendarsModal
+        open={calendarsOpen}
+        onClose={() => setCalendarsOpen(false)}
+        namespaces={calendars.list}
+        activeNamespace={calendars.activeSlug}
+        onSwitch={calendars.switchTo}
+        onCreate={calendars.create}
+        onRename={calendars.rename}
+        onSetAppearance={calendars.setAppearance}
+        onRemove={calendars.remove}
         labels={{
-          heading: t("namespaces.heading"),
-          blurb: t("namespaces.blurb"),
-          newAction: t("namespaces.newAction"),
-          namePlaceholder: t("namespaces.namePlaceholder"),
-          nameLabel: t("namespaces.nameLabel"),
-          create: t("namespaces.create"),
-          nameRequired: t("namespaces.nameRequired"),
-          colorLabel: t("namespaces.colorLabel"),
-          glyphLabel: t("namespaces.glyphLabel"),
-          glyphNone: t("namespaces.glyphNone"),
-          save: t("namespaces.save"),
-          cancel: t("namespaces.cancel"),
-          renameAction: t("namespaces.renameAction"),
-          deleteAction: t("namespaces.deleteAction"),
-          delete: t("namespaces.delete"),
-          deleteConfirm: (name) => t("namespaces.deleteConfirm", { name }),
-          switchTo: (name) => t("namespaces.switchTo", { name }),
-          defaultBadge: t("namespaces.defaultBadge"),
-          close: t("namespaces.close"),
+          heading: t("calendars.heading"),
+          blurb: t("calendars.blurb"),
+          newAction: t("calendars.newAction"),
+          namePlaceholder: t("calendars.namePlaceholder"),
+          nameLabel: t("calendars.nameLabel"),
+          create: t("calendars.create"),
+          nameRequired: t("calendars.nameRequired"),
+          colorLabel: t("calendars.colorLabel"),
+          glyphLabel: t("calendars.glyphLabel"),
+          glyphNone: t("calendars.glyphNone"),
+          save: t("calendars.save"),
+          cancel: t("calendars.cancel"),
+          renameAction: t("calendars.renameAction"),
+          deleteAction: t("calendars.deleteAction"),
+          delete: t("calendars.delete"),
+          deleteConfirm: (name) => t("calendars.deleteConfirm", { name }),
+          switchTo: (name) => t("calendars.switchTo", { name }),
+          defaultBadge: t("calendars.defaultBadge"),
+          close: t("calendars.close"),
         }}
       />
 
@@ -591,7 +594,7 @@ export function App() {
         onOpenPlanner={openPlanner}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
-        namespace={namespaces.activeSlug}
+        calendarSlug={calendars.activeSlug}
         storage={{
           setActive: setActiveBackend,
           folderConnected,

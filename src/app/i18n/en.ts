@@ -22,19 +22,20 @@ export const en = {
     // colour. Swedish calendars print "v 32"; English ones "w 32".
     weekMark: "w {n}",
   },
-  namespaces: {
+  calendars: {
     // The top menu's left-hand button — the one that used to say "Today".
-    // The word matches the sibling `contacts` app, which ships the same
-    // feature under the same name; the blurb below says what it means here.
-    switcher: "Namespace: {name}",
-    menu: "Namespaces",
-    manage: "Manage namespaces…",
-    heading: "Namespaces",
+    // The framework ships this feature as "namespaces", a generic slot an app
+    // files documents under; this app files exactly one kind of document, so
+    // the reader is offered the thing rather than the slot.
+    switcher: "Calendar: {name}",
+    menu: "Calendars",
+    manage: "Manage calendars…",
+    heading: "Calendars",
     blurb:
-      "Each namespace is a separate calendar with its own notes — one for home, one for work. Switch between them from the top menu, or give one an icon and a colour.",
-    newAction: "New namespace",
-    namePlaceholder: "Namespace name",
-    nameLabel: "Namespace name",
+      "Each calendar keeps its own notes — one for home, one for work. Switch between them from the top menu, or give one an icon and a colour.",
+    newAction: "New calendar",
+    namePlaceholder: "Calendar name",
+    nameLabel: "Calendar name",
     create: "Create",
     nameRequired: "A name is required",
     colorLabel: "Colour",
@@ -44,13 +45,13 @@ export const en = {
     cancel: "Cancel",
     close: "Close",
     renameAction: "Rename",
-    deleteAction: "Delete namespace",
+    deleteAction: "Delete calendar",
     delete: "Delete",
     deleteConfirm:
       "Delete \u201c{name}\u201d and all of its notes? This can't be undone.",
     switchTo: "Switch to {name}",
     defaultBadge: "Default",
-    // The two namespaces a first run is seeded with (see `useNamespaces`).
+    // The two calendars a first run is seeded with (see `useCalendars`).
     seedPersonal: "Personal",
     seedWork: "Work",
   },

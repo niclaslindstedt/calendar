@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The top menu — the app's only chrome (no sidebar): the namespace switcher
+// The top menu — the app's only chrome (no sidebar): the calendar switcher
 // on the left, the view switcher in the middle, and the settings cogwheel top
 // right. Period navigation is deliberately NOT here: the ‹ › arrows sit on
 // the month heading (`PeriodHeading`), which is where the eye already is and
@@ -8,7 +8,7 @@
 // Going back to today is not a button either. Pressing the view you are
 // already in returns to today — the gesture a segmented control invites
 // anyway (a tab bar that re-selects its own tab scrolls to the top), and the
-// only way to fit a namespace switcher into a three-slot bar without a fourth
+// only way to fit a calendar switcher into a three-slot bar without a fourth
 // control that wraps in portrait.
 //
 // The bar follows the sibling `notes` app's header: page-background with a
@@ -21,12 +21,11 @@ import {
   CogIcon,
   SegmentedControl,
 } from "@niclaslindstedt/oss-framework/components";
-import type { Namespace } from "@niclaslindstedt/oss-framework/namespaces";
-
-import { NamespaceMenu } from "./NamespaceMenu.tsx";
+import { CalendarMenu } from "./CalendarMenu.tsx";
 import { TopBarIconButton } from "./TopBarButton.tsx";
 import { useT } from "./i18n/index.ts";
 import type { ViewMode } from "./useAppSettings.ts";
+import type { Calendar } from "./useCalendars.ts";
 
 type Props = {
   view: ViewMode;
@@ -34,30 +33,30 @@ type Props = {
    *  that is already showing, which is how the calendar goes back to today.
    *  The shell owns that decision (`App.tsx`), not this bar. */
   onViewChange: (view: ViewMode) => void;
-  namespaces: Namespace[];
-  activeNamespace: string;
-  onSwitchNamespace: (slug: string) => void;
-  onManageNamespaces: () => void;
+  calendars: Calendar[];
+  activeCalendar: string;
+  onSwitchCalendar: (slug: string) => void;
+  onManageCalendars: () => void;
   onOpenSettings: () => void;
 };
 
 export function TopBar({
   view,
   onViewChange,
-  namespaces,
-  activeNamespace,
-  onSwitchNamespace,
-  onManageNamespaces,
+  calendars,
+  activeCalendar,
+  onSwitchCalendar,
+  onManageCalendars,
   onOpenSettings,
 }: Props) {
   const t = useT();
   return (
     <header className="cal-topbar flex items-center gap-2 border-b border-line bg-page-bg/90 px-4 backdrop-blur">
-      <NamespaceMenu
-        namespaces={namespaces}
-        activeSlug={activeNamespace}
-        onSwitch={onSwitchNamespace}
-        onManage={onManageNamespaces}
+      <CalendarMenu
+        calendars={calendars}
+        activeSlug={activeCalendar}
+        onSwitch={onSwitchCalendar}
+        onManage={onManageCalendars}
       />
 
       <div className="flex min-w-0 flex-1 justify-center">

@@ -11,14 +11,13 @@
 // REST, the folder file store) — this file just wires it to localStorage keys
 // and the app's env.
 //
-// Everything here is per-*namespace*: a backend is a place, and each
-// namespace is a separate document in that place. The connection state (a
-// token, a folder handle) is shared by every namespace on the device; only
+// Everything here is per-*calendar*: a backend is a place, and each calendar
+// is a separate document in that place. The connection state (a token, a
+// folder handle) is shared by every calendar on the device; only
 // where the document sits varies — a suffixed name beside its siblings on
 // most backends, a folder of its own on Dropbox — and `./paths.ts` owns that
 // naming.
 
-import { DEFAULT_NAMESPACE_SLUG } from "@niclaslindstedt/oss-framework/namespaces";
 import {
   BrowserLocalStorageAdapter,
   clearDirectoryHandle,
@@ -43,6 +42,7 @@ import { logStore } from "../log.ts";
 import { emptyDoc, serializeDoc } from "../types.ts";
 import type { BackendId } from "./demoAdapter.ts";
 import {
+  DEFAULT_CALENDAR_SLUG,
   DROPBOX_DOCUMENT_FILE,
   cacheScope,
   documentFileName,
@@ -212,7 +212,7 @@ export async function completeOauthOnBoot(): Promise<BackendId | null> {
 
 // --- where the document sits ------------------------------------------------
 
-/** Where a namespace's calendar lives in Dropbox, spelled the way Dropbox
+/** Where a calendar's notes live in Dropbox, spelled the way Dropbox
  *  shows it. The app folder's name is a build-time setting the user can't see
  *  from the outside, so the Storage tab prints this rather than leaving them
  *  to hunt for the folder. */
@@ -222,14 +222,14 @@ export function dropboxLocation(slug: string): string {
 
 // --- adapter construction ---------------------------------------------------
 
-/** Build the adapter for a backend id and namespace slug, or null when the
+/** Build the adapter for a backend id and calendar slug, or null when the
  *  backend isn't connected / available (the caller falls back to "browser").
  *  Cloud adapters are wrapped in the framework's offline mirror so the
- *  calendar still opens without a network — one mirror per namespace, so two
- *  namespaces can't serve each other's cached document. */
+ *  calendar still opens without a network — one mirror per calendar, so two
+ *  of them can't serve each other's cached document. */
 export async function buildAdapter(
   id: BackendId,
-  slug: string = DEFAULT_NAMESPACE_SLUG,
+  slug: string = DEFAULT_CALENDAR_SLUG,
 ): Promise<StorageAdapter | null> {
   const fileName = documentFileName(slug);
   switch (id) {
@@ -260,10 +260,10 @@ export async function buildAdapter(
         },
         {
           appKey: DROPBOX_APP_KEY,
-          // A folder per namespace at the app folder's root, the calendar
+          // A folder per calendar at the app folder's root, the notes
           // inside it. Dropbox creates the folder on the first upload, and a
-          // folder that isn't there yet reads as an empty namespace rather
-          // than an error — so a new namespace needs no setup round-trip.
+          // folder that isn't there yet reads as an empty calendar rather
+          // than an error — so a new calendar needs no setup round-trip.
           rootPath: dropboxRootPath(slug),
           fileName: DROPBOX_DOCUMENT_FILE,
           logger: storageLog("dropbox"),
@@ -297,24 +297,24 @@ export async function buildAdapter(
   }
 }
 
-// --- namespace teardown -----------------------------------------------------
+// --- calendar teardown ------------------------------------------------------
 
-/** Throw away a deleted namespace's document. The device-local copies (the
+/** Throw away a deleted calendar's document. The device-local copies (the
  *  browser document, every backend's offline mirror) are removed outright.
- *  Dropbox holds the namespace as a folder, so the folder goes with it —
- *  a deleted calendar leaves nothing behind in the app folder. Elsewhere the
+ *  Dropbox holds a calendar as a folder, so the folder goes with it — a
+ *  deleted calendar leaves nothing behind in the app folder. Elsewhere the
  *  copy in the *active* remote backend is emptied rather than removed,
- *  because a `StorageAdapter` can write but not delete. Either way a
- *  namespace re-created under the same slug comes back blank instead of
- *  inheriting the deleted one's notes.
+ *  because a `StorageAdapter` can write but not delete. Either way a calendar
+ *  re-created under the same slug comes back blank instead of inheriting the
+ *  deleted one's notes.
  *
- *  Best-effort throughout: a namespace leaves the registry whether or not the
+ *  Best-effort throughout: a calendar leaves the registry whether or not the
  *  cloud round-trip succeeds, so a failure here is logged, not thrown. */
-export async function discardNamespaceData(
+export async function discardCalendarData(
   id: BackendId,
   slug: string,
 ): Promise<void> {
-  if (slug === DEFAULT_NAMESPACE_SLUG) return;
+  if (slug === DEFAULT_CALENDAR_SLUG) return;
 
   deleteLocalDocument(documentKey(slug));
   for (const backend of ["dropbox", "gdrive"] as const) {
@@ -326,29 +326,29 @@ export async function discardNamespaceData(
   }
 
   if (id === "browser" || id === "demo") return;
-  if (id === "dropbox" && (await removeDropboxNamespaceFolder(slug))) return;
+  if (id === "dropbox" && (await removeDropboxCalendarFolder(slug))) return;
   try {
     const adapter = await buildAdapter(id, slug);
     await adapter?.save(serializeDoc(emptyDoc()));
   } catch (err) {
     storageLog(id).error(
-      "could not clear the deleted namespace's document",
+      "could not clear the deleted calendar's document",
       err,
     );
   }
 }
 
-/** Delete a namespace's whole Dropbox folder. Returns false when there is no
+/** Delete a calendar's whole Dropbox folder. Returns false when there is no
  *  connection to delete through, or the call failed — the caller then falls
  *  back to emptying the document in place. */
-async function removeDropboxNamespaceFolder(slug: string): Promise<boolean> {
+async function removeDropboxCalendarFolder(slug: string): Promise<boolean> {
   const accessToken = localStorage.getItem(DROPBOX_ACCESS_KEY);
   if (!accessToken) return false;
   try {
     await deleteDropboxPath(accessToken, dropboxRootPath(slug));
     return true;
   } catch (err) {
-    storageLog("dropbox").error("could not delete the namespace's folder", err);
+    storageLog("dropbox").error("could not delete the calendar's folder", err);
     return false;
   }
 }

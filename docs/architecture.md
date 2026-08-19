@@ -25,13 +25,13 @@ src/
     │                     holiday eves are worked) — see features/locales.md
     ├── i18n/             UI-string catalogs (framework createI18n)
     ├── storage/          backend registry + OAuth flows + demo adapter;
-    │                     paths.ts names each namespace's document (pure, tested)
+    │                     paths.ts names each calendar's document (pure, tested)
     ├── types.ts          CalendarDoc: { version, entries: { "YYYY-MM-DD": text } }
     ├── migrations.ts     version chain (framework createMigrator)
-    ├── useCalendarStore.ts  load/save the active namespace's document through
+    ├── useCalendarStore.ts  load/save the active calendar's document through
     │                     the active StorageAdapter
-    ├── useNamespaces.ts  the namespace registry + active pointer — separate
-    │                     calendars, one document each (features/namespaces.md)
+    ├── useCalendars.ts   the calendar registry + active pointer — separate
+    │                     calendars, one document each (features/calendars.md)
     ├── useAppSettings.ts    persisted app settings (country, view, dev mode…)
     ├── entryFont.ts      entry sizing: the shrink-to-fit curve and the three
     │                     fixed steps (pure, tested)
@@ -43,7 +43,7 @@ src/
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── DayEntry.tsx      shared read/edit entry surface
     ├── TopBar.tsx        the only chrome — no sidebar
-    ├── NamespaceMenu.tsx the top-left switcher (button + dropdown)
+    ├── CalendarMenu.tsx  the top-left switcher (button + dropdown)
     ├── TopBarButton.tsx  the shared 36 px icon button
     ├── settings/         the tabbed settings dialog: SettingsModal.tsx (shell
     │                     + draft/Save), tabs.tsx (header + rail), one file

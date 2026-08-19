@@ -27,7 +27,7 @@ Name the app folder something else and `VITE_DROPBOX_APP_FOLDER` has to say
 so: Dropbox fixes that name in the app's configuration and the API's root
 _is_ that folder, so the value is never sent with a request — it is only what
 Settings → Storage prints when it tells the user where their calendar sits.
-Inside it, each namespace gets a folder of its own — see
+Inside it, each calendar gets a folder of its own — see
 [storage](storage.md).
 
 **Google Drive**: create an OAuth client id in the Google Cloud console with
@@ -43,15 +43,20 @@ under `calendar:*` keys — no server, no account.
 
 The keys worth knowing by name:
 
-| Key                         | Holds                                                                                               |
-| --------------------------- | --------------------------------------------------------------------------------------------------- |
-| `calendar:settings`         | The settings dialog's choices.                                                                      |
-| `calendar:appearance`       | Theme, accent, font family.                                                                         |
-| `calendar:language`         | UI language (separate from the country calendar).                                                   |
-| `calendar:backend`          | The active storage backend.                                                                         |
-| `calendar:namespaces`       | The [namespace](features/namespaces.md) registry — names, icons, colours.                           |
-| `calendar:namespace:active` | Which namespace is on screen.                                                                       |
-| `calendar:document`         | The default namespace's calendar, when the browser backend is active (others are suffixed by slug). |
+| Key                        | Holds                                                                                           |
+| -------------------------- | ----------------------------------------------------------------------------------------------- |
+| `calendar:settings`        | The settings dialog's choices.                                                                  |
+| `calendar:appearance`      | Theme, accent, font family.                                                                     |
+| `calendar:language`        | UI language (separate from the country calendar).                                               |
+| `calendar:backend`         | The active storage backend.                                                                     |
+| `calendar:calendars`       | The [calendar](features/calendars.md) registry — names, icons, colours.                         |
+| `calendar:calendar:active` | Which calendar is on screen.                                                                    |
+| `calendar:document`        | The default calendar's notes, when the browser backend is active (others are suffixed by slug). |
 
-The namespace registry is device-local by design: the _documents_ sync through
+The calendar registry is device-local by design: the _documents_ sync through
 the backend you chose, the list of them does not.
+
+> The registry shipped under `calendar:namespaces` and
+> `calendar:namespace:active` while the feature was called "namespaces". A
+> device that still has those keys is moved onto the names above the first
+> time it loads the app; nothing is lost, and the old keys are dropped.

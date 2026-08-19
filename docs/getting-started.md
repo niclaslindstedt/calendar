@@ -67,12 +67,12 @@ switches to it and keeps the period you were reading. The arrows sit on the
 heading rather than in the top bar so the view switcher has room on a portrait
 phone.
 
-## Namespaces
+## Calendars
 
-The button at the top left is the namespace switcher: separate calendars, each
+The button at the top left is the calendar switcher: separate calendars, each
 with its own notes, one for home and one for work. Tap it to switch, or to
-open **Manage namespaces…** and create, rename, restyle or delete one. See
-[namespaces](features/namespaces.md).
+open **Manage calendars…** and create, rename, restyle or delete one. See
+[calendars](features/calendars.md).
 
 ## Holidays and vacation planning
 

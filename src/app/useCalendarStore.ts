@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The document store: the active namespace's calendar, loaded from and saved
+// The document store: the active calendar's notes, loaded from and saved
 // through the active storage backend. Owns load-on-switch, the debounced save
 // pipeline with revision tracking, and the save-status line the Storage tab
 // shows. Deliberately simpler than a full sync engine: one document, last
 // writer wins, conflicts resolve by adopting the remote copy (per-day notes
 // make silent overwrites low-stakes).
 //
-// "Which document" is (backend, namespace): the backend is the place, the
-// namespace is the file in it. A change to either is one thing to this store
+// "Which document" is (backend, calendar): the backend is the place, the
+// calendar is the file in it. A change to either is one thing to this store
 // — a *session*: build an adapter, load, then save through it until the next
 // change swaps it out.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
-import { DEFAULT_NAMESPACE_SLUG } from "@niclaslindstedt/oss-framework/namespaces";
+import { DEFAULT_CALENDAR_SLUG } from "./storage/paths.ts";
 import {
   ConflictError,
   describeStorageError,
@@ -49,10 +49,10 @@ export type CalendarStore = {
   effectiveBackend: BackendId;
 };
 
-/** One (backend, namespace) document, with the adapter that reads and writes
+/** One (backend, calendar) document, with the adapter that reads and writes
  *  it and the revision that document is at. Held by value so an in-flight
  *  save always finishes against the adapter it started on, even if the user
- *  has since switched namespace. */
+ *  has since switched calendar. */
 type Session = {
   adapter: StorageAdapter;
   revision: string | undefined;
@@ -67,14 +67,14 @@ function parseSnapshot(text: string): CalendarDoc {
   }
 }
 
-/** The store. `requestedBackend` is the settings choice, `namespace` the
- *  active namespace's slug; `demoMode` swaps in a fresh in-memory demo
+/** The store. `requestedBackend` is the settings choice, `calendarSlug` the
+ *  active calendar's slug; `demoMode` swaps in a fresh in-memory demo
  *  adapter while true (the real backend and document are untouched — and the
- *  demo has no namespaces of its own, so the slug is ignored). */
+ *  demo has no calendars of its own, so the slug is ignored). */
 export function useCalendarStore(
   requestedBackend: BackendId,
   demoMode: boolean,
-  namespace: string = DEFAULT_NAMESPACE_SLUG,
+  calendarSlug: string = DEFAULT_CALENDAR_SLUG,
 ): CalendarStore {
   const [doc, setDoc] = useState<CalendarDoc>(emptyDoc);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "loading" });
@@ -84,13 +84,13 @@ export function useCalendarStore(
   const sessionRef = useRef<Session | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The edit a debounce is still sitting on, with the session it belongs to.
-  // A session change flushes it rather than dropping it — switching namespace
+  // A session change flushes it rather than dropping it — switching calendar
   // right after a keystroke must not lose that keystroke.
   const pending = useRef<{ session: Session; doc: CalendarDoc } | null>(null);
 
   const push = useCallback(async (session: Session, next: CalendarDoc) => {
     // A save that outlives its session still completes (the bytes belong in
-    // that namespace either way), but it must not touch the UI — that now
+    // that calendar either way), but it must not touch the UI — that now
     // shows a different document.
     const live = () => sessionRef.current === session;
     if (live()) setSaveState({ kind: "saving" });
@@ -129,7 +129,7 @@ export function useCalendarStore(
   }, [push]);
 
   // (Re)build the adapter and load the document whenever the backend choice,
-  // the namespace, or demo mode changes.
+  // the calendar, or demo mode changes.
   useEffect(() => {
     let current = true;
     flush();
@@ -143,9 +143,9 @@ export function useCalendarStore(
         adapter = createDemoAdapter();
         effective = "demo";
       } else {
-        adapter = await buildAdapter(requestedBackend, namespace);
+        adapter = await buildAdapter(requestedBackend, calendarSlug);
         if (!adapter) {
-          adapter = await buildAdapter("browser", namespace);
+          adapter = await buildAdapter("browser", calendarSlug);
           effective = "browser";
         }
       }
@@ -163,8 +163,8 @@ export function useCalendarStore(
         setDoc(parseSnapshot(sync.text));
         setSaveState({ kind: "saved" });
       } else {
-        // A cloud namespace has nothing to show until its load lands; the
-        // previous namespace's notes must not sit there in the meantime.
+        // A cloud calendar has nothing to show until its load lands; the
+        // previous calendar's notes must not sit there in the meantime.
         setDoc(emptyDoc());
       }
 
@@ -191,7 +191,7 @@ export function useCalendarStore(
       current = false;
       flush();
     };
-  }, [requestedBackend, demoMode, namespace, flush]);
+  }, [requestedBackend, demoMode, calendarSlug, flush]);
 
   const setEntry = useCallback(
     (day: DayKey, text: string) => {
