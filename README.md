@@ -49,8 +49,8 @@ optionally synced to a storage backend you control.
 - **Finds your name day even if the almanac spells it differently**: tap a
   name to browse the almanac alphabetically, and search it by how a name
   sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
-- **Storage your way**: browser storage, a local folder, Dropbox, or Google
-  Drive.
+- **Storage your way**: browser storage, a local folder, Dropbox (a folder per
+  calendar in the app folder), or Google Drive.
 - **Separate calendars in one app**: namespaces keep home and work apart —
   each its own notes, all in the same backend.
 
@@ -112,7 +112,7 @@ All configuration is optional build-time environment (`.env`, see
 | ------------------------- | ------------------------------------------------------------ |
 | `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key; unset hides the Dropbox backend        |
 | `VITE_GOOGLE_CLIENT_ID`   | Google OAuth client id; unset hides the Google Drive backend |
-| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `Calendar`)                 |
+| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `nird-calendar`)            |
 | `VITE_GDRIVE_APP_FOLDER`  | Drive folder name (default `Calendar`)                       |
 | `VITE_BASE`               | Deploy base path (set by CI; default `/`)                    |
 

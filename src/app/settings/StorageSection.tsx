@@ -14,6 +14,7 @@ import {
 import { useT } from "../i18n/index.ts";
 import type { BackendId } from "../storage/backends.ts";
 import {
+  dropboxLocation,
   isDropboxAvailable,
   isDropboxConnected,
   isFolderAvailable,
@@ -34,12 +35,16 @@ export type StorageActions = {
 export function StorageSection({
   saveState,
   effectiveBackend,
+  namespace,
   storage,
   devMode,
   demoData,
 }: {
   saveState: SaveState;
   effectiveBackend: BackendId;
+  /** The active namespace's slug — Dropbox files the calendar in a folder of
+   *  its own, and the row prints which one. */
+  namespace: string;
   storage: StorageActions;
   devMode: boolean;
   demoData: boolean;
@@ -64,6 +69,9 @@ export function StorageSection({
       connected: boolean;
       onConnect?: () => void;
       connectLabel?: string;
+      /** A second, quieter line under the hint — where the document actually
+       *  sits, for a backend whose location the user can't otherwise see. */
+      detail?: string;
     },
   ) => {
     if (!opts.available) return null;
@@ -73,6 +81,11 @@ export function StorageSection({
         <div className="min-w-0 flex-1">
           <div className="text-sm">{label}</div>
           <div className="text-muted text-xs">{hint}</div>
+          {opts.detail && (
+            <div className="text-muted mt-0.5 text-[11px] break-all opacity-80">
+              {opts.detail}
+            </div>
+          )}
         </div>
         {active ? (
           <Badge tone="accent">{t("storage.active")}</Badge>
@@ -116,6 +129,7 @@ export function StorageSection({
           available: isDropboxAvailable(),
           connected: isDropboxConnected(),
           onConnect: storage.connectDropbox,
+          detail: dropboxLocation(namespace),
         })}
         {backendRow("gdrive", t("storage.gdrive"), t("storage.gdriveHint"), {
           available: isGdriveAvailable(),

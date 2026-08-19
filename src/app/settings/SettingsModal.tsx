@@ -102,6 +102,8 @@ type Props = {
   onOpenPlanner: () => void;
   saveState: SaveState;
   effectiveBackend: BackendId;
+  /** The active namespace's slug, for the Storage tab's file locations. */
+  namespace: string;
   storage: StorageActions;
   updateChecking: boolean;
   updateAvailable: boolean;
@@ -121,6 +123,7 @@ export function SettingsModal({
   onOpenPlanner,
   saveState,
   effectiveBackend,
+  namespace,
   storage,
   updateChecking,
   updateAvailable,
@@ -293,6 +296,7 @@ export function SettingsModal({
               <StorageSection
                 saveState={saveState}
                 effectiveBackend={effectiveBackend}
+                namespace={namespace}
                 storage={storage}
                 devMode={settings.devMode}
                 demoData={settings.demoData}
