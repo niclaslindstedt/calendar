@@ -42,12 +42,15 @@ The switcher in the top bar toggles:
   in the year is printed and whether rows may grow are all yours to choose —
   see [Week planner](#week-planner). (On a landscape phone, where seven rows
   leave no height for a stack, everything lies back down into one line.)
-- **Day list** — the month as a vertical scroll, one row per day with the
-  day's name days beside the number. In Settings → Calendar you can choose
-  whether rows keep a fixed height or grow with their text (the week planner
-  has the same choice, made separately). The month heading
-  stays pinned to the top of the list as you scroll, so which month you are
-  reading is never off screen.
+- **Day list** — the month as a vertical scroll, one row per day, laid out
+  like the week planner: the date with the weekday beside it and the day's
+  names under that, your note filling the middle, and the week number and the
+  holiday's name in the right-hand margin. A doubled rule crosses the list
+  wherever the week changes — the one thing this view can show that a
+  single-week strip cannot. In Settings → Calendar you can choose whether rows
+  keep a fixed height or grow with their text (the week planner has the same
+  choice, made separately). The month heading stays pinned to the top of the
+  list as you scroll, so which month you are reading is never off screen.
 
 **Swipe left or right** in any of the three views to turn the page — the
 neighbouring period follows your finger and settles into place. The month view
@@ -217,7 +220,9 @@ is previewed on the calendar behind the dialog as you change it.
   printed almanac's abbreviation, and the default) or plain **34**. The
   buttons are labelled with what they print. The number appears on the day
   that opens the week, and only when week numbers are on
-  (Settings → General → Week numbers).
+  (Settings → General → Week numbers). The day list prints its week numbers
+  the same way — it is the same piece of almanac in the same margin — but it
+  keeps its own date size, because its row is a line rather than a band.
 - **Row height** — **Fixed** fits the whole week on one screen, every row the
   same height. **Dynamic** grows a row with what you have written in it and
   lets the week scroll, for people who write more on some days than others.
@@ -230,8 +235,11 @@ calendar prints its masthead. It is **off** by default, which leaves the
 heading plain.
 
 The colour is spent twice: the band itself, and the week numbers in the week
-planner's margin, which are printed in the same ink. With the band off those
-week numbers print in the page's own colour.
+planner's and the day list's margins, which are printed in the same ink. With
+the band off those week numbers print in the page's own colour.
+
+The band is exactly as wide as the calendar under it, and it replaces the
+hairline the heading otherwise carries — a solid band is already an edge.
 
 The five colours are chosen to hold white text on the band and to stay legible
 as ink in both the light and the dark theme, so the choice does not have to be

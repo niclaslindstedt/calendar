@@ -88,7 +88,7 @@ export const en = {
     countryHint:
       "Sets the start of week, week numbers, red days, and name days.",
     weekNumbers: "Week numbers",
-    weekNumbersHint: "Show ISO week numbers in the month grid.",
+    weekNumbersHint: "Show ISO week numbers in the calendar.",
     nameDays: "Name days",
     nameDaysHint: "Show the day's names on the calendar.",
     eves: "Holiday eves",
@@ -177,6 +177,7 @@ export const en = {
       "Print each day's number in the year (1–366) beside the weekday.",
     weekDateSize: "Date size",
     weekFormat: "Week number",
+    weekFormatHint: "The day list prints its week numbers the same way.",
     weekRows: "Week planner rows",
     weekRowsHint:
       "Fixed fits the whole week on one screen; Dynamic grows a day with its text and scrolls.",

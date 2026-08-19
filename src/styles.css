@@ -196,7 +196,7 @@ body {
   font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-week, 1));
 }
 
-/* The week planner's almanac lane. Its base width comes from the view (as a
+/* The strip row's almanac lane (the week planner and the day list share it). Its base width comes from the view (as a
    `[--cal-lane:…]` utility, so it can keep a responsive variant and a narrower
    value for a pack that prints no name days); the scale the reader has the
    day's names set at multiplies it here.
@@ -215,7 +215,7 @@ body {
    the two are the same kind of marginal number. Its default of `0rem` — a
    length, not a bare `0` — is what keeps the multiplication valid when the
    number is off. */
-.cal-week-lane {
+.cal-strip-lane {
   width: calc(
     (var(--cal-date, 1.5rem) + 0.375rem) * var(--cal-size-day, 1) +
       var(--cal-lane, 5.5rem) * var(--cal-size-nameday, 1) +
@@ -256,7 +256,7 @@ body {
    line between two weeks, and it is deliberately not the heading's colour
    either — the week boundary is a fact about the calendar and has to read the
    same whether or not a band has been turned on. */
-.cal-week-row.cal-week-break {
+.cal-strip-row.cal-strip-break {
   border-top: 2px solid var(--line);
 }
 
@@ -288,6 +288,10 @@ body {
      the row's own order (lane, note, rail) is already the order this screen
      wants.
 
+     Everything here is scoped under `.cal-week-row`, which only the week
+     planner's rows carry: the day list shares the same three margins but not
+     this problem — its rows are a line high in any orientation, and it scrolls.
+
      It lives here rather than in the view because only a media query knows the
      screen is that short. 700 px is where it flips: seven rows plus the app's
      own chrome need that much for a row to clear the stacked lane, so a
@@ -296,7 +300,7 @@ body {
   .cal-week-row {
     align-items: center;
   }
-  .cal-week-lane {
+  .cal-week-row .cal-strip-lane {
     /* A line, not a two-column block — so the measured widths above have
        nothing to say here. The floor keeps the note's left edge in one place
        down the strip for as long as the names are ordinary. */
@@ -306,15 +310,17 @@ body {
     align-items: baseline;
     column-gap: 0.375rem;
   }
-  .cal-week-names {
+  /* The weekday-and-names stack lies down with it, for the same reason: two
+     lines where the screen has room for one. */
+  .cal-week-row .cal-strip-names {
     flex-direction: row;
     align-items: baseline;
     column-gap: 0.375rem;
   }
-  .cal-week-names > * {
+  .cal-week-row .cal-strip-names > * {
     margin-top: 0;
   }
-  .cal-week-rail {
+  .cal-week-row .cal-strip-rail {
     flex-direction: row;
     align-items: baseline;
     justify-content: flex-end;
@@ -323,12 +329,12 @@ body {
   /* The holiday is pushed to the bottom of a tall rail with `mt-auto`, and an
      auto margin outranks the alignment above — so it is cleared here rather
      than fought with. */
-  .cal-week-rail .cal-week-holiday {
+  .cal-week-row .cal-strip-holiday {
     margin-top: 0;
   }
   /* A date that is a heading in the lane is just the day number again on a
      line — the size the other views print it at. */
-  .cal-week-lane .cal-size-day {
+  .cal-week-row .cal-size-day {
     --cal-base: 1rem;
   }
 }

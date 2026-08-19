@@ -19,7 +19,7 @@
 //     point: paging through the weeks, the heavy line is where one week ends
 //     and the next begins, the same mark the printed strip uses down a month.
 
-import { memo, useMemo, type CSSProperties } from "react";
+import { memo, useMemo } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
@@ -29,29 +29,25 @@ import {
 
 import { DayEntry } from "./DayEntry.tsx";
 import { WEEK_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
-import { useT } from "./i18n/index.ts";
 import {
   holidayFor,
   isRedDay,
   monthName,
   nameDaysFor,
   weekNumber,
-  weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
 import { CONTENT_BOTTOM_PAD, LIST_BOTTOM_PAD } from "./layout.ts";
-import { NameDayNames } from "./NameDayNames.tsx";
-import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
+import { StripLane, StripNote, StripRail } from "./stripRow.tsx";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { CalendarDoc } from "./types.ts";
 import {
   WEEK_ROW_MIN_HEIGHT,
-  dayOfYear,
   startsWeek,
   weekDateBase,
-  weekNumberLabel,
   type WeekDateSize,
   type WeekFormat,
   type WeekRowMode,
@@ -116,7 +112,6 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   onOpenHolidays,
   onOpenNames,
 }: Props) {
-  const t = useT();
   const days = useMemo(
     () => buildWeekStrip(anchor, { weekStartsOn: pack.weekStartsOn, today }),
     [anchor, pack.weekStartsOn, today],
@@ -173,7 +168,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     />
   );
 
-  const strip = days.map((cell) => {
+  const strip = days.map((cell, i) => {
     const parts = parseDayKey(cell.key);
     const weekday = new Date(`${cell.key}T12:00:00Z`).getUTCDay();
     const holiday = parts
@@ -187,6 +182,10 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     const entry = doc.entries[cell.key] ?? "";
     const marked = pastMarkSlot(pastMark, cell.key, today);
     const opens = startsWeek(weekday, pack.weekStartsOn);
+    // The week-change rule, except where the band above has already drawn the
+    // line: a coloured heading is a solid edge, and a rule immediately under
+    // it reads as a stray hairline rather than as the start of a week.
+    const bandedTop = i === 0 && headerInk !== null;
     return (
       <div
         key={cell.key}
@@ -204,76 +203,26 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         // sizes each row by its own contents instead, with the fixed row's
         // height as the floor so an empty week still looks like a week.
         style={grows ? { minHeight: WEEK_ROW_MIN_HEIGHT } : undefined}
-        className={`cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
+        className={`cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
           grows ? "" : "min-h-0 flex-1 overflow-hidden"
-        } ${opens ? "cal-week-break" : ""} ${
+        } ${opens && !bandedTop ? "cal-strip-break" : ""} ${
           cell.isToday ? "bg-surface-2" : ""
         }`}
       >
-        {/* The almanac's lane — a width, not a shrink-wrap: seven ragged left
-            edges on the writing area would read as seven columns rather than
-            one board. The date leads it, at a measured 24 px (the largest that
-            still leaves a portrait row its weekday and a line of names at the
-            *top* of the size ladder, where the date grows but the row does
-            not), with the weekday and the day's names set beside it in a
-            stack. `--cal-lane` is the room that stack gets, and 88 px is what
-            the longest run of names needs to hold two lines under the
-            weekday; a pack that prints no name days has nothing that wide to
-            set, so it gets the measured floor and nothing more, and the note
-            gets the difference back — the same rule the day list's week
-            gutter follows. The date's own column and the year-day number's
-            are added to it in `src/styles.css`, each scaled by its own size
-            setting rather than by the names'. */}
-        <div
-          // The date's size is the reader's (Settings → Calendar → Week
-          // planner), and it is published here as one custom property because
-          // two things need it: the date itself, and the width the lane bills
-          // for its first column (`src/styles.css`).
-          style={{ "--cal-date": weekDateBase(dateSize) } as CSSProperties}
-          className={`cal-week-lane flex shrink-0 items-start gap-1.5 leading-tight ${
-            showNameDays
-              ? "[--cal-lane:5.5rem] sm:[--cal-lane:7rem]"
-              : "[--cal-lane:4.25rem] sm:[--cal-lane:5.5rem]"
-          } ${showDayOfYear ? "[--cal-lane-extra:1.375rem]" : ""}`}
-        >
-          <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
-            <span
-              className={`cal-font-day cal-size-day leading-none [--cal-base:var(--cal-date,1.5rem)] ${
-                red ? "cal-red" : "text-fg"
-              }`}
-            >
-              {parts?.day}
-            </span>
-          </MarkedDate>
-          <div className="cal-week-names flex min-w-0 flex-1 flex-col">
-            <span
-              className={`cal-serif text-sm leading-none ${
-                red ? "cal-red" : "text-muted"
-              }`}
-            >
-              {weekdayName(pack, weekday)}
-            </span>
-            {names.length > 0 && (
-              <span className="cal-font-nameday cal-size-nameday text-muted mt-0.5 [--cal-base:10px]">
-                {/* Every name is also the way into the name-day search. */}
-                <NameDayNames names={names} pack={pack} onOpen={onOpenNames} />
-              </span>
-            )}
-          </div>
-          {/* The day's ordinal in the year, printed the way the strip
-              calendar does: small, grey, hard against the lane's right edge,
-              where it is available to be counted from and invisible until it
-              is wanted. Sized off the week number's scale — the two are the
-              same kind of number, marginalia rather than a day's content — so
-              one setting moves both. */}
-          {showDayOfYear && (
-            <span className="cal-size-week text-muted shrink-0 pt-1 leading-none [--cal-base:9px]">
-              {dayOfYear(cell.key) || ""}
-            </span>
-          )}
-        </div>
+        <StripLane
+          dayKey={cell.key}
+          day={parts?.day ?? 0}
+          pack={pack}
+          weekday={weekday}
+          names={names}
+          red={red}
+          markDate={marked === "date" ? pastMark.style : "none"}
+          dateBase={weekDateBase(dateSize)}
+          showDayOfYear={showDayOfYear}
+          onOpenNames={onOpenNames}
+        />
 
-        <div className="cal-week-note min-h-0 min-w-0 flex-1 self-stretch">
+        <StripNote>
           <DayEntry
             text={entry}
             editing={editingDay === cell.key}
@@ -286,54 +235,18 @@ export const WeekPlannerView = memo(function WeekPlannerView({
             onCommit={(text) => onCommit(cell.key, text)}
             onClose={() => onEditDay(null)}
           />
-        </div>
+        </StripNote>
 
-        {/* The right-hand margin: the week number at the top of the day that
-            opens the week, the holiday's name along the bottom. Both are the
-            almanac talking rather than the day, which is why they sit outside
-            the writing area instead of floating over it. */}
         {rail && (
-          <div className="cal-week-rail flex w-16 shrink-0 flex-col items-end self-stretch text-right sm:w-24">
-            {showWeekNumbers && opens && (
-              <span
-                className={`cal-serif cal-size-week leading-none italic [--cal-base:0.875rem] ${
-                  headerInk ? "" : "text-fg"
-                }`}
-                style={headerInk ? { color: headerInk } : undefined}
-                // Spelled out for a screen reader whatever the margin prints:
-                // "34" on its own is a number, not a week.
-                aria-label={t("topbar.week", { n: weekNumber(pack, cell.key) })}
-              >
-                {weekNumberLabel(weekFormat, weekNumber(pack, cell.key), {
-                  long: t("topbar.week", { n: weekNumber(pack, cell.key) }),
-                  mark: t("topbar.weekMark", { n: weekNumber(pack, cell.key) }),
-                })}
-              </span>
-            )}
-            {/* Also the way into the holidays screen — see the same tap
-                target in the month view. */}
-            {holiday && (
-              <span
-                role="button"
-                tabIndex={0}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onOpenHolidays(year);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key !== "Enter" && e.key !== " ") return;
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onOpenHolidays(year);
-                }}
-                className={`cal-font-holiday cal-size-holiday cal-week-holiday mt-auto cursor-pointer leading-tight [--cal-base:11px] focus-visible:outline-2 ${
-                  holiday.red ? "cal-red" : "text-muted"
-                }`}
-              >
-                {holiday.name}
-              </span>
-            )}
-          </div>
+          <StripRail
+            weekNumber={
+              showWeekNumbers && opens ? weekNumber(pack, cell.key) : null
+            }
+            weekFormat={weekFormat}
+            holiday={holiday}
+            ink={headerInk}
+            onOpenHolidays={() => onOpenHolidays(year)}
+          />
         )}
 
         {/* The whole-row stroke — drawn over the row's content, and

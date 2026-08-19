@@ -56,17 +56,16 @@ export function PeriodHeading({
   onNext,
 }: Props) {
   const t = useT();
-  // The band has to reach the screen's edges to read as printed furniture
-  // rather than as a rectangle drawn on the page, and every view insets its
-  // content by its own gutter — so the heading gives that gutter back with a
-  // negative margin and re-spends it as padding. Only when banded: an
-  // uncoloured heading has nothing to bleed.
+  // The band is exactly as wide as the calendar under it. It bled to the
+  // screen's edges once, on the theory that printed furniture reaches the
+  // paper's edge — but the rows below it do not, and a band a gutter wider
+  // than its own calendar reads as a misalignment rather than as a masthead.
   const banded = accent !== null;
   const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
   return (
     <div
       className={`flex shrink-0 items-center gap-1 py-4 ${
-        banded ? "-mx-3 px-3 text-white sm:-mx-6 sm:px-6" : ""
+        banded ? "px-2 text-white" : ""
       } ${className}`}
       // Inline, so it wins over whatever background the caller's `className`
       // carries — the day list pins its heading with an opaque `bg-page-bg`
