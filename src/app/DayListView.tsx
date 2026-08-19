@@ -1,36 +1,48 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The day list — the month as a vertical scroll, one row per day (the
-// name-day calendar look): day number in the margin, the day's names small
-// beside it, the note filling the line. A small month image heads the list
-// when a pack ships one. Rows are fixed-height by default; the "dynamic"
-// setting lets a row grow with its text for people who write more.
+// The day list — the month as a vertical scroll, one row per day, laid out
+// like the printed column calendar it is drawn from and sharing its anatomy
+// with the week planner (`stripRow.tsx`): the date at the head of the row with
+// the weekday beside it and the day's names under that, the note filling the
+// middle, and the almanac's marginalia in a rail on the right — the week
+// number where a week opens, the holiday's name along the bottom. A doubled
+// rule crosses the list wherever the week changes, which is the one thing this
+// view can show that a single-week strip cannot.
+//
+// A small month image heads the list when a pack ships one. Rows are
+// fixed-height by default; the "dynamic" setting lets a row grow with its text
+// for people who write more.
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
 import { LIST_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
-import { useT } from "./i18n/index.ts";
 import {
   holidayFor,
   isRedDay,
   monthName,
   nameDaysFor,
   weekNumber,
-  weekdayName,
   type LocalePack,
 } from "./locale/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
-import { NameDayNames } from "./NameDayNames.tsx";
-import { MarkedDate, PastMark } from "./PastMark.tsx";
+import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
+import { StripLane, StripNote, StripRail } from "./stripRow.tsx";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
+import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
+
+/** What the list sets its date at. Not the week planner's setting: a list row
+ *  is a line of a month-long scroll rather than a band a seventh of the screen
+ *  high, so its date is sized to the two caption lines beside it and stays
+ *  there. The shared day-number scale still multiplies it. */
+const LIST_DATE_BASE = "1.25rem";
 
 type Props = {
   year: number;
@@ -40,6 +52,10 @@ type Props = {
   showWeekNumbers: boolean;
   showNameDays: boolean;
   rowMode: ListRowMode;
+  /** How the rail prints a week number: "Week 34", "w 34", or "34" — the same
+   *  setting the week planner reads, because it is the same piece of almanac
+   *  printed in the same margin. */
+  weekFormat: WeekFormat;
   /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
   headerInk: string | null;
   /** The stroke drawn over the days that have passed, if any. */
@@ -74,6 +90,7 @@ export const DayListView = memo(function DayListView({
   showWeekNumbers,
   showNameDays,
   rowMode,
+  weekFormat,
   headerInk,
   pastMark,
   textSize,
@@ -88,6 +105,19 @@ export const DayListView = memo(function DayListView({
 }: Props) {
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
+  // Whether the rail is rendered at all, decided once for the month rather
+  // than per row — the same rule the week planner follows, and for the same
+  // reason: a rail that came and went down a ninety-row scroll would give the
+  // note a different width on every line. Reserved when the month has anything
+  // to print in it, and left out entirely when it has not.
+  const rail = useMemo(
+    () =>
+      showWeekNumbers ||
+      Array.from({ length: count }, (_, i) =>
+        holidayFor(pack, year, month, i + 1),
+      ).some((holiday) => holiday !== null),
+    [count, month, pack, showWeekNumbers, year],
+  );
 
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
@@ -97,7 +127,7 @@ export const DayListView = memo(function DayListView({
     // leave you — not at whatever row you had scrolled to in the month before.
     <div
       {...DECK_SCROLLER}
-      className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
+      className="mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6"
     >
       {/* The slim artwork band (smaller than the month view's). */}
       {image && (
@@ -114,14 +144,18 @@ export const DayListView = memo(function DayListView({
           the arrows come along so paging never means scrolling back up. The
           background is opaque — rows pass underneath it — and the hairline it
           carries is the one the rows below used to start with, so the heading
-          keeps the list's top border rather than adding a second line. */}
+          keeps the list's top border rather than adding a second line. A
+          coloured band is already an edge, so it drops the hairline: a rule
+          immediately under a solid band reads as a stray line. */}
       <PeriodHeading
         title={monthName(pack, month)}
         meta={String(year)}
         titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
         metaClass="text-lg"
         accent={headerInk}
-        className="bg-page-bg sticky top-0 z-10 border-b border-line"
+        className={`bg-page-bg sticky top-0 z-10 ${
+          headerInk ? "" : "border-b border-line"
+        }`}
         onPrevious={onPrevious}
         onNext={onNext}
       />
@@ -140,6 +174,9 @@ export const DayListView = memo(function DayListView({
               pack={pack}
               showWeekNumbers={showWeekNumbers}
               showNameDays={showNameDays}
+              weekFormat={weekFormat}
+              rail={rail}
+              headerInk={headerInk}
               today={today}
               pastMark={pastMark}
               textSize={textSize}
@@ -180,6 +217,9 @@ const DayRow = memo(function DayRow({
   pack,
   showWeekNumbers,
   showNameDays,
+  weekFormat,
+  rail,
+  headerInk,
   today,
   pastMark,
   textSize,
@@ -199,6 +239,10 @@ const DayRow = memo(function DayRow({
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  weekFormat: WeekFormat;
+  /** Whether the month reserved a right-hand rail (decided by the list). */
+  rail: boolean;
+  headerInk: string | null;
   today: DayKey;
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -210,17 +254,18 @@ const DayRow = memo(function DayRow({
   onOpenHolidays: (year: number) => void;
   onOpenNames: (name: string) => void;
 }) {
-  const t = useT();
   const weekday = new Date(`${dayKey}T12:00:00Z`).getUTCDay();
   const holiday = holidayFor(pack, year, month, day);
   const red = isRedDay(pack, year, month, day, weekday);
   const names = showNameDays ? nameDaysFor(pack, month, day) : [];
   const marked = pastMarkSlot(pastMark, dayKey, today);
-  // A small week marker on the first day of each week (and on the 1st), the
-  // way Swedish wall calendars badge their week rows. Bare number, like the
-  // month grid's gutter: once the marker has a lane of its own the column says
-  // "week" by itself, and the prefix was portrait width spent repeating it.
-  const startsWeek = weekday === pack.weekStartsOn || day === 1;
+  // The week number is printed on the day that opens the week — and on the
+  // 1st, whatever weekday it falls on, so a month never starts without saying
+  // which week you are in. The doubled rule is the *week's* though, so it is
+  // drawn only where a week actually changes: a 1st mid-week gets the number
+  // without the line.
+  const opens = startsWeek(weekday, pack.weekStartsOn);
+  const marks = opens || day === 1;
 
   return (
     <div
@@ -234,80 +279,30 @@ const DayRow = memo(function DayRow({
           onEditDay(dayKey);
         }
       }}
-      className={`relative flex cursor-text items-start gap-2 border-b border-line px-1 py-1 focus-visible:outline-2 ${
-        fixed ? "h-11 overflow-hidden" : "min-h-11"
-      } ${dayKey === today ? "bg-surface-2" : ""}`}
+      // 3.25 rem is the row measured rather than chosen: a weekday line
+      // (14 px), the gap under it, and *two* lines of names — which is not an
+      // edge case but the ordinary Swedish day ("Bernhard, Bernt" does not
+      // hold an 88 px lane) — come to 41 px, and the row's own padding takes
+      // the rest. A shorter fixed row clipped the second name away.
+      className={`cal-strip-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
+        fixed ? "h-[3.25rem] overflow-hidden" : "min-h-[3.25rem]"
+      } ${opens ? "cal-strip-break" : ""} ${
+        dayKey === today ? "bg-surface-2" : ""
+      }`}
     >
-      {/* The week gutter is only reserved when week numbers are on —
-          otherwise every row carries dead left margin. It is sized to its
-          digits rather than to the day column: two digits are 14 px at the
-          ladder's top stop, so a 16 px lane holds the widest week number at
-          any text size, and the negative margin halves the row's gap on the
-          number's right. Both sides of the marker stay narrow so the day
-          number reads as the row's start. */}
-      {showWeekNumbers && (
-        <span
-          className="text-muted cal-size-week -mr-1 w-4 shrink-0 pt-1 text-right leading-tight [--cal-base:9px]"
-          aria-label={
-            startsWeek
-              ? t("topbar.week", { n: weekNumber(pack, dayKey) })
-              : undefined
-          }
-        >
-          {startsWeek ? weekNumber(pack, dayKey) : ""}
-        </span>
-      )}
-      <span
-        className={`cal-font-day cal-size-day w-7 shrink-0 text-right leading-tight [--cal-base:1.125rem] ${
-          red ? "cal-red" : "text-fg"
-        }`}
-      >
-        <MarkedDate style={marked === "date" ? pastMark.style : "none"}>
-          {day}
-        </MarkedDate>
-      </span>
-      <span
-        className={`w-8 shrink-0 pt-1 text-[10px] leading-tight ${
-          red ? "cal-red" : "text-muted"
-        }`}
-      >
-        {weekdayName(pack, weekday, "short")}
-      </span>
-      {/* The holiday and the day's names share this column and **wrap** rather
-          than truncate: "Trettondedag jul · Kasper, Melker" ending in an
-          ellipsis tells you a name is there and refuses to say which. Two
-          lines of 10 px still clear a fixed 44 px row. */}
-      <span className="w-24 shrink-0 pt-1 text-[10px] leading-tight sm:w-36">
-        {/* Also the way into the holidays screen — see the same tap target in
-            the month view. */}
-        {holiday && (
-          <span
-            role="button"
-            tabIndex={0}
-            onClick={(e) => {
-              e.stopPropagation();
-              onOpenHolidays(year);
-            }}
-            onKeyDown={(e) => {
-              if (e.key !== "Enter" && e.key !== " ") return;
-              e.preventDefault();
-              e.stopPropagation();
-              onOpenHolidays(year);
-            }}
-            className={`cal-font-holiday cal-size-holiday cursor-pointer [--cal-base:10px] focus-visible:outline-2 ${
-              holiday.red ? "cal-red" : "text-muted"
-            }`}
-          >
-            {holiday.name}
-          </span>
-        )}
-        {holiday && names.length > 0 && <span className="text-muted"> · </span>}
-        <span className="cal-font-nameday cal-size-nameday text-muted [--cal-base:10px]">
-          {/* Every name is also the way into the name-day search. */}
-          <NameDayNames names={names} pack={pack} onOpen={onOpenNames} />
-        </span>
-      </span>
-      <div className="min-h-0 min-w-0 flex-1 self-stretch pt-0.5">
+      <StripLane
+        dayKey={dayKey}
+        day={day}
+        pack={pack}
+        weekday={weekday}
+        names={names}
+        red={red}
+        markDate={marked === "date" ? pastMark.style : "none"}
+        dateBase={LIST_DATE_BASE}
+        onOpenNames={onOpenNames}
+      />
+
+      <StripNote>
         <DayEntry
           text={entry}
           editing={editing}
@@ -317,7 +312,19 @@ const DayRow = memo(function DayRow({
           onCommit={(text) => onCommit(dayKey, text)}
           onClose={() => onEditDay(null)}
         />
-      </div>
+      </StripNote>
+
+      {rail && (
+        <StripRail
+          weekNumber={
+            showWeekNumbers && marks ? weekNumber(pack, dayKey) : null
+          }
+          weekFormat={weekFormat}
+          holiday={holiday}
+          ink={headerInk}
+          onOpenHolidays={() => onOpenHolidays(year)}
+        />
+      )}
 
       {/* The whole-row stroke — over the row, transparent to taps. */}
       {marked === "cell" && <PastMark style={pastMark.style} />}

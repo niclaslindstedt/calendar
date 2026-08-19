@@ -373,6 +373,7 @@ export function CalendarSection({
               }),
             }))}
           />
+          <p className="text-muted text-xs">{t("settings.weekFormatHint")}</p>
         </Field>
 
         <Field label={t("settings.rows")}>

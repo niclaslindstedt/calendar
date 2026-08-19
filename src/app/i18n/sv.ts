@@ -78,7 +78,7 @@ export const sv: Catalog = {
     countryHint:
       "Styr veckans första dag, veckonummer, röda dagar och namnsdagar.",
     weekNumbers: "Veckonummer",
-    weekNumbersHint: "Visa ISO-veckonummer i månadsvyn.",
+    weekNumbersHint: "Visa ISO-veckonummer i kalendern.",
     nameDays: "Namnsdagar",
     nameDaysHint: "Visa dagens namn i kalendern.",
     eves: "Helgdagsaftnar",
@@ -167,6 +167,7 @@ export const sv: Catalog = {
       "Skriv ut dagens nummer på året (1–366) bredvid veckodagen.",
     weekDateSize: "Datumets storlek",
     weekFormat: "Veckonummer",
+    weekFormatHint: "Daglistan skriver ut sina veckonummer på samma sätt.",
     weekRows: "Veckoplanerarens rader",
     weekRowsHint:
       "Fast får hela veckan att rymmas på en skärm; Dynamisk låter dagen växa med texten och skrolla.",

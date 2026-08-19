@@ -402,6 +402,7 @@ export function App() {
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
           rowMode={live.listRows}
+          weekFormat={weekFormat}
           headerInk={headerInk}
           pastMark={pastMark}
           textSize={live.textSize}
