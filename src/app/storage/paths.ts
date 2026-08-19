@@ -33,3 +33,36 @@ export function cacheScope(slug: string): string {
 function isDefault(slug: string): boolean {
   return slug === DEFAULT_NAMESPACE_SLUG || slug === "";
 }
+
+// --- Dropbox ----------------------------------------------------------------
+//
+// Dropbox is the one backend that gets a tree rather than a flat run of files:
+// every namespace is its own folder at the app folder's root, and that
+// namespace's calendar is the one document inside it. So a Dropbox user
+// browsing `Apps/<app folder>/` sees their calendars as folders — the same
+// list the namespace switcher shows — instead of a pile of similarly-named
+// JSON files. The folder is named for the *slug*, which is fixed at creation:
+// renaming a namespace changes what the switcher says, never where its notes
+// live. The default namespace is a folder like any other, so nothing sits
+// loose at the app folder's root.
+
+/** The file a namespace's calendar takes inside its own Dropbox folder. */
+export const DROPBOX_DOCUMENT_FILE = "calendar.json";
+
+/** The folder a namespace occupies at the Dropbox app folder's root. */
+export function dropboxNamespaceFolder(slug: string): string {
+  return isDefault(slug) ? DEFAULT_NAMESPACE_SLUG : slug;
+}
+
+/** The path the Dropbox file store is scoped to for a namespace — an
+ *  app-folder-relative path, which is what the Dropbox API takes. */
+export function dropboxRootPath(slug: string): string {
+  return `/${dropboxNamespaceFolder(slug)}`;
+}
+
+/** Where a namespace's calendar sits, spelled the way Dropbox shows it to the
+ *  user (`Apps/<app folder>/<namespace>/calendar.json`). Display only — the
+ *  API never sees the `Apps/` prefix. */
+export function dropboxDisplayPath(appFolder: string, slug: string): string {
+  return `Apps/${appFolder}/${dropboxNamespaceFolder(slug)}/${DROPBOX_DOCUMENT_FILE}`;
+}

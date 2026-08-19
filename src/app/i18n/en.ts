@@ -174,7 +174,7 @@ export const en = {
     folderConnect: "Choose folder…",
     folderReconnect: "Reconnect folder…",
     dropbox: "Dropbox",
-    dropboxHint: "A file in your Dropbox app folder.",
+    dropboxHint: "One folder per calendar in your Dropbox app folder.",
     gdrive: "Google Drive",
     gdriveHint: "A file in a Drive folder the app creates.",
     connect: "Connect",

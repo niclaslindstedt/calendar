@@ -14,7 +14,9 @@
 // Everything here is per-*namespace*: a backend is a place, and each
 // namespace is a separate document in that place. The connection state (a
 // token, a folder handle) is shared by every namespace on the device; only
-// the document's name varies, and `./paths.ts` owns that naming.
+// where the document sits varies — a suffixed name beside its siblings on
+// most backends, a folder of its own on Dropbox — and `./paths.ts` owns that
+// naming.
 
 import { DEFAULT_NAMESPACE_SLUG } from "@niclaslindstedt/oss-framework/namespaces";
 import {
@@ -24,6 +26,7 @@ import {
   createDropboxAdapter,
   createFolderAdapter,
   createGdriveAdapter,
+  deleteDropboxPath,
   deleteLocalDocument,
   hasPendingDropboxAuth,
   isFolderBackendAvailable,
@@ -39,7 +42,14 @@ import {
 import { logStore } from "../log.ts";
 import { emptyDoc, serializeDoc } from "../types.ts";
 import type { BackendId } from "./demoAdapter.ts";
-import { cacheScope, documentFileName, documentKey } from "./paths.ts";
+import {
+  DROPBOX_DOCUMENT_FILE,
+  cacheScope,
+  documentFileName,
+  documentKey,
+  dropboxDisplayPath,
+  dropboxRootPath,
+} from "./paths.ts";
 
 export type { BackendId } from "./demoAdapter.ts";
 
@@ -54,6 +64,15 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as
   string | undefined;
 const GDRIVE_APP_FOLDER =
   (import.meta.env.VITE_GDRIVE_APP_FOLDER as string | undefined) || "Calendar";
+
+// Dropbox fixes the app folder's name in the app's own configuration — an
+// "App folder"-scoped app lives under `Apps/<name>/` and the API's root *is*
+// that folder, so the name is never sent with a request. The app still needs
+// it to tell the user which folder to look in, hence the build-time knob:
+// point a deployment at its own Dropbox app and the displayed location follows.
+const DROPBOX_APP_FOLDER =
+  (import.meta.env.VITE_DROPBOX_APP_FOLDER as string | undefined)?.trim() ||
+  "nird-calendar";
 
 const storageLog = (scope: string) => logStore.createLogger(scope);
 
@@ -191,6 +210,16 @@ export async function completeOauthOnBoot(): Promise<BackendId | null> {
   return "dropbox";
 }
 
+// --- where the document sits ------------------------------------------------
+
+/** Where a namespace's calendar lives in Dropbox, spelled the way Dropbox
+ *  shows it. The app folder's name is a build-time setting the user can't see
+ *  from the outside, so the Storage tab prints this rather than leaving them
+ *  to hunt for the folder. */
+export function dropboxLocation(slug: string): string {
+  return dropboxDisplayPath(DROPBOX_APP_FOLDER, slug);
+}
+
 // --- adapter construction ---------------------------------------------------
 
 /** Build the adapter for a backend id and namespace slug, or null when the
@@ -231,7 +260,12 @@ export async function buildAdapter(
         },
         {
           appKey: DROPBOX_APP_KEY,
-          fileName,
+          // A folder per namespace at the app folder's root, the calendar
+          // inside it. Dropbox creates the folder on the first upload, and a
+          // folder that isn't there yet reads as an empty namespace rather
+          // than an error — so a new namespace needs no setup round-trip.
+          rootPath: dropboxRootPath(slug),
+          fileName: DROPBOX_DOCUMENT_FILE,
           logger: storageLog("dropbox"),
         },
       );
@@ -266,8 +300,10 @@ export async function buildAdapter(
 // --- namespace teardown -----------------------------------------------------
 
 /** Throw away a deleted namespace's document. The device-local copies (the
- *  browser document, every backend's offline mirror) are removed outright;
- *  the copy in the *active* remote backend is emptied rather than removed,
+ *  browser document, every backend's offline mirror) are removed outright.
+ *  Dropbox holds the namespace as a folder, so the folder goes with it —
+ *  a deleted calendar leaves nothing behind in the app folder. Elsewhere the
+ *  copy in the *active* remote backend is emptied rather than removed,
  *  because a `StorageAdapter` can write but not delete. Either way a
  *  namespace re-created under the same slug comes back blank instead of
  *  inheriting the deleted one's notes.
@@ -290,6 +326,7 @@ export async function discardNamespaceData(
   }
 
   if (id === "browser" || id === "demo") return;
+  if (id === "dropbox" && (await removeDropboxNamespaceFolder(slug))) return;
   try {
     const adapter = await buildAdapter(id, slug);
     await adapter?.save(serializeDoc(emptyDoc()));
@@ -298,5 +335,20 @@ export async function discardNamespaceData(
       "could not clear the deleted namespace's document",
       err,
     );
+  }
+}
+
+/** Delete a namespace's whole Dropbox folder. Returns false when there is no
+ *  connection to delete through, or the call failed — the caller then falls
+ *  back to emptying the document in place. */
+async function removeDropboxNamespaceFolder(slug: string): Promise<boolean> {
+  const accessToken = localStorage.getItem(DROPBOX_ACCESS_KEY);
+  if (!accessToken) return false;
+  try {
+    await deleteDropboxPath(accessToken, dropboxRootPath(slug));
+    return true;
+  } catch (err) {
+    storageLog("dropbox").error("could not delete the namespace's folder", err);
+    return false;
   }
 }

@@ -532,6 +532,7 @@ export function App() {
         onOpenPlanner={openPlanner}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
+        namespace={namespaces.activeSlug}
         storage={{
           setActive: setActiveBackend,
           folderConnected,

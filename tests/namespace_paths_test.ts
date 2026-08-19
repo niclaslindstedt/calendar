@@ -8,9 +8,13 @@ import {
 } from "@niclaslindstedt/oss-framework/namespaces";
 
 import {
+  DROPBOX_DOCUMENT_FILE,
   cacheScope,
   documentFileName,
   documentKey,
+  dropboxDisplayPath,
+  dropboxNamespaceFolder,
+  dropboxRootPath,
 } from "../src/app/storage/paths.ts";
 
 describe("namespace storage paths", () => {
@@ -59,6 +63,55 @@ describe("namespace storage paths", () => {
     expect(new Set(files).size).toBe(created.length);
     for (const file of files) {
       expect(file).toMatch(/^calendar\.[a-z0-9-]+\.json$/);
+    }
+  });
+});
+
+describe("Dropbox namespace folders", () => {
+  // Dropbox holds a namespace as a folder rather than a suffixed file name,
+  // so the app folder reads as the list of calendars the switcher shows.
+  it("gives every namespace a folder of its own, the document inside it", () => {
+    expect(dropboxRootPath("work")).toBe("/work");
+    expect(dropboxDisplayPath("nird-calendar", "work")).toBe(
+      "Apps/nird-calendar/work/calendar.json",
+    );
+  });
+
+  // The default namespace is a folder like any other — nothing sits loose at
+  // the app folder's root, so a second device sees one uniform layout.
+  it("files the default namespace in a folder too", () => {
+    expect(dropboxRootPath(DEFAULT_NAMESPACE_SLUG)).toBe(
+      `/${DEFAULT_NAMESPACE_SLUG}`,
+    );
+    expect(dropboxDisplayPath("nird-calendar", DEFAULT_NAMESPACE_SLUG)).toBe(
+      `Apps/nird-calendar/${DEFAULT_NAMESPACE_SLUG}/${DROPBOX_DOCUMENT_FILE}`,
+    );
+  });
+
+  it("treats an empty slug as the default namespace", () => {
+    expect(dropboxRootPath("")).toBe(dropboxRootPath(DEFAULT_NAMESPACE_SLUG));
+  });
+
+  // The file name is the same in every folder: what tells two calendars apart
+  // is the folder, so the path as a whole still has to be unique.
+  it("never collides across namespaces", () => {
+    const slugs = [DEFAULT_NAMESPACE_SLUG, "work", "shared", "work-2"];
+    const paths = new Set(slugs.map((slug) => dropboxRootPath(slug)));
+    expect(paths.size).toBe(slugs.length);
+  });
+
+  // The registry allocates slugs; every one of them has to name a folder
+  // Dropbox will accept — no separators, no leading or trailing dots/spaces.
+  it("names the slugs the registry actually allocates", () => {
+    let list = normalizeNamespaces([{ slug: DEFAULT_NAMESPACE_SLUG }]);
+    const created: string[] = [];
+    for (const name of ["Work", "Work", "Sommarstuga & båt"]) {
+      const added = addNamespace(list, name);
+      list = added.list;
+      created.push(added.created.slug);
+    }
+    for (const slug of [...created, DEFAULT_NAMESPACE_SLUG]) {
+      expect(dropboxNamespaceFolder(slug)).toMatch(/^[a-z0-9][a-z0-9-]*$/);
     }
   });
 });

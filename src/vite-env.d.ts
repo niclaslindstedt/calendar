@@ -33,7 +33,8 @@ interface ImportMetaEnv {
   // storage backend. See `src/app/storage/backends.ts`.
   readonly VITE_GOOGLE_CLIENT_ID?: string;
   // Dropbox app-folder name; informational (the folder is fixed by the
-  // Dropbox app config). Defaults to "Calendar".
+  // Dropbox app config, and the API's root *is* that folder). Shown in
+  // Settings → Storage so the user can find it. Defaults to "nird-calendar".
   readonly VITE_DROPBOX_APP_FOLDER?: string;
   // Google Drive folder name the app creates in My Drive. Defaults to
   // "Calendar".
