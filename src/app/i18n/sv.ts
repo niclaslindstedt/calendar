@@ -17,6 +17,7 @@ export const sv: Catalog = {
     viewWeek: "Vecka",
     viewList: "Daglista",
     week: "Vecka {n}",
+    weekMark: "v {n}",
   },
   namespaces: {
     switcher: "Namnrymd: {name}",
@@ -129,6 +130,7 @@ export const sv: Catalog = {
     textSizeSmall: "Liten",
     textSizeMedium: "Mellan",
     textSizeLarge: "Stor",
+    textSizeHuge: "Störst",
     textSizeSampleHoliday: "Alla helgon",
     textSizeSampleNote: "Middag 18:00",
     pastDays: "Passerade dagar",
@@ -147,6 +149,27 @@ export const sv: Catalog = {
       "Fast ger alla rader samma höjd; Dynamisk låter raden växa med texten.",
     rowsFixed: "Fast",
     rowsDynamic: "Dynamisk",
+    heading: "Rubrik",
+    headingHint:
+      "En tryckt kalender sätter månaden över en färgad list och trycker veckonumren i samma färg. Av lämnar rubriken omålad och veckonumren i sidans egen färg.",
+    headerColor: "Färg",
+    headerColorNone: "Av",
+    headerColorRed: "Röd",
+    headerColorBlue: "Blå",
+    headerColorGreen: "Grön",
+    headerColorPlum: "Plommon",
+    headerColorOchre: "Ockra",
+    weekPlanner: "Veckoplanerare",
+    weekPlannerHint:
+      "Veckans remsa: datumet och dagens namn till vänster, dina anteckningar i mitten, och veckonumret och helgdagens namn i högermarginalen.",
+    weekDayOfYear: "Dagnummer",
+    weekDayOfYearHint:
+      "Skriv ut dagens nummer på året (1–366) bredvid veckodagen.",
+    weekDateSize: "Datumets storlek",
+    weekFormat: "Veckonummer",
+    weekRows: "Veckoplanerarens rader",
+    weekRowsHint:
+      "Fast får hela veckan att rymmas på en skärm; Dynamisk låter dagen växa med texten och skrolla.",
     theme: "Tema",
     themeMode: "Läge",
     themeSystem: "Följ enheten",

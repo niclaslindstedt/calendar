@@ -31,23 +31,30 @@ The switcher in the top bar toggles:
 
 - **Month** — the whole month, one screen, wall-calendar style. When a month
   image pack is installed, the artwork hangs above the grid.
-- **Week** — one week at a time, one generous row per weekday. The date is set
-  big at the head of a lane down the left, with the weekday, the holiday and
-  the day's name days stacked under it; the rest of the row is yours to write
-  in, with more room to read and write than a month cell. (On a landscape
-  phone, where seven rows leave no height for a lane, those four pieces lie
-  back down into a line with the note under them.)
+- **Week** — one week at a time, one generous row per weekday, laid out like a
+  printed column calendar. The date is set big at the head of the row with the
+  weekday beside it and the day's name days under that; the middle of the row
+  is yours to write in; and the right-hand margin carries the week number (on
+  the day the week opens) and the holiday's name (along the bottom of the
+  row). The day that opens a week draws a doubled rule above it, so paging
+  through the weeks you can see where one ends and the next begins. How big
+  the date is set, how the week number is phrased, whether each day's number
+  in the year is printed and whether rows may grow are all yours to choose —
+  see [Week planner](#week-planner). (On a landscape phone, where seven rows
+  leave no height for a stack, everything lies back down into one line.)
 - **Day list** — the month as a vertical scroll, one row per day with the
   day's name days beside the number. In Settings → Calendar you can choose
-  whether rows keep a fixed height or grow with their text. The month heading
+  whether rows keep a fixed height or grow with their text (the week planner
+  has the same choice, made separately). The month heading
   stays pinned to the top of the list as you scroll, so which month you are
   reading is never off screen.
 
 **Swipe left or right** in any of the three views to turn the page — the
-neighbouring period follows your finger and settles into place. The month and
-week views fill the screen exactly and never scroll at all; the day list still
-scrolls up and down, and a clearly vertical drag there scrolls it instead of
-turning the page. The holidays screen pages between years the same way, with
+neighbouring period follows your finger and settles into place. The month view
+fills the screen exactly and never scrolls at all, and so does the week planner
+until you let its rows grow; the day list always scrolls up and down, and a
+clearly vertical drag in a view that scrolls scrolls it instead of turning the
+page. The holidays screen pages between years the same way, with
 its header staying put while only the year's list moves.
 
 The **‹ ›** arrows flanking the month heading do the same thing with the same
@@ -102,9 +109,11 @@ stock look without touching your storage connections or developer switches.
 - **Calendar** — **Holiday eves** (which of the country's eves you actually
   work), the month cell's layout (arranged on a sample day: tap a corner and
   pick what belongs in it), whether the days that have passed are crossed off,
-  the day-list row height, the face each part of a day is set in, and how big
-  each of them is printed. See [Holiday eves](#holiday-eves),
+  the day-list row height, the week planner's own layout, the colour the
+  period heading is banded with, the face each part of a day is set in, and
+  how big each of them is printed. See [Holiday eves](#holiday-eves),
   [Month cell layout](#month-cell-layout), [Passed days](#passed-days),
+  [Week planner](#week-planner), [Heading colour](#heading-colour),
   [Type](#type) and [Text size](#text-size).
 - **Appearance** — the theme, and only the theme: **Follow device** (the
   default, which tracks your device's light / dark preference), **Light**,
@@ -189,6 +198,44 @@ The mark applies in all three views, and **today is never marked**: the run
 of crosses stops at the day you are in, which is what makes it worth having.
 The sample day in the section above is drawn as a passed day, so the mark you
 pick is previewed there as well as on the calendar behind the dialog.
+
+### Week planner
+
+**Settings → Calendar → Week planner** sets up the week strip. Everything here
+is previewed on the calendar behind the dialog as you change it.
+
+- **Day of year** — off by default. On, each row prints the day's number in
+  the year (1–366) in small grey type beside the weekday, the way a Swedish
+  column calendar does.
+- **Date size** — **Small**, **Medium**, **Large** or **Huge**. Medium is the
+  measured default (the largest date that still leaves a portrait row its
+  weekday and a line of names); **Huge** is twice that — a wall-planner date,
+  for a week read from across the room. This is the week strip's own step
+  ladder, and the shared **Text size → Day number** scale still applies on top
+  of it.
+- **Week number** — how the margin phrases it: **Week 34**, **w 34** (the
+  printed almanac's abbreviation, and the default) or plain **34**. The
+  buttons are labelled with what they print. The number appears on the day
+  that opens the week, and only when week numbers are on
+  (Settings → General → Week numbers).
+- **Row height** — **Fixed** fits the whole week on one screen, every row the
+  same height. **Dynamic** grows a row with what you have written in it and
+  lets the week scroll, for people who write more on some days than others.
+
+### Heading colour
+
+**Settings → Calendar → Heading** bands the period heading — the month and
+year at the top of every view — in one of five print colours, the way a wall
+calendar prints its masthead. It is **off** by default, which leaves the
+heading plain.
+
+The colour is spent twice: the band itself, and the week numbers in the week
+planner's margin, which are printed in the same ink. With the band off those
+week numbers print in the page's own colour.
+
+The five colours are chosen to hold white text on the band and to stay legible
+as ink in both the light and the dark theme, so the choice does not have to be
+revisited when the theme changes.
 
 ### Type
 
