@@ -29,6 +29,7 @@ import { DayEntryText } from "../DayEntry.tsx";
 import { LIST_DATE_BASE } from "../DayListView.tsx";
 import { LIST_ROW_FONT, MONTH_CELL_FONT, WEEK_ROW_FONT } from "../entryFont.ts";
 import { useT, type TFunction } from "../i18n/index.ts";
+import { WEEK_GUTTER_COLUMN } from "../layout.ts";
 import { getLocale, weekdayName, type Holiday } from "../locale/index.ts";
 import { MonthCellFrame } from "../monthCell.tsx";
 import { MarkedDate, PastMark } from "../PastMark.tsx";
@@ -97,7 +98,13 @@ export function MonthSample({ look }: { look: LookSettings }) {
       style={{ "--cal-room": "1" } as CSSProperties}
     >
       {effectiveToggles(look).weekNumbers && (
-        <div className="cal-font-week cal-size-week text-muted w-5 shrink-0 pt-1 leading-none [--cal-base:10px]">
+        <div
+          // The same lane the grid gives it, from the same place — a sample
+          // whose gutter stayed 20 px while its number grew would preview the
+          // crowding rather than the setting.
+          style={{ width: WEEK_GUTTER_COLUMN }}
+          className="cal-font-week cal-size-week text-muted shrink-0 pt-1 leading-none [--cal-base:10px]"
+        >
           {SAMPLE_WEEK}
         </div>
       )}

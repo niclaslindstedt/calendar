@@ -22,7 +22,7 @@ import {
   type EntryTextSize,
 } from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
-import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { CONTENT_BOTTOM_PAD, monthGridColumns } from "./layout.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import {
   holidayFor,
@@ -134,17 +134,10 @@ export const MonthGridView = memo(function MonthGridView({
   // week once it has a header-less lane of its own, so the "v."/"w." prefix
   // was portrait width spent saying so.
   //
-  // The lane is a measured constant, like the cell font: at the gutter's
-  // computed 10 px the widest of the 53 possible labels is 11.12 px, and the
-  // week number is never three digits. The number is left-aligned in a 20 px
-  // lane, which spends the width in the two places it is visible — the number
-  // starts at the section's 12 px padding, matching the 12 px the grid leaves
-  // on the right, and the ~9 px left over becomes the gap between the number
-  // and the first day column. Sizing the lane to the digits alone squared the
-  // margins but pressed the number against the grid.
-  const gridCols = showWeekNumbers
-    ? "grid-template-columns: 1.25rem repeat(7, minmax(0, 1fr))"
-    : "grid-template-columns: repeat(7, minmax(0, 1fr))";
+  // The lane is a measured constant, like the cell font — and, like every
+  // measurement in this app, one taken on a phone and scaled by the reader's
+  // step and the room the screen has. `layout.ts` holds both halves of that.
+  const gridCols = monthGridColumns(showWeekNumbers);
 
   return (
     <div
