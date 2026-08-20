@@ -1,13 +1,24 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Horizontal period paging for the month, week and list views. The month and
-// week views fill exactly one screen and never scroll, which frees the
-// horizontal axis for navigation: drag left or right and the neighbouring
-// period follows your finger, then springs into place. The framework ships no
-// pager — `useRowSwipe` is a per-row reveal/commit gesture and
-// `useSwipeDownToClose` is for sheets — so this is app-local.
+// Period paging for the month, week and list views. The month and week views
+// fill exactly one screen and never scroll, which frees an axis for
+// navigation: drag along it and the neighbouring period follows your finger,
+// then springs into place. The framework ships no pager — `useRowSwipe` is a
+// per-row reveal/commit gesture and `useSwipeDownToClose` is for sheets — so
+// this is app-local.
+//
+// Which axis that is, is the reader's (Settings → Calendar → Navigation,
+// `navSwipe.ts`). Left/right is the default and the one the app shipped with;
+// up/down is for a thumb that would rather scroll a calendar than flick
+// through it, and it takes the arrows out of the heading, since a pair of
+// chevrons pointing the wrong way is worse than no chevrons at all. Only the
+// axis moves: everything below — the axis lock, the commit thresholds, the
+// swap-then-animate order — is written in terms of the *main* axis (the one
+// pages travel on) and the *cross* axis, so there is one pager rather than
+// two.
 //
 // The track holds three panes (previous, current, next), each exactly one
-// container wide, and rests at `-100%` so the current one is on screen.
+// container wide (or tall), and rests at `-100%` so the current one is on
+// screen.
 //
 // Two rules keep the animation smooth, and both are about *when* work happens:
 //
@@ -37,16 +48,17 @@ import {
 
 import { useMediaQuery } from "@niclaslindstedt/oss-framework/hooks";
 
-/** Horizontal travel before the gesture is ours rather than the page's. Low
- *  enough that a deliberate swipe engages immediately, high enough that a tap
- *  on a day cell with a shaky thumb still opens the editor. */
+/** Travel along the paging axis before the gesture is ours rather than the
+ *  page's. Low enough that a deliberate swipe engages immediately, high enough
+ *  that a tap on a day cell with a shaky thumb still opens the editor. */
 const AXIS_LOCK_PX = 10;
-/** How much more vertical than horizontal a drag must be before it counts as
+/** How much more cross-axis than main-axis a drag must be before it counts as
  *  scrolling rather than paging, on the decks whose pane actually scrolls. A
  *  thumb swiping across a phone travels in an arc, so a plain
- *  `|dy| >= |dx|` test hands far too many honest side-swipes to the list. */
+ *  `|cross| >= |main|` test hands far too many honest side-swipes to the
+ *  list. */
 const SCROLL_BIAS = 1.4;
-/** A drag past this share of the width commits even if it ends slowly. */
+/** A drag past this share of the page commits even if it ends slowly. */
 const COMMIT_FRACTION = 0.22;
 /** …and a flick faster than this (px/ms) commits however short it was. */
 const COMMIT_VELOCITY = 0.4;
@@ -60,15 +72,46 @@ const SETTLE_EASING = "cubic-bezier(0.22, 0.61, 0.36, 1)";
  *  this only cleans up, so firing late costs nothing. */
 const SETTLE_TIMEOUT_MS = SETTLE_MS * 2 + 400;
 
-/** The panes, left to right: the previous period, the current one, the next. */
+/** The panes, in reading order along the paging axis: the previous period, the
+ *  current one, the next. */
 const RELATIVE: readonly (-1 | 0 | 1)[] = [-1, 0, 1];
 
-/** Where the track sits when nothing is happening: the centre pane on screen. */
-const REST = "translate3d(-100%, 0, 0)";
+/** The axis pages travel on: `x` is left/right, `y` is up/down. */
+export type DeckAxis = "x" | "y";
 
-/** The track's transform `px` away from {@link REST}. */
-function trackTransform(px: number): string {
-  return px === 0 ? REST : `translate3d(calc(-100% + ${px}px), 0, 0)`;
+/** Where the track sits when nothing is happening: the centre pane on
+ *  screen. A percentage transform is of the track's own border box, and the
+ *  track is exactly one pane wide *and* tall (its siblings overflow), so the
+ *  same `-100%` is one page on either axis. */
+function restTransform(axis: DeckAxis): string {
+  return axis === "y" ? "translate3d(0, -100%, 0)" : "translate3d(-100%, 0, 0)";
+}
+
+/** The track's transform `px` away from {@link restTransform}. */
+function trackTransform(axis: DeckAxis, px: number): string {
+  if (px === 0) return restTransform(axis);
+  return axis === "y"
+    ? `translate3d(0, calc(-100% + ${px}px), 0)`
+    : `translate3d(calc(-100% + ${px}px), 0, 0)`;
+}
+
+/** Whether a scroller has run out of room in the direction a drag is heading:
+ *  `main` is the finger's travel along the paging axis, so a positive one
+ *  (dragging down, revealing the pane above) needs a scroller already at its
+ *  top and a negative one needs it at its bottom.
+ *
+ *  This is what lets the day list keep the vertical axis it scrolls on and
+ *  still page on it: the pane scrolls until it cannot, and the drag that
+ *  carries on past the end is the one that turns the page. A pane with no
+ *  scroller of its own has nothing to give up, so it is at both ends at once.
+ *  The pixel of slack is for fractional scroll offsets, which a zoomed page
+ *  and a retina scrollbar both produce. */
+function atScrollEnd(scroller: Element | null, main: number): boolean {
+  if (!scroller) return true;
+  if (main > 0) return scroller.scrollTop <= 0;
+  return (
+    scroller.scrollTop >= scroller.scrollHeight - scroller.clientHeight - 1
+  );
 }
 
 /** Marks the scrolling element inside a pane of a `scrolls` deck, so the deck
@@ -133,16 +176,27 @@ type Props = {
    *  nowhere to go. A scrolling pane keeps `pan-y` and leans on the biased
    *  axis lock. */
   scrolls?: boolean;
+  /** Which way a page turn travels (Settings → Calendar → Navigation).
+   *  Defaults to the left/right paging the app shipped with. */
+  axis?: DeckAxis;
 };
 
 type Drag = {
-  x: number;
-  y: number;
-  width: number;
-  /** Null until the gesture commits to an axis; "y" abandons it to the page. */
-  axis: "x" | "y" | null;
-  /** Last sample, for the release velocity. */
-  sampleX: number;
+  /** Where the finger went down, along the paging axis… */
+  main: number;
+  /** …and across it. */
+  cross: number;
+  /** The container's length along the paging axis — one page. */
+  size: number;
+  /** False until the gesture is ours. A drag the page wins is dropped
+   *  outright rather than kept in a losing state. */
+  locked: boolean;
+  /** The scroller the gesture started over, on a deck whose panes scroll:
+   *  what decides, at lock time, whether the pane still has room to give the
+   *  drag or the deck should take it (see {@link atScrollEnd}). */
+  scroller: Element | null;
+  /** Last main-axis sample, for the release velocity. */
+  sample: number;
   sampleT: number;
   velocity: number;
 };
@@ -154,13 +208,21 @@ export function SwipeDeck({
   renderItem,
   renderChrome,
   scrolls = false,
+  axis = "x",
 }: Props) {
+  const vertical = axis === "y";
+  /** The pointer's position along the paging axis. */
+  const along = (e: { clientX: number; clientY: number }) =>
+    vertical ? e.clientY : e.clientX;
+  /** …and across it. */
+  const across = (e: { clientX: number; clientY: number }) =>
+    vertical ? e.clientX : e.clientY;
   const host = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const drag = useRef<Drag | null>(null);
-  /** How far the finger has taken the track from rest. A ref, not state: the
-   *  whole point is that dragging renders nothing. */
-  const dx = useRef(0);
+  /** How far along the paging axis the finger has taken the track from rest.
+   *  A ref, not state: the whole point is that dragging renders nothing. */
+  const offset = useRef(0);
   /** Set once a gesture becomes a swipe, so the click it ends with does not
    *  also drop into the day cell it happens to land on. */
   const swiped = useRef(false);
@@ -210,7 +272,7 @@ export function SwipeDeck({
     const el = track.current;
     if (!el) return;
     el.style.transition = "none";
-    el.style.transform = trackTransform(px);
+    el.style.transform = trackTransform(axis, px);
   };
 
   /** Run the track home from wherever it currently is. The start value is
@@ -222,7 +284,7 @@ export function SwipeDeck({
     void el.offsetWidth;
     el.style.willChange = "transform";
     el.style.transition = `transform ${SETTLE_MS}ms ${SETTLE_EASING}`;
-    el.style.transform = REST;
+    el.style.transform = restTransform(axis);
     timer.current = window.setTimeout(endSettle, SETTLE_TIMEOUT_MS);
   };
 
@@ -287,11 +349,33 @@ export function SwipeDeck({
     const el = host.current;
     if (!el) return;
     const onTouchMove = (e: TouchEvent) => {
-      if (drag.current?.axis === "x" && e.cancelable) e.preventDefault();
+      if (drag.current?.locked && e.cancelable) e.preventDefault();
     };
     el.addEventListener("touchmove", onTouchMove, { passive: false });
     return () => el.removeEventListener("touchmove", onTouchMove);
   }, []);
+
+  // A deck that pages on the axis its panes scroll on has one more thing to
+  // arrange, and it is the browser's rubber band. `overscroll-behavior: none`
+  // is what says "there is nothing past the end here": without it iOS bounces
+  // the pane instead, and a bounce is a scroll — the engine claims the touch,
+  // fires `pointercancel`, and the drag that was meant to turn the page is
+  // gone. With it, a finger that reaches the end of the list keeps sending us
+  // moves, which is exactly the gesture {@link atScrollEnd} is looking for.
+  //
+  // Set here rather than in the views' own classes because it is the *deck's*
+  // reason: the same list scrolled under left/right paging should keep its
+  // bounce.
+  useLayoutEffect(() => {
+    const el = host.current;
+    if (!el) return;
+    const scrollers = el.querySelectorAll<HTMLElement>("[data-deck-scroller]");
+    for (const scroller of scrollers) {
+      scroller.style.overscrollBehaviorY = vertical ? "none" : "";
+    }
+    // `scrolls` is what says whether the panes have a scroller at all — it is
+    // the prop that changes when the week planner's rows start growing.
+  }, [vertical, scrolls]);
 
   // The centre period changed. Our own page turn has already placed the track
   // and started its animation; anything else is a jump from outside the deck
@@ -305,8 +389,14 @@ export function SwipeDeck({
     // a queued arrow tap was heading for.
     queued.current = null;
     endSettle();
-    dx.current = 0;
+    offset.current = 0;
     place(0);
+    // `itemKey` alone, deliberately. This is the "someone moved the anchor
+    // from outside" effect; `place` is in it only because it writes the
+    // track, and it counts as reactive only because it reads the paging axis
+    // — which cannot change under a mounted deck anyway, since `App.tsx` keys
+    // the deck on it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemKey]);
 
   // A pane is a reused DOM node — the period inside it swaps, its scroll
@@ -340,7 +430,7 @@ export function SwipeDeck({
    *  one does not block input — nothing changed, so a second try can start
    *  before the first has finished springing. */
   const rest = () => {
-    dx.current = 0;
+    offset.current = 0;
     runHome();
   };
 
@@ -349,19 +439,20 @@ export function SwipeDeck({
       queued.current = direction;
       return;
     }
-    const width = host.current?.clientWidth ?? 0;
+    const el = host.current;
+    const size = (vertical ? el?.clientHeight : el?.clientWidth) ?? 0;
     const step = () => (direction === 1 ? onNext() : onPrevious());
 
     // Where the track has to sit, once the anchor has moved, for the period
     // you are looking at to stay exactly where it is: one pane over, plus
     // whatever the finger had already added.
-    const from = direction * width + dx.current;
-    dx.current = 0;
+    const from = direction * size + offset.current;
+    offset.current = 0;
     stepped.current = true;
     keepScroll.current = paneKey(rotation, 0);
     setRotation((r) => r + direction);
 
-    if (reducedMotion || width === 0) {
+    if (reducedMotion || size === 0) {
       place(0);
       step();
       return;
@@ -396,14 +487,16 @@ export function SwipeDeck({
     if (target?.closest("textarea, input, select, [contenteditable='true']")) {
       return;
     }
-    const width = host.current?.clientWidth ?? 0;
-    if (width === 0) return;
+    const el = host.current;
+    const size = (vertical ? el?.clientHeight : el?.clientWidth) ?? 0;
+    if (size === 0) return;
     drag.current = {
-      x: e.clientX,
-      y: e.clientY,
-      width,
-      axis: null,
-      sampleX: e.clientX,
+      main: along(e),
+      cross: across(e),
+      size,
+      locked: false,
+      scroller: target?.closest("[data-deck-scroller]") ?? null,
+      sample: along(e),
       sampleT: e.timeStamp,
       velocity: 0,
     };
@@ -413,20 +506,27 @@ export function SwipeDeck({
   const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     if (!d) return;
-    const moved = e.clientX - d.x;
+    const moved = along(e) - d.main;
 
-    if (d.axis === null) {
-      const vertical = Math.abs(e.clientY - d.y);
-      if (Math.abs(moved) < AXIS_LOCK_PX && vertical < AXIS_LOCK_PX) return;
+    if (!d.locked) {
+      const sideways = Math.abs(across(e) - d.cross);
+      if (Math.abs(moved) < AXIS_LOCK_PX && sideways < AXIS_LOCK_PX) return;
       // Only a pane that scrolls has anything to give the gesture up for, and
-      // even then it takes a clearly vertical drag to win it.
-      if (scrolls && vertical > Math.abs(moved) * SCROLL_BIAS) {
-        // Vertical intent — hand the gesture back to the page.
+      // even then it takes a clearly cross-axis drag to win it.
+      if (scrolls && sideways > Math.abs(moved) * SCROLL_BIAS) {
+        // The pane's axis, not ours — hand the gesture back to the page.
         drag.current = null;
         return;
       }
       if (Math.abs(moved) < AXIS_LOCK_PX) return;
-      d.axis = "x";
+      // Paging up and down over a pane that scrolls up and down: the scroll
+      // comes first and the page turn is what is left once the pane has run
+      // out. Handing the gesture back here is what keeps the day list a list.
+      if (vertical && scrolls && !atScrollEnd(d.scroller, moved)) {
+        drag.current = null;
+        return;
+      }
+      d.locked = true;
       swiped.current = true;
       const el = track.current;
       if (el) el.style.willChange = "transform";
@@ -441,21 +541,21 @@ export function SwipeDeck({
 
     const elapsed = e.timeStamp - d.sampleT;
     if (elapsed > 0) {
-      d.velocity = (e.clientX - d.sampleX) / elapsed;
-      d.sampleX = e.clientX;
+      d.velocity = (along(e) - d.sample) / elapsed;
+      d.sample = along(e);
       d.sampleT = e.timeStamp;
     }
     // Capped at one period: a long drag reveals the neighbour and no further,
     // because there is no fourth pane behind it.
-    dx.current = Math.max(-d.width, Math.min(d.width, moved));
-    place(dx.current);
+    offset.current = Math.max(-d.size, Math.min(d.size, moved));
+    place(offset.current);
   };
 
-  /** Ends an x-locked drag: commit if it went far or fast, spring back if
-   *  not. `x` is the pointer's final position. */
-  const finish = (d: Drag, x: number) => {
-    const moved = Math.max(-d.width, Math.min(d.width, x - d.x));
-    const far = Math.abs(moved) > d.width * COMMIT_FRACTION;
+  /** Ends a locked drag: commit if it went far or fast, spring back if not.
+   *  `at` is the pointer's final position along the paging axis. */
+  const finish = (d: Drag, at: number) => {
+    const moved = Math.max(-d.size, Math.min(d.size, at - d.main));
+    const far = Math.abs(moved) > d.size * COMMIT_FRACTION;
     const flicked =
       Math.abs(d.velocity) > COMMIT_VELOCITY &&
       Math.sign(d.velocity) === Math.sign(moved);
@@ -466,9 +566,9 @@ export function SwipeDeck({
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     drag.current = null;
-    if (!d || d.axis !== "x") return;
+    if (!d || !d.locked) return;
     setSelectable(true);
-    finish(d, e.clientX);
+    finish(d, along(e));
   };
 
   const onPointerCancel = () => {
@@ -479,7 +579,7 @@ export function SwipeDeck({
     // A cancel after the axis lock means the browser stole a gesture that was
     // already a swipe. Finish it from the last sample rather than snapping
     // back — the finger asked for a page turn.
-    if (d.axis === "x") finish(d, d.sampleX);
+    if (d.locked) finish(d, d.sample);
     else rest();
   };
 
@@ -501,6 +601,12 @@ export function SwipeDeck({
       // native gesture worth keeping on either axis, and `none` means the
       // browser can never claim the drag (a claim fires `pointercancel` and
       // eats the page turn — `pan-x` invited exactly that).
+      //
+      // That holds when the deck pages up and down too, and for the same
+      // reason read the other way round: the scroll is the pane's until the
+      // pane runs out, so the browser keeps `pan-y` and the deck takes over
+      // at the end of the list (`atScrollEnd`, and the `overscroll-behavior`
+      // above that keeps the bounce from eating the drag).
       style={{ touchAction: scrolls ? "pan-y" : "none" }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -512,11 +618,13 @@ export function SwipeDeck({
       <div className="min-h-0 flex-1 overflow-hidden">
         <div
           ref={track}
-          className="flex h-full w-full"
+          // One pane wide and tall either way; the other two overflow, along
+          // the axis the panes are laid out on.
+          className={`flex h-full w-full ${vertical ? "flex-col" : ""}`}
           // The resting transform is the only one React writes. Every other
           // position — the finger's, the page turn's — is set on this node
           // directly, so no gesture ever costs a render.
-          style={{ transform: REST }}
+          style={{ transform: restTransform(axis) }}
         >
           {RELATIVE.map((rel) => {
             const key = paneKey(rotation, rel);

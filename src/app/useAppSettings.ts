@@ -24,6 +24,11 @@ import {
   type EveChoices,
 } from "./locale/index.ts";
 import {
+  DEFAULT_SWIPE_DIRECTION,
+  swipeDirectionOf,
+  type SwipeDirection,
+} from "./navSwipe.ts";
+import {
   DEFAULT_PAST_MARK,
   pastMarkScope,
   pastMarkStyle,
@@ -133,6 +138,9 @@ export type AppSettings = {
   monthHolidayCorner: CellCorner;
   /** Month cell: where the note sits in what is left. */
   monthNote: NotePlacement;
+  /** Which way a swipe turns the page — left/right by default, the way the
+   *  heading's arrows point (`navSwipe.ts`). */
+  swipeDirection: SwipeDirection;
   /** The stroke drawn over a day that has passed — off by default: not
    *  everyone wants their calendar written on. */
   pastMark: PastMarkStyle;
@@ -197,6 +205,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   monthNameDayCorner: "bottom-right",
   monthHolidayCorner: "bottom-right",
   monthNote: "top",
+  swipeDirection: DEFAULT_SWIPE_DIRECTION,
   pastMark: DEFAULT_PAST_MARK.style,
   pastMarkScope: DEFAULT_PAST_MARK.scope,
   vacationDays: 25,
@@ -230,6 +239,7 @@ export const LOOK_KEYS = [
   "monthNameDayCorner",
   "monthHolidayCorner",
   "monthNote",
+  "swipeDirection",
   "pastMark",
   "pastMarkScope",
   "vacationDays",
@@ -258,6 +268,7 @@ export function pickLook(settings: AppSettings): LookSettings {
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
     monthNote: settings.monthNote,
+    swipeDirection: settings.swipeDirection,
     pastMark: settings.pastMark,
     pastMarkScope: settings.pastMarkScope,
     vacationDays: settings.vacationDays,
@@ -289,6 +300,15 @@ export function pastMarkOf(
     style: pastMarkStyle(look.pastMark),
     scope: pastMarkScope(look.pastMarkScope),
   };
+}
+
+/** Which way a swipe turns the page, held to the two known directions — the
+ *  deck reads the axis off this, and so does the heading, which prints its
+ *  arrows only where they point the way the page turns. */
+export function swipeDirectionFor(
+  look: Pick<AppSettings, "swipeDirection">,
+): SwipeDirection {
+  return swipeDirectionOf(look.swipeDirection);
 }
 
 /** The heading band's colour, as the CSS ink the views paint with — `null`

@@ -46,7 +46,13 @@ import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
-import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import {
+  STRIP_ROW_EDGE,
+  StripLane,
+  StripNote,
+  StripRail,
+  type StripDay,
+} from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
@@ -81,6 +87,9 @@ type Props = {
   /** The heading band's colour, which the week numbers are printed in too —
    *  `null` for the plain heading, and then the page's own ink. */
   headerInk: string | null;
+  /** Whether the heading prints its period arrows — off where the reader
+   *  pages up and down (`navSwipe.ts`). */
+  arrows: boolean;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -112,6 +121,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   weekFormat,
   dateSize,
   headerInk,
+  arrows,
   pastMark,
   textSize,
   doc,
@@ -184,6 +194,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       metaClass="text-lg"
       accent={headerInk}
       bleed
+      arrows={arrows}
       // Grown rows turn the one view that fits a week on a screen into a
       // scroller, so the heading pins itself the way the day list's does —
       // otherwise scrolling to Sunday loses which week you are in.
@@ -246,7 +257,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         // sizes each row by its own contents instead, with the fixed row's
         // height as the floor so an empty week still looks like a week.
         style={grows ? { minHeight: WEEK_ROW_MIN_HEIGHT } : undefined}
-        className={`cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
+        className={`cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
           grows ? "" : "min-h-0 flex-1 overflow-hidden"
         } ${opens && !bandedTop ? "cal-strip-break" : ""} ${
           cell.isToday ? "bg-surface-2" : ""

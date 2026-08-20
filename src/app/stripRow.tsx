@@ -33,6 +33,22 @@ import {
 } from "./stripLayout.ts";
 import { dayOfYear, weekNumberLabel, type WeekFormat } from "./weekPlanner.ts";
 
+/** The row's own edges, shared for the same reason its margins are.
+ *
+ *  On a phone a row runs the full width of the screen: its rule, its
+ *  week-change rule and today's tint are the calendar's own furniture, and
+ *  furniture that stops 12 px short of the paper on both sides reads as a
+ *  column floating on the page rather than as a printed strip — the same
+ *  reason the heading band bleeds (`PeriodHeading`). So the view's own gutter
+ *  is cancelled here and put back as padding, and the padding put back is
+ *  *less* than the pair it replaces: what the row spends at the two ends is
+ *  the date at one and the week number at the other, and both of them would
+ *  rather have the 8 px than the margin would.
+ *
+ *  Past `sm` the calendar is a centred column on a wide page and the rules
+ *  belong to the column, so the row goes back to the view's own padding. */
+export const STRIP_ROW_EDGE = "-mx-3 px-3 sm:mx-0 sm:px-2";
+
 /** Everything a row prints, and the arrangement it prints it in. The views
  *  hand this straight down from what they already resolved per day. */
 export type StripDay = {

@@ -64,6 +64,16 @@ clearly vertical drag in a view that scrolls scrolls it instead of turning the
 page. The holidays screen pages between years the same way, with
 its header staying put while only the year's list moves.
 
+Prefer to page **up and down**? Settings → Calendar → Navigation → **Swipe:
+Up / down** turns the whole app on its side: swipe down for the period before
+and up for the one after, in every view. The day list keeps scrolling the days
+themselves and simply carries on into the month above or below when it reaches
+one end, so it reads as one continuous scroll rather than as a list you have to
+page out of. The heading drops its arrows there — two chevrons pointing
+sideways over a calendar that turns vertically point at nothing — so the
+gesture is the navigation. Left / right is the default. See
+[Navigation](#navigation).
+
 The **‹ ›** arrows flanking the month heading do the same thing with the same
 animation. To jump back to the current day, **press the view switcher** — any
 of its three buttons. Pressing the view you are already in (Month while in
@@ -119,10 +129,11 @@ stock look without touching your storage connections or developer switches.
 - **Calendar** — **Holiday eves** (which of the country's eves you actually
   work), then **View**: how each view prints a day — what sits where, the face
   each piece is set in, and how big it is — arranged on a live sample of the
-  view you picked. After that, the calendar's own behaviour: whether the days
-  that have passed are crossed off, the day-list row height, the week
-  planner's margin, and the colour the period heading is banded with. See
-  [Holiday eves](#holiday-eves), [View](#view), [Passed days](#passed-days),
+  view you picked. After that, the calendar's own behaviour: which way a swipe
+  turns the page, whether the days that have passed are crossed off, the
+  day-list row height, the week planner's margin, and the colour the period
+  heading is banded with. See [Holiday eves](#holiday-eves), [View](#view),
+  [Navigation](#navigation), [Passed days](#passed-days),
   [Week planner](#week-planner) and [Heading colour](#heading-colour).
 - **Appearance** — the theme, and only the theme: **Light** (the default — a
   wall calendar is printed on paper), **Follow device** (tracks your device's
@@ -287,6 +298,26 @@ long name breaks at a syllable rather than being clipped. The strip views have
 the opposite freedom: their lane widens with the name-day step, so bigger
 captions keep the same number of lines and the note beside them gives up the
 width instead.
+
+### Navigation
+
+**Settings → Calendar → Navigation** decides which way a swipe turns the page.
+
+- **Left / right** (the default) — the page turns sideways, the way a wall
+  calendar's pages do, and the heading keeps its **‹ ›** arrows. In the two
+  views that scroll (the day list, and the week planner with grown rows) a
+  clearly vertical drag scrolls instead of paging.
+- **Up / down** — the page turns the way you already scroll: swipe **down**
+  for the period before, **up** for the one after. The heading's arrows are
+  taken away, because a chevron is a direction and neither of those two points
+  where the page now goes. In the day list the days still scroll under your
+  finger; the page only turns once the list has run out at that end, so
+  scrolling past the bottom of August carries on into September, and past the
+  top of August into July.
+
+The choice applies to all three views at once — it is a habit rather than a
+layout — and is previewed behind the dialog as you make it, arrows and all.
+The holidays screen keeps paging between years left and right either way.
 
 ### Passed days
 

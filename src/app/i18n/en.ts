@@ -147,6 +147,14 @@ export const en = {
     textSizeHuge: "Huge",
     textSizeSampleHoliday: "All Saints",
     textSizeSampleNote: "Dinner 18:00",
+    navigation: "Navigation",
+    navigationHint:
+      "How you move between months and weeks. Whichever way you choose, the day list still scrolls the days themselves.",
+    swipeDirection: "Swipe",
+    swipeHorizontal: "Left / right",
+    swipeVertical: "Up / down",
+    swipeDirectionHint:
+      "Up and down turns the page the way you already scroll — swipe down for the period before, up for the one after — and takes the arrows out of the heading. In the day list you simply keep scrolling into the month above or below.",
     pastDays: "Passed days",
     pastDaysHint:
       "Cross off the days that have gone, the way you would on a paper calendar. Today is never crossed — the run of marks stops at it.",
