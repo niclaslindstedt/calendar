@@ -10,7 +10,12 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, it } from "vitest";
 
-import { CONTENT_BOTTOM_PAD, LIST_BOTTOM_PAD } from "../src/app/layout.ts";
+import {
+  CONTENT_BOTTOM_PAD,
+  LIST_BOTTOM_PAD,
+  WEEK_GUTTER_COLUMN,
+  monthGridColumns,
+} from "../src/app/layout.ts";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
 
 const css = readFileSync(
@@ -191,5 +196,34 @@ describe("the room factor in the stylesheet", () => {
     for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
       expect(ruleBody(selector)).toMatch(/max-width:\s*\d+%/);
     }
+  });
+});
+
+describe("the month grid's week gutter", () => {
+  // A lane holding printed type is a printed size, and this one was the width
+  // the room factor missed: 20 px measured at the gutter's own 10 px, left
+  // flat while the number in it reached 30 px on a desk monitor at the
+  // ladder's top step — so it drew ten pixels past its column, through the
+  // first day column's rule.
+  it("carries both factors that size the number in it", () => {
+    expect(WEEK_GUTTER_COLUMN).toContain("var(--cal-size-week");
+    expect(WEEK_GUTTER_COLUMN).toContain("var(--cal-room");
+  });
+
+  it("keeps the measured 20 px as what it starts from", () => {
+    expect(WEEK_GUTTER_COLUMN).toContain("1.25rem");
+  });
+
+  it("leads the seven day columns with it, and only when it is printed", () => {
+    // Both the weekday header row and every week row lay out with this, so a
+    // gutter in one and not the other would knock the headers off their days.
+    expect(monthGridColumns(true)).toBe(
+      `grid-template-columns: ${WEEK_GUTTER_COLUMN} repeat(7, minmax(0, 1fr))`,
+    );
+    expect(monthGridColumns(false)).toBe(
+      "grid-template-columns: repeat(7, minmax(0, 1fr))",
+    );
+    // No dead gutter when the country prints no week numbers.
+    expect(monthGridColumns(false)).not.toContain("1.25rem");
   });
 });
