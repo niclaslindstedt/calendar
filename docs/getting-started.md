@@ -123,7 +123,9 @@ stock look without touching your storage connections or developer switches.
   wall calendar is printed on paper), **Follow device** (tracks your device's
   light / dark preference), **Dark**, or **Custom**, plus the palette variant
   within the light and dark families.
-- **Storage** — where your calendar lives. See [storage.md](storage.md).
+- **Storage** — where your calendar lives, and **Import and export**: one file
+  carrying your settings and every calendar with its notes, merged back in
+  where it lands. See [storage.md](storage.md).
 - **Developer** — demo data, log capture, build info, the update check, and
   the device's own geometry (visible in developer mode). The **Device** block
   prints the viewport, the four safe-area insets in CSS order

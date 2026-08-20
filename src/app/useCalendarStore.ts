@@ -21,14 +21,9 @@ import {
   type StorageAdapter,
 } from "@niclaslindstedt/oss-framework/storage";
 
-import { migrator } from "./migrations.ts";
+import { parseDocument } from "./migrations.ts";
 import { error as logError, status } from "../output.ts";
-import {
-  coerceDoc,
-  emptyDoc,
-  serializeDoc,
-  type CalendarDoc,
-} from "./types.ts";
+import { emptyDoc, serializeDoc, type CalendarDoc } from "./types.ts";
 import { buildAdapter, type BackendId } from "./storage/backends.ts";
 import { createDemoAdapter } from "./storage/demoAdapter.ts";
 
@@ -43,6 +38,9 @@ export type CalendarStore = {
   doc: CalendarDoc;
   /** Set (or clear, with "") the text for a day. */
   setEntry: (day: DayKey, text: string) => void;
+  /** Swap the whole document out and save it — what an import does to the
+   *  calendar that happens to be on screen (`storage/backup.ts`). */
+  replaceDoc: (next: CalendarDoc) => void;
   saveState: SaveState;
   /** The backend the store is actually saving through — falls back to
    *  "browser" when the requested backend isn't connected. */
@@ -57,15 +55,6 @@ type Session = {
   adapter: StorageAdapter;
   revision: string | undefined;
 };
-
-function parseSnapshot(text: string): CalendarDoc {
-  try {
-    return coerceDoc(migrator.migrate(JSON.parse(text)).data);
-  } catch (err) {
-    logError(`Stored document unreadable — starting empty (${String(err)})`);
-    return emptyDoc();
-  }
-}
 
 /** The store. `requestedBackend` is the settings choice, `calendarSlug` the
  *  active calendar's slug; `demoMode` swaps in a fresh in-memory demo
@@ -106,7 +95,7 @@ export function useCalendarStore(
         // Another device pushed first: adopt the remote copy and tell the log.
         session.revision = err.remote.revision;
         if (live()) {
-          setDoc(parseSnapshot(err.remote.text));
+          setDoc(parseDocument(err.remote.text));
           setSaveState({ kind: "saved" });
         }
         logError("Save conflict — loaded the newer copy from the backend");
@@ -160,7 +149,7 @@ export function useCalendarStore(
       const sync = adapter.loadSync?.();
       if (sync) {
         session.revision = sync.revision;
-        setDoc(parseSnapshot(sync.text));
+        setDoc(parseDocument(sync.text));
         setSaveState({ kind: "saved" });
       } else {
         // A cloud calendar has nothing to show until its load lands; the
@@ -173,7 +162,7 @@ export function useCalendarStore(
         if (!current || sessionRef.current !== session) return;
         if (snapshot) {
           session.revision = snapshot.revision;
-          setDoc(parseSnapshot(snapshot.text));
+          setDoc(parseDocument(snapshot.text));
         } else if (!sync) {
           setDoc(emptyDoc());
         }
@@ -220,8 +209,25 @@ export function useCalendarStore(
     [push],
   );
 
+  // An import rewrites the document under the reader rather than editing a
+  // day of it. It goes through the live session — not through a fresh adapter
+  // — so the revision the store holds stays the one it just wrote, and any
+  // keystroke still sitting on the debounce is dropped rather than allowed to
+  // land on top of the merge a moment later.
+  const replaceDoc = useCallback(
+    (next: CalendarDoc) => {
+      if (saveTimer.current) clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+      pending.current = null;
+      setDoc(next);
+      const session = sessionRef.current;
+      if (session) void push(session, next);
+    },
+    [push],
+  );
+
   return useMemo(
-    () => ({ doc, setEntry, saveState, effectiveBackend }),
-    [doc, setEntry, saveState, effectiveBackend],
+    () => ({ doc, setEntry, replaceDoc, saveState, effectiveBackend }),
+    [doc, setEntry, replaceDoc, saveState, effectiveBackend],
   );
 }

@@ -230,7 +230,12 @@ The app owns the domain and the stores ("store stays in the app"):
   to keep the un-suffixed names a single-calendar app wrote under.
   `registryKeys.ts` holds the two `localStorage` keys the registry lives
   under and the one-time move off the names it shipped with — also pure, for
-  the same reason.
+  the same reason. `backup.ts` is the import / export **file and its merge
+  rules** — what a backup carries and what importing one means for the device
+  it lands on (add what is missing, keep every day only one side has, ask only
+  where the two disagree); pure and tested, with `backupIo.ts` doing the
+  round-trip through the adapters and `useBackup.ts` wiring both to the
+  stores. See `docs/storage.md`.
 - `src/app/MonthGridView.tsx`, `WeekPlannerView.tsx`, `DayListView.tsx` — the
   three views; `DayEntry.tsx` is the shared click-to-type entry surface with
   the auto-shrinking text. `entryFont.ts` owns the pre-layout sizing curve and
@@ -462,6 +467,7 @@ looks fine at 393 px can be a margin taking three quarters of a strip row at
 | the document model / migrations    | `docs/storage.md`, `tests/migrations_test.ts`                                                               |
 | locale packs / name days           | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
 | storage backends                   | `docs/storage.md`, `docs/configuration.md`                                                                  |
+| import / export (the backup file)  | `docs/storage.md`, `tests/backup_test.ts`                                                                   |
 | calendars / where a document lives | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`    |
 | settings surface                   | `docs/getting-started.md`                                                                                   |
 | user-visible features              | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |

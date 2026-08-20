@@ -60,7 +60,10 @@ The list of calendars and which one is active are **device-local** (the
 The documents sync through whichever backend you chose; the registry does not,
 so a second device pointed at the same Dropbox app folder needs its calendars
 created there too — under the same names, which produce the same slugs (and
-therefore the same folders), and the notes line up.
+therefore the same folders), and the notes line up. Settings → Storage →
+**Import and export** does that for you: the backup file carries the registry
+along with the notes, and importing it adds the calendars the second device
+is missing (see [storage](../storage.md#import-and-export)).
 
 > The feature was called **namespaces** before it was released, and its
 > registry lived under `calendar:namespaces` and `calendar:namespace:active`.

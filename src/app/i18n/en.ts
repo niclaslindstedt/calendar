@@ -221,6 +221,55 @@ export const en = {
     statusError: "Save failed: {error}",
     statusLoading: "Loading…",
   },
+  // Import / export — the Storage tab's second half. A "backup" here is a
+  // file: the settings and every calendar with its notes, never the storage
+  // connection that holds them.
+  backup: {
+    heading: "Import and export",
+    hint: "A backup file carries your settings and every calendar with its notes. Your storage connection stays on this device.",
+    export: "Export…",
+    import: "Import…",
+    working: "Working…",
+    demoBlocked: "Turn demo data off to import or export your real calendars.",
+    exportFailed: "Export failed: {error}",
+    /** One or more calendars whose notes couldn't be written back. */
+    writeFailed: "These calendars could not be written: {calendars}",
+    nothingToDo: "Everything in that file is already on this device.",
+    errorUnreadable: "That file isn't readable JSON.",
+    errorNotBackup: "That isn't a calendar backup file.",
+    errorTooNew: "That backup was written by a newer version of the app.",
+    /** The merge dialog. */
+    importTitle: "Import backup",
+    importBlurb:
+      "Anything the file brings that this device doesn't have is added. Where the two disagree, pick which one wins — the other side's days are kept either way.",
+    exportedAt: "Exported {date}",
+    settingsRow: "App settings",
+    settingsDiffer: "The file's settings differ from this device's.",
+    settingsAdopted:
+      "This device is on the default settings, so the file's are used.",
+    whoWins: "Which one wins",
+    keepMine: "Keep mine",
+    useFile: "Use the file",
+    importAction: "Import",
+    importing: "Merging…",
+    /** A calendar this device doesn't have yet. */
+    calendarNew: "New calendar",
+    calendarDaysAdded: "{n} days added",
+    calendarOneDayAdded: "1 day added",
+    calendarDaysDiffer: "{n} days differ",
+    calendarOneDayDiffers: "1 day differs",
+    calendarRenamed: "Called “{name}” in the file",
+    alsoApplied: "Applied either way",
+    /** The receipt under the buttons once an import has run. */
+    resultHeading: "Imported",
+    resultCalendarsAdded: "Calendars added",
+    resultCalendarsMerged: "Calendars merged",
+    resultDaysAdded: "Days added",
+    resultDaysReplaced: "Days replaced",
+    resultSettings: "Settings",
+    resultSettingsTaken: "From the file",
+    resultSettingsKept: "Kept",
+  },
   developer: {
     devMode: "Developer mode",
     devModeHint: "Unlocks the demo-data backend, logs, and build info.",

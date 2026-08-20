@@ -58,11 +58,13 @@ import {
   writeActiveBackendId,
   type BackendId,
 } from "./app/storage/backends.ts";
+import { useBackup } from "./app/useBackup.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
 import { useCalendars } from "./app/useCalendars.ts";
 import { pinShell } from "./app/shellScroll.ts";
 import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
+  DEFAULT_LOOK,
   clampVacationDays,
   effectiveToggles,
   eveChoices,
@@ -85,6 +87,15 @@ import { status } from "./output.ts";
 const DEFAULT_APPEARANCE: ThemeAppearance = {
   ...DEFAULT_THEME_APPEARANCE,
   theme: FAMILY_DEFAULT_THEME.light,
+};
+
+// What an untouched install reads like — the yardstick an import measures a
+// file's settings against. A device still sitting on both of these has made no
+// choice to defend, so it adopts the file's rather than asking (see
+// `storage/backup.ts`). Hoisted so the identity is stable across renders.
+const BACKUP_DEFAULTS = {
+  look: DEFAULT_LOOK,
+  appearance: DEFAULT_APPEARANCE,
 };
 
 /** What a parked pane's handlers are. Hoisted so the two neighbours the deck
@@ -221,6 +232,18 @@ export function App() {
     settings.demoData,
     calendars.activeSlug,
   );
+  // Import / export, over the same backend the store is saving through: a
+  // backup is a copy of what is actually stored, not of what was asked for.
+  const backup = useBackup({
+    settings,
+    appearance,
+    defaults: BACKUP_DEFAULTS,
+    backend: store.effectiveBackend,
+    calendars,
+    store,
+    commitLook,
+    setAppearance,
+  });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarsOpen, setCalendarsOpen] = useState(false);
 
@@ -631,6 +654,7 @@ export function App() {
             if (store.effectiveBackend === id) setActiveBackend("browser");
           },
         }}
+        backup={backup}
         updateChecking={pwa.checking}
         updateAvailable={pwa.needRefresh}
         onCheckUpdate={pwa.checkForUpdate}

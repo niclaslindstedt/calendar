@@ -6,7 +6,8 @@
 import { createMigrator } from "@niclaslindstedt/oss-framework/storage";
 
 import { log } from "./log.ts";
-import { DOC_VERSION } from "./types.ts";
+import { error as logError } from "../output.ts";
+import { coerceDoc, emptyDoc, DOC_VERSION, type CalendarDoc } from "./types.ts";
 
 export const migrator = createMigrator({
   latestVersion: DOC_VERSION,
@@ -27,3 +28,17 @@ export const migrator = createMigrator({
   },
   logger: log,
 });
+
+/** A stored document's text, as the app's model: parsed, migrated forward and
+ *  coerced. Unreadable bytes are a note in the log and an empty calendar
+ *  rather than a crash — a hand-edited file, or one written by something
+ *  else, must not take the app down with it. Shared by the document store and
+ *  the backup reader, so both read a document the same way. */
+export function parseDocument(text: string): CalendarDoc {
+  try {
+    return coerceDoc(migrator.migrate(JSON.parse(text)).data);
+  } catch (err) {
+    logError(`Stored document unreadable — starting empty (${String(err)})`);
+    return emptyDoc();
+  }
+}

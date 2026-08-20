@@ -53,6 +53,9 @@ optionally synced to a storage backend you control.
   calendar in the app folder), or Google Drive.
 - **Separate calendars in one app**: keep home and work apart — each calendar
   with its own notes, all in the same backend.
+- **Take it with you**: export your settings and every calendar to one file,
+  and import it on another device — a merge, not an overwrite, so it only asks
+  you where the two actually disagree.
 
 ## Prerequisites
 
@@ -103,8 +106,8 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   face per part of a day (date, holiday, name days, your text), a size per
   part of a day (small / medium / large, plus dynamic for your own text,
   each with a sample beside the buttons), the theme,
-  storage backend, developer mode, and logs. Look changes preview live behind
-  the dialog and are kept with Save; Cancel drops them.
+  storage backend, import / export, developer mode, and logs. Look changes
+  preview live behind the dialog and are kept with Save; Cancel drops them.
 
 ## Configuration
 
