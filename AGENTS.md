@@ -245,6 +245,13 @@ The app owns the domain and the stores ("store stays in the app"):
   `DayEntry`'s `bounded` prop — set where the surface clips (month cells, week
   rows, a fixed-height day-list row), clear where the row grows with its
   text.
+- `src/app/listHome.ts` — which row the day list opens a month on. The other
+  two views fill a screen, so "today" is the period they show; the list is a
+  ninety-row scroll, and the month you are living in opens at the week you are
+  in. Pure, and the scrolling is the deck's: `SwipeDeck` owns every pane's
+  offset, so the view only marks the row (`DECK_HOME`) and keeps its pinned
+  heading's height clear of it (`scroll-padding-top`) — a scroll set by the
+  view would be overwritten by the deck's own a moment later.
 - `src/app/viewStyle.ts` — how each piece of a day is _set_ (its face and its
   size), answered **per view**: a month cell is 47 px wide and a strip row is
   the width of the screen, so one answer could not serve both. Two **scopes**

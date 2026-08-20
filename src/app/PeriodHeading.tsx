@@ -39,6 +39,18 @@ type Props = {
 const ARROW_BASE =
   "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] transition-colors focus-visible:ring-2 focus-visible:outline-none";
 
+/** How tall the heading stands: the `py-4` below marks 1rem above and below
+ *  the tallest thing in the row, which is the 2.25rem arrow button — both
+ *  titles the views set are shorter than their own arrows, so the sum does not
+ *  depend on which view is asking.
+ *
+ *  Exported because the day list pins this over its own scroll, so a row it
+ *  opens on has to clear exactly this much (`scroll-padding-top`). Derived
+ *  from the two classes rather than measured off a screenshot, and
+ *  `tests/layout_test.ts` reads those classes back out of this file so the
+ *  three can never drift. */
+export const HEADING_HEIGHT = "4.25rem";
+
 /** On the page's own ground, and on a colour band. The banded pair are white
  *  at two strengths rather than the theme's muted/foreground tokens: the band
  *  is one fixed colour in both themes, so the ink over it has to be too. */

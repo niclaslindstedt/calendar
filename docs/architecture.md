@@ -39,6 +39,8 @@ src/
     │                     to fit, clamp to an ellipsis, refuse a full day
     ├── pastDays.ts       which days are past and what the "crossed off" mark
     │                     is made of (pure, tested); PastMark.tsx draws it
+    ├── listHome.ts       the row the day list opens a month on — today's
+    │                     week, in the month today is in (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── DayEntry.tsx      shared read/edit entry surface

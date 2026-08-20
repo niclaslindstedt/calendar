@@ -13,6 +13,11 @@
 // A small month image heads the list when a pack ships one. Rows are
 // fixed-height by default; the "dynamic" setting lets a row grow with its text
 // for people who write more.
+//
+// The current month opens at the week you are in rather than at its 1st
+// (`listHome.ts`) — the deck does the scrolling, because it owns every pane's
+// offset; this view only marks the row (`DECK_HOME`) and keeps the pinned
+// heading's height clear of it (`scroll-padding-top`).
 
 import { memo, useMemo, type CSSProperties } from "react";
 
@@ -38,12 +43,13 @@ import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
-import { PeriodHeading } from "./PeriodHeading.tsx";
+import { listHomeDay } from "./listHome.ts";
+import { HEADING_HEIGHT, PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
-import { DECK_SCROLLER } from "./SwipeDeck.tsx";
+import { DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
 import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
@@ -154,6 +160,13 @@ export const DayListView = memo(function DayListView({
   const room = useRoom("strip");
   const entryFont = useMemo(() => scaleEntryFont(LIST_ROW_FONT, room), [room]);
 
+  // The row this month opens on — today's week, in the month today is in, and
+  // nothing at all in any other. The deck reads the mark off the DOM when it
+  // puts the pane back to its top, so this is a flag on one row rather than a
+  // scroll of our own: a scroll set from here would be overwritten by the
+  // deck's own a moment later (see `SwipeDeck`).
+  const home = listHomeDay(year, month, today, pack.weekStartsOn);
+
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
     // axis inside its pane while the deck around it owns the horizontal one.
@@ -162,6 +175,13 @@ export const DayListView = memo(function DayListView({
     // leave you — not at whatever row you had scrolled to in the month before.
     <div
       {...DECK_SCROLLER}
+      // The heading below is pinned to this scroller's top, so it covers
+      // whatever the scroller is scrolled to. `scroll-padding-top` is the
+      // browser's own word for that: it keeps the heading's height clear at
+      // the top of the scrollport, both for the row the deck opens the month
+      // on and for anything the browser scrolls into view itself — a row's
+      // editor, opened with the keyboard, used to land under the month.
+      style={{ scrollPaddingTop: HEADING_HEIGHT }}
       className={`${SCOPE_CLASS.strip} mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6`}
     >
       {/* The slim artwork band (smaller than the month view's). */}
@@ -222,6 +242,7 @@ export const DayListView = memo(function DayListView({
               entryFont={entryFont}
               entry={doc.entries[key] ?? ""}
               editing={editingDay === key}
+              home={day === home}
               // A fixed row clips, so its note is measured against the row;
               // the row it is being typed into grows instead, whatever the
               // setting, so the caret is never in a box it has outgrown.
@@ -270,6 +291,7 @@ const DayRow = memo(function DayRow({
   entry,
   editing,
   fixed,
+  home,
   onEditDay,
   onCommit,
   onOpenHolidays,
@@ -297,6 +319,9 @@ const DayRow = memo(function DayRow({
   entry: string;
   editing: boolean;
   fixed: boolean;
+  /** Whether this is the row the month opens on (`listHome.ts`). A primitive,
+   *  like everything else here, so the memo holds for the other ninety. */
+  home: boolean;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: (year: number) => void;
@@ -339,6 +364,7 @@ const DayRow = memo(function DayRow({
       role="button"
       tabIndex={0}
       aria-label={dayKey}
+      {...(home ? DECK_HOME : {})}
       onClick={() => onEditDay(dayKey)}
       onKeyDown={(e) => {
         if (e.key === "Enter" && !editing) {

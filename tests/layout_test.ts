@@ -16,6 +16,7 @@ import {
   WEEK_GUTTER_COLUMN,
   monthGridColumns,
 } from "../src/app/layout.ts";
+import { HEADING_HEIGHT } from "../src/app/PeriodHeading.tsx";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
 
 const css = readFileSync(
@@ -91,6 +92,36 @@ describe("the top menu's vertical rhythm", () => {
     const fallback = declaration("padding-top");
     expect(fallback).toContain("var(--cal-header-pad)");
     expect(fallback).toContain("env(safe-area-inset-top, 0px)");
+  });
+});
+
+describe("the pinned heading's height", () => {
+  // The day list pins the heading over its own scroll and keeps exactly this
+  // much clear at the top of the scrollport, so a row the month opens on
+  // lands under the heading rather than behind it. The constant is derived
+  // from two Tailwind classes in `PeriodHeading` — change either and the
+  // clearance is wrong by the difference, silently, in the one view that
+  // scrolls. So it is re-derived here from the file itself.
+  const source = readFileSync(
+    fileURLToPath(new URL("../src/app/PeriodHeading.tsx", import.meta.url)),
+    "utf8",
+  );
+
+  /** A Tailwind spacing step, in rem. */
+  const step = (units: number) => units * 0.25;
+
+  /** The single `<n>` in the first `<prefix>-<n>` the source carries. */
+  function scale(prefix: string): number {
+    const match = new RegExp(`\\b${prefix}-(\\d+)\\b`).exec(source);
+    if (!match) throw new Error(`PeriodHeading no longer sets ${prefix}-*`);
+    return step(Number(match[1]));
+  }
+
+  it("is the arrow button plus the padding above and below it", () => {
+    // The arrows are the tallest thing in the row — both titles the views set
+    // are shorter than their own buttons — so the row's height does not
+    // depend on which view is asking for it.
+    expect(HEADING_HEIGHT).toBe(`${scale("h") + 2 * scale("py")}rem`);
   });
 });
 
