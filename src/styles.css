@@ -372,17 +372,19 @@ body {
 
 /* The rule where one week ends and the next begins. In a view that shows a
    single week it is the strip's top edge — which is the point: paging through
-   the weeks, the doubled line is the week change, the same mark a printed
+   the weeks, the heavier line is the week change, the same mark a printed
    column calendar draws across its strip.
 
-   Twice the hairline's height and the same ink: it is the *same* rule, drawn
-   heavier, which is what a printed strip does. Setting it in the page's
-   foreground colour instead read as a bar across the calendar rather than as a
-   line between two weeks, and it is deliberately not the heading's colour
-   either — the week boundary is a fact about the calendar and has to read the
-   same whether or not a band has been turned on. */
+   Half again the hairline's height rather than double it: down a month-long
+   scroll the doubled rule read as a bar across the calendar, and the mark only
+   has to be *heavier* than the day rule under it, not twice it. Setting it in
+   the page's foreground colour is what made that worse, so where the heading
+   is banded the rule takes that colour instead (`--cal-week-rule`, set by the
+   view) — the week numbers in the rail are already printed in the heading's
+   ink, and the rule that opens the week belongs with them. With the band off
+   there is no such ink and the rule falls back to the hairline's own. */
 .cal-strip-row.cal-strip-break {
-  border-top: 2px solid var(--line);
+  border-top: 1.5px solid var(--cal-week-rule, var(--line));
 }
 
 /* The week planner's almanac lane, lying back down on a short screen.
