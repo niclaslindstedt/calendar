@@ -255,6 +255,19 @@ The app owns the domain and the stores ("store stays in the app"):
   the measured default, as a scale rather than a px value (the shipped size of
   a piece is a measurement — see "What to check" below). Your own text is not
   on it — it is sized by `entryFont.ts` against the room a view leaves it.
+- `src/app/roomScale.ts` — the **second** factor in every printed size, beside
+  the reader's: how much more room the screen has than the 393 × 852 phone
+  every length in this repo was measured on, as the square root of the area
+  ratio (wrapped text is area-bound; a rotated phone has the same area and so
+  prints at the same size), floored at 1 and capped at 2. Published per scope
+  like everything in `viewStyle.ts` — the month grid spans the window and the
+  strip views stop at `max-w-3xl` — and reaching CSS as `--cal-room`, which
+  `src/styles.css` multiplies into every size and into the two strip margins
+  whose widths hold that type. **A new printed size carries it**, or that one
+  piece stays at phone size while everything around it grows;
+  `tests/layout_test.ts` holds the stylesheet to that. The one place it is
+  needed as a number is the entry band (`scaleEntryFont`), because
+  `entryFit.ts` measures a note against px rather than against a length.
 - `src/app/stripLayout.ts` — which margin each piece of a strip row is printed
   in, and at which end: a `lane` on the left and a `rail` on the right, each
   with a top and a bottom, which is what lets the settings designer be the
@@ -350,9 +363,15 @@ infer from the diff.
   with `canvas.measureText` over the real strings (`src/app/locale/*.ts`) in
   the cell's computed font before changing it. Today: 7.5 px on the 45.8 px
   line a band gets at 393 px, widest name "Bartolomeus" at 42.1 px. The reader
-  can scale that default (Settings → Calendar → View), which is the one
-  sanctioned way past it: the measurement is what the cell _ships_ at, so it
-  stays the ladder's middle stop and the default.
+  can scale that default (Settings → Calendar → View), which is one sanctioned
+  way past it: the measurement is what the cell _ships_ at, so it stays the
+  ladder's middle stop and the default. **The other is the screen**
+  (`roomScale.ts`): 7.5 px is what a _47 px_ cell can set, and a desk monitor's
+  cell is 356 px, so the constant is a ratio and the room factor is the rest of
+  it. Both multiply the measurement; neither replaces it. If you are about to
+  argue that some size "is too small", check which of the two is missing before
+  reaching for the constant — the last time this came up, the answer was that a
+  1440p monitor was being handed a phone's measurements unchanged.
 - **A soft hyphen is an opportunity, and a greedy line breaker takes the last
   one that fits.** So `hyphenate` only seeds them into words that cannot fit a
   caption line whole (`MIN_HYPHENATED_LETTERS`, also measured): a name carrying
@@ -410,6 +429,14 @@ infer from the diff.
 
 Landscape and desktop must not be _broken_, but portrait is what gets
 optimised when the two pull against each other.
+
+That said, "not broken" is not the same as "unreadable", and desktop has been
+both. Anything that touches type has to be looked at on a desk-sized viewport
+too — 2560 × 1440 and 1440 × 900, at the ladder's Small and Large as well as
+its default — because the room factor (`roomScale.ts`) is a different number
+there and it multiplies everything the reader's setting does. A change that
+looks fine at 393 px can be a margin taking three quarters of a strip row at
+1440p.
 
 ## Test conventions
 

@@ -128,3 +128,68 @@ describe("the strip lane's first line", () => {
     expect(css).toContain("@supports (text-box-edge: cap alphabetic)");
   });
 });
+
+describe("the room factor in the stylesheet", () => {
+  // `roomScale.ts` publishes `--cal-<scope>-room`; the stylesheet is the other
+  // half of that contract. Every printed size has to carry it, or a piece is
+  // left at the phone's measurement while everything around it grows — which
+  // is the bug this whole factor exists to fix, reintroduced one rule at a
+  // time.
+  const SIZE_RULES = [
+    ".cal-cell-nameday",
+    ".cal-cell-holiday",
+    ".cal-size-day",
+    ".cal-size-holiday",
+    ".cal-size-nameday",
+    ".cal-size-week",
+    ".cal-strip-weekday",
+  ];
+
+  /** Every body the stylesheet gives a selector, joined — a selector can be
+   *  declared more than once (the cap-trim `@supports` block also names
+   *  `.cal-strip-weekday`), and what matters here is that one of them carries
+   *  the factor, not which. */
+  function ruleBody(selector: string): string {
+    const bodies: string[] = [];
+    let at = rules.indexOf(`${selector} {`);
+    while (at >= 0) {
+      const open = rules.indexOf("{", at);
+      bodies.push(rules.slice(open + 1, rules.indexOf("}", open)));
+      at = rules.indexOf(`${selector} {`, open);
+    }
+    if (bodies.length === 0) throw new Error(`${selector} has no rule`);
+    return bodies.join("\n");
+  }
+
+  it("multiplies every printed size by it", () => {
+    for (const selector of SIZE_RULES) {
+      expect(ruleBody(selector)).toContain("var(--cal-room");
+    }
+  });
+
+  it("maps it down in both scopes, so neither falls through to the other", () => {
+    for (const scope of ["month", "strip"]) {
+      expect(ruleBody(`.cal-scope-${scope}`)).toContain(
+        `--cal-room: var(--cal-${scope}-room`,
+      );
+    }
+  });
+
+  it("grows the margins that hold the type it grew", () => {
+    // A lane or a rail left at the phone's width while its contents grow is a
+    // week number wrapped onto two lines in a 96 px margin.
+    for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
+      expect(ruleBody(selector)).toContain("var(--cal-room");
+    }
+  });
+
+  it("caps what those margins may take of the row", () => {
+    // Both widths are linear in the reader's scale *and* the room factor, and
+    // the two multiply. Without a ceiling the margins take three quarters of a
+    // desk-width row at the ladder's top step and the note — the thing the
+    // calendar is for — gets what is left.
+    for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
+      expect(ruleBody(selector)).toMatch(/max-width:\s*\d+%/);
+    }
+  });
+});

@@ -20,7 +20,12 @@ import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { LIST_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
+import {
+  LIST_ROW_FONT,
+  scaleEntryFont,
+  type EntryFontOptions,
+  type EntryTextSize,
+} from "./entryFont.ts";
 import {
   holidayFor,
   isRedDay,
@@ -36,6 +41,7 @@ import { monthImageUrl } from "./monthImage.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
@@ -141,6 +147,13 @@ export const DayListView = memo(function DayListView({
   const lane = marginReserved(layout, "lane", has) || showDayOfYear;
   const rail = marginReserved(layout, "rail", has);
 
+  // The note's band, on the screen this is actually being drawn on. The rows
+  // are the same rows a phone prints, set larger where the screen has the room
+  // for it (`roomScale.ts`); the band is a px number rather than a CSS length
+  // because `entryFit.ts` measures the note against it.
+  const room = useRoom("strip");
+  const entryFont = useMemo(() => scaleEntryFont(LIST_ROW_FONT, room), [room]);
+
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
     // axis inside its pane while the deck around it owns the horizontal one.
@@ -206,6 +219,7 @@ export const DayListView = memo(function DayListView({
               today={today}
               pastMark={pastMark}
               textSize={textSize}
+              entryFont={entryFont}
               entry={doc.entries[key] ?? ""}
               editing={editingDay === key}
               // A fixed row clips, so its note is measured against the row;
@@ -252,6 +266,7 @@ const DayRow = memo(function DayRow({
   today,
   pastMark,
   textSize,
+  entryFont,
   entry,
   editing,
   fixed,
@@ -278,6 +293,7 @@ const DayRow = memo(function DayRow({
   today: DayKey;
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
+  entryFont: EntryFontOptions;
   entry: string;
   editing: boolean;
   fixed: boolean;
@@ -344,8 +360,15 @@ const DayRow = memo(function DayRow({
       // edge case but the ordinary Swedish day ("Bernhard, Bernt" does not
       // hold an 88 px lane) — come to 41 px, and the row's own padding takes
       // the rest. A shorter fixed row clipped the second name away.
+      //
+      // It is multiplied by the room factor for exactly that reason: those
+      // are 14 px lines on the phone the row was measured on, and a screen
+      // with more room prints them larger (`src/app/roomScale.ts`), so a row
+      // held at the phone's height would clip the same second name again.
       className={`cal-strip-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
-        fixed ? "h-[3.25rem] overflow-hidden" : "min-h-[3.25rem]"
+        fixed
+          ? "h-[calc(3.25rem*var(--cal-room,1))] overflow-hidden"
+          : "min-h-[calc(3.25rem*var(--cal-room,1))]"
       } ${opens ? "cal-strip-break" : ""} ${
         dayKey === today ? "bg-surface-2" : ""
       }`}
@@ -356,7 +379,7 @@ const DayRow = memo(function DayRow({
         <DayEntry
           text={entry}
           editing={editing}
-          font={LIST_ROW_FONT}
+          font={entryFont}
           size={textSize}
           bounded={fixed}
           onCommit={(text) => onCommit(dayKey, text)}

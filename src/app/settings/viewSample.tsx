@@ -21,6 +21,8 @@
 // holiday, two names, a week number, a note — so no quadrant is empty while
 // you are deciding what goes in it.
 
+import type { CSSProperties } from "react";
+
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntryText } from "../DayEntry.tsx";
@@ -83,7 +85,17 @@ export function MonthSample({ look }: { look: LookSettings }) {
   const note = t("settings.textSizeSampleNote");
 
   return (
-    <div className={`${SCOPE_CLASS.month} flex h-full gap-1`}>
+    // `--cal-room: 1` pins the sample to the measured sizes. The room factor
+    // (`roomScale.ts`) says how much bigger the *calendar* is set on this
+    // screen than on the phone it was measured on, and the sample is not the
+    // calendar — it is a fixed box in a dialog, already drawn at its own bases
+    // rather than the cell's. Letting it grow with the window would burst it
+    // on the very screens the factor exists for. The reader still sees the
+    // real thing: the dialog streams its edits to the calendar behind it.
+    <div
+      className={`${SCOPE_CLASS.month} flex h-full gap-1`}
+      style={{ "--cal-room": "1" } as CSSProperties}
+    >
       {effectiveToggles(look).weekNumbers && (
         <div className="cal-font-week cal-size-week text-muted w-5 shrink-0 pt-1 leading-none [--cal-base:10px]">
           {SAMPLE_WEEK}
@@ -177,6 +189,9 @@ export function StripSample({
       className={`${SCOPE_CLASS.strip} cal-strip-row relative flex h-full items-stretch gap-2 overflow-hidden px-2 py-1 ${
         week ? "cal-week-row" : ""
       }`}
+      // Pinned to the measured sizes, for the reason {@link MonthSample}
+      // gives: the sample is a box in a dialog, not a row of the calendar.
+      style={{ "--cal-room": "1" } as CSSProperties}
     >
       {(marginReserved(layout, "lane", has) || day.showDayOfYear) && (
         <StripLane day={day} />

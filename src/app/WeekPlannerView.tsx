@@ -28,7 +28,11 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { WEEK_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
+import {
+  WEEK_ROW_FONT,
+  scaleEntryFont,
+  type EntryTextSize,
+} from "./entryFont.ts";
 import {
   holidayFor,
   isRedDay,
@@ -43,6 +47,7 @@ import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { CalendarDoc } from "./types.ts";
@@ -161,6 +166,13 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     }),
     [days, pack, showNameDays, showWeekNumbers],
   );
+  // The note's band, on the screen this is actually being drawn on: the same
+  // rows on a desk monitor are taller and their notes are set larger
+  // (`roomScale.ts`), and the band is a px number rather than a CSS length
+  // because `entryFit.ts` measures the note against it.
+  const room = useRoom("strip");
+  const entryFont = useMemo(() => scaleEntryFont(WEEK_ROW_FONT, room), [room]);
+
   const lane = marginReserved(layout, "lane", has) || showDayOfYear;
   const rail = marginReserved(layout, "rail", has);
 
@@ -246,7 +258,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
           <DayEntry
             text={entry}
             editing={editingDay === cell.key}
-            font={WEEK_ROW_FONT}
+            font={entryFont}
             size={textSize}
             // A row that cannot grow measures its note against itself; a grown
             // one has no bound to measure against and simply takes the height
