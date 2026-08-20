@@ -12,8 +12,15 @@ import {
 } from "../src/app/headerColor.ts";
 
 describe("the heading colour", () => {
-  it("ships off", () => {
-    expect(DEFAULT_HEADER_COLOR).toBe("none");
+  it("ships the printed masthead's red", () => {
+    expect(DEFAULT_HEADER_COLOR).toBe("red");
+    expect(headerInk(DEFAULT_HEADER_COLOR)).toBe(HEADER_COLOR_HEX.red);
+  });
+
+  it("still has an off, and lands there rather than on the default", () => {
+    // A value we don't recognise leaves the heading alone; it does not fall
+    // back on the shipped colour and paint a band nobody asked for.
+    expect(HEADER_COLORS).toContain("none");
     expect(headerColorOf(undefined)).toBe("none");
     expect(headerInk(undefined)).toBeNull();
     expect(headerInk("none")).toBeNull();

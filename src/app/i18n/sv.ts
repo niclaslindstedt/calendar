@@ -167,7 +167,7 @@ export const sv: Catalog = {
       "Veckans remsa: datumet och dagens namn till vänster, dina anteckningar i mitten, och veckonumret och helgdagens namn i högermarginalen.",
     weekDayOfYear: "Dagnummer",
     weekDayOfYearHint:
-      "Skriv ut dagens nummer på året (1–366) bredvid veckodagen.",
+      "Skriv ut dagens nummer på året (1–366) bredvid veckodagen. Daglistan skriver ut det också.",
     weekDateSize: "Datumets storlek",
     weekFormat: "Veckonummer",
     weekFormatHint: "Daglistan skriver ut sina veckonummer på samma sätt.",

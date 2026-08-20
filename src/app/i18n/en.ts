@@ -178,7 +178,7 @@ export const en = {
       "The week strip: the date and the day's names down the left, your notes in the middle, and the week number and the holiday's name in the right-hand margin.",
     weekDayOfYear: "Day of year",
     weekDayOfYearHint:
-      "Print each day's number in the year (1–366) beside the weekday.",
+      "Print each day's number in the year (1–366) beside the weekday. The day list prints it too.",
     weekDateSize: "Date size",
     weekFormat: "Week number",
     weekFormatHint: "The day list prints its week numbers the same way.",

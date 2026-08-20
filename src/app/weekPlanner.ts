@@ -55,14 +55,15 @@ export function weekRowModeOf(value: unknown): WeekRowMode {
  *  ("Vecka 34"), `mark` is the printed almanac's abbreviation ("v 34" in
  *  Swedish, "w 34" in English) and `bare` is the number alone, the way the
  *  month grid's gutter prints it once the column has said "week" by itself.
- *  `mark` is the default — it is what the Swedish column calendar this strip
- *  is drawn from prints, and it reads as a week number without spending the
- *  margin's width on the word. */
+ *  `long` is the default: the strip's rail is wide enough to spell the word,
+ *  and a margin that says "Week 34" is read as a week number by someone who
+ *  has never been told what a "v" in the margin means. `mark` is there for
+ *  the reader who wants the printed almanac's own shorthand back. */
 export type WeekFormat = "long" | "mark" | "bare";
 
 export const WEEK_FORMATS: readonly WeekFormat[] = ["long", "mark", "bare"];
 
-export const DEFAULT_WEEK_FORMAT: WeekFormat = "mark";
+export const DEFAULT_WEEK_FORMAT: WeekFormat = "long";
 
 export function weekFormatOf(value: unknown): WeekFormat {
   return WEEK_FORMATS.find((f) => f === value) ?? DEFAULT_WEEK_FORMAT;

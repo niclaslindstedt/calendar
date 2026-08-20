@@ -91,9 +91,9 @@ describe("the row mode", () => {
 describe("the week number's format", () => {
   const phrases = { long: "Vecka 34", mark: "v 34" };
 
-  it("ships the printed almanac's abbreviation", () => {
-    expect(DEFAULT_WEEK_FORMAT).toBe("mark");
-    expect(weekNumberLabel(undefined, 34, phrases)).toBe("v 34");
+  it("ships the week spelled out", () => {
+    expect(DEFAULT_WEEK_FORMAT).toBe("long");
+    expect(weekNumberLabel(undefined, 34, phrases)).toBe("Vecka 34");
   });
 
   it("prints each of the three ways of saying it", () => {
@@ -107,7 +107,7 @@ describe("the week number's format", () => {
       expect(weekFormatOf(format)).toBe(format);
     }
     expect(weekFormatOf("Vecka {n}")).toBe(DEFAULT_WEEK_FORMAT);
-    expect(weekNumberLabel(null, 7, phrases)).toBe("v 34");
+    expect(weekNumberLabel(null, 7, phrases)).toBe("Vecka 34");
   });
 });
 

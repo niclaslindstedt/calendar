@@ -404,8 +404,7 @@ export type LegacyStyleSettings = Partial<Omit<AppSettings, "styles">> & {
  *  app (`fontDay`, `sizeDay`, …). Those become the *starting point for both
  *  scopes* — a reader who had set the day's names Large meant both views, and
  *  splitting the setting must not quietly reset half of it. The week number
- *  had no face of its own, so it keeps each scope's default (the strip's
- *  almanac italic, the month gutter's plain number).
+ *  had no face of its own, so it keeps whichever face its scope ships today.
  *
  *  Pure, and taking the raw blob rather than an `AppSettings`, because the
  *  values it reads are ones the current type no longer has: the storage hook

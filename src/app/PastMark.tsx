@@ -86,9 +86,23 @@ export function MarkedDate({
           — an unhelped cross comes out as a steep hourglass rather than an ✕.
           The overhang is in `em`, so it follows the date's own size, and it
           is also simply what a pen does: a mark drawn over a number runs past
-          it. Vertically the em box is already taller than the digits, so only
-          the sides need it. */}
-      <span className="pointer-events-none absolute -inset-x-[0.3em] inset-y-0">
+          it.
+
+          Vertically it is the other way round: the em box is taller than the
+          digits at both ends, and a mark drawn to its edges reaches above the
+          number into whatever is over it. In the week planner that is the
+          row's own top rule — the date is the first thing in the row, under
+          4 px of padding — and the cross arrived at it with nothing in
+          between, which reads as cramped rather than as crossed off. So the
+          box gives back the share of the em the digits don't use. 0.14em is
+          that share measured — the gap over the cap in the printed serif at
+          the week planner's 24 px date (cap top 3.3 px into a 24 px em box),
+          and the descender's gap under the baseline is the same — so 0.2em is
+          the digits' own box plus a hair of air at each end, which is what
+          keeps the stroke reading as drawn over the number rather than into
+          the rule above it. Re-measure it with the face if the date's default
+          face moves. */}
+      <span className="pointer-events-none absolute -inset-x-[0.26em] inset-y-[0.2em]">
         {/* A date is a small box, so its stroke is drawn a touch heavier than
             the one that crosses a whole cell — a hairline over two digits
             reads as an artefact rather than a mark. */}

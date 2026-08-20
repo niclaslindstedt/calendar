@@ -162,7 +162,9 @@ export function StripSample({
     markDate: pastMark.scope === "date" ? pastMark.style : "none",
     dateBase: week ? weekDateBase(weekDateSizeFor(look)) : LIST_DATE_BASE,
     ink: headerInkOf(look),
-    showDayOfYear: week && look.weekDayOfYear,
+    // Both strip views print it — it is one setting for the row they share —
+    // so the sample shows it whichever of the two is being previewed.
+    showDayOfYear: look.weekDayOfYear,
     onOpenNames: NOOP,
     onOpenHolidays: NOOP,
   };

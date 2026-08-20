@@ -86,14 +86,14 @@ describe("the look draft", () => {
     expect(next.headerColor).toBe(DEFAULT_LOOK.headerColor);
   });
 
-  it("ships the week planner as the printed strip it was", () => {
-    // The whole week on one screen, no year-day numbers, no colour band —
-    // every one of the three is opt-in, so an install that never opens
-    // Settings renders what it always did.
+  it("ships the week planner as the printed strip it is", () => {
+    // The whole week on one screen and no year-day numbers, both opt-in —
+    // but the heading is banded in the masthead red a printed calendar uses,
+    // which the strip views spend again on their week numbers.
     expect(DEFAULT_LOOK.weekRows).toBe("fixed");
     expect(DEFAULT_LOOK.weekDayOfYear).toBe(false);
-    expect(DEFAULT_LOOK.headerColor).toBe("none");
-    expect(headerInkOf(DEFAULT_LOOK)).toBeNull();
+    expect(DEFAULT_LOOK.headerColor).toBe("red");
+    expect(headerInkOf(DEFAULT_LOOK)).toBe(HEADER_COLOR_HEX.red);
   });
 
   it("previews the heading band and the week strip rather than saving them", () => {

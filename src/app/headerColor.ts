@@ -9,8 +9,9 @@
 // the page, so every value has to clear both, in both themes. A hex field
 // cannot promise that; five measured inks can.
 //
-// Off is the default — an uncoloured heading is the look the app shipped with,
-// and the week numbers then print in the page's own ink.
+// Red is the default — the masthead colour a printed wall calendar reaches
+// for. Off is still a swatch, and an uncoloured heading prints its week
+// numbers in the page's own ink.
 
 /** The colours a heading can be banded with. `none` is off. */
 export const HEADER_COLORS = [
@@ -38,14 +39,23 @@ export const HEADER_COLOR_HEX: Record<Exclude<HeaderColor, "none">, string> = {
   ochre: "#a8641b",
 };
 
-export const DEFAULT_HEADER_COLOR: HeaderColor = "none";
+/** What a fresh install bands its heading with. Red is the masthead colour a
+ *  printed wall calendar uses, and it is spent twice: the band over the month,
+ *  and the week numbers in the strip views' margins, printed in the same ink.
+ *  The reader can take it back off — "off" is still one of the swatches. */
+export const DEFAULT_HEADER_COLOR: HeaderColor = "red";
+
+/** Where a value we don't recognise lands: off. Not the default above — a
+ *  hand-edited setting that means nothing should leave the heading alone
+ *  rather than pick a colour for it. */
+const UNKNOWN_HEADER_COLOR: HeaderColor = "none";
 
 /** The colour a stored value resolves to. Settings are a plain JSON blob in
  *  localStorage and can be hand-edited, so every read goes through here and an
  *  unknown name lands on "off" rather than painting the heading with a string
  *  that means nothing. */
 export function headerColorOf(value: unknown): HeaderColor {
-  return HEADER_COLORS.find((c) => c === value) ?? DEFAULT_HEADER_COLOR;
+  return HEADER_COLORS.find((c) => c === value) ?? UNKNOWN_HEADER_COLOR;
 }
 
 /** The ink a heading band paints in, or `null` when it is off — which the
