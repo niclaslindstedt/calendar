@@ -13,6 +13,7 @@ import {
   buildMonthGrid,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
+import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
 import {
@@ -84,6 +85,9 @@ type Props = {
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** A long press holds the day up close (`DayZoom`) — the way to read, and
+   *  write, a note the 47 px column had to shrink. */
+  onZoomDay: (day: DayKey) => void;
 };
 
 /** Memoized: the deck keeps three months mounted, so an unrelated state change
@@ -112,6 +116,7 @@ export const MonthGridView = memo(function MonthGridView({
   onNext,
   onOpenHolidays,
   onOpenNames,
+  onZoomDay,
 }: Props) {
   const t = useT();
   // Memoized so the cells below — which are memoized in turn — are handed the
@@ -168,8 +173,6 @@ export const MonthGridView = memo(function MonthGridView({
         <PeriodHeading
           title={monthName(pack, month)}
           meta={String(year)}
-          titleClass="cal-serif text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl"
-          metaClass="text-xl tracking-normal sm:text-2xl"
           accent={headerInk}
           bleed
           arrows={arrows}
@@ -244,6 +247,7 @@ export const MonthGridView = memo(function MonthGridView({
                   onCommit={onCommit}
                   onOpenHolidays={onOpenHolidays}
                   onOpenNames={onOpenNames}
+                  onZoomDay={onZoomDay}
                 />
               ))}
             </div>
@@ -293,6 +297,7 @@ const DayCell = memo(function DayCell({
   onCommit,
   onOpenHolidays,
   onOpenNames,
+  onZoomDay,
 }: {
   cell: GridCell;
   /** The month's own year — what a tapped holiday opens the screen on. */
@@ -312,7 +317,13 @@ const DayCell = memo(function DayCell({
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: (year: number) => void;
   onOpenNames: (name: string) => void;
+  onZoomDay: (day: DayKey) => void;
 }) {
+  // Press and hold to zoom. Off while the day is being written in: there the
+  // press is a caret being placed, and the framework's hook would otherwise
+  // fire under a finger resting on the textarea. It swallows the click the
+  // press ends with, so the editor does not open behind the card.
+  const press = useLongPress(() => onZoomDay(cell.key), { enabled: !editing });
   const parts = parseDayKey(cell.key);
   const weekday = parts ? new Date(`${cell.key}T12:00:00Z`).getUTCDay() : 1;
   const holiday = parts
@@ -331,6 +342,7 @@ const DayCell = memo(function DayCell({
       role="button"
       tabIndex={0}
       aria-label={cell.key}
+      {...press}
       onClick={() => onEditDay(cell.key)}
       onKeyDown={(e) => {
         if (e.key === "Enter" && !editing) {
@@ -338,7 +350,7 @@ const DayCell = memo(function DayCell({
           onEditDay(cell.key);
         }
       }}
-      className={`relative min-w-0 cursor-text overflow-hidden border-l border-line px-1 pt-0.5 pb-1 last:border-r focus-visible:outline-2 ${
+      className={`cal-day relative min-w-0 cursor-text overflow-hidden border-l border-line px-1 pt-0.5 pb-1 last:border-r focus-visible:outline-2 ${
         cell.inMonth ? "" : "opacity-35"
       } ${cell.isToday ? "bg-surface-2" : ""}`}
     >

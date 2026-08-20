@@ -3,7 +3,12 @@
 // rather than in the top menu — on a portrait phone the menu has no room for
 // them beside the view switcher, and the arrows read better flanking the
 // thing they move. All three views render this, so the navigation sits in the
-// same place whichever one is open.
+// same place whichever one is open — and, since this build, in the same type.
+// The month grid used to set its masthead larger and in caps while the two
+// strip views set theirs smaller and in lower case, which read as three
+// calendars rather than three views of one; the wall-calendar caps won,
+// because that is what a printed month title looks like, and the size came
+// down to what the longest month name can hold (see {@link HEADING_TITLE}).
 //
 // …and none at all where the reader pages up and down (Settings → Calendar →
 // Navigation): a chevron is a direction, and two pointing sideways over a
@@ -23,11 +28,6 @@ type Props = {
   title: string;
   /** The quieter trailing detail (the year, or the week's month + year). */
   meta?: string;
-  /** Typography for the title, so the month view can keep its larger,
-   *  letter-spaced wall-calendar serif while the other views stay compact. */
-  titleClass: string;
-  /** Typography for `meta`, matched to the title's size. */
-  metaClass: string;
   /** Extra classes on the heading row — how the day list pins it to the top
    *  of its own scroller. */
   className?: string;
@@ -44,6 +44,34 @@ type Props = {
   onPrevious: () => void;
   onNext: () => void;
 };
+
+/** The masthead's type, the same in every view.
+ *
+ *  Caps and letter-spacing are the wall calendar's, and the size is a
+ *  measurement rather than a taste call, like every other size in this app
+ *  (AGENTS.md): the title has to hold the longest month name *and* the year
+ *  beside it in what the arrows leave of a 393 px screen, which is 273 px once
+ *  the band's padding and the two 36 px buttons are taken off. The widest name
+ *  either shipped pack has is "SEPTEMBER"; measured with `canvas.measureText`
+ *  in the heading's own resolved serif it comes to 217 px with the year beside
+ *  it — 56 px of slack, which is the room a device whose serif is wider than
+ *  the one this was measured in needs. At the 30 px and 0.18em the month view
+ *  used to set, the same pair measured ~274 px against the same 273 px, which
+ *  is why "September" was the month that gave the game away.
+ *
+ *  Past `sm` the calendar is a centred column on a wide page and the masthead
+ *  steps up with it. 30 px is the ceiling there: a `text-3xl` line box is
+ *  2.25 rem, exactly the arrows' height, so the band's measured height
+ *  ({@link HEADING_HEIGHT}) stays true — the `text-4xl` the month view used to
+ *  reach for was 2.5 rem and quietly made the band taller than the number the
+ *  day list scrolls by. */
+export const HEADING_TITLE =
+  "cal-serif text-2xl font-normal tracking-[0.14em] uppercase sm:text-3xl";
+
+/** …and the quieter detail beside it — the year, at the ratio the wall
+ *  calendar's masthead prints it, with the tracking dropped: a year is a
+ *  number to read, not a title to space out. */
+export const HEADING_META = "text-lg tracking-normal sm:text-xl";
 
 const ARROW_BASE =
   "inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-[var(--radius)] transition-colors focus-visible:ring-2 focus-visible:outline-none";
@@ -96,8 +124,6 @@ const ARROW_ON_BAND =
 export function PeriodHeading({
   title,
   meta,
-  titleClass,
-  metaClass,
   className = "",
   accent = null,
   bleed = false,
@@ -147,11 +173,11 @@ export function PeriodHeading({
         </button>
       )}
 
-      <h2 className={`min-w-0 flex-1 text-center ${titleClass}`}>
+      <h2 className={`min-w-0 flex-1 text-center ${HEADING_TITLE}`}>
         {title}
         {meta && (
           <span
-            className={`ml-3 ${banded ? "text-white/80" : "text-muted"} ${metaClass}`}
+            className={`ml-3 ${banded ? "text-white/80" : "text-muted"} ${HEADING_META}`}
           >
             {meta}
           </span>

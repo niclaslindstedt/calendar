@@ -561,6 +561,23 @@ body {
   min-height: 30px;
 }
 
+/* A day is a surface for the two gestures the calendar answers to: a tap puts
+   a caret in it, and a press and hold opens it up close (`DayZoom`). Neither
+   is a text selection, and on iOS a long press over the cell's own text is
+   otherwise answered by the selection magnifier and the callout menu — which
+   is the system taking the gesture the calendar was about to answer. So a day
+   hands the browser neither, and the editor inside it takes selection back:
+   text you are *writing* is text you must be able to select. */
+.cal-day {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.cal-day .cal-entry-editor {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Red days (Sundays) and other red accents. */
 .cal-red {
   color: var(--cal-red);

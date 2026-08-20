@@ -92,6 +92,9 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   Ctrl/⌘+Enter or clicking away closes the editor. The text is plain text;
   keep it short — it shrinks to fit, and when it can shrink no further the day
   is full. A note too long for the space it is shown in ends in an ellipsis.
+- **Press and hold a day** to open it as a page of its own — the whole note,
+  at about four times the size a month cell can hold it at, and a comfortable
+  place to write it.
 - **Swipe** in any view to turn the page — left and right by default, or up
   and down if you set Settings → Calendar → Navigation that way, in which case
   the day list simply keeps scrolling into the month above or below.

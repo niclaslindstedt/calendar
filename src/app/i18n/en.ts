@@ -62,6 +62,11 @@ export const en = {
     hint: "Enter adds a line · Esc closes",
     editDay: "Edit {date}",
   },
+  // The day held up close: press and hold a day anywhere in the calendar.
+  zoom: {
+    close: "Close the day",
+    write: "The day's note, in full",
+  },
   weekdays: {
     // The "(week) w" prefix printed before week numbers in the grid margin.
     weekShort: "w.",
