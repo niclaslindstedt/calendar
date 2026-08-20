@@ -36,7 +36,7 @@ The switcher in the top bar toggles:
   weekday beside it and the day's name days under that; the middle of the row
   is yours to write in; and the right-hand margin carries the week number (on
   the day the week opens) and the holiday's name (along the bottom of the
-  row). The day that opens a week draws a doubled rule above it, so paging
+  row). The day that opens a week draws a heavier rule above it, so paging
   through the weeks you can see where one ends and the next begins. How big
   the date is set, how the week number is phrased, whether each day's number
   in the year is printed and whether rows may grow are all yours to choose —
@@ -45,9 +45,9 @@ The switcher in the top bar toggles:
 - **Day list** — the month as a vertical scroll, one row per day, laid out
   like the week planner: the date with the weekday beside it and the day's
   names under that, your note filling the middle, and the week number and the
-  holiday's name in the right-hand margin. A doubled rule crosses the list
-  wherever the week changes — the one thing this view can show that a
-  single-week strip cannot. In Settings → Calendar you can choose whether rows
+  holiday's name in the right-hand margin. A heavier rule — in the heading's
+  colour, where the heading is banded — crosses the list wherever the week
+  changes, the one thing this view can show that a single-week strip cannot. In Settings → Calendar you can choose whether rows
   keep a fixed height or grow with their text (the week planner has the same
   choice, made separately). The month heading stays pinned to the top of the
   list as you scroll, so which month you are reading is never off screen.
@@ -316,12 +316,17 @@ calendar prints its masthead. **Red** is the default, the masthead colour a
 printed calendar reaches for; the first swatch turns the band **off**, which
 leaves the heading plain.
 
-The colour is spent twice: the band itself, and the week numbers in the week
-planner's and the day list's margins, which are printed in the same ink. With
-the band off those week numbers print in the page's own colour.
+The colour is spent three times: the band itself, the week numbers in the week
+planner's and the day list's margins, and the rule the day list draws where one
+week ends and the next begins — all printed in the same ink. With the band off
+those week numbers print in the page's own colour and the week rule in the
+hairline's.
 
-The band is exactly as wide as the calendar under it, and it replaces the
-hairline the heading otherwise carries — a solid band is already an edge.
+The band replaces the hairline the heading otherwise carries — a solid band is
+already an edge. In the week planner and the day list it runs the full width of
+a phone's screen, the way printed furniture reaches the paper's edge; over the
+month grid, and on a wider screen where the calendar is a centred column, it is
+exactly as wide as the calendar under it.
 
 The five colours are chosen to hold white text on the band and to stay legible
 as ink in both the light and the dark theme, so the choice does not have to be

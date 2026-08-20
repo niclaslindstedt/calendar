@@ -26,10 +26,12 @@ type Props = {
    *  of its own scroller. */
   className?: string;
   /** The colour the heading is banded with (Settings → Calendar → Heading),
-   *  or `null` for the plain heading the app shipped with. A band bleeds to
-   *  the screen's edges and sets its text in white, the way a printed almanac
-   *  prints its masthead. */
+   *  or `null` for the plain heading the app shipped with. A band sets its
+   *  text in white, the way a printed almanac prints its masthead. */
   accent?: string | null;
+  /** Whether the band runs edge to edge on a phone (see below). Only a band
+   *  can bleed — an unbanded heading has nothing to reach the edges with. */
+  bleed?: boolean;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -52,21 +54,32 @@ export function PeriodHeading({
   metaClass,
   className = "",
   accent = null,
+  bleed = false,
   onPrevious,
   onNext,
 }: Props) {
   const t = useT();
-  // The band is exactly as wide as the calendar under it. It bled to the
-  // screen's edges once, on the theory that printed furniture reaches the
-  // paper's edge — but the rows below it do not, and a band a gutter wider
-  // than its own calendar reads as a misalignment rather than as a masthead.
+  // How wide the band is drawn depends on what is under it. Over the month
+  // grid it is exactly as wide as the calendar: the grid's own edges are the
+  // page's margin, and a band a gutter wider than the grid it heads reads as a
+  // misalignment. The strip views have no such edge — a row runs the width of
+  // the screen and its rules end in the same gutter the band would — so there
+  // the band reaches the screen's edges, the way printed furniture reaches the
+  // paper's. Only on a phone: past `sm` the calendar is a centred column on a
+  // wide page, and a masthead spanning the whole window would be heading the
+  // window rather than the calendar.
+  //
+  // `-mx-3` is the strip views' own `px-3`, cancelled; the band puts it back
+  // as padding (`px-5` = the gutter plus the band's own `px-2`) so the arrows
+  // stay where they were, over the rows' margins.
   const banded = accent !== null;
+  const bled = banded && bleed;
   const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
   return (
     <div
       className={`flex shrink-0 items-center gap-1 py-4 ${
-        banded ? "px-2 text-white" : ""
-      } ${className}`}
+        banded ? "text-white" : ""
+      } ${bled ? "-mx-3 px-5 sm:mx-0 sm:px-2" : banded ? "px-2" : ""} ${className}`}
       // Inline, so it wins over whatever background the caller's `className`
       // carries — the day list pins its heading with an opaque `bg-page-bg`
       // so the rows pass under it, and the band has to be what shows.

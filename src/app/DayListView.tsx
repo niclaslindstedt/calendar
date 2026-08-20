@@ -5,15 +5,16 @@
 // the weekday beside it and the day's names under that, the day's ordinal in
 // the year small in the margin behind them, the note filling the
 // middle, and the almanac's marginalia in a rail on the right — the week
-// number where a week opens, the holiday's name along the bottom. A doubled
-// rule crosses the list wherever the week changes, which is the one thing this
-// view can show that a single-week strip cannot.
+// number where a week opens, the holiday's name along the bottom. A heavier
+// rule — in the heading's own colour, where the heading is banded — crosses the
+// list wherever the week changes, which is the one thing this view can show
+// that a single-week strip cannot.
 //
 // A small month image heads the list when a pack ships one. Rows are
 // fixed-height by default; the "dynamic" setting lets a row grow with its text
 // for people who write more.
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, type CSSProperties } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
@@ -174,6 +175,7 @@ export const DayListView = memo(function DayListView({
         titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
         metaClass="text-lg"
         accent={headerInk}
+        bleed
         className={`bg-page-bg sticky top-0 z-10 ${
           headerInk ? "" : "border-b border-line"
         }`}
@@ -291,7 +293,7 @@ const DayRow = memo(function DayRow({
   const marked = pastMarkSlot(pastMark, dayKey, today);
   // The week number is printed on the day that opens the week — and on the
   // 1st, whatever weekday it falls on, so a month never starts without saying
-  // which week you are in. The doubled rule is the *week's* though, so it is
+  // which week you are in. The heavier rule is the *week's* though, so it is
   // drawn only where a week actually changes: a 1st mid-week gets the number
   // without the line.
   const opens = startsWeek(weekday, pack.weekStartsOn);
@@ -328,6 +330,15 @@ const DayRow = memo(function DayRow({
           onEditDay(dayKey);
         }
       }}
+      // The week rule's ink, where a week opens and the heading is banded: the
+      // same colour the rail's week numbers are printed in, so the two marks
+      // that say "a week starts here" say it in one voice. Nothing to set with
+      // the band off — the rule falls back to the hairline's own colour.
+      style={
+        opens && headerInk
+          ? ({ "--cal-week-rule": headerInk } as CSSProperties)
+          : undefined
+      }
       // 3.25 rem is the row measured rather than chosen: a weekday line
       // (14 px), the gap under it, and *two* lines of names — which is not an
       // edge case but the ordinary Swedish day ("Bernhard, Bernt" does not

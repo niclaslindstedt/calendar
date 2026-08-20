@@ -171,6 +171,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
       metaClass="text-lg"
       accent={headerInk}
+      bleed
       // Grown rows turn the one view that fits a week on a screen into a
       // scroller, so the heading pins itself the way the day list's does —
       // otherwise scrolling to Sunday loses which week you are in.
