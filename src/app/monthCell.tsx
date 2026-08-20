@@ -67,7 +67,13 @@ export function MonthCellFrame({
         // crowding the note surface out of the cell. It is also why the
         // captions can't use `line-clamp-*`: that sets `display: -webkit-box`,
         // whose line boxes ignore a float instead of wrapping around it.
-        <div className="-mx-1 max-h-[3.5rem] shrink-0 overflow-hidden">
+        //
+        // The cap is a share of the cell rather than a length, which is why it
+        // carries the room factor: it was measured against a phone's 120 px
+        // cell, and on a screen that prints the number and the captions half
+        // again as large it has to cap half again as much or it clips the
+        // second name off every day (`src/app/roomScale.ts`).
+        <div className="-mx-1 max-h-[calc(3.5rem*var(--cal-room,1))] shrink-0 overflow-hidden">
           {dayOnTop && content.day != null && (
             <span
               className={`block px-1 ${isRight(layout.day) ? "float-right" : "float-left"}`}

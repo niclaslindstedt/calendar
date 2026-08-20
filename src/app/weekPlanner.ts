@@ -138,5 +138,10 @@ export function weekDateBase(value: unknown): string {
  *  A seventh of a 393×852 portrait phone, minus the app's chrome, is about
  *  98 px — so a dynamic week whose days are all empty has to look like the
  *  fixed one rather than collapsing to seven captions. 6rem is that height at
- *  the default type scale; a row with more text than fits grows past it. */
-export const WEEK_ROW_MIN_HEIGHT = "6rem";
+ *  the default type scale; a row with more text than fits grows past it.
+ *
+ *  Times the room factor, because that is the other half of "the default type
+ *  scale": a desk monitor prints the same row's date and captions larger
+ *  (`src/app/roomScale.ts`), and a floor measured on a phone would have the
+ *  empty rows on a 1440p screen shorter than the type they hold. */
+export const WEEK_ROW_MIN_HEIGHT = "calc(6rem * var(--cal-room, 1))";

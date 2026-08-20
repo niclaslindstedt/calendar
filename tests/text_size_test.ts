@@ -28,6 +28,16 @@ describe("the size ladder", () => {
     expect(TEXT_SCALES).toContain(DEFAULT_TEXT_SCALE);
   });
 
+  it("spreads the steps far enough apart to be worth pressing", () => {
+    // The old ladder was 0.8 / 1 / 1.25 — a sixth either side of the middle,
+    // which is not a difference a reader can see without switching back and
+    // forth. Large has to be at least half again the size of Small.
+    expect(TEXT_STEP_SCALE.large / TEXT_STEP_SCALE.small).toBeGreaterThan(1.5);
+    expect(
+      TEXT_STEP_SCALE.large / TEXT_STEP_SCALE.medium,
+    ).toBeGreaterThanOrEqual(1.4);
+  });
+
   it("offers three named steps with the measured size in the middle", () => {
     expect(TEXT_STEPS).toEqual(["small", "medium", "large"]);
     expect(TEXT_SCALES).toHaveLength(TEXT_STEPS.length);
@@ -43,18 +53,28 @@ describe("clampTextScale", () => {
   });
 
   it("snaps a value between two steps to the nearer one", () => {
-    expect(clampTextScale(0.81)).toBe(0.8);
-    expect(clampTextScale(1.02)).toBe(1);
-    expect(clampTextScale(1.2)).toBe(1.25);
+    expect(clampTextScale(0.86)).toBe(TEXT_STEP_SCALE.small);
+    expect(clampTextScale(1.02)).toBe(TEXT_STEP_SCALE.medium);
+    expect(clampTextScale(1.4)).toBe(TEXT_STEP_SCALE.large);
   });
 
-  it("carries a document off the older six-stop ladder onto a step", () => {
-    // 0.9, 1.1 and 1.4 were stops before the sliders became buttons; a
-    // document written then still names them.
-    for (const stored of [0.9, 1.1, 1.4]) {
+  it("reads a tie as the larger of the two steps", () => {
+    // 1.25 was this ladder's own Large until the steps were spread, and it
+    // sits exactly halfway between the 1 and the 1.5 that replaced them. A
+    // reader who had pressed Large has to still be on Large.
+    expect(clampTextScale(1.25)).toBe(TEXT_STEP_SCALE.large);
+  });
+
+  it("carries a document off an older ladder onto a step", () => {
+    // 0.9, 1.1 and 1.4 were stops before the sliders became buttons, and
+    // 0.8 / 1.25 were the three buttons' own scales before the steps were
+    // spread; a document written then still names them.
+    for (const stored of [0.8, 0.9, 1.1, 1.25, 1.4]) {
       expect(TEXT_SCALES).toContain(clampTextScale(stored));
     }
-    expect(clampTextScale(1.1)).toBe(1);
+    expect(clampTextScale(0.8)).toBe(TEXT_STEP_SCALE.small);
+    expect(clampTextScale(1.1)).toBe(TEXT_STEP_SCALE.medium);
+    expect(clampTextScale(1.25)).toBe(TEXT_STEP_SCALE.large);
     expect(clampTextScale(1.4)).toBe(TEXT_STEP_SCALE.large);
   });
 

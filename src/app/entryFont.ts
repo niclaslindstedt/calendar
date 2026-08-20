@@ -66,22 +66,33 @@ export const ENTRY_TEXT_SIZES: readonly EntryTextSize[] = [
 
 export type FixedEntryTextSize = Exclude<EntryTextSize, "dynamic">;
 
-/** Where the two upper steps sit in a view's own [minPx, maxPx] band. The
- *  ladder deliberately stops short of the band's ceiling: a day cell is not a
- *  page, and the sizes people actually keep are the small ones — so `large`
- *  is what the band's middle used to be and `medium` what its `small` was.
- *  `small` is then one point under `medium` (see {@link fixedEntryFontPx}),
- *  which is as small as the text goes before the view's own floor takes
- *  over. */
+/** Where the two upper steps sit in a view's own [minPx, maxPx] band.
+ *
+ *  The ladder used to be bunched into the bottom of the band — 0.2 and 0.6,
+ *  on the reasoning that a day cell is not a page and the sizes people
+ *  actually keep are the small ones. In a month cell that put the three
+ *  steps at 8, 9 and 11 px: a Small a reader could not read and a Large that
+ *  was two points above it. Whatever the ceiling is for, it is not there to
+ *  keep the *reader's own* top step three points below it, so the steps take
+ *  most of the band now — `large` all but reaching the size a near-empty
+ *  note is drawn at on the shrink-to-fit curve, and `medium` sitting between
+ *  it and the floor rather than beside the floor.
+ *
+ *  Nothing here overflows a cell: a pinned size is still measured against the
+ *  box the view left it (`entryFit.ts`), and a note too long for its day is
+ *  clamped to an ellipsis exactly as it was. What the reader has moved is how
+ *  much *fits*, which is the trade the ladder is asking about. */
 const FIXED_STEPS: Record<Exclude<FixedEntryTextSize, "small">, number> = {
-  medium: 0.2,
-  large: 0.6,
+  medium: 0.45,
+  large: 0.85,
 };
 
-/** One point: the gap between `small` and `medium`. A point rather than a
- *  fraction of the band, so the smallest step reads the same distance below
- *  the middle one in every view. */
-const SMALL_DROP_PX = 1;
+/** The gap between `small` and `medium`, as a share of the band. A share
+ *  rather than the flat point it used to be: a point is a fifth of a month
+ *  cell's five-point band and a sixteenth of the week planner's, so the one
+ *  number made the smallest step nearly invisible in the view with the most
+ *  room to show it in. */
+const SMALL_DROP = 0.25;
 
 /** The pinned font size (px) for `size` within the view's band. */
 export function fixedEntryFontPx(
@@ -91,9 +102,7 @@ export function fixedEntryFontPx(
   const band = (fraction: number) =>
     opts.minPx + (opts.maxPx - opts.minPx) * fraction;
   if (size === "small") {
-    return round1(
-      Math.max(opts.minPx, band(FIXED_STEPS.medium) - SMALL_DROP_PX),
-    );
+    return round1(Math.max(opts.minPx, band(FIXED_STEPS.medium - SMALL_DROP)));
   }
   return round1(band(FIXED_STEPS[size]));
 }
@@ -112,4 +121,31 @@ export function resolveEntryFontPx(
 
 function round1(px: number): number {
   return Math.round(px * 10) / 10;
+}
+
+/** The same band, on a screen with more room than the one it was measured on.
+ *
+ *  Every number above is a measurement taken on a 393 × 852 portrait phone —
+ *  a month cell's note tops out at 13 px because a month cell is 47 px wide —
+ *  and a desktop was drawing the identical 13 px in a 356 px cell. The views
+ *  hand their band through here with the room factor their scope is printed
+ *  at (`roomScale.ts`), which is the same factor `src/styles.css` multiplies
+ *  into every other size on the page, so the note grows with the almanac
+ *  around it instead of shrinking against it.
+ *
+ *  The character counts are deliberately left alone: they say when a note is
+ *  long enough to want shrinking, which is a fact about the note rather than
+ *  about the screen — and the measured fit pass (`entryFit.ts`) is what has
+ *  the last word either way. */
+export function scaleEntryFont(
+  opts: EntryFontOptions,
+  room: number,
+): EntryFontOptions {
+  const factor = Number.isFinite(room) && room > 0 ? room : 1;
+  if (factor === 1) return opts;
+  return {
+    ...opts,
+    maxPx: round1(opts.maxPx * factor),
+    minPx: round1(opts.minPx * factor),
+  };
 }

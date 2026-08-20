@@ -44,6 +44,7 @@ import { useT } from "./app/i18n/index.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
+import { applyRoomVars } from "./app/roomScale.ts";
 import { applySafeAreaVars } from "./app/safeArea.ts";
 import {
   completeOauthOnBoot,
@@ -138,7 +139,12 @@ export function App() {
   // and so a different answer for the top menu's leading space.
   useEffect(() => {
     const media = window.matchMedia("(display-mode: standalone)");
-    const measure = () => applySafeAreaVars();
+    // The room factor rides along: it is a function of the same two numbers a
+    // resize changes, and every printed size is multiplied by it.
+    const measure = () => {
+      applySafeAreaVars();
+      applyRoomVars();
+    };
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
     media.addEventListener("change", measure);

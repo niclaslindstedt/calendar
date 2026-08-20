@@ -181,7 +181,15 @@ export function StripRail({
         dateHere ? ({ "--cal-date": d.dateBase } as CSSProperties) : undefined
       }
       className={`cal-strip-rail flex shrink-0 flex-col items-end self-stretch text-right ${
-        wide ? "w-24 sm:w-32" : "w-16 sm:w-24"
+        // A width rather than a shrink-wrap, for the reason the lane is one:
+        // the note keeps one straight right edge down the strip. The room
+        // factor multiplies it in `src/styles.css` — these are the widths a
+        // phone's week number and holiday need, and a screen that prints them
+        // larger needs the margin larger or "Vecka 34" comes back on two
+        // lines.
+        wide
+          ? "[--cal-rail:6rem] sm:[--cal-rail:8rem]"
+          : "[--cal-rail:4rem] sm:[--cal-rail:6rem]"
       } ${className}`}
     >
       {top.map((piece) => (
@@ -260,7 +268,7 @@ function DateNumber({ day: d }: { day: StripDay }) {
 function Weekday({ day: d }: { day: StripDay }) {
   return (
     <span
-      className={`cal-strip-weekday cal-serif text-sm leading-none ${
+      className={`cal-strip-weekday cal-serif leading-none ${
         d.red ? "cal-red" : "text-muted"
       }`}
     >

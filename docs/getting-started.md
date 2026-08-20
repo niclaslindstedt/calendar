@@ -236,7 +236,9 @@ The **day number**, **holiday name**, **name days** and **week number** are
 the almanac's own printing, and their three sizes — **Small**, **Medium**,
 **Large** — are steps around the size each was measured at. **Medium** is that
 measurement (the middle button, and what a fresh install uses), with **Small**
-a fifth smaller and **Large** a quarter bigger.
+a little under it and **Large** half again bigger — far enough apart that
+pressing a button is a change you can see rather than one you have to go
+looking for.
 
 **Your text** — what you write on a day — has a fourth button, because it is
 sized against the room the view actually leaves it rather than against a fixed
@@ -254,8 +256,23 @@ was written in a view with more room — is cut off at the last line that fits
 and ends in an ellipsis, so it stops short of the day's captions instead of
 running under them.
 
-A month cell is only 47 px wide, so the caption sizes there are measured
-rather than chosen: a face wider than the default gives the difference back
+#### On a bigger screen
+
+Those measurements were taken on a phone held upright, which is where this
+calendar is mostly read — and until now they were what every screen got, so a
+desk monitor drew a month cell seven times as wide and still printed its name
+days at phone size. The calendar now sets itself to the screen it is on: the
+type grows with the room a window actually has, up to twice the measured size
+on a large monitor, and the reader's own Small / Medium / Large sits on top of
+that. A phone in your hand is unchanged, in either orientation — a rotation
+trades height for width and gains no room.
+
+Nothing about this is a setting. If the result is still not big enough on your
+screen, **Large** is the button, and it now means half again rather than a
+quarter.
+
+A month cell is only 47 px wide on a phone, so the caption sizes there are
+measured rather than chosen: a face wider than the default gives the difference back
 automatically, and the longest name day still holds a full line instead of
 being clipped. On **Large** the longest names start breaking across two lines
 — the calendar re-picks its hyphenation points for the size you chose, so a

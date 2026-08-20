@@ -13,6 +13,7 @@ import "@fontsource/jetbrains-mono/latin-ext-700.css";
 import "./styles.css";
 import { App } from "./App.tsx";
 import { LanguageRoot } from "./app/i18n/index.ts";
+import { applyRoomVars } from "./app/roomScale.ts";
 import { applySafeAreaVars } from "./app/safeArea.ts";
 
 // In dev no worker registers (`usePwaUpdate` runs disabled), but a worker
@@ -36,6 +37,11 @@ if (!root) throw new Error("missing #root element");
 // keeps them current when the device rotates or the app moves between a tab
 // and the home screen.
 applySafeAreaVars();
+
+// …and the room factor, for the same reason: every printed size is multiplied
+// by it, so resolving it in an effect would paint one frame of the phone's
+// measurements and then restate every font size on the page.
+applyRoomVars();
 
 render(
   <LanguageRoot>

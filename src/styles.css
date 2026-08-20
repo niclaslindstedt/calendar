@@ -174,7 +174,16 @@ body {
 
    Every piece is mapped in both blocks. A piece left out would fall through
    to whatever the enclosing scope had set, which inside the settings dialog
-   is the *other* view's answer. */
+   is the *other* view's answer.
+
+   `--cal-room` is the second factor in every size below, beside the reader's
+   own `--cal-size-*`: how much more room the screen has than the 393 x 852
+   portrait phone every length in this file was measured on
+   (`src/app/roomScale.ts` computes it and publishes it per scope, because the
+   month grid spans the window and the strip views stop at `max-w-3xl`).
+   Without it a 356 px desktop month cell printed its name days at the same
+   7.5 px a 47 px cell gets, and the ladder's largest step came out at 9.4 px
+   on a 1440p monitor. */
 .cal-scope-month {
   --cal-font-day: var(--cal-month-font-day, var(--cal-serif));
   --cal-font-holiday: var(--cal-month-font-holiday, inherit);
@@ -188,6 +197,7 @@ body {
   --cal-nameday-scale: var(--cal-month-nameday-scale, 1);
   --cal-holiday-scale: var(--cal-month-holiday-scale, 1);
   --cal-date-em: var(--cal-month-date-em, 1.35);
+  --cal-room: var(--cal-month-room, 1);
 }
 .cal-scope-strip {
   --cal-font-day: var(--cal-strip-font-day, var(--cal-serif));
@@ -202,6 +212,7 @@ body {
   --cal-nameday-scale: var(--cal-strip-nameday-scale, 1);
   --cal-holiday-scale: var(--cal-strip-holiday-scale, 1);
   --cal-date-em: var(--cal-strip-date-em, 1.35);
+  --cal-room: var(--cal-strip-room, 1);
 }
 
 /* The month cell's two caption bands. The size is a measured constant, not a
@@ -214,15 +225,22 @@ body {
    The third factor is the reader's own call (Settings → Calendar → Text
    size): the measurement is what the caption ships at, not a ceiling. Past
    1 the band stops holding the longest names whole, which is why the month
-   cell reseeds its hyphens from the same scale (`minHyphenatedLetters`). */
+   cell reseeds its hyphens from the same scale (`minHyphenatedLetters`).
+
+   The fourth is the room the screen has (`--cal-room` above). The 7.5 px is
+   what a *47 px* cell can set; a cell four times that wide holds the same
+   name on one line at four times the size, so the constant is the ratio and
+   the room factor is the rest of it. */
 .cal-cell-nameday {
   font-size: calc(
-    7.5px * var(--cal-nameday-scale, 1) * var(--cal-size-nameday, 1)
+    7.5px * var(--cal-nameday-scale, 1) * var(--cal-size-nameday, 1) *
+      var(--cal-room, 1)
   );
 }
 .cal-cell-holiday {
   font-size: calc(
-    7.5px * var(--cal-holiday-scale, 1) * var(--cal-size-holiday, 1)
+    7.5px * var(--cal-holiday-scale, 1) * var(--cal-size-holiday, 1) *
+      var(--cal-room, 1)
   );
 }
 
@@ -233,16 +251,24 @@ body {
    rather than a shared one, so a site names the piece it is drawing and
    can't pick up a neighbour's scale. */
 .cal-size-day {
-  font-size: calc(var(--cal-base, 1rem) * var(--cal-size-day, 1));
+  font-size: calc(
+    var(--cal-base, 1rem) * var(--cal-size-day, 1) * var(--cal-room, 1)
+  );
 }
 .cal-size-holiday {
-  font-size: calc(var(--cal-base, 0.6875rem) * var(--cal-size-holiday, 1));
+  font-size: calc(
+    var(--cal-base, 0.6875rem) * var(--cal-size-holiday, 1) * var(--cal-room, 1)
+  );
 }
 .cal-size-nameday {
-  font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-nameday, 1));
+  font-size: calc(
+    var(--cal-base, 0.625rem) * var(--cal-size-nameday, 1) * var(--cal-room, 1)
+  );
 }
 .cal-size-week {
-  font-size: calc(var(--cal-base, 0.625rem) * var(--cal-size-week, 1));
+  font-size: calc(
+    var(--cal-base, 0.625rem) * var(--cal-size-week, 1) * var(--cal-room, 1)
+  );
 }
 
 /* The strip row's almanac lane (the week planner and the day list share it). Its base width comes from the view (as a
@@ -285,13 +311,13 @@ body {
      at the week planner's largest date. A single-digit day keeps the same
      column, so it simply shows more of it. */
   --cal-date-col: calc(
-    var(--cal-date, 1.5rem) * var(--cal-size-day, 1) *
+    var(--cal-date, 1.5rem) * var(--cal-size-day, 1) * var(--cal-room, 1) *
       (var(--cal-date-em, 1.35) + 0.25)
   );
   width: calc(
     var(--cal-date-col) + 0.375rem + var(--cal-lane, 5.5rem) *
-      var(--cal-size-nameday, 1) + var(--cal-lane-extra, 0rem) *
-      var(--cal-size-week, 1)
+      var(--cal-size-nameday, 1) * var(--cal-room, 1) +
+      var(--cal-lane-extra, 0rem) * var(--cal-size-week, 1) * var(--cal-room, 1)
   );
   /* …and the floor the scales can't take it below. The lane's first line is
      the date with the weekday beside it, and the weekday is *not* set at the
@@ -309,9 +335,21 @@ body {
      above is what two digits of that need. The 0.375rem after it is the lane's
      own gap, billed at the flat value the flex row actually renders. */
   min-width: calc(
-    var(--cal-date-col) + 0.375rem + var(--cal-lane-floor, 4.25rem) +
-      var(--cal-lane-extra, 0rem) * var(--cal-size-week, 1)
+    var(--cal-date-col) + 0.375rem + var(--cal-lane-floor, 4.25rem) *
+      var(--cal-room, 1) + var(--cal-lane-extra, 0rem) *
+      var(--cal-size-week, 1) * var(--cal-room, 1)
   );
+  /* …and the share of the row it may never take.
+     The width above is linear in both the reader's scale and the room factor,
+     because a lane that grew more slowly than its type would simply wrap the
+     names to a line the row has no height for. Multiplied together those reach
+     2.7× on a desk monitor at the ladder's top step, which is a margin taking
+     more than half the row and a note squeezed into a sixth of it — and the
+     note is what the calendar is for. Past this share the names go back to
+     wrapping, which is a caption the reader can still read, rather than the
+     writing surface disappearing. The `min-width` above outranks this in CSS,
+     so the date's own column is never squeezed by it. */
+  max-width: 40%;
 }
 
 /* The date's box. `--cal-date-col` is what the lane reserved for it; the `2ch`
@@ -368,6 +406,36 @@ body {
     text-box-trim: trim-start;
     text-box-edge: cap alphabetic;
   }
+}
+
+/* The weekday's own size. It is deliberately *not* on the reader's ladder —
+   it is the date's caption rather than one of the almanac's pieces, and the
+   lane's 4.25 rem floor is this word measured ("Wednesday", 64.2 px in the
+   lane's serif at 14 px) — but it does carry the room factor, because that
+   floor carries it too (`.cal-strip-lane` above). Left at a flat 14 px it read
+   as a footnote beside a name run set at nearly twice that on a desk monitor,
+   and the lane would have been reserving width for a word that no longer
+   needed it. */
+.cal-strip-weekday {
+  font-size: calc(0.875rem * var(--cal-room, 1));
+}
+
+/* The rail on the right, the same way: `--cal-rail` is the width the view asks
+   for (wider when the rail carries a caption rather than only a week number)
+   and the room factor is what a screen that prints that number larger needs
+   back — as is the reader's own scale for the two pieces a rail holds, which
+   is why the wider of those two multiplies it (the lane does the same with the
+   names' scale). Left flat, a reader on the ladder's Large step got "Vecka 34"
+   broken across two lines in a 96 px margin. */
+.cal-strip-rail {
+  width: calc(
+    var(--cal-rail, 4rem) * var(--cal-room, 1) *
+      max(var(--cal-size-week, 1), var(--cal-size-holiday, 1))
+  );
+  /* Its share of the row, on the lane's reasoning above: the measured width
+     carries slack over the two digits it usually holds, and multiplying that
+     slack by both factors spends the note's width on air. */
+  max-width: 28%;
 }
 
 /* The rule where one week ends and the next begins. In a view that shows a
@@ -429,9 +497,11 @@ body {
   }
   .cal-week-row .cal-strip-lane {
     /* A line, not a two-column block — so the measured widths above have
-       nothing to say here. The floor keeps the note's left edge in one place
-       down the strip for as long as the names are ordinary. */
+       nothing to say here, the share of the row included. The floor keeps the
+       note's left edge in one place down the strip for as long as the names
+       are ordinary. */
     width: auto;
+    max-width: none;
     min-width: 15rem;
     flex-wrap: wrap;
     align-items: baseline;
@@ -452,6 +522,10 @@ body {
     align-items: baseline;
     justify-content: flex-end;
     column-gap: 0.5rem;
+    /* A line, not a column — so the measured width has nothing to say here,
+       exactly as it has nothing to say for the lane above. */
+    width: auto;
+    max-width: none;
   }
   /* The rail's bottom end is pushed to the bottom of a tall rail with
      `mt-auto`, and an auto margin outranks the alignment above — so it is

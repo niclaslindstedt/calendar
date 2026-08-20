@@ -68,23 +68,44 @@ describe("the fixed text-size steps", () => {
     }
   });
 
-  it("keeps the ladder low in the band — a day cell is not a page", () => {
+  it("spends most of the band on the three steps", () => {
+    // The ladder used to be bunched into the bottom of the band (0.2 / 0.6),
+    // which in a month cell is 8, 9 and 11 px: a Small nobody can read and a
+    // Large two points above it. Large now reaches most of the way to the
+    // size a near-empty note is drawn at, and the three steps are spread over
+    // more than half of what the view has to give.
     for (const font of FONTS) {
-      const mid = font.minPx + (font.maxPx - font.minPx) / 2;
-      expect(fixedEntryFontPx("medium", font)).toBeLessThan(mid);
-      expect(fixedEntryFontPx("large", font)).toBeLessThanOrEqual(
-        font.minPx + (font.maxPx - font.minPx) * 0.6,
+      const band = font.maxPx - font.minPx;
+      const [small, medium, large] = FIXED.map((size) =>
+        fixedEntryFontPx(size, font),
       );
+      expect(large).toBeGreaterThanOrEqual(font.minPx + band * 0.8);
+      expect(medium).toBeGreaterThan(font.minPx + band * 0.4);
+      expect(large - small).toBeGreaterThan(band * 0.5);
     }
   });
 
-  it("puts small one point under medium, never below the floor", () => {
-    for (const font of FONTS) {
-      const small = fixedEntryFontPx("small", font);
-      const medium = fixedEntryFontPx("medium", font);
-      expect(small).toBe(
-        Math.max(font.minPx, Math.round((medium - 1) * 10) / 10),
+  it("puts small the same share of the band under medium in every view", () => {
+    // A share rather than the flat point it used to be: a point is a fifth of
+    // a month cell's band and a sixteenth of the week planner's, so the one
+    // number made the smallest step nearly invisible in the view with the
+    // most room to show it in.
+    const drops = FONTS.map((font) => {
+      const band = font.maxPx - font.minPx;
+      return (
+        (fixedEntryFontPx("medium", font) - fixedEntryFontPx("small", font)) /
+        band
       );
+    });
+    // Within the half-point the px sizes are rounded to.
+    for (const drop of drops) expect(drop).toBeCloseTo(0.25, 1);
+  });
+
+  it("never puts a step below the view's floor", () => {
+    for (const font of FONTS) {
+      for (const size of FIXED) {
+        expect(fixedEntryFontPx(size, font)).toBeGreaterThanOrEqual(font.minPx);
+      }
     }
   });
 

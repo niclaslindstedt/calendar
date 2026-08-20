@@ -15,7 +15,12 @@ import {
 } from "@niclaslindstedt/oss-framework/calendar";
 
 import { DayEntry } from "./DayEntry.tsx";
-import { MONTH_CELL_FONT, type EntryTextSize } from "./entryFont.ts";
+import {
+  MONTH_CELL_FONT,
+  scaleEntryFont,
+  type EntryFontOptions,
+  type EntryTextSize,
+} from "./entryFont.ts";
 import { useT } from "./i18n/index.ts";
 import { CONTENT_BOTTOM_PAD } from "./layout.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
@@ -37,6 +42,7 @@ import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import { minHyphenatedLetters } from "./textSize.ts";
+import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import type { CalendarDoc } from "./types.ts";
 import type { MonthCellLayout } from "./useAppSettings.ts";
@@ -106,6 +112,16 @@ export const MonthGridView = memo(function MonthGridView({
   const t = useT();
   // Memoized so the cells below — which are memoized in turn — are handed the
   // same `GridCell` objects until the month itself changes.
+  // The note's band, on the screen this is actually being drawn on. Memoized
+  // on the room factor (which is rounded to two decimals at the source) so a
+  // window drag hands the memoized cells a new object a handful of times
+  // rather than once per pixel.
+  const room = useRoom("month");
+  const entryFont = useMemo(
+    () => scaleEntryFont(MONTH_CELL_FONT, room),
+    [room],
+  );
+
   const weeks = useMemo(
     () =>
       buildMonthGrid(year, month, { weekStartsOn: pack.weekStartsOn, today }),
@@ -215,6 +231,7 @@ export const MonthGridView = memo(function MonthGridView({
                   pastMark={pastMark}
                   showNameDays={showNameDays}
                   textSize={textSize}
+                  entryFont={entryFont}
                   nameDayScale={nameDayScale}
                   holidayScale={holidayScale}
                   entry={doc.entries[cell.key] ?? ""}
@@ -263,6 +280,7 @@ const DayCell = memo(function DayCell({
   pastMark,
   showNameDays,
   textSize,
+  entryFont,
   nameDayScale,
   holidayScale,
   entry,
@@ -281,6 +299,7 @@ const DayCell = memo(function DayCell({
   pastMark: PastMarkSetting;
   showNameDays: boolean;
   textSize: EntryTextSize;
+  entryFont: EntryFontOptions;
   nameDayScale: number;
   holidayScale: number;
   entry: string;
@@ -380,7 +399,7 @@ const DayCell = memo(function DayCell({
             <DayEntry
               text={entry}
               editing={editing}
-              font={MONTH_CELL_FONT}
+              font={entryFont}
               size={textSize}
               bounded
               onCommit={(text) => onCommit(cell.key, text)}
