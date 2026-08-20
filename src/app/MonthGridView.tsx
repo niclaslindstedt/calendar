@@ -58,6 +58,9 @@ type Props = {
   layout: MonthCellLayout;
   /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
   headerInk: string | null;
+  /** Whether the heading prints its period arrows — off where the reader
+   *  pages up and down (`navSwipe.ts`). */
+  arrows: boolean;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -96,6 +99,7 @@ export const MonthGridView = memo(function MonthGridView({
   showNameDays,
   layout,
   headerInk,
+  arrows,
   pastMark,
   textSize,
   nameDayScale,
@@ -159,24 +163,31 @@ export const MonthGridView = memo(function MonthGridView({
         className="flex min-h-0 flex-1 flex-col px-3 sm:px-6"
         style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
       >
-        {/* The serif month title, wall-calendar style, between the arrows. */}
+        {/* The serif month title, wall-calendar style, between the arrows —
+            banded edge to edge on a phone, as in the other two views. */}
         <PeriodHeading
           title={monthName(pack, month)}
           meta={String(year)}
           titleClass="cal-serif text-3xl font-normal tracking-[0.18em] uppercase sm:text-4xl"
           metaClass="text-xl tracking-normal sm:text-2xl"
           accent={headerInk}
+          bleed
+          arrows={arrows}
           onPrevious={onPrevious}
           onNext={onNext}
         />
 
-        {/* Weekday headers. */}
-        <div className="grid shrink-0" style={gridCols}>
+        {/* Weekday headers. The rule under them is the row's, not each
+            heading's: the week rows below draw theirs across the whole grid,
+            gutter included, so a rule that started at the first day column
+            left the calendar's top line short by exactly the week numbers'
+            lane. */}
+        <div className="grid shrink-0 border-b border-line" style={gridCols}>
           {showWeekNumbers && <div aria-hidden="true" />}
           {order.map((wd) => (
             <div
               key={wd}
-              className={`cal-serif border-b border-line pb-1 text-center text-sm sm:text-base ${
+              className={`cal-serif pb-1 text-center text-sm sm:text-base ${
                 isRedWeekday(pack, wd) ? "cal-red" : "text-fg"
               }`}
             >

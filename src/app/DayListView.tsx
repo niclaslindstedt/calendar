@@ -46,7 +46,13 @@ import { monthImageUrl } from "./monthImage.ts";
 import { listHomeDay } from "./listHome.ts";
 import { HEADING_CLEARANCE, PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
-import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
+import {
+  STRIP_ROW_EDGE,
+  StripLane,
+  StripNote,
+  StripRail,
+  type StripDay,
+} from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
@@ -81,6 +87,9 @@ type Props = {
   weekFormat: WeekFormat;
   /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
   headerInk: string | null;
+  /** Whether the heading prints its period arrows — off where the reader
+   *  pages up and down (`navSwipe.ts`). */
+  arrows: boolean;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -117,6 +126,7 @@ export const DayListView = memo(function DayListView({
   rowMode,
   weekFormat,
   headerInk,
+  arrows,
   pastMark,
   textSize,
   doc,
@@ -210,6 +220,7 @@ export const DayListView = memo(function DayListView({
         metaClass="text-lg"
         accent={headerInk}
         bleed
+        arrows={arrows}
         className={`bg-page-bg sticky top-0 z-10 ${
           headerInk ? "" : "border-b border-line"
         }`}
@@ -244,6 +255,7 @@ export const DayListView = memo(function DayListView({
               entry={doc.entries[key] ?? ""}
               editing={editingDay === key}
               home={day === home}
+              lastOfMonth={day === count}
               // A fixed row clips, so its note is measured against the row;
               // the row it is being typed into grows instead, whatever the
               // setting, so the caret is never in a box it has outgrown.
@@ -293,6 +305,7 @@ const DayRow = memo(function DayRow({
   editing,
   fixed,
   home,
+  lastOfMonth,
   onEditDay,
   onCommit,
   onOpenHolidays,
@@ -323,6 +336,9 @@ const DayRow = memo(function DayRow({
   /** Whether this is the row the month opens on (`listHome.ts`). A primitive,
    *  like everything else here, so the memo holds for the other ninety. */
   home: boolean;
+  /** Whether this is the month's last row — the one row with no day under it
+   *  to hand its rule to (see the border below). */
+  lastOfMonth: boolean;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: (year: number) => void;
@@ -340,6 +356,14 @@ const DayRow = memo(function DayRow({
   // without the line.
   const opens = startsWeek(weekday, pack.weekStartsOn);
   const marks = opens || day === 1;
+  // The last day of a week hands its rule to the first day of the next, which
+  // draws a heavier one of its own (`cal-strip-break`). Left in place, the two
+  // sat a pixel apart — a hairline immediately over the week's own rule, which
+  // reads as a smudged double line rather than as one mark saying "a week
+  // starts here". The month's last row keeps its rule: nothing follows it in
+  // this pane, so there is nobody to hand it to.
+  const closes =
+    !lastOfMonth && startsWeek((weekday + 1) % 7, pack.weekStartsOn);
 
   const stripDay: StripDay = {
     layout,
@@ -392,7 +416,9 @@ const DayRow = memo(function DayRow({
       // are 14 px lines on the phone the row was measured on, and a screen
       // with more room prints them larger (`src/app/roomScale.ts`), so a row
       // held at the phone's height would clip the same second name again.
-      className={`cal-strip-row relative flex cursor-text items-stretch gap-2 border-b border-line px-2 py-1 focus-visible:outline-2 ${
+      className={`cal-strip-row relative flex cursor-text items-stretch gap-2 border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+        closes ? "" : "border-b"
+      } ${
         fixed
           ? "h-[calc(3.25rem*var(--cal-room,1))] overflow-hidden"
           : "min-h-[calc(3.25rem*var(--cal-room,1))]"

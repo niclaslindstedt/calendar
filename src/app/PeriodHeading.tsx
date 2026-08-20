@@ -4,6 +4,12 @@
 // them beside the view switcher, and the arrows read better flanking the
 // thing they move. All three views render this, so the navigation sits in the
 // same place whichever one is open.
+//
+// …and none at all where the reader pages up and down (Settings → Calendar →
+// Navigation): a chevron is a direction, and two pointing sideways over a
+// calendar that turns vertically are worse than no chevrons at all. The row
+// keeps its height regardless (`min-h-9`, the arrows' own), because the day
+// list pins this over its scroll and measures the clearance from it.
 
 import {
   ChevronLeftIcon,
@@ -32,6 +38,9 @@ type Props = {
   /** Whether the band runs edge to edge on a phone (see below). Only a band
    *  can bleed — an unbanded heading has nothing to reach the edges with. */
   bleed?: boolean;
+  /** Whether the two chevrons are printed. Off where a swipe pages up and
+   *  down (`navSwipe.ts`); the row keeps its height either way. */
+  arrows?: boolean;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -92,21 +101,21 @@ export function PeriodHeading({
   className = "",
   accent = null,
   bleed = false,
+  arrows = true,
   onPrevious,
   onNext,
 }: Props) {
   const t = useT();
-  // How wide the band is drawn depends on what is under it. Over the month
-  // grid it is exactly as wide as the calendar: the grid's own edges are the
-  // page's margin, and a band a gutter wider than the grid it heads reads as a
-  // misalignment. The strip views have no such edge — a row runs the width of
-  // the screen and its rules end in the same gutter the band would — so there
-  // the band reaches the screen's edges, the way printed furniture reaches the
-  // paper's. Only on a phone: past `sm` the calendar is a centred column on a
-  // wide page, and a masthead spanning the whole window would be heading the
-  // window rather than the calendar.
+  // On a phone the band reaches the screen's edges, the way printed furniture
+  // reaches the paper's — in every view, because in every view the rules under
+  // it do. The month grid used to be the exception, on the reasoning that its
+  // own edges were the page's margin and a band a gutter wider than the grid
+  // read as a misalignment; what it actually read as was one view's masthead
+  // stopping short of two others'. Only on a phone: past `sm` the calendar is a
+  // centred column on a wide page, and a masthead spanning the whole window
+  // would be heading the window rather than the calendar.
   //
-  // `-mx-3` is the strip views' own `px-3`, cancelled; the band puts it back
+  // `-mx-3` is the views' own `px-3`, cancelled; the band puts it back
   // as padding (`px-5` = the gutter plus the band's own `px-2`) so the arrows
   // stay where they were, over the rows' margins.
   const banded = accent !== null;
@@ -114,7 +123,7 @@ export function PeriodHeading({
   const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
   return (
     <div
-      className={`flex shrink-0 items-center gap-1 py-4 ${
+      className={`flex min-h-9 shrink-0 items-center gap-1 py-4 ${
         banded ? "text-white" : ""
       } ${bled ? "-mx-3 px-5 sm:mx-0 sm:px-2" : banded ? "px-2" : ""} ${className}`}
       // The background is inline so it wins over whatever the caller's
@@ -127,14 +136,16 @@ export function PeriodHeading({
         ...(banded ? { background: accent } : {}),
       }}
     >
-      <button
-        type="button"
-        aria-label={t("topbar.previous")}
-        onClick={onPrevious}
-        className={arrow}
-      >
-        <ChevronLeftIcon className="h-5 w-5" />
-      </button>
+      {arrows && (
+        <button
+          type="button"
+          aria-label={t("topbar.previous")}
+          onClick={onPrevious}
+          className={arrow}
+        >
+          <ChevronLeftIcon className="h-5 w-5" />
+        </button>
+      )}
 
       <h2 className={`min-w-0 flex-1 text-center ${titleClass}`}>
         {title}
@@ -147,14 +158,16 @@ export function PeriodHeading({
         )}
       </h2>
 
-      <button
-        type="button"
-        aria-label={t("topbar.next")}
-        onClick={onNext}
-        className={arrow}
-      >
-        <ChevronRightIcon className="h-5 w-5" />
-      </button>
+      {arrows && (
+        <button
+          type="button"
+          aria-label={t("topbar.next")}
+          onClick={onNext}
+          className={arrow}
+        >
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+      )}
     </div>
   );
 }

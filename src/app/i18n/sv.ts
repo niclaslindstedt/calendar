@@ -136,6 +136,14 @@ export const sv: Catalog = {
     textSizeHuge: "Störst",
     textSizeSampleHoliday: "Alla helgon",
     textSizeSampleNote: "Middag 18:00",
+    navigation: "Navigering",
+    navigationHint:
+      "Hur du byter månad och vecka. Vilket du än väljer skrollar daglistan fortfarande bland dagarna.",
+    swipeDirection: "Svep",
+    swipeHorizontal: "Vänster / höger",
+    swipeVertical: "Upp / ner",
+    swipeDirectionHint:
+      "Upp och ner bläddrar åt samma håll som du redan skrollar — svep nedåt för perioden före och uppåt för den efter — och tar bort pilarna ur rubriken. I daglistan skrollar du helt enkelt vidare in i månaden före eller efter.",
     pastDays: "Passerade dagar",
     pastDaysHint:
       "Kryssa av dagarna som gått, som i en papperskalender. Dagens datum kryssas aldrig — raden av kryss slutar där.",

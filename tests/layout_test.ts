@@ -22,6 +22,7 @@ import {
   HEADING_HEIGHT,
 } from "../src/app/PeriodHeading.tsx";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
+import { STRIP_ROW_EDGE } from "../src/app/stripRow.tsx";
 
 const css = readFileSync(
   fileURLToPath(new URL("../src/styles.css", import.meta.url)),
@@ -247,6 +248,34 @@ describe("the room factor in the stylesheet", () => {
     for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
       expect(ruleBody(selector)).toMatch(/max-width:\s*\d+%/);
     }
+  });
+});
+
+describe("the strip row's edges", () => {
+  // The week planner and the day list print the same row, so they cancel the
+  // same gutter with the same class — a row that bled in one view and not the
+  // other is two calendars.
+  const source = (name: string) =>
+    readFileSync(
+      fileURLToPath(new URL(`../src/app/${name}`, import.meta.url)),
+      "utf8",
+    );
+
+  it("is the one both strip views print with", () => {
+    for (const view of ["DayListView.tsx", "WeekPlannerView.tsx"]) {
+      expect(source(view)).toContain("STRIP_ROW_EDGE");
+    }
+  });
+
+  it("cancels the views' own gutter on a phone and gives it back past sm", () => {
+    // The views pad themselves `px-3` up to `sm`, so the row's negative margin
+    // is exactly that: the rules reach the screen's edges, and past `sm` the
+    // calendar is a centred column again and the row goes back inside it.
+    for (const view of ["DayListView.tsx", "WeekPlannerView.tsx"]) {
+      expect(source(view)).toContain("px-3 sm:px-6");
+    }
+    expect(STRIP_ROW_EDGE).toContain("-mx-3");
+    expect(STRIP_ROW_EDGE).toContain("sm:mx-0");
   });
 });
 

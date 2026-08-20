@@ -42,6 +42,7 @@ import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
+import { showsArrows, swipeAxis } from "./app/navSwipe.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
@@ -72,6 +73,7 @@ import {
   monthCellLayout,
   pastMarkOf,
   stripLayoutOf,
+  swipeDirectionFor,
   useAppSettings,
   weekDateSizeFor,
   weekFormatFor,
@@ -397,6 +399,11 @@ export function App() {
   const weekRows = weekRowsOf(live);
   const weekFormat = weekFormatFor(live);
   const weekDateSize = weekDateSizeFor(live);
+  // Which way a swipe turns the page, and — the same answer read again —
+  // whether the heading still has arrows to point with. Off the live look, so
+  // the dialog's preview shows both as they are chosen.
+  const swipe = swipeDirectionFor(live);
+  const arrows = showsArrows(swipe);
   // Every view pages horizontally, so each renders three periods at a time:
   // the one on screen and the two waiting either side of it. The month and
   // week views fill exactly one screen; the day list scrolls inside its own
@@ -435,6 +442,7 @@ export function App() {
           rowMode={live.listRows}
           weekFormat={weekFormat}
           headerInk={headerInk}
+          arrows={arrows}
           pastMark={pastMark}
           textSize={styles.strip.entry.size}
           doc={store.doc}
@@ -461,6 +469,7 @@ export function App() {
         weekFormat={weekFormat}
         dateSize={weekDateSize}
         headerInk={headerInk}
+        arrows={arrows}
         pastMark={pastMark}
         textSize={styles.strip.entry.size}
         doc={store.doc}
@@ -482,6 +491,7 @@ export function App() {
         showNameDays={toggles.nameDays}
         layout={cellLayout}
         headerInk={headerInk}
+        arrows={arrows}
         pastMark={pastMark}
         textSize={styles.month.entry.size}
         nameDayScale={styles.month.nameDays.size}
@@ -552,9 +562,17 @@ export function App() {
         {paged && (
           <SwipeDeck
             // Remounting on a view switch drops any half-finished gesture and
-            // re-centres, rather than carrying a month's drag into a week.
-            key={settings.view}
+            // re-centres, rather than carrying a month's drag into a week. The
+            // paging axis is in the key for the same reason: the track's
+            // resting transform is written to the DOM directly, so turning the
+            // deck on its side is a fresh deck rather than a re-styled one.
+            key={`${settings.view}:${swipe}`}
             itemKey={`${anchor}@${homings}`}
+            // Left/right by default; up/down for a reader who would rather
+            // scroll a calendar than flick through it, in which case the day
+            // list simply carries on scrolling into the month above or below
+            // (`navSwipe.ts`, and `atScrollEnd` in the deck).
+            axis={swipeAxis(swipe)}
             scrolls={
               settings.view === "list" ||
               (settings.view === "week" && weekRows === "dynamic")

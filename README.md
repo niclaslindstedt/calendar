@@ -92,8 +92,12 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   Ctrl/⌘+Enter or clicking away closes the editor. The text is plain text;
   keep it short — it shrinks to fit, and when it can shrink no further the day
   is full. A note too long for the space it is shown in ends in an ellipsis.
+- **Swipe** in any view to turn the page — left and right by default, or up
+  and down if you set Settings → Calendar → Navigation that way, in which case
+  the day list simply keeps scrolling into the month above or below.
 - **Arrows** flanking the month heading page between months (or weeks, in the
-  week planner).
+  week planner). They are printed only while the swipe is left/right, which is
+  the way they point.
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
   list — and every press of it jumps back to today, including a press on the
   view you are already in. The day list opens the current month at the week
@@ -103,7 +107,8 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   backend.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
   (English / Swedish), week numbers and name days on/off, which holiday eves
-  you work, the month cell's layout, crossing off the days that have passed, a
+  you work, the month cell's layout, which way a swipe turns the page,
+  crossing off the days that have passed, a
   face per part of a day (date, holiday, name days, your text), a size per
   part of a day (small / medium / large, plus dynamic for your own text,
   each with a sample beside the buttons), the theme,
