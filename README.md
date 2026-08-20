@@ -92,7 +92,8 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **Arrows** flanking the month heading page between months (or weeks, in the
   week planner).
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
-  list — and pressing the view you are already in jumps back to today.
+  list — and every press of it jumps back to today, including a press on the
+  view you are already in.
 - **Calendar switcher** (top left) keeps separate calendars in the same app:
   one for home, one for work, each with its own notes in the same storage
   backend.

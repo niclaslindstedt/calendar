@@ -477,15 +477,19 @@ export function App() {
     <div className="flex h-full flex-col overflow-hidden bg-page-bg text-fg">
       <TopBar
         view={settings.view}
-        // Pressing the view you are already in is how you get back to today —
-        // the switcher's own "you are here" slot doubles as the way home,
-        // which is what frees the left-hand button for the calendar menu.
+        // Every press of the switcher lands on today — the switcher's own "you
+        // are here" slot doubles as the way home, which is what frees the
+        // left-hand button for the calendar menu. Pressing a *different* view
+        // goes to today as well: the three views are three readings of the
+        // same calendar rather than three places you keep a position in, and
+        // carrying a browsed-away period across the switch left you looking at
+        // a week in March with no idea it was not this one.
         onViewChange={(view) => {
           setEditingDay(null);
           closeHolidays();
           closeNames();
-          if (view === settings.view) goToday();
-          else update("view", view);
+          if (view !== settings.view) update("view", view);
+          goToday();
         }}
         calendars={calendars.list}
         activeCalendar={calendars.activeSlug}

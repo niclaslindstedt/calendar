@@ -11,10 +11,11 @@ active calendar's icon in its colour, so which calendar you are writing in is
 visible without opening anything. Tap it for the list; tap a name to switch.
 The month on screen stays put, only the notes change.
 
-> Going back to today moved onto the view switcher: **press the view you are
-> already in** (Month while in Month, Week while in Week) and the calendar
-> returns to the current day. Pressing a _different_ view switches to it and
-> keeps the period you were reading.
+> Going back to today moved onto the view switcher: **any press of it** puts
+> the calendar back at the current day. Pressing the view you are already in
+> (Month while in Month, Week while in Week) returns to today without changing
+> view; pressing a _different_ view switches to it and lands on today there
+> too.
 
 ## Managing
 

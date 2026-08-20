@@ -5,11 +5,12 @@
 // the month heading (`PeriodHeading`), which is where the eye already is and
 // which leaves the switcher room to breathe on a portrait phone.
 //
-// Going back to today is not a button either. Pressing the view you are
-// already in returns to today — the gesture a segmented control invites
-// anyway (a tab bar that re-selects its own tab scrolls to the top), and the
-// only way to fit a calendar switcher into a three-slot bar without a fourth
-// control that wraps in portrait.
+// Going back to today is not a button either. Every press of the switcher
+// returns to today, whether it lands on the view you are already in or moves
+// you to another one — the gesture a segmented control invites anyway (a tab
+// bar that re-selects its own tab scrolls to the top), and the only way to fit
+// a calendar switcher into a three-slot bar without a fourth control that
+// wraps in portrait.
 //
 // The bar follows the sibling `notes` app's header: page-background with a
 // blur, one hairline underneath, `px-4 py-3`, and 36 px square icon buttons.
@@ -30,8 +31,8 @@ import type { Calendar } from "./useCalendars.ts";
 type Props = {
   view: ViewMode;
   /** Called for every press of the switcher — including a press on the view
-   *  that is already showing, which is how the calendar goes back to today.
-   *  The shell owns that decision (`App.tsx`), not this bar. */
+   *  that is already showing. Every one of them also puts the calendar back at
+   *  today; the shell owns that decision (`App.tsx`), not this bar. */
   onViewChange: (view: ViewMode) => void;
   calendars: Calendar[];
   activeCalendar: string;
