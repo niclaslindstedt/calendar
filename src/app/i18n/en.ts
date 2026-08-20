@@ -188,7 +188,7 @@ export const en = {
     headerColorOchre: "Ochre",
     weekPlanner: "Week planner",
     weekPlannerHint:
-      "The week strip: the date and the day's names down the left, your notes in the middle, and the week number and the holiday's name in the right-hand margin.",
+      "The week strip: the date and the day's names down the left, the week number and the holiday's name in the right-hand margin, and your notes flowing around both — beside them, then across the full width below them.",
     weekDayOfYear: "Day of year",
     weekDayOfYearHint:
       "Print each day's number in the year (1–366) beside the weekday. The day list prints it too.",

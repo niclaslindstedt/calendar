@@ -3,9 +3,10 @@
 // like the printed column calendar it is drawn from and sharing its anatomy
 // with the week planner (`stripRow.tsx`): the date at the head of the row with
 // the weekday beside it and the day's names under that, the day's ordinal in
-// the year small in the margin behind them, the note filling the
-// middle, and the almanac's marginalia in a rail on the right — the week
-// number where a week opens, the holiday's name along the bottom. A heavier
+// the year small in the margin behind them, the almanac's marginalia in a rail
+// on the right — the week number where a week opens, the holiday's name along
+// the bottom — and the note flowing around all of it, beside the margins while
+// they last and across the row's full width underneath. A heavier
 // rule — in the heading's own colour, where the heading is banded — crosses the
 // list wherever the week changes, which is the one thing this view can show
 // that a single-week strip cannot.
@@ -49,9 +50,8 @@ import { HEADING_CLEARANCE, PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import {
   STRIP_ROW_EDGE,
-  StripLane,
-  StripNote,
-  StripRail,
+  STRIP_ROW_FRAME,
+  StripBody,
   type StripDay,
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
@@ -426,7 +426,7 @@ const DayRow = memo(function DayRow({
       // are 14 px lines on the phone the row was measured on, and a screen
       // with more room prints them larger (`src/app/roomScale.ts`), so a row
       // held at the phone's height would clip the same second name again.
-      className={`cal-day cal-strip-row relative flex cursor-text items-stretch gap-2 border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+      className={`cal-day cal-strip-row relative ${STRIP_ROW_FRAME} cursor-text border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
         closes ? "" : "border-b"
       } ${
         fixed
@@ -436,21 +436,21 @@ const DayRow = memo(function DayRow({
         dayKey === today ? "bg-surface-2" : ""
       }`}
     >
-      {lane && <StripLane day={stripDay} />}
-
-      <StripNote>
+      <StripBody day={stripDay} lane={lane} rail={rail}>
         <DayEntry
           text={entry}
           editing={editing}
           font={entryFont}
           size={textSize}
           bounded={fixed}
+          // The row prints its margins beside the note, so the note's lines
+          // make room for them and then take the row's full width — which is
+          // also what a note too long for the row is measured against.
+          flow
           onCommit={(text) => onCommit(dayKey, text)}
           onClose={() => onEditDay(null)}
         />
-      </StripNote>
-
-      {rail && <StripRail day={stripDay} />}
+      </StripBody>
 
       {/* The whole-row stroke — over the row, transparent to taps. */}
       {marked === "cell" && <PastMark style={pastMark.style} />}

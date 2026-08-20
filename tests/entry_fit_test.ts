@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ENTRY_LINE_HEIGHT,
+  ellipsizedEntry,
   entryLineLimit,
   entrySizeLadder,
 } from "../src/app/entryFit.ts";
@@ -60,5 +61,32 @@ describe("entrySizeLadder", () => {
 
   it("is a single rung when the size is pinned", () => {
     expect(entrySizeLadder(11, 11)).toEqual([11]);
+  });
+});
+
+describe("ellipsizedEntry", () => {
+  // How a note that has run out of room ends in a view whose lines flow around
+  // the row's margins: the text itself is cut, because the `-webkit-box` a
+  // cell clamps with cannot wrap around a float.
+  const note = "Middag kl 18:00 hos Anna";
+
+  it("leaves a note that fits whole", () => {
+    expect(ellipsizedEntry(note, note.length)).toBe(note);
+    expect(ellipsizedEntry(note, note.length + 10)).toBe(note);
+  });
+
+  it("closes a cut note with an ellipsis", () => {
+    expect(ellipsizedEntry(note, 6)).toBe("Middag…");
+  });
+
+  it("does not leave the space the cut was made at hanging", () => {
+    // "Middag …" reads as a missing word rather than as a note that carries
+    // on.
+    expect(ellipsizedEntry(note, 7)).toBe("Middag…");
+    expect(ellipsizedEntry("Middag\n\nkl", 8)).toBe("Middag…");
+  });
+
+  it("keeps the ellipsis alone when not even a character fits", () => {
+    expect(ellipsizedEntry(note, 0)).toBe("…");
   });
 });

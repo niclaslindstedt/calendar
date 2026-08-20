@@ -114,6 +114,64 @@ export function fitEntryText(
   return { px, fits: best >= 0 };
 }
 
+/** Print as much of `text` as fits `available`, ending it in an ellipsis.
+ *
+ *  The other way a note that has run out of room is ended. A cell clamps with
+ *  `-webkit-line-clamp`, which is one declaration and costs no measuring — but
+ *  its line boxes ignore floats, and a strip row's note is lines flowing
+ *  around the row's margins (`stripRow.tsx`), so a note clamped that way would
+ *  be pushed clear of the margins and set in the third of the row the layout
+ *  exists to give up. So the ellipsis is put in the *text* instead: the
+ *  longest prefix that still fits, plus the character that says there is more.
+ *
+ *  A binary search over the character count, for the reason
+ *  {@link fitEntryText} uses one: more text never sets in fewer lines, so
+ *  "fits" is monotonic and a note of any length is settled in a handful of
+ *  measurements. It writes through the text node the renderer already put
+ *  there rather than replacing it, so the next render can still restate the
+ *  whole text through the same node — this is a correction to what is painted,
+ *  not a change to what the day holds. */
+export function clipEntryText(
+  el: HTMLElement,
+  available: number,
+  text: string,
+): void {
+  const node = el.firstChild;
+  if (!node || node.nodeType !== 3 /* Node.TEXT_NODE */) return;
+  const show = (kept: number): boolean => {
+    node.nodeValue = ellipsizedEntry(text, kept);
+    return el.scrollHeight <= available + 0.5;
+  };
+
+  let lo = 0;
+  let hi = text.length - 1;
+  let best = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (show(mid)) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  // The search's last measurement is not necessarily the one that fit, so the
+  // winner is written back — without measuring it again. A note where nothing
+  // fits, not even the first character, is left as the ellipsis alone: a day
+  // with something written on it never looks blank, which is the floor
+  // {@link entryLineLimit} keeps for a clamped cell too.
+  node.nodeValue = ellipsizedEntry(text, Math.max(best, 0));
+}
+
+/** `text` cut to `kept` characters and closed with an ellipsis, with any
+ *  space the cut left hanging trimmed off first — "Middag …" rather than
+ *  "Middag  …". Cutting mid-word is deliberate: a whole word dropped to keep
+ *  the ellipsis tidy is a word of the day's note nobody can see. */
+export function ellipsizedEntry(text: string, kept: number): string {
+  if (kept >= text.length) return text;
+  return `${text.slice(0, kept).replace(/\s+$/u, "")}…`;
+}
+
 function round1(px: number): number {
   return Math.round(px * 10) / 10;
 }

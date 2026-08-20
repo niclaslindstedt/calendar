@@ -47,10 +47,12 @@ The switcher in the top bar toggles:
   image pack is installed, the artwork hangs above the grid.
 - **Week** — one week at a time, one generous row per weekday, laid out like a
   printed column calendar. The date is set big at the head of the row with the
-  weekday beside it and the day's name days under that; the middle of the row
-  is yours to write in; and the right-hand margin carries the week number (on
-  the day the week opens) and the holiday's name (along the bottom of the
-  row). The day that opens a week draws a heavier rule above it, so paging
+  weekday beside it and the day's name days under that; the right-hand margin
+  carries the week number (on the day the week opens) and the holiday's name
+  (along the bottom of the row); and the rest of the row is yours to write in.
+  Those margins are only as tall as what they print, so a long note runs
+  beside them and then takes the row's full width underneath — the way text
+  flows around a picture on a page. The day that opens a week draws a heavier rule above it, so paging
   through the weeks you can see where one ends and the next begins. How big
   the date is set, how the week number is phrased, whether each day's number
   in the year is printed and whether rows may grow are all yours to choose —
@@ -58,8 +60,9 @@ The switcher in the top bar toggles:
   leave no height for a stack, everything lies back down into one line.)
 - **Day list** — the month as a vertical scroll, one row per day, laid out
   like the week planner: the date with the weekday beside it and the day's
-  names under that, your note filling the middle, and the week number and the
-  holiday's name in the right-hand margin. A heavier rule — in the heading's
+  names under that, the week number and the holiday's name in the right-hand
+  margin, and your note flowing around both — beside them while they last and
+  across the row's full width underneath. A heavier rule — in the heading's
   colour, where the heading is banded — crosses the list wherever the week
   changes, the one thing this view can show that a single-week strip cannot. In Settings → Calendar you can choose whether rows
   keep a fixed height or grow with their text (the week planner has the same
@@ -240,12 +243,14 @@ printed column calendar sets the date, and a **rail** on the right, where it
 sets its marginalia. The defaults are that arrangement — the date at the head
 of the lane with the day's names under it, the week number at the top of the
 rail and the holiday's name along the bottom of it — and the note always takes
-the width between the two.
+what they leave: the width between them, and the row's full width below them.
 
 - The weekday's name travels with the day number wherever it goes.
 - A margin nothing is printed in is **not drawn at all**, so a plain English
   month — no name days, no week numbers, the odd holiday — gets its full row
   width for writing instead of a dead gutter down ninety rows.
+- Within a margin that _is_ drawn, a piece is printed only on the days that
+  have one: the six days a week that open no week get those lines back.
 
 Captions wrap rather than truncate, and a name is only broken across lines
 when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while

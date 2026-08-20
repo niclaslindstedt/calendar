@@ -176,7 +176,7 @@ export const sv: Catalog = {
     headerColorOchre: "Ockra",
     weekPlanner: "Veckoplanerare",
     weekPlannerHint:
-      "Veckans remsa: datumet och dagens namn till vänster, dina anteckningar i mitten, och veckonumret och helgdagens namn i högermarginalen.",
+      "Veckans remsa: datumet och dagens namn till vänster, veckonumret och helgdagens namn i högermarginalen, och dina anteckningar runt omkring — bredvid dem och sedan i hela radens bredd under dem.",
     weekDayOfYear: "Dagnummer",
     weekDayOfYearHint:
       "Skriv ut dagens nummer på året (1–366) bredvid veckodagen. Daglistan skriver ut det också.",

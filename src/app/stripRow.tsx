@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The strip row's two margins, shared by the week planner and the day list.
+// The strip row's two margins and the writing surface that flows around them,
+// shared by the week planner and the day list.
 //
 // Both views print the same day: the date set big at the head of a lane on the
 // left with the weekday beside it and the day's names under that, and the
@@ -7,8 +8,17 @@
 // name along the bottom — in a rail on the right. What differs is the *row*:
 // the week planner gives a day a seventh of the screen and the day list gives
 // it a line of a month-long scroll. So the row itself stays each view's own
-// (its height, its borders, how it memoizes) and only the two margins live
-// here, which is what keeps the two from drifting apart a caption at a time.
+// (its height, its borders, how it memoizes) and only the margins and the
+// surface between them live here, which is what keeps the two from drifting
+// apart a caption at a time.
+//
+// The margins are **floats**, which is the whole of how a printed calendar
+// sets a note beside its marginalia: the lane and the rail are only as tall as
+// what they print, so what you write runs beside them while they last and
+// takes the row's full width underneath — the same arrangement the month cell
+// gives its day number (`monthCell.tsx`). A margin that reserved its width for
+// the row's full height instead left the bottom two thirds of every row blank
+// while the note it belonged to was shrunk to fit a third of the width.
 //
 // Which margin each piece is printed in — and at which end of it — is the
 // reader's call (Settings → Calendar → View, `stripLayout.ts`). The defaults
@@ -27,7 +37,7 @@ import type { PastMarkStyle } from "./pastDays.ts";
 import {
   inMargin,
   piecesInMargin,
-  piecesInSlot,
+  piecesPrinted,
   type StripLayout,
   type StripPiece,
 } from "./stripLayout.ts";
@@ -48,6 +58,12 @@ import { dayOfYear, weekNumberLabel, type WeekFormat } from "./weekPlanner.ts";
  *  Past `sm` the calendar is a centred column on a wide page and the rules
  *  belong to the column, so the row goes back to the view's own padding. */
 export const STRIP_ROW_EDGE = "-mx-3 px-3 sm:mx-0 sm:px-2";
+
+/** The row itself: a column of the flowing body and, under it, whatever the
+ *  rail's bottom end prints along the row's edge. Both views (and the settings
+ *  sample) put this on their own row element, which is the one that carries
+ *  the height, the rules and the gestures. */
+export const STRIP_ROW_FRAME = "flex flex-col";
 
 /** Everything a row prints, and the arrangement it prints it in. The views
  *  hand this straight down from what they already resolved per day. */
@@ -84,6 +100,46 @@ export type StripDay = {
   onOpenHolidays: () => void;
 };
 
+/** A row's contents: the two margins, the note that flows around them, and the
+ *  band along the bottom edge that the rail's lower end prints in.
+ *
+ *  `lane` and `rail` are the period's answer to whether each margin is worth
+ *  drawing at all (`marginReserved`) — decided once for a whole week or month,
+ *  because a margin that came and went would move the note's edge on every
+ *  row. Inside that, a *piece* is printed only on the days that have one: a
+ *  week number is printed where a week opens, so the six days that open none
+ *  get their first lines back rather than carrying an empty column. That is
+ *  the difference floats make — an absent piece costs nothing, where an
+ *  absent column used to cost the row its width. */
+export function StripBody({
+  day,
+  lane,
+  rail,
+  children,
+}: {
+  day: StripDay;
+  lane: boolean;
+  rail: boolean;
+  children: ReactNode;
+}) {
+  const head = rail ? printedIn(day, "rail-top") : [];
+  const tail = rail ? printedIn(day, "rail-bottom") : [];
+
+  return (
+    <>
+      {/* The flowing body. `flow-root` so the margins are *inside* it — a block
+          that lets its floats hang out of the bottom would let the lane print
+          over the row below it on a row that grows with its text. */}
+      <div className="cal-strip-flow min-h-0 min-w-0 flex-1">
+        {lane && <StripLane day={day} />}
+        {head.length > 0 && <StripRail day={day} pieces={head} />}
+        <StripNote>{children}</StripNote>
+      </div>
+      {tail.length > 0 && <StripTail day={day} pieces={tail} />}
+    </>
+  );
+}
+
 /** The lane on the left: whichever pieces are parked in it, with the date in a
  *  column of its own at the head of the row.
  *
@@ -95,8 +151,12 @@ export type StripDay = {
  *  note gets the difference back. The date's own column and the year-day
  *  number's are added to those in `src/styles.css`, each scaled by its own
  *  size setting rather than by the names' — and each zeroed here when the
- *  piece it pays for is printed in the other margin instead. */
-export function StripLane({ day: d }: { day: StripDay }) {
+ *  piece it pays for is printed in the other margin instead.
+ *
+ *  Its *height* is only what it prints, because it is floated: the note runs
+ *  beside the two or three lines the lane sets and then takes the width back
+ *  underneath them. */
+function StripLane({ day: d }: { day: StripDay }) {
   const dateHere = inMargin(d.layout, "lane", "day");
   const namesHere =
     inMargin(d.layout, "lane", "nameDays") && d.names.length > 0;
@@ -113,7 +173,7 @@ export function StripLane({ day: d }: { day: StripDay }) {
           "--cal-lane-floor": dateHere ? "4.25rem" : "0rem",
         } as CSSProperties
       }
-      className={`cal-strip-lane flex shrink-0 items-start gap-1.5 leading-tight ${
+      className={`cal-strip-lane flex items-start gap-1.5 leading-tight ${
         // The wide pair once the lane carries a caption to set; the measured
         // weekday floor otherwise.
         namesHere || inMargin(d.layout, "lane", "holidays")
@@ -168,26 +228,25 @@ export function StripLane({ day: d }: { day: StripDay }) {
   );
 }
 
-/** The rail on the right: whichever pieces are parked in it, the top end at
- *  the row's top and the bottom end pushed to its bottom edge — which is where
- *  a printed almanac sets a holiday's name.
+/** The rail on the right: whichever pieces are parked at its top end, floated
+ *  so the note runs beside them and then under them.
  *
  *  Everything here is the almanac talking rather than the day, which is why
- *  the rail sits outside the writing area instead of floating over it — and
- *  why it is reserved for a whole period at a time (`marginReserved`), so the
- *  note keeps one straight right edge down the strip. */
-export function StripRail({
+ *  the rail sits outside the writing area instead of floating over it. It is a
+ *  width rather than a shrink-wrap for the reason the lane is one — "Vecka 34"
+ *  and "w 34" are not the same length, and a right edge that moved with the
+ *  wording would read as a different column per row. */
+function StripRail({
   day: d,
-  className = "",
+  pieces,
 }: {
   day: StripDay;
-  className?: string;
+  /** The pieces to print, already filtered to the ones this day has. */
+  pieces: StripPiece[];
 }) {
-  const top = piecesInSlot(d.layout, "rail-top");
-  const bottom = piecesInSlot(d.layout, "rail-bottom");
-  const dateHere = inMargin(d.layout, "rail", "day");
+  const dateHere = pieces.includes("day");
   // A rail holding a caption needs more than the two digits of a week number.
-  const wide = inMargin(d.layout, "rail", "nameDays") || dateHere;
+  const wide = pieces.includes("nameDays") || dateHere;
 
   return (
     <div
@@ -196,31 +255,18 @@ export function StripRail({
       style={
         dateHere ? ({ "--cal-date": d.dateBase } as CSSProperties) : undefined
       }
-      className={`cal-strip-rail flex shrink-0 flex-col items-end self-stretch text-right ${
-        // A width rather than a shrink-wrap, for the reason the lane is one:
-        // the note keeps one straight right edge down the strip. The room
-        // factor multiplies it in `src/styles.css` — these are the widths a
-        // phone's week number and holiday need, and a screen that prints them
-        // larger needs the margin larger or "Vecka 34" comes back on two
-        // lines.
+      className={`cal-strip-rail flex flex-col items-end text-right ${
+        // The room factor multiplies it in `src/styles.css` — these are the
+        // widths a phone's week number and holiday need, and a screen that
+        // prints them larger needs the margin larger or "Vecka 34" comes back
+        // on two lines.
         wide
           ? "[--cal-rail:6rem] sm:[--cal-rail:8rem]"
           : "[--cal-rail:4rem] sm:[--cal-rail:6rem]"
-      } ${className}`}
+      }`}
     >
-      {top.map((piece) => (
+      {pieces.map((piece) => (
         <div key={piece} className="min-w-0">
-          {piecePart(piece, d)}
-        </div>
-      ))}
-      {bottom.map((piece, i) => (
-        <div
-          key={piece}
-          // The first piece of the bottom end carries the push; the landscape
-          // media query in `src/styles.css` clears it by this class when the
-          // rail lies down into a line.
-          className={`min-w-0 ${i === 0 ? "cal-strip-rail-tail mt-auto" : ""}`}
-        >
           {piecePart(piece, d)}
         </div>
       ))}
@@ -228,15 +274,64 @@ export function StripRail({
   );
 }
 
-/** A day's writing surface, between the two margins. Just the box — the entry
- *  itself stays the view's, because what it is measured against (a band the
- *  view fixed, or a line that grows) is the difference between the two. */
-export function StripNote({ children }: { children: ReactNode }) {
+/** The rail's bottom end, printed along the row's bottom edge — which is where
+ *  a printed almanac sets a holiday's name.
+ *
+ *  A band rather than the foot of a column: the rail above is only as tall as
+ *  the week number it holds, so there is no column left to push anything to
+ *  the bottom of. It takes the row's width and stays right-aligned, so the
+ *  holiday is in the corner it has always been printed in, and it is only
+ *  drawn on the days that have something to print there — an ordinary day
+ *  keeps the line for the note. */
+function StripTail({
+  day: d,
+  pieces,
+}: {
+  day: StripDay;
+  pieces: StripPiece[];
+}) {
+  const dateHere = pieces.includes("day");
   return (
-    <div className="cal-strip-note min-h-0 min-w-0 flex-1 self-stretch">
-      {children}
+    <div
+      style={
+        dateHere ? ({ "--cal-date": d.dateBase } as CSSProperties) : undefined
+      }
+      className="cal-strip-tail flex shrink-0 flex-wrap items-end justify-end gap-x-2 text-right"
+    >
+      {pieces.map((piece) => (
+        <div key={piece} className="min-w-0">
+          {piecePart(piece, d)}
+        </div>
+      ))}
     </div>
   );
+}
+
+/** A day's writing surface. Just the box — the entry itself stays the view's,
+ *  because what it is measured against (a band the view fixed, or a line that
+ *  grows) is the difference between the two.
+ *
+ *  It is the row's full width, and the margins beside it are floats, so it is
+ *  the *lines* that make room for them rather than the box. That is also why
+ *  it must not become a formatting context of its own (no `overflow`, no
+ *  flex): a box that did would be pushed clear of the floats whole, back to
+ *  the third of the row this arrangement exists to give up. */
+function StripNote({ children }: { children: ReactNode }) {
+  return <div className="cal-strip-note">{children}</div>;
+}
+
+/** The pieces one slot prints *on this day* — the arrangement's answer
+ *  (`piecesPrinted`) asked of what this day has. */
+function printedIn(
+  d: StripDay,
+  slot: "rail-top" | "rail-bottom",
+): StripPiece[] {
+  return piecesPrinted(d.layout, slot, {
+    day: true,
+    nameDays: d.names.length > 0,
+    holidays: d.holiday !== null,
+    week: d.weekNumber !== null,
+  });
 }
 
 /** The pieces the lane stacks beside the date, top end before bottom end. The
