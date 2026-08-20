@@ -51,6 +51,31 @@ const ARROW_BASE =
  *  three can never drift. */
 export const HEADING_HEIGHT = "4.25rem";
 
+/** The air the heading leaves under itself, before the first thing the view
+ *  prints.
+ *
+ *  The band is a solid edge, so whatever follows it sits *on* that edge
+ *  unless something holds it off — and the two strip views follow it with a
+ *  row whose date starts at the very top of its box, so the first day of the
+ *  week read as printed into the masthead rather than under it. The month
+ *  grid gets away with less only because its weekday row brings its own
+ *  leading; it is the same gap either way, for the reason `layout.ts` gives
+ *  for keeping the shared measurements in one place.
+ *
+ *  It carries the room factor (`roomScale.ts`) like every other measured
+ *  length here: the rows below it are set larger on a bigger screen, and a
+ *  gap left at the phone's 12 px between them would read as the same crowding
+ *  one size up. `--cal-room` is mapped down per scope by the `.cal-scope-*`
+ *  class the view carries, which is above the heading in all three. */
+export const HEADING_GAP = "calc(0.75rem * var(--cal-room, 1))";
+
+/** How much the heading occupies at the top of a scroller that pins it — the
+ *  band itself plus the air under it. The day list keeps this much of its
+ *  scrollport clear (`scroll-padding-top`), so a row it scrolls to lands with
+ *  the same gap below the band that an unscrolled one has, rather than flush
+ *  against it. */
+export const HEADING_CLEARANCE = `calc(${HEADING_HEIGHT} + ${HEADING_GAP})`;
+
 /** On the page's own ground, and on a colour band. The banded pair are white
  *  at two strengths rather than the theme's muted/foreground tokens: the band
  *  is one fixed colour in both themes, so the ink over it has to be too. */
@@ -92,10 +117,15 @@ export function PeriodHeading({
       className={`flex shrink-0 items-center gap-1 py-4 ${
         banded ? "text-white" : ""
       } ${bled ? "-mx-3 px-5 sm:mx-0 sm:px-2" : banded ? "px-2" : ""} ${className}`}
-      // Inline, so it wins over whatever background the caller's `className`
-      // carries — the day list pins its heading with an opaque `bg-page-bg`
-      // so the rows pass under it, and the band has to be what shows.
-      style={banded ? { background: accent } : undefined}
+      // The background is inline so it wins over whatever the caller's
+      // `className` carries — the day list pins its heading with an opaque
+      // `bg-page-bg` so the rows pass under it, and the band has to be what
+      // shows. The gap is inline because it is a `calc()` on the room factor
+      // rather than a spacing step.
+      style={{
+        marginBottom: HEADING_GAP,
+        ...(banded ? { background: accent } : {}),
+      }}
     >
       <button
         type="button"

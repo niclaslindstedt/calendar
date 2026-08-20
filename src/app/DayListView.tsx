@@ -44,7 +44,7 @@ import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { listHomeDay } from "./listHome.ts";
-import { HEADING_HEIGHT, PeriodHeading } from "./PeriodHeading.tsx";
+import { HEADING_CLEARANCE, PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import { StripLane, StripNote, StripRail, type StripDay } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
@@ -177,11 +177,12 @@ export const DayListView = memo(function DayListView({
       {...DECK_SCROLLER}
       // The heading below is pinned to this scroller's top, so it covers
       // whatever the scroller is scrolled to. `scroll-padding-top` is the
-      // browser's own word for that: it keeps the heading's height clear at
-      // the top of the scrollport, both for the row the deck opens the month
-      // on and for anything the browser scrolls into view itself — a row's
-      // editor, opened with the keyboard, used to land under the month.
-      style={{ scrollPaddingTop: HEADING_HEIGHT }}
+      // browser's own word for that: it keeps the heading's height — and the
+      // gap it leaves under itself — clear at the top of the scrollport, both
+      // for the row the deck opens the month on and for anything the browser
+      // scrolls into view itself; a row's editor, opened with the keyboard,
+      // used to land under the month.
+      style={{ scrollPaddingTop: HEADING_CLEARANCE }}
       className={`${SCOPE_CLASS.strip} mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6`}
     >
       {/* The slim artwork band (smaller than the month view's). */}
