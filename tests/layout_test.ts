@@ -16,7 +16,11 @@ import {
   WEEK_GUTTER_COLUMN,
   monthGridColumns,
 } from "../src/app/layout.ts";
-import { HEADING_HEIGHT } from "../src/app/PeriodHeading.tsx";
+import {
+  HEADING_CLEARANCE,
+  HEADING_GAP,
+  HEADING_HEIGHT,
+} from "../src/app/PeriodHeading.tsx";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
 
 const css = readFileSync(
@@ -122,6 +126,22 @@ describe("the pinned heading's height", () => {
     // are shorter than their own buttons — so the row's height does not
     // depend on which view is asking for it.
     expect(HEADING_HEIGHT).toBe(`${scale("h") + 2 * scale("py")}rem`);
+  });
+
+  it("leaves air under the band, and grows it with the screen", () => {
+    // The gap is a measured length like every other one here, so it carries
+    // the room factor — a strip row on a desk monitor is set larger, and a
+    // gap held at the phone's 12 px between larger rows is the same crowding
+    // one size up.
+    expect(HEADING_GAP).toContain("0.75rem");
+    expect(HEADING_GAP).toContain("var(--cal-room");
+  });
+
+  it("clears the band and that gap at the top of the scrollport", () => {
+    // What the day list keeps clear is both, or a row it scrolls to lands
+    // flush against the band while an unscrolled one has air under it.
+    expect(HEADING_CLEARANCE).toContain(HEADING_HEIGHT);
+    expect(HEADING_CLEARANCE).toContain(HEADING_GAP);
   });
 });
 
