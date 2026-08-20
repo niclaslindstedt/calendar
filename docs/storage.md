@@ -79,6 +79,71 @@ Saves carry the last-seen revision. If another device pushed first, the app
 adopts the newer remote copy and notes it in the in-app log — with per-day
 plain-text notes, last-writer-wins is the honest, simple policy.
 
+## Import and export
+
+Settings → Storage → **Import and export** takes a copy of everything out of
+the app, and merges one back in. It is the way to move to another device, to
+keep a backup of your own, or to put a phone and a laptop back in step when
+they aren't sharing a cloud backend.
+
+**Export** writes one JSON file, `calendar-backup-YYYY-MM-DD.json`:
+
+```json
+{
+  "kind": "nird-calendar-backup",
+  "version": 1,
+  "exportedAt": "2026-08-20T09:00:00.000Z",
+  "settings": { "localeId": "sv-SE", "weekNumbers": null, "…": "…" },
+  "appearance": { "theme": "githubDark", "…": "…" },
+  "calendars": [
+    {
+      "slug": "default",
+      "name": "Personal",
+      "entries": { "2026-08-16": "Dinner Ada 18:00" }
+    },
+    { "slug": "work", "name": "Work", "glyph": "briefcase", "entries": {} }
+  ]
+}
+```
+
+It carries the look settings, the theme, and **every** calendar with its
+notes — read from whichever backend is active, not just the one on screen.
+What it deliberately does not carry is the _connection_: the chosen backend,
+the Dropbox / Drive tokens and the picked folder are this device's own account
+state, and a file that held them would either be a secret or a lie on the
+machine it was opened on. So an imported calendar lands in whatever backend
+that device is already using.
+
+**Import is a merge, not a restore.** Three rules:
+
+- a calendar the device doesn't have is **added**, notes and all;
+- a day only one side has is **kept**, whichever side it came from;
+- a day both sides have written differently — or a calendar the two sides name
+  differently — is a **conflict**.
+
+Conflicts are the only thing you are asked about. A dialog lists them one per
+row — the app settings as a row of their own, then each contested calendar —
+and each row is a two-way choice: **Keep mine** or **Use the file**. The
+winner decides the contested days and the calendar's name and icon; every
+uncontested day is taken either way, so nothing is lost whichever way you
+answer. A file that only brings new things is applied without a dialog, and a
+file whose contents this device already has says so and does nothing.
+
+The settings are treated as one blob: a device still sitting on the defaults
+adopts the file's without being asked (it has made no choice to defend), and
+one that has been set up gets the question.
+
+A file that isn't a backup — or one written by a newer version of the app than
+this one — is refused with a line saying which. Everything inside a file that
+_is_ one is coerced back onto values the app can draw: a calendar's slug is
+re-derived (it is a storage location — a key, a file name, a folder), an
+unknown theme falls back to the device's, and non-text notes are dropped, the
+same treatment a hand-edited document already gets.
+
+Import and export are unavailable while **demo data** is on: there is nothing
+real to copy out of an in-memory sample, and nothing that would survive an
+import into it.
+
 ## Demo data
 
 Settings → Developer → **Demo data** swaps storage for an in-memory

@@ -134,6 +134,16 @@ export function useCalendars(backend: BackendId) {
     [backend, setList, setActiveSlug],
   );
 
+  // Write a whole registry at once — what an import commits once the merge
+  // is settled (`storage/backup.ts`). Normalised on the way in, like every
+  // other read of this list, and the active calendar is left where it is: an
+  // import adds calendars, it does not move the reader off the one they are
+  // looking at.
+  const replaceAll = useCallback(
+    (next: Calendar[]) => setList(normalizeCalendars(next)),
+    [setList],
+  );
+
   const activeCalendar = list.find((c) => c.slug === activeSlug) ?? list[0]!;
 
   return {
@@ -145,5 +155,6 @@ export function useCalendars(backend: BackendId) {
     rename,
     setAppearance,
     remove,
+    replaceAll,
   };
 }

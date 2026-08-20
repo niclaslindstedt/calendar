@@ -4,6 +4,10 @@
 // connect / disconnect affordance. Connections apply immediately (they are
 // account state, not a look preference), so this tab ignores the dialog's
 // draft entirely.
+//
+// Under the backends sits the backup pair (`BackupSection`): a place is where
+// your calendar lives, a file is a copy of it you can carry to another one —
+// the same tab answers both.
 
 import {
   Badge,
@@ -22,6 +26,8 @@ import {
   isGdriveConnected,
 } from "../storage/backends.ts";
 import type { SaveState } from "../useCalendarStore.ts";
+import type { BackupActions, ImportResult } from "../useBackup.ts";
+import { BackupSection } from "./BackupSection.tsx";
 
 export type StorageActions = {
   setActive: (id: BackendId) => void;
@@ -39,6 +45,8 @@ export function StorageSection({
   storage,
   devMode,
   demoData,
+  backup,
+  onImported,
 }: {
   saveState: SaveState;
   effectiveBackend: BackendId;
@@ -48,6 +56,9 @@ export function StorageSection({
   storage: StorageActions;
   devMode: boolean;
   demoData: boolean;
+  backup: BackupActions;
+  /** An applied import, so the dialog can re-seat the draft it holds. */
+  onImported: (result: ImportResult) => void;
 }) {
   const t = useT();
 
@@ -109,39 +120,53 @@ export function StorageSection({
   };
 
   return (
-    <Section title={t("storage.heading")}>
-      <div>
-        <div className="text-muted pb-1 text-xs">{t("storage.hint")}</div>
-        <div className="text-muted text-xs">{saveLine}</div>
-      </div>
-      <div>
-        {backendRow("browser", t("storage.browser"), t("storage.browserHint"), {
-          available: true,
-          connected: true,
-        })}
-        {backendRow("folder", t("storage.folder"), t("storage.folderHint"), {
-          available: isFolderAvailable(),
-          connected: storage.folderConnected,
-          onConnect: storage.connectFolder,
-          connectLabel: t("storage.folderConnect"),
-        })}
-        {backendRow("dropbox", t("storage.dropbox"), t("storage.dropboxHint"), {
-          available: isDropboxAvailable(),
-          connected: isDropboxConnected(),
-          onConnect: storage.connectDropbox,
-          detail: dropboxLocation(calendarSlug),
-        })}
-        {backendRow("gdrive", t("storage.gdrive"), t("storage.gdriveHint"), {
-          available: isGdriveAvailable(),
-          connected: isGdriveConnected(),
-          onConnect: storage.connectGdrive,
-        })}
-        {devMode &&
-          backendRow("demo", t("storage.demo"), t("storage.demoHint"), {
-            available: true,
-            connected: demoData,
+    <>
+      <Section title={t("storage.heading")}>
+        <div>
+          <div className="text-muted pb-1 text-xs">{t("storage.hint")}</div>
+          <div className="text-muted text-xs">{saveLine}</div>
+        </div>
+        <div>
+          {backendRow(
+            "browser",
+            t("storage.browser"),
+            t("storage.browserHint"),
+            { available: true, connected: true },
+          )}
+          {backendRow("folder", t("storage.folder"), t("storage.folderHint"), {
+            available: isFolderAvailable(),
+            connected: storage.folderConnected,
+            onConnect: storage.connectFolder,
+            connectLabel: t("storage.folderConnect"),
           })}
-      </div>
-    </Section>
+          {backendRow(
+            "dropbox",
+            t("storage.dropbox"),
+            t("storage.dropboxHint"),
+            {
+              available: isDropboxAvailable(),
+              connected: isDropboxConnected(),
+              onConnect: storage.connectDropbox,
+              detail: dropboxLocation(calendarSlug),
+            },
+          )}
+          {backendRow("gdrive", t("storage.gdrive"), t("storage.gdriveHint"), {
+            available: isGdriveAvailable(),
+            connected: isGdriveConnected(),
+            onConnect: storage.connectGdrive,
+          })}
+          {devMode &&
+            backendRow("demo", t("storage.demo"), t("storage.demoHint"), {
+              available: true,
+              connected: demoData,
+            })}
+        </div>
+      </Section>
+      <BackupSection
+        backup={backup}
+        demoData={demoData}
+        onImported={onImported}
+      />
+    </>
   );
 }

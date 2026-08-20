@@ -52,6 +52,7 @@ import { EvesSection } from "./EvesSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
 import { StorageSection, type StorageActions } from "./StorageSection.tsx";
+import type { BackupActions, ImportResult } from "../useBackup.ts";
 import { ViewStyleSection } from "./ViewStyleSection.tsx";
 import { TabSidebar, SettingsHeader, type TabDef } from "./tabs.tsx";
 
@@ -104,6 +105,8 @@ type Props = {
   /** The active calendar's slug, for the Storage tab's file locations. */
   calendarSlug: string;
   storage: StorageActions;
+  /** Import / export, for the Storage tab's backup pair. */
+  backup: BackupActions;
   updateChecking: boolean;
   updateAvailable: boolean;
   onCheckUpdate: () => Promise<PwaUpdateCheckResult>;
@@ -124,6 +127,7 @@ export function SettingsModal({
   effectiveBackend,
   calendarSlug,
   storage,
+  backup,
   updateChecking,
   updateAvailable,
   onCheckUpdate,
@@ -214,6 +218,17 @@ export function SettingsModal({
     onOpenPlanner();
   }, [handleSave, onOpenPlanner]);
 
+  // An import that adopted the file's settings has already written them. The
+  // draft this dialog is holding predates them, so re-seat it on what was
+  // imported — otherwise the next Save would quietly put the old look back,
+  // and the preview behind the dialog would keep showing it in the meantime.
+  const handleImported = useCallback((result: ImportResult) => {
+    setDraft((prev) => ({
+      look: result.look ?? prev.look,
+      appearance: result.appearance ?? prev.appearance,
+    }));
+  }, []);
+
   // Reset only the look the dialog owns — the device-local switches and the
   // storage connections are left alone, and nothing is written until Save.
   const handleReset = useCallback(
@@ -302,6 +317,8 @@ export function SettingsModal({
                 storage={storage}
                 devMode={settings.devMode}
                 demoData={settings.demoData}
+                backup={backup}
+                onImported={handleImported}
               />
             )}
             {activeTab === "developer" && (
