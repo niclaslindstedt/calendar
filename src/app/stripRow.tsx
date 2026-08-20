@@ -60,6 +60,9 @@ export type StripDay = {
   /** The heading band's colour, which the week number is printed in — `null`
    *  for the page's own ink. */
   ink: string | null;
+  /** Whether the lane prints the day's ordinal in its year (1–366). Both
+   *  strip views read the one setting — it is the same gloss on the same
+   *  row. */
   showDayOfYear?: boolean;
   onOpenNames: (name: string) => void;
   onOpenHolidays: () => void;

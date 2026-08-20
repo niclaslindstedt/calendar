@@ -111,6 +111,18 @@ describe("reading the setting back", () => {
     }
   });
 
+  it("covers the date rather than the day, once it is turned on", () => {
+    // The narrower of the two marks is the default: a crossed-off date says
+    // where in the month you are without a stroke over what you wrote. It is
+    // also the first of the two buttons, so the order and the default agree.
+    expect(DEFAULT_PAST_MARK.scope).toBe("date");
+    expect(PAST_MARK_SCOPES[0]).toBe("date");
+    expect(PAST_MARK_SCOPES[1]).toBe("cell");
+    expect(
+      pastMarkSlot({ style: "cross", scope: "date" }, "2026-08-17", TODAY),
+    ).toBe("date");
+  });
+
   it("ships off, and travels in the previewed look", () => {
     expect(DEFAULT_SETTINGS.pastMark).toBe("none");
     expect(pastMarkOf(DEFAULT_LOOK)).toEqual(DEFAULT_PAST_MARK);

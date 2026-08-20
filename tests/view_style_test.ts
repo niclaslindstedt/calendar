@@ -55,14 +55,14 @@ describe("the scopes", () => {
     }
   });
 
-  it("keeps the printed defaults each view already had", () => {
-    // The date in the display serif everywhere; the week number in the strip's
-    // almanac italic but plain in the month grid's gutter, which is what the
-    // two looked like before the face was settable.
-    expect(DEFAULT_CAL_STYLES.month.day.font).toBe("print");
-    expect(DEFAULT_CAL_STYLES.strip.day.font).toBe("print");
-    expect(DEFAULT_CAL_STYLES.strip.week.font).toBe("print");
-    expect(DEFAULT_CAL_STYLES.month.week.font).toBe("mono");
+  it("sets every piece of both views in the almanac's own face", () => {
+    // A wall calendar is printed in one family; the picker is for the reader
+    // who wants a piece in something else.
+    for (const scope of STYLE_SCOPES) {
+      for (const piece of STYLED_PIECES) {
+        expect(DEFAULT_CAL_STYLES[scope][piece].font).toBe("print");
+      }
+    }
   });
 });
 
@@ -111,7 +111,7 @@ describe("the published variables", () => {
   });
 
   it("lists the faces in use so they can be fetched", () => {
-    expect(facesOf(DEFAULT_CAL_STYLES).sort()).toEqual(["mono", "print"]);
+    expect(facesOf(DEFAULT_CAL_STYLES).sort()).toEqual(["print"]);
     expect(
       facesOf(
         setPieceStyle(DEFAULT_CAL_STYLES, "strip", "entry", {
@@ -185,15 +185,15 @@ describe("carrying an older settings blob forward", () => {
   });
 
   it("leaves the week number on each scope's own default — it had no face", () => {
+    // The old blob carried a size for it and no face at all, so the face is
+    // whatever the scope ships today and only the size is carried across.
     const styles = migrateStyles({ sizeWeek: TEXT_STEP_SCALE.small });
-    expect(styles.month.week).toEqual({
-      font: "mono",
-      size: TEXT_STEP_SCALE.small,
-    });
-    expect(styles.strip.week).toEqual({
-      font: "print",
-      size: TEXT_STEP_SCALE.small,
-    });
+    for (const scope of STYLE_SCOPES) {
+      expect(styles[scope].week).toEqual({
+        font: DEFAULT_CAL_STYLES[scope].week.font,
+        size: TEXT_STEP_SCALE.small,
+      });
+    }
   });
 
   it("prefers the per-view answer once there is one", () => {

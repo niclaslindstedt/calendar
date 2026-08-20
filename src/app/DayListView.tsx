@@ -2,7 +2,8 @@
 // The day list — the month as a vertical scroll, one row per day, laid out
 // like the printed column calendar it is drawn from and sharing its anatomy
 // with the week planner (`stripRow.tsx`): the date at the head of the row with
-// the weekday beside it and the day's names under that, the note filling the
+// the weekday beside it and the day's names under that, the day's ordinal in
+// the year small in the margin behind them, the note filling the
 // middle, and the almanac's marginalia in a rail on the right — the week
 // number where a week opens, the holiday's name along the bottom. A doubled
 // rule crosses the list wherever the week changes, which is the one thing this
@@ -53,6 +54,10 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Whether each row prints the day's ordinal in the year (1–366) — the same
+   *  setting the week planner reads, because it is the same gloss printed in
+   *  the same lane. */
+  showDayOfYear: boolean;
   /** Which margin each piece of a row is printed in — shared with the week
    *  planner, which prints the same row (Settings → Calendar → View). */
   layout: StripLayout;
@@ -94,6 +99,7 @@ export const DayListView = memo(function DayListView({
   pack,
   showWeekNumbers,
   showNameDays,
+  showDayOfYear,
   layout,
   rowMode,
   weekFormat,
@@ -128,7 +134,10 @@ export const DayListView = memo(function DayListView({
     }),
     [count, month, pack, showNameDays, showWeekNumbers, year],
   );
-  const lane = marginReserved(layout, "lane", has);
+  // The year-day number stays in the lane whatever the arrangement (it is a
+  // gloss on the date, not a piece of the almanac), so it can be the only
+  // reason the lane is drawn at all — the same rule the week planner follows.
+  const lane = marginReserved(layout, "lane", has) || showDayOfYear;
   const rail = marginReserved(layout, "rail", has);
 
   return (
@@ -186,6 +195,7 @@ export const DayListView = memo(function DayListView({
               pack={pack}
               showWeekNumbers={showWeekNumbers}
               showNameDays={showNameDays}
+              showDayOfYear={showDayOfYear}
               weekFormat={weekFormat}
               layout={layout}
               lane={lane}
@@ -231,6 +241,7 @@ const DayRow = memo(function DayRow({
   pack,
   showWeekNumbers,
   showNameDays,
+  showDayOfYear,
   weekFormat,
   layout,
   lane,
@@ -255,6 +266,7 @@ const DayRow = memo(function DayRow({
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  showDayOfYear: boolean;
   weekFormat: WeekFormat;
   layout: StripLayout;
   /** Whether the month reserved each margin (decided once, by the list). */
@@ -299,6 +311,7 @@ const DayRow = memo(function DayRow({
     markDate: marked === "date" ? pastMark.style : "none",
     dateBase: LIST_DATE_BASE,
     ink: headerInk,
+    showDayOfYear,
     onOpenNames,
     onOpenHolidays: () => onOpenHolidays(year),
   };

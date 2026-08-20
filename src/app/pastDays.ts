@@ -20,17 +20,24 @@ export const PAST_MARK_STYLES = ["none", "cross", "slash"] as const;
 
 export type PastMarkStyle = (typeof PAST_MARK_STYLES)[number];
 
-/** How much of the day the stroke covers: the whole cell (a month cell, a
- *  week-planner row, a day-list row) or the date alone, which leaves the
- *  day's captions and anything you wrote there unobstructed. */
-export const PAST_MARK_SCOPES = ["cell", "date"] as const;
+/** How much of the day the stroke covers: the date alone, which leaves the
+ *  day's captions and anything you wrote there unobstructed, or the whole
+ *  cell (a month cell, a week-planner row, a day-list row).
+ *
+ *  In that order, because it is the order the buttons are printed in and the
+ *  narrower mark is the default — the wider one is the deliberate step out to
+ *  a stroke across everything you wrote. */
+export const PAST_MARK_SCOPES = ["date", "cell"] as const;
 
 export type PastMarkScope = (typeof PAST_MARK_SCOPES)[number];
 
 /** The setting as the views read it. */
 export type PastMark = { style: PastMarkStyle; scope: PastMarkScope };
 
-export const DEFAULT_PAST_MARK: PastMark = { style: "none", scope: "cell" };
+/** Off, and — once it is turned on — over the number alone: crossing a day
+ *  off is about seeing where in the month you are, which the date says by
+ *  itself, so the mark starts where it obscures the least. */
+export const DEFAULT_PAST_MARK: PastMark = { style: "none", scope: "date" };
 
 /** The stored style, snapped back onto the known set — a hand-edited
  *  document (or one written by an older build) can carry anything, and an

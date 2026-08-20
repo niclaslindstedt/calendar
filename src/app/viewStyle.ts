@@ -121,29 +121,30 @@ export type ViewStyle = Record<ScaledPiece, PieceStyle> & {
 /** Both views' type — what the look carries. */
 export type CalStyles = Record<StyleScope, ViewStyle>;
 
-/** The printed-almanac defaults, and what every view looked like before the
- *  faces and sizes became per-view settings: the date in the display serif,
- *  the captions and your own text in the UI font, and every piece at the size
- *  it was measured at.
+/** The printed-almanac defaults: every piece of every view set in the display
+ *  serif — the face the app calls **Almanac** — at the size it was measured
+ *  at. A wall calendar is printed in one family and this is what it looks
+ *  like off the shelf; the picker is there for the reader who wants a caption
+ *  (or their own writing) in something else.
  *
- *  The one difference between the two scopes is the week number. The strip
- *  prints it in the margin the way an almanac does — display serif, italic —
- *  while the month grid's gutter is a plain number beside the grid, so the
- *  two ship in the faces they already had. */
+ *  The month cell's captions are the one place a face has a width to answer
+ *  for, and the printed serif is the narrowest the app ships (`CAPTION_SCALE`
+ *  in `fonts.ts`: 38.3 px against the mono baseline's 49.5 px), so the
+ *  measured 7.5 px band holds the longest name with room to spare. */
 export const DEFAULT_CAL_STYLES: CalStyles = {
   month: {
     day: { font: "print", size: DEFAULT_TEXT_SCALE },
-    holidays: { font: "mono", size: DEFAULT_TEXT_SCALE },
-    nameDays: { font: "mono", size: DEFAULT_TEXT_SCALE },
-    week: { font: "mono", size: DEFAULT_TEXT_SCALE },
-    entry: { font: "mono", size: "dynamic" },
+    holidays: { font: "print", size: DEFAULT_TEXT_SCALE },
+    nameDays: { font: "print", size: DEFAULT_TEXT_SCALE },
+    week: { font: "print", size: DEFAULT_TEXT_SCALE },
+    entry: { font: "print", size: "dynamic" },
   },
   strip: {
     day: { font: "print", size: DEFAULT_TEXT_SCALE },
-    holidays: { font: "mono", size: DEFAULT_TEXT_SCALE },
-    nameDays: { font: "mono", size: DEFAULT_TEXT_SCALE },
+    holidays: { font: "print", size: DEFAULT_TEXT_SCALE },
+    nameDays: { font: "print", size: DEFAULT_TEXT_SCALE },
     week: { font: "print", size: DEFAULT_TEXT_SCALE },
-    entry: { font: "mono", size: "dynamic" },
+    entry: { font: "print", size: "dynamic" },
   },
 };
 

@@ -117,10 +117,10 @@ stock look without touching your storage connections or developer switches.
   planner's margin, and the colour the period heading is banded with. See
   [Holiday eves](#holiday-eves), [View](#view), [Passed days](#passed-days),
   [Week planner](#week-planner) and [Heading colour](#heading-colour).
-- **Appearance** — the theme, and only the theme: **Follow device** (the
-  default, which tracks your device's light / dark preference), **Light**,
-  **Dark**, or **Custom**, plus the palette variant within the light and dark
-  families.
+- **Appearance** — the theme, and only the theme: **Light** (the default — a
+  wall calendar is printed on paper), **Follow device** (tracks your device's
+  light / dark preference), **Dark**, or **Custom**, plus the palette variant
+  within the light and dark families.
 - **Storage** — where your calendar lives. See [storage.md](storage.md).
 - **Developer** — demo data, log capture, build info, the update check, and
   the device's own geometry (visible in developer mode). The **Device** block
@@ -223,10 +223,10 @@ calendar behind the dialog as you change them.
 A printed calendar doesn't set its whole page in one font, and neither does
 this one. The five faces are **Almanac** (system serifs, no download),
 **Mono**, **Sans**, **Serif** and **Dyslexic** (OpenDyslexic), and each option
-in the dropdown is set in the face it offers. The defaults are the printed
-look: the date in **Almanac**, the captions and your own text in **Mono**, and
-the week number in the almanac's italic in the strip views and plain in the
-month grid's gutter. Everything else — the month title, the weekday headers,
+in the dropdown is set in the face it offers. Every piece of every view starts
+in **Almanac**, the way a printed calendar sets its whole page in one family;
+the picker is there for the piece you want in something else — your own
+writing in **Mono**, say. Everything else — the month title, the weekday headers,
 the app's own buttons and dialogs — keeps the app font, so changing a face
 restyles the calendar rather than the program around it.
 
@@ -271,10 +271,10 @@ choices to make once it is on:
 
 - **Mark** — **Off**, **Cross ✕** (two strokes) or **Slash /** (one). The
   slash is the cross's own diagonal, drawn once.
-- **Covers** — **Whole day** draws the mark corner to corner across the day
-  (a month cell, a week-planner row, a day-list row), while **The date**
-  crosses only the day number and leaves the holiday, the name days and
-  anything you wrote untouched.
+- **Covers** — **The date** (the default) crosses only the day number and
+  leaves the holiday, the name days and anything you wrote untouched, while
+  **Whole day** draws the mark corner to corner across the day (a month cell,
+  a week-planner row, a day-list row).
 
 The mark applies in all three views, and **today is never marked**: the run
 of crosses stops at the day you are in, which is what makes it worth having.
@@ -288,15 +288,17 @@ is previewed on the calendar behind the dialog as you change it.
 
 - **Day of year** — off by default. On, each row prints the day's number in
   the year (1–366) in small grey type beside the weekday, the way a Swedish
-  column calendar does.
+  column calendar does. The day list prints it too — it is the same gloss on
+  the same row.
 - **Date size** — **Small**, **Medium**, **Large** or **Huge**. Medium is the
   measured default (the largest date that still leaves a portrait row its
   weekday and a line of names); **Huge** is twice that — a wall-planner date,
   for a week read from across the room. This is the week strip's own step
   ladder, and the view's own **Day number** size ([View](#view)) still applies
   on top of it.
-- **Week number** — how the margin phrases it: **Week 34**, **w 34** (the
-  printed almanac's abbreviation, and the default) or plain **34**. The
+- **Week number** — how the margin phrases it: **Week 34** (the default —
+  spelled out, which the rail has room for and which needs no explaining),
+  **w 34** (the printed almanac's abbreviation) or plain **34**. The
   buttons are labelled with what they print. The number appears on the day
   that opens the week, and only when week numbers are on
   (Settings → General → Week numbers). The day list prints its week numbers
@@ -310,8 +312,9 @@ is previewed on the calendar behind the dialog as you change it.
 
 **Settings → Calendar → Heading** bands the period heading — the month and
 year at the top of every view — in one of five print colours, the way a wall
-calendar prints its masthead. It is **off** by default, which leaves the
-heading plain.
+calendar prints its masthead. **Red** is the default, the masthead colour a
+printed calendar reaches for; the first swatch turns the band **off**, which
+leaves the heading plain.
 
 The colour is spent twice: the band itself, and the week numbers in the week
 planner's and the day list's margins, which are printed in the same ink. With

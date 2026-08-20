@@ -23,6 +23,7 @@ import {
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
   DEFAULT_THEME_APPEARANCE,
+  FAMILY_DEFAULT_THEME,
   useApplyTheme,
   type ThemeAppearance,
 } from "@niclaslindstedt/oss-framework/theme";
@@ -76,12 +77,13 @@ import {
 import { facesOf, styleVars, stylesSignature } from "./app/viewStyle.ts";
 import { status } from "./output.ts";
 
-// The default look follows the device: `"system"` tracks the OS light/dark
-// preference, so a phone in dark mode opens a dark calendar. Users pin a
-// concrete theme in Settings → Appearance, persisted per device.
+// The default look is the printed one: paper is light, so the calendar opens
+// light whatever the device is set to. "Follow device" is one tap away in
+// Settings → Appearance (with the dark palettes behind it), persisted per
+// device.
 const DEFAULT_APPEARANCE: ThemeAppearance = {
   ...DEFAULT_THEME_APPEARANCE,
-  theme: "system",
+  theme: FAMILY_DEFAULT_THEME.light,
 };
 
 /** What a parked pane's handlers are. Hoisted so the two neighbours the deck
@@ -399,6 +401,7 @@ export function App() {
           pack={pack}
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
+          showDayOfYear={live.weekDayOfYear}
           layout={stripLayout}
           rowMode={live.listRows}
           weekFormat={weekFormat}
