@@ -50,7 +50,11 @@ The switcher in the top bar toggles:
   changes, the one thing this view can show that a single-week strip cannot. In Settings → Calendar you can choose whether rows
   keep a fixed height or grow with their text (the week planner has the same
   choice, made separately). The month heading stays pinned to the top of the
-  list as you scroll, so which month you are reading is never off screen.
+  list as you scroll, so which month you are reading is never off screen. The
+  current month opens at the week you are in rather than at its 1st — a
+  ninety-row scroll can hide today three flicks below the fold, and the week
+  around a date is what makes it a place in the month rather than a number at
+  the top of the screen. Every other month opens at its top.
 
 **Swipe left or right** in any of the three views to turn the page — the
 neighbouring period follows your finger and settles into place. The month view
@@ -66,7 +70,8 @@ of its three buttons. Pressing the view you are already in (Month while in
 Month, Week while in Week) returns to today without changing view; pressing a
 different view switches to it and lands on today there too, so a view is always
 entered at the current day rather than at whatever period you had browsed away
-to. The arrows sit on the heading rather than in the top bar so the view
+to — in the day list, at the week you are in rather than at the month's 1st.
+The arrows sit on the heading rather than in the top bar so the view
 switcher has room on a portrait phone.
 
 ## Calendars

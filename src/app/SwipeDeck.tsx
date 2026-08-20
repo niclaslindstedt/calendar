@@ -76,6 +76,29 @@ function trackTransform(px: number): string {
  *  scroller: `<div {...DECK_SCROLLER} className="overflow-y-auto">`. */
 export const DECK_SCROLLER = { "data-deck-scroller": "" } as const;
 
+/** Marks the row a scroller should open on, when its top is somewhere other
+ *  than zero — the day list marks today's week, so the month you are living in
+ *  opens where you are in it rather than at the 1st. Spread onto the row
+ *  (`{...DECK_HOME}`), at most one per scroller, and only while the pane
+ *  actually has such a row: without it the scroller opens at the very top,
+ *  which is what every other period wants. */
+export const DECK_HOME = { "data-deck-home": "" } as const;
+
+/** Where a scroller's top is. Zero, unless the pane marked a row to open on —
+ *  and then that row's offset, less the scroller's own `scroll-padding-top`:
+ *  the space its pinned chrome needs kept clear is exactly the space the row
+ *  underneath it has to clear. Measured from the rects rather than read off
+ *  `offsetTop`, which is relative to whichever ancestor happens to be
+ *  positioned rather than to the scroller. */
+function homeOffset(scroller: Element): number {
+  const home = scroller.querySelector("[data-deck-home]");
+  if (!home) return 0;
+  const pad = parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0;
+  const above =
+    home.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+  return Math.max(0, above + scroller.scrollTop - pad);
+}
+
 /** Animated period stepping, handed to whatever chrome a pane draws so the
  *  heading arrows turn the page the same way a swipe does. */
 export type DeckNav = {
@@ -294,6 +317,11 @@ export function SwipeDeck({
   // before the browser paints. The one exception is the pane still holding the
   // period you just left: it is on screen, sliding out, and yanking it to the
   // top mid-animation is exactly the flash this is meant to prevent.
+  //
+  // "The top" is the pane's to define ({@link homeOffset}), and it has to be
+  // decided here rather than by the pane itself: this runs after the panes'
+  // own layout effects, so a scroll one of them set would be overwritten a
+  // moment later by the zero this used to write unconditionally.
   useLayoutEffect(() => {
     if (!scrolls) return;
     const el = host.current;
@@ -303,7 +331,7 @@ export function SwipeDeck({
     for (const pane of el.querySelectorAll<HTMLElement>("[data-deck-pane]")) {
       if (keep !== null && pane.dataset.deckPane === String(keep)) continue;
       for (const scroller of pane.querySelectorAll("[data-deck-scroller]")) {
-        scroller.scrollTop = 0;
+        scroller.scrollTop = homeOffset(scroller);
       }
     }
   }, [itemKey, scrolls]);
