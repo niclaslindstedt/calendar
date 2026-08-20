@@ -61,11 +61,13 @@ page. The holidays screen pages between years the same way, with
 its header staying put while only the year's list moves.
 
 The **‹ ›** arrows flanking the month heading do the same thing with the same
-animation. To jump back to the current day, **press the view you are already
-in** — Month while in Month, Week while in Week. Pressing a different view
-switches to it and keeps the period you were reading. The arrows sit on the
-heading rather than in the top bar so the view switcher has room on a portrait
-phone.
+animation. To jump back to the current day, **press the view switcher** — any
+of its three buttons. Pressing the view you are already in (Month while in
+Month, Week while in Week) returns to today without changing view; pressing a
+different view switches to it and lands on today there too, so a view is always
+entered at the current day rather than at whatever period you had browsed away
+to. The arrows sit on the heading rather than in the top bar so the view
+switcher has room on a portrait phone.
 
 ## Calendars
 
