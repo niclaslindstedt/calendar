@@ -18,7 +18,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
-import { CONTENT_BOTTOM_PAD } from "./layout.ts";
+import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { monthName, weekdayName, type LocalePack } from "./locale/index.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import { DECK_SCROLLER, SwipeDeck } from "./SwipeDeck.tsx";
@@ -198,13 +198,21 @@ function YearPanel({
     <div
       {...DECK_SCROLLER}
       className="mx-auto h-full w-full max-w-2xl overflow-y-auto overscroll-contain px-3 sm:px-6"
-      style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
     >
       {mode === "list" ? (
         <HolidayList year={year} pack={pack} />
       ) : (
         <PlannerList year={year} pack={pack} budget={vacationDays} />
       )}
+
+      {/* The gutter under the last row, on the day list's terms rather than
+          the laid-out views': this screen scrolls its last row into view too,
+          so it needs the taller gutter, as an in-flow spacer rather than
+          `padding-bottom` on the scroller — trailing padding is not counted
+          into the scrollable overflow by every engine, which is why the last
+          holiday and the last break arrived flush against the bottom edge
+          with the home indicator drawn across them. */}
+      <div aria-hidden="true" style={{ height: LIST_BOTTOM_PAD }} />
     </div>
   );
 }
