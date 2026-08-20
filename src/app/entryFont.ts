@@ -44,6 +44,22 @@ export const LIST_ROW_FONT: EntryFontOptions = {
   floorAt: 160,
 };
 
+/** The zoom's page (`DayZoom`), which is the one surface here that is not a
+ *  day of a calendar but a day on its own.
+ *
+ *  Roughly four times what a month cell can set the same note at, which is the
+ *  whole errand: the zoom is opened *because* the note was shrunk to fit a
+ *  47 px column, so it has to undo that rather than repeat it. The counts are
+ *  pushed out for the same reason — a note only starts shrinking here once it
+ *  is longer than anything a cell would have held whole, and the floor is
+ *  still comfortably above the cell's ceiling. */
+export const ZOOM_NOTE_FONT: EntryFontOptions = {
+  maxPx: 26,
+  minPx: 16,
+  startAt: 200,
+  floorAt: 900,
+};
+
 /** The font size (px) for an entry of `length` characters: `maxPx` up to
  *  `startAt`, then a linear ramp down to `minPx` at `floorAt`, clamped. */
 export function entryFontPx(length: number, opts: EntryFontOptions): number {

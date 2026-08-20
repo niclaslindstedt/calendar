@@ -19,13 +19,14 @@
 //     point: paging through the weeks, the heavy line is where one week ends
 //     and the next begins, the same mark the printed strip uses down a month.
 
-import { memo, useMemo } from "react";
+import { memo, useMemo, useRef } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   buildWeekStrip,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
+import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
 import {
@@ -105,6 +106,8 @@ type Props = {
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** A long press holds the day up close (`DayZoom`). */
+  onZoomDay: (day: DayKey) => void;
 };
 
 /** Memoized for the same reason as the other two views: the deck keeps three
@@ -132,7 +135,18 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   onNext,
   onOpenHolidays,
   onOpenNames,
+  onZoomDay,
 }: Props) {
+  // Press and hold to zoom (`DayZoom`). One hook for the seven rows rather
+  // than one per row, because the rows here are a `map` in this component
+  // rather than a component of their own — so the row records which day the
+  // finger went down on and the hook reads it when the press comes good. The
+  // other two views can call the hook inside their own memoized row.
+  const pressed = useRef<DayKey | null>(null);
+  const press = useLongPress(() => {
+    const day = pressed.current;
+    if (day && editingDay !== day) onZoomDay(day);
+  });
   const days = useMemo(
     () => buildWeekStrip(anchor, { weekStartsOn: pack.weekStartsOn, today }),
     [anchor, pack.weekStartsOn, today],
@@ -190,8 +204,6 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     <PeriodHeading
       title={mid ? monthName(pack, mid.month) : ""}
       meta={mid ? String(mid.year) : ""}
-      titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
-      metaClass="text-lg"
       accent={headerInk}
       bleed
       arrows={arrows}
@@ -246,6 +258,11 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         role="button"
         tabIndex={0}
         aria-label={cell.key}
+        {...press}
+        onPointerDown={(e) => {
+          pressed.current = cell.key;
+          press.onPointerDown(e);
+        }}
         onClick={() => onEditDay(cell.key)}
         onKeyDown={(e) => {
           if (e.key === "Enter" && editingDay !== cell.key) {
@@ -257,7 +274,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         // sizes each row by its own contents instead, with the fixed row's
         // height as the floor so an empty week still looks like a week.
         style={grows ? { minHeight: WEEK_ROW_MIN_HEIGHT } : undefined}
-        className={`cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+        className={`cal-day cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
           grows ? "" : "min-h-0 flex-1 overflow-hidden"
         } ${opens && !bandedTop ? "cal-strip-break" : ""} ${
           cell.isToday ? "bg-surface-2" : ""

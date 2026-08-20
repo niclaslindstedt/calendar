@@ -29,6 +29,7 @@ import {
 } from "@niclaslindstedt/oss-framework/theme";
 
 import { DayListView } from "./app/DayListView.tsx";
+import { DayZoom } from "./app/DayZoom.tsx";
 import { loadCalFonts } from "./app/fonts.ts";
 import { HolidaysView, type HolidayMode } from "./app/HolidaysView.tsx";
 import { MonthGridView } from "./app/MonthGridView.tsx";
@@ -79,7 +80,12 @@ import {
   weekFormatFor,
   weekRowsOf,
 } from "./app/useAppSettings.ts";
-import { facesOf, styleVars, stylesSignature } from "./app/viewStyle.ts";
+import {
+  SCOPE_OF_VIEW,
+  facesOf,
+  styleVars,
+  stylesSignature,
+} from "./app/viewStyle.ts";
 import { status } from "./output.ts";
 
 // The default look is the printed one: paper is light, so the calendar opens
@@ -209,6 +215,11 @@ export function App() {
   // The day being edited, if any (shared across views).
   const [editingDay, setEditingDay] = useState<DayKey | null>(null);
 
+  // The day being held up close, if any: what a long press on a day opens
+  // (`DayZoom`). One at a time, and never at the same time as the in-cell
+  // editor — the zoom carries an editor of its own.
+  const [zoomDay, setZoomDay] = useState<DayKey | null>(null);
+
   // The holidays screen, when open: the year it shows, and which of its two
   // modes. It is not one of the three top-bar views — you arrive by tapping a
   // holiday's name in a day cell, and any top-bar action leaves again.
@@ -315,7 +326,15 @@ export function App() {
   const openHolidays = useCallback((year: number) => {
     setEditingDay(null);
     setNameSeed(null);
+    setZoomDay(null);
     setHolidayYear(year);
+  }, []);
+
+  /** Hold a day up close. Stable, for the same reason: every day of every
+   *  period the deck holds carries a reference to it. */
+  const openZoom = useCallback((day: DayKey) => {
+    setEditingDay(null);
+    setZoomDay(day);
   }, []);
 
   /** Leave the name-day search. */
@@ -325,6 +344,7 @@ export function App() {
    *  for the same reason as {@link openHolidays}. */
   const openNames = useCallback((name: string) => {
     setEditingDay(null);
+    setZoomDay(null);
     setNameQuery("");
     setNameSeed(name);
   }, []);
@@ -428,6 +448,7 @@ export function App() {
     const onEditDay = interactive ? setEditingDay : NOOP;
     const onCommit = interactive ? store.setEntry : NOOP;
     const onOpenNames = interactive ? openNames : NOOP;
+    const onZoomDay = interactive ? openZoom : NOOP;
     if (settings.view === "list") {
       return (
         <DayListView
@@ -453,6 +474,7 @@ export function App() {
           onNext={nav.next}
           onOpenHolidays={openHolidays}
           onOpenNames={onOpenNames}
+          onZoomDay={onZoomDay}
         />
       );
     }
@@ -480,6 +502,7 @@ export function App() {
         onNext={nav.next}
         onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
+        onZoomDay={onZoomDay}
       />
     ) : (
       <MonthGridView
@@ -504,6 +527,7 @@ export function App() {
         onNext={nav.next}
         onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
+        onZoomDay={onZoomDay}
       />
     );
   };
@@ -583,6 +607,24 @@ export function App() {
           />
         )}
       </main>
+
+      {/* A day held up close — what a long press on any day opens. The note
+          it prints is the same note the calendar behind it shows, so an edit
+          made here lands in the cell as it is typed. */}
+      <DayZoom
+        day={zoomDay}
+        view={settings.view}
+        pack={pack}
+        showWeekNumbers={toggles.weekNumbers}
+        showNameDays={toggles.nameDays}
+        headerInk={headerInk}
+        textSize={styles[SCOPE_OF_VIEW[settings.view]].entry.size}
+        text={zoomDay ? (store.doc.entries[zoomDay] ?? "") : ""}
+        onCommit={store.setEntry}
+        onClose={() => setZoomDay(null)}
+        onOpenHolidays={openHolidays}
+        onOpenNames={openNames}
+      />
 
       {/* Tapping one of a day's names opens the almanac at that name; the
           answer is a date in the calendar behind, so this is a dialog rather

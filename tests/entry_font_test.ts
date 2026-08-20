@@ -6,6 +6,7 @@ import {
   LIST_ROW_FONT,
   MONTH_CELL_FONT,
   WEEK_ROW_FONT,
+  ZOOM_NOTE_FONT,
   entryFontPx,
   fixedEntryFontPx,
   resolveEntryFontPx,
@@ -130,6 +131,36 @@ describe("the fixed text-size steps", () => {
       expect(fixedEntryFontPx(size, WEEK_ROW_FONT)).toBeGreaterThan(
         fixedEntryFontPx(size, MONTH_CELL_FONT),
       );
+    }
+  });
+});
+
+describe("the zoom's page", () => {
+  // A long press opens the day up close precisely because the cell had to
+  // shrink the note to fit 47 px (`DayZoom`), so the band it is set in there
+  // has to undo that rather than repeat it.
+  it("sets a note about four times the size a month cell can", () => {
+    const ratio = ZOOM_NOTE_FONT.maxPx / MONTH_CELL_FONT.maxPx;
+    expect(ratio).toBeGreaterThan(1.8);
+    expect(ZOOM_NOTE_FONT.minPx).toBeGreaterThan(MONTH_CELL_FONT.maxPx);
+  });
+
+  it("holds that size past anything a cell would have held whole", () => {
+    // The cell is at its floor by 90 characters; the page has not started
+    // shrinking yet, which is the point of having opened it.
+    expect(ZOOM_NOTE_FONT.startAt).toBeGreaterThan(MONTH_CELL_FONT.floorAt);
+    expect(entryFontPx(MONTH_CELL_FONT.floorAt, ZOOM_NOTE_FONT)).toBe(
+      ZOOM_NOTE_FONT.maxPx,
+    );
+  });
+
+  it("keeps the reader's own steps inside that band", () => {
+    for (const size of FIXED) {
+      const px = fixedEntryFontPx(size, ZOOM_NOTE_FONT);
+      expect(px).toBeGreaterThanOrEqual(ZOOM_NOTE_FONT.minPx);
+      expect(px).toBeLessThanOrEqual(ZOOM_NOTE_FONT.maxPx);
+      // …and every one of them is still bigger than the cell's largest.
+      expect(px).toBeGreaterThan(fixedEntryFontPx(size, MONTH_CELL_FONT));
     }
   });
 });

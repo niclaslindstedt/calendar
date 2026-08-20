@@ -20,6 +20,8 @@ import {
   HEADING_CLEARANCE,
   HEADING_GAP,
   HEADING_HEIGHT,
+  HEADING_META,
+  HEADING_TITLE,
 } from "../src/app/PeriodHeading.tsx";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
 import { STRIP_ROW_EDGE } from "../src/app/stripRow.tsx";
@@ -248,6 +250,48 @@ describe("the room factor in the stylesheet", () => {
     for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
       expect(ruleBody(selector)).toMatch(/max-width:\s*\d+%/);
     }
+  });
+});
+
+describe("the period heading's type", () => {
+  // One masthead for the whole app. The month grid used to set its title
+  // larger and in caps while the two strip views set theirs smaller and in
+  // lower case, which read as three calendars rather than three views of one —
+  // so the views no longer carry typography of their own, and this is what
+  // says so.
+  const views = [
+    "MonthGridView.tsx",
+    "WeekPlannerView.tsx",
+    "DayListView.tsx",
+    "HolidaysView.tsx",
+  ];
+
+  it("is the heading's own, not each view's", () => {
+    for (const view of views) {
+      const source = readFileSync(
+        fileURLToPath(new URL(`../src/app/${view}`, import.meta.url)),
+        "utf8",
+      );
+      expect(source).not.toContain("titleClass");
+      expect(source).not.toContain("metaClass");
+    }
+  });
+
+  it("prints the month in the wall calendar's caps", () => {
+    expect(HEADING_TITLE).toContain("uppercase");
+    expect(HEADING_TITLE).toContain("cal-serif");
+  });
+
+  it("stays inside the line box the band's height is measured from", () => {
+    // `HEADING_HEIGHT` is the arrow button plus its padding, and the day list
+    // scrolls by that number. A title whose line box outgrew the 2.25 rem
+    // arrows would make the band taller than the constant says it is —
+    // `text-3xl` is exactly 2.25 rem, and the `text-4xl` the month view used
+    // to reach for at `sm` was 2.5 rem.
+    expect(HEADING_TITLE).toContain("sm:text-3xl");
+    expect(HEADING_TITLE).not.toContain("text-4xl");
+    // The year is the quieter half, so it never leads the line box either.
+    expect(HEADING_META).toContain("text-lg");
   });
 });
 

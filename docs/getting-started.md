@@ -25,6 +25,20 @@ line break costs a line of that room like any other typing, so a cell with no
 room left refuses it too.
 If you routinely need more room, use the week planner or the day list.
 
+### Hold a day up close
+
+**Press and hold a day** — in any of the three views — and it opens as a page
+of its own: the date and its weekday, the week number, the holiday and the
+day's names, and under them **the whole note**, set about four times the size
+a month cell could hold it at, wrapping properly and scrolling if it is long.
+It is the answer to a note the calendar had to end in an ellipsis. Tap the
+page to write on it, the way you tap a day; the ✕, Escape, or a tap outside
+closes it, and what you typed is already saved.
+
+The page has more room than the cell behind it, so this is the one place a note
+can outgrow its day. Nothing is lost when it does — the calendar prints what
+fits and ends in an ellipsis, and the rest is a long press away.
+
 ## The three views
 
 The switcher in the top bar toggles:
@@ -55,6 +69,9 @@ The switcher in the top bar toggles:
   ninety-row scroll can hide today three flicks below the fold, and the week
   around a date is what makes it a place in the month rather than a number at
   the top of the screen. Every other month opens at its top.
+
+All three views head the month the same way: the name in the wall calendar's
+caps with the year beside it, over the colour band if you have picked one.
 
 **Swipe left or right** in any of the three views to turn the page — the
 neighbouring period follows your finger and settles into place. The month view

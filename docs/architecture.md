@@ -44,6 +44,9 @@ src/
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── DayEntry.tsx      shared read/edit entry surface
+    ├── DayZoom.tsx       one day as a page of its own — what a long press on
+    │                     a day opens, where a note the cell had to clamp is
+    │                     read and written in full
     ├── TopBar.tsx        the only chrome — no sidebar
     ├── CalendarMenu.tsx  the top-left switcher (button + dropdown)
     ├── TopBarButton.tsx  the shared 36 px icon button

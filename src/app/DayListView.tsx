@@ -23,6 +23,7 @@ import { memo, useMemo, type CSSProperties } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
+import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
 import {
@@ -105,6 +106,9 @@ type Props = {
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** A long press holds the day up close (`DayZoom`) — a fixed row clips its
+   *  note exactly as a month cell does. */
+  onZoomDay: (day: DayKey) => void;
 };
 
 function daysInMonth(year: number, month: number): number {
@@ -137,6 +141,7 @@ export const DayListView = memo(function DayListView({
   onNext,
   onOpenHolidays,
   onOpenNames,
+  onZoomDay,
 }: Props) {
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
@@ -216,8 +221,6 @@ export const DayListView = memo(function DayListView({
       <PeriodHeading
         title={monthName(pack, month)}
         meta={String(year)}
-        titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
-        metaClass="text-lg"
         accent={headerInk}
         bleed
         arrows={arrows}
@@ -264,6 +267,7 @@ export const DayListView = memo(function DayListView({
               onCommit={onCommit}
               onOpenHolidays={onOpenHolidays}
               onOpenNames={onOpenNames}
+              onZoomDay={onZoomDay}
             />
           );
         })}
@@ -310,6 +314,7 @@ const DayRow = memo(function DayRow({
   onCommit,
   onOpenHolidays,
   onOpenNames,
+  onZoomDay,
 }: {
   dayKey: DayKey;
   /** The month's own year — what a tapped holiday opens the screen on. */
@@ -343,7 +348,11 @@ const DayRow = memo(function DayRow({
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: (year: number) => void;
   onOpenNames: (name: string) => void;
+  onZoomDay: (day: DayKey) => void;
 }) {
+  // Press and hold to zoom — see the month cell's copy of this; the rule is
+  // the row's rather than the cell's only because the surface is.
+  const press = useLongPress(() => onZoomDay(dayKey), { enabled: !editing });
   const weekday = new Date(`${dayKey}T12:00:00Z`).getUTCDay();
   const holiday = holidayFor(pack, year, month, day);
   const red = isRedDay(pack, year, month, day, weekday);
@@ -390,6 +399,7 @@ const DayRow = memo(function DayRow({
       tabIndex={0}
       aria-label={dayKey}
       {...(home ? DECK_HOME : {})}
+      {...press}
       onClick={() => onEditDay(dayKey)}
       onKeyDown={(e) => {
         if (e.key === "Enter" && !editing) {
@@ -416,7 +426,7 @@ const DayRow = memo(function DayRow({
       // are 14 px lines on the phone the row was measured on, and a screen
       // with more room prints them larger (`src/app/roomScale.ts`), so a row
       // held at the phone's height would clip the same second name again.
-      className={`cal-strip-row relative flex cursor-text items-stretch gap-2 border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+      className={`cal-day cal-strip-row relative flex cursor-text items-stretch gap-2 border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
         closes ? "" : "border-b"
       } ${
         fixed

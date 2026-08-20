@@ -52,6 +52,10 @@ export const sv: Catalog = {
     hint: "Enter ger ny rad · Esc stänger",
     editDay: "Redigera {date}",
   },
+  zoom: {
+    close: "Stäng dagen",
+    write: "Dagens anteckning i sin helhet",
+  },
   weekdays: {
     weekShort: "v.",
   },

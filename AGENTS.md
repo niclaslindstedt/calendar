@@ -238,7 +238,11 @@ The app owns the domain and the stores ("store stays in the app"):
   stores. See `docs/storage.md`.
 - `src/app/MonthGridView.tsx`, `WeekPlannerView.tsx`, `DayListView.tsx` — the
   three views; `DayEntry.tsx` is the shared click-to-type entry surface with
-  the auto-shrinking text. `entryFont.ts` owns the pre-layout sizing curve and
+  the auto-shrinking text. `DayZoom.tsx` is the same day as a **page** — what
+  a long press on any day opens (the framework's `useLongPress`), and the one
+  surface with no box to measure a note against: it is where a note the cell
+  had to clamp to an ellipsis is read and written in full, so it is also the
+  one place a note can outgrow its own cell. `entryFont.ts` owns the pre-layout sizing curve and
   the three fixed steps; `entryFit.ts` measures that guess against the box the
   view actually left (shrink to fit, clamp an overrun to an ellipsis, refuse
   the keystroke that would overflow a full day). A view says which it is with

@@ -169,8 +169,6 @@ function HolidaysChrome({
 
       <PeriodHeading
         title={String(year)}
-        titleClass="cal-serif text-2xl tracking-wide sm:text-3xl"
-        metaClass="text-lg"
         onPrevious={onPrevious}
         onNext={onNext}
       />
