@@ -52,8 +52,9 @@ The switcher in the top bar toggles:
   (along the bottom of the row); and the rest of the row is yours to write in.
   Those margins are only as tall as what they print, so a long note runs
   beside them and then takes the row's full width underneath — the way text
-  flows around a picture on a page. The day that opens a week draws a heavier rule above it, so paging
-  through the weeks you can see where one ends and the next begins. How big
+  flows around a picture on a page. The day that opens a week draws a heavier
+  rule above it, so paging through the weeks you can see where one ends and the
+  next begins. How big
   the date is set, how the week number is phrased, whether each day's number
   in the year is printed and whether rows may grow are all yours to choose —
   see [Week planner](#week-planner). (On a landscape phone, where seven rows
