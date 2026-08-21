@@ -37,7 +37,7 @@ import {
   weekdayOrder,
   type LocalePack,
 } from "./locale/index.ts";
-import { MonthCellFrame } from "./monthCell.tsx";
+import { MonthCellFrame, monthNoteFlows } from "./monthCell.tsx";
 import { MarkedDate, PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
@@ -418,6 +418,10 @@ const DayCell = memo(function DayCell({
               font={entryFont}
               size={textSize}
               bounded
+              // A note at the top of the cell shares the band the day number
+              // floats in, so its lines make room for the number and it has to
+              // be ended the way flowing text is (`monthCell.tsx`).
+              flow={monthNoteFlows(layout)}
               onCommit={(text) => onCommit(cell.key, text)}
               onClose={() => onEditDay(null)}
             />

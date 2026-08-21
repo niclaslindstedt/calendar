@@ -46,6 +46,9 @@ src/
     │                     week, in the month today is in (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
+    ├── monthCell.tsx     the month cell's arrangement: the corners its pieces
+    │                     are parked in, and the note flowing around the day
+    │                     number where the cell is wide enough for it
     ├── DayEntry.tsx      shared entry surface — one box, read or written, so
     │                     a note being typed has the shape it will be read in
     ├── stripRow.tsx      the week planner's and the day list's shared row: two

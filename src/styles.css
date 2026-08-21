@@ -244,6 +244,68 @@ body {
   );
 }
 
+/* The month cell's top captions, and the cap on how much of the cell they may
+   take: a holiday and three names must not crowd the note out. Measured
+   against a phone's 120 px cell, so it carries the room factor for the reason
+   the sizes above do — on a screen that prints the captions half again as
+   large it has to cap half again as much, or it clips the second name off
+   every day.
+
+   `overflow: clip` rather than `hidden`, and the difference is the whole
+   layout: `hidden` establishes a block formatting context, and such a box is
+   pushed clear of a float whole rather than wrapping its lines around it — the
+   captions would stand in a column beside the day number instead of flowing
+   under it. `clip` establishes none, so it caps and clips without taking the
+   flow away. */
+.cal-cell-caps {
+  max-height: calc(3.5rem * var(--cal-room, 1));
+  overflow: clip;
+}
+
+/* The note, where the cell lets it flow around the day number
+   (`monthCell.tsx`). The band it sits in bleeds into the cell's padding so the
+   number and the captions can be set hard against the edges; the note is the
+   one thing in there that still wants that padding, so it takes it back.
+
+   And it is not stretched to the band's height the way it is in a strip row
+   (`.cal-entry-editor`): here it starts below the captions, so a box as tall
+   as the whole band would measure itself against room that is not in front of
+   it and refuse the first keystroke on a day with a holiday in it. */
+.cal-cell-flow {
+  container-type: inline-size;
+}
+.cal-cell-flow > .cal-entry {
+  padding-inline: 0.25rem;
+  /* On a phone the cell is 47 px wide and the date takes 30 of them, so the
+     room beside it is three characters: too narrow to set a word in, and a
+     note that tried stranded "Kl" and "8" on lines of their own above the one
+     it meant to start on. So the note starts under the number here — the
+     arrangement the month grid has always drawn — and only *takes* the room
+     beside it where there is room to take. Measured: 6 rem is the cell at
+     which the date leaves half its width over, which is a readable few words
+     at the caption sizes this cell sets. A tablet's cell is 115 px and a desk
+     monitor's is 356; both flow. */
+  clear: both;
+  overflow-wrap: break-word;
+}
+.cal-cell-flow > .cal-entry-editor {
+  min-height: 0;
+}
+
+@container (min-width: 6rem) {
+  .cal-cell-flow > .cal-entry {
+    clear: none;
+    /* Wide enough to set a word beside the number, so the flowing rule applies
+       here as it does in a strip row: a word that does not fit the shortened
+       line moves down whole, and only a word that fits no line at all breaks
+       (`.cal-entry-flow` above). */
+    overflow-wrap: normal;
+  }
+  .cal-cell-flow > .cal-entry.cal-entry-break {
+    overflow-wrap: break-word;
+  }
+}
+
 /* The same setting, everywhere else a piece is drawn. A site's own size is
    the *base* — the week planner's day number is not the day list's — so it
    sets `--cal-base` (as a `[--cal-base:…]` utility, which keeps a responsive
@@ -666,6 +728,26 @@ body {
   line-height: 1.25;
 }
 
+/* A note that makes room for a margin beside it (a strip row's lane and rail,
+   a month cell's day number). Its lines are shortened by the float, and a
+   shortened line is exactly where breaking a word is wrong: the month cell's
+   first line beside a 47 px cell's date is three characters wide, and
+   "Middag" set as "Midd" / "ag" to fill it reads as a fault rather than as a
+   note. So a word that does not fit moves down whole — the rule the cell's
+   captions already follow — and the line box drops below the float when
+   nothing fits it at all.
+
+   The word that fits no line at all is the exception, and it is measured
+   rather than guessed (`entryOverflowsWidth`): a note holding one goes back
+   to breaking words for as long as it holds it, which is what keeps a long
+   word from hanging out of the cell. */
+.cal-entry-flow {
+  overflow-wrap: normal;
+}
+.cal-entry-flow.cal-entry-break {
+  overflow-wrap: break-word;
+}
+
 /* A note that has run out of room in a *cell*: clamped to the lines the cell
    has left over after the day number and the captions, ending in an ellipsis
    rather than sliding under them. The line count is measured (`entryFit.ts`)
@@ -709,6 +791,24 @@ body {
      `.cal-entry` sets the wrapping, this keeps a run of characters with no
      break opportunity from widening the row. */
   overflow-wrap: break-word;
+}
+
+/* Where the caret goes in an *empty* day.
+   An empty block has no line box, so the browser paints the caret at the box's
+   own content edge — and this box is the row's full width, whose left edge is
+   behind the date. Pressing an empty day put the caret over the number, and
+   the first character then jumped to where the text actually starts, beside
+   the margin. A line box would have made room for the float; there simply
+   wasn't one.
+   So the box is given one that costs nothing: an empty inline-block is an
+   atomic inline, so a line box exists from the moment the editor is mounted
+   and the caret sits where the first character will. It is generated content,
+   so it is not in the note's text (`innerText` skips it) and the reader cannot
+   put a caret in it or delete it. */
+.cal-entry-editor::before {
+  content: "";
+  display: inline-block;
+  width: 0;
 }
 
 /* The stroke over a day that has passed (Settings → Calendar → Passed days).

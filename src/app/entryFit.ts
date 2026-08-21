@@ -26,17 +26,42 @@ export const ENTRY_LINE_HEIGHT = 1.25;
  *  measurements. */
 const SHRINK_STEP = 0.5;
 
-/** The height (px) the note may occupy: the content box of the slot its view
- *  parked it in. Zero when there is nothing to measure against yet — an
- *  unmeasurable slot must never be read as "full". */
+/** The height (px) the note may occupy: what is left of its slot from where
+ *  the note starts. Zero when there is nothing to measure against yet — an
+ *  unmeasurable slot must never be read as "full".
+ *
+ *  "From where the note starts" is the whole slot in the two views that give
+ *  the note a box of its own — a strip row's writing surface begins at the top
+ *  of the row's body — and less than that in a month cell whose note flows in
+ *  the same band as the day number and the top captions: there the note begins
+ *  under the captions, and a measurement that ignored them would hand it room
+ *  that is above it rather than in front of it, and then refuse the first
+ *  keystroke on a day that has a holiday. */
 export function entrySlotHeight(el: HTMLElement): number {
   const slot = el.parentElement;
   if (!slot) return 0;
   const style = getComputedStyle(slot);
-  const padding =
-    (parseFloat(style.paddingTop) || 0) +
-    (parseFloat(style.paddingBottom) || 0);
-  return Math.max(0, slot.clientHeight - padding);
+  const padTop = parseFloat(style.paddingTop) || 0;
+  const padding = padTop + (parseFloat(style.paddingBottom) || 0);
+  const content = slot.clientHeight - padding;
+  const start =
+    el.getBoundingClientRect().top -
+    (slot.getBoundingClientRect().top + slot.clientTop + padTop);
+  return Math.max(0, content - Math.max(0, start));
+}
+
+/** Whether the text sticks out of its box sideways: a word longer than the
+ *  line it landed on.
+ *
+ *  Only a note that *flows* asks. Text making room for a float is set with
+ *  `overflow-wrap: normal`, so a word that does not fit the shortened line
+ *  moves down whole rather than being split to fill three characters beside a
+ *  day number — the rule the month cell's captions already follow. The price
+ *  of that rule is the word that fits no line at all, which would hang out of
+ *  the cell instead of wrapping; this is how it is caught, and the note goes
+ *  back to breaking words for as long as it holds one. */
+export function entryOverflowsWidth(el: HTMLElement): boolean {
+  return el.scrollWidth > el.clientWidth + 0.5;
 }
 
 /** How many lines of `px` text an `available`-tall slot holds. At least one:

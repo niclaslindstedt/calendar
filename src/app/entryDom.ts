@@ -49,6 +49,13 @@ function detectPlainTextEditing(): boolean {
  *  box is `white-space: pre-wrap` (`.cal-entry`), so nothing the reader typed
  *  is collapsed on the way out. */
 export function readNote(el: HTMLElement): string {
+  // A box the reader has emptied is empty, whatever the engine left in it:
+  // deleting the last character leaves a filler `<br>` behind in Chromium, and
+  // `innerText` reads that back as a newline — so a day cleared to nothing
+  // would have been saved as a blank line rather than as no note at all. No
+  // text node means no note; a note that really does end in a line break has
+  // one.
+  if (el.textContent === "") return "";
   return el.innerText;
 }
 

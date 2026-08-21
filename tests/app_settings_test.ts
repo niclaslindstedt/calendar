@@ -18,6 +18,7 @@ import {
   weekRowsOf,
 } from "../src/app/useAppSettings.ts";
 import { HEADER_COLOR_HEX } from "../src/app/headerColor.ts";
+import { monthNoteFlows } from "../src/app/monthCell.tsx";
 import { getLocale } from "../src/app/locale/index.ts";
 
 describe("the look draft", () => {
@@ -56,6 +57,22 @@ describe("the look draft", () => {
     }
     const moved = updateLook(DEFAULT_LOOK, "monthDayCorner", "top-left");
     expect(monthCellLayout(moved).day).toBe("top-left");
+  });
+
+  it("lets the note flow around the day number where it is set to the top", () => {
+    // The default arrangement, and the one where the note can start on the
+    // same line as the date rather than under it.
+    expect(monthNoteFlows(monthCellLayout(DEFAULT_LOOK))).toBe(true);
+  });
+
+  it("keeps the bands where the reader has pushed the note down the cell", () => {
+    // A note asked to sit in the middle or at the bottom wants the leftover
+    // room as a *box*, and a box cannot be an L: it goes back to the three
+    // bands the cell has always had.
+    for (const where of ["middle", "bottom"] as const) {
+      const look = updateLook(DEFAULT_LOOK, "monthNote", where);
+      expect(monthNoteFlows(monthCellLayout(look))).toBe(false);
+    }
   });
 
   it("names the look key that parks each piece", () => {
