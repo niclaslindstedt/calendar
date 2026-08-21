@@ -15,8 +15,8 @@
  *  rather than taken on the inset's word, and `env()` inside a CSS `max()`
  *  is precisely the expression the installed iOS app refused to compute,
  *  leaving `padding-bottom` at its initial 0 and the last row hanging off the
- *  bottom of the screen. Either way the last row keeps 16 px of visible
- *  breathing room. */
+ *  bottom of the screen. Either way the last row keeps a visible margin —
+ *  `GUTTER_MARGIN` — under whatever band the device reserved. */
 export const CONTENT_BOTTOM_PAD = "var(--cal-bottom-gutter)";
 
 /** The bottom gutter for a view whose last row has to be *scrolled* into view

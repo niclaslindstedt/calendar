@@ -76,7 +76,7 @@ body {
    than compared against it. Everything that needs a real comparison (the home
    indicator's 34 px floor, the display mode) is `safeArea.ts`'s job. */
 :root {
-  --cal-gutter-margin: 16px;
+  --cal-gutter-margin: 24px;
   --cal-bottom-gutter: calc(
     env(safe-area-inset-bottom, 0px) + var(--cal-gutter-margin)
   );
@@ -113,6 +113,47 @@ body {
     calc(var(--cal-header-pad) + env(safe-area-inset-top, 0px))
   );
   padding-bottom: var(--cal-header-pad);
+}
+
+/* …and what an *installed iOS app* falls back to, which is a different answer
+   from the two above. Both fallbacks so far are a browser tab's arithmetic —
+   the pad added on top of the inset over the buttons, the device's own word
+   for its bottom band under the last row — and on the installed app both come
+   out wrong:
+
+     - the status-bar inset is the whole band and already leaves room under
+       the notch, so adding the pad to it puts half again as much air over the
+       buttons as under them;
+     - `env(safe-area-inset-bottom)` has been seen reporting `0` there while
+       the home indicator was very much still on screen, which leaves the last
+       week row sitting under the swipe bar with the margin alone for a
+       gutter instead of the home indicator's band plus the margin.
+
+   `src/app/safeArea.ts` resolves both properly and publishes them on `<html>`
+   as inline lengths, which win over this block. This is what holds if that
+   never lands — a stale worker, an inset read before the app was laid out
+   into the full screen, anything — because the *fallback* an installed app
+   uses should be the installed app's answer, not a tab's. It says the same
+   thing in the one form iOS computes: plain values, and no `min()`, `max()`
+   or `clamp()` anywhere near an `env()`.
+
+   Scoped exactly like the `100vh` shell above: `-webkit-touch-callout` is the
+   iOS probe (no other engine supports it) and `display-mode: standalone` is
+   the installed app. A Safari tab keeps the tab's answers. */
+@supports (-webkit-touch-callout: none) {
+  @media (display-mode: standalone) {
+    :root {
+      /* The band *is* the lead — it already leaves room below the island. */
+      --cal-topbar-lead: env(safe-area-inset-top, 0px);
+      /* The band the home indicator occupies, taken as a constant rather than
+         from the inset that has twice denied it. `safeArea.ts` floors the
+         measured inset at this same number. */
+      --cal-home-indicator: 34px;
+      --cal-bottom-gutter: calc(
+        var(--cal-home-indicator) + var(--cal-gutter-margin)
+      );
+    }
+  }
 }
 
 body {

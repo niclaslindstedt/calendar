@@ -46,8 +46,15 @@ import { readInsets, type Insets } from "./viewportInfo.ts";
 export const HEADER_PAD = 12;
 
 /** The visible margin below a view's last row, on top of whatever band the
- *  device reserves for itself. */
-export const GUTTER_MARGIN = 16;
+ *  device reserves for itself.
+ *
+ *  It is 24 rather than the 16 it shipped with because the band it sits on is
+ *  the home indicator's, and the swipe bar is drawn *inside* that band with
+ *  its own air around it — so 16 px of clear space read as the last row's
+ *  descenders resting on the bar rather than as a margin under the calendar.
+ *  `src/styles.css` restates it as `--cal-gutter-margin`, and
+ *  `tests/layout_test.ts` holds the two to the same number. */
+export const GUTTER_MARGIN = 24;
 
 /** The smallest bottom gutter, for a device that reserves nothing. */
 export const GUTTER_FLOOR = 25;
@@ -55,7 +62,12 @@ export const GUTTER_FLOOR = 25;
 /** The band an iPhone's home indicator occupies. The bottom inset is supposed
  *  to describe it and has been seen reporting 0 in the installed app, so a
  *  device that is demonstrably a notched phone (see `SAFE_TOP_MIN`) gets this
- *  as the floor for the band rather than the inset's word for it. */
+ *  as the floor for the band rather than the inset's word for it.
+ *
+ *  `src/styles.css` carries the same number, as `--cal-home-indicator` in the
+ *  block an installed iOS app falls back to: a fallback that took the inset's
+ *  word for the band is how the last week row ended up under the swipe bar
+ *  even with this floor written here. */
 export const HOME_INDICATOR = 34;
 
 /** A top inset this large is a notch or a Dynamic Island — no browser chrome

@@ -165,12 +165,26 @@ export function App() {
       applySafeAreaVars();
       applyRoomVars();
     };
+    // Once more now the app is mounted. `main.tsx` measures before the first
+    // render so the calendar never paints the fallback geometry and then
+    // shifts, but a cold launch of the installed app measures into a document
+    // that iOS has not finished laying out into the full screen — and an inset
+    // read a beat too early is a wrong lead and a wrong gutter that nothing
+    // afterwards corrects, because a phone that never rotates never resizes.
+    measure();
+    // A PWA is resumed far more often than it is launched, and iOS re-lays the
+    // web view out when it comes back — the two events that say so, since
+    // neither one is a resize.
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
+    window.addEventListener("pageshow", measure);
+    document.addEventListener("visibilitychange", measure);
     media.addEventListener("change", measure);
     return () => {
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
+      window.removeEventListener("pageshow", measure);
+      document.removeEventListener("visibilitychange", measure);
       media.removeEventListener("change", measure);
     };
   }, []);
