@@ -237,6 +237,13 @@ defaults reproduce a printed wall calendar: the date large in the
 - **Your note** has no corner: it takes the room the corners leave, and its
   own control puts it at the top of that space, centred in it, or at the
   bottom.
+- A note at the top of the cell flows around the day number too, so it starts
+  beside the date rather than under it — on a screen whose cells have the room
+  for it. A phone's cell is 47 px wide and the date takes most of that, so
+  there the note keeps to its own lines; a tablet's and a desk monitor's cells
+  are wide enough that the first line runs beside the number. A word that does
+  not fit the space beside it moves down whole rather than being split into
+  it.
 
 In the **week planner and the day list** the four quadrants are the row's two
 margins, each with a top and a bottom end: a **lane** on the left, where a

@@ -46,6 +46,7 @@ import {
 import {
   clipEntryText,
   entryLineLimit,
+  entryOverflowsWidth,
   entrySlotHeight,
   fitEntryText,
 } from "./entryFit.ts";
@@ -75,7 +76,8 @@ type Props = {
   flow?: boolean;
   onCommit: (text: string) => void;
   onClose: () => void;
-  /** Extra classes on the read view (colour/weight comes from the cell). */
+  /** Extra classes on the note's box, read or written (colour and weight come
+   *  from the cell). */
   className?: string;
 };
 
@@ -106,6 +108,24 @@ export function DayEntryText({
   );
 }
 
+/** Fit the text to the slot, and — where it flows — let a word too long for
+ *  the line it landed on break after all. Two passes at most: breaking rewraps
+ *  the text, so the size has to be settled again once it does. */
+function breakingFit(
+  el: HTMLElement,
+  flow: boolean,
+  available: number,
+  startPx: number,
+  floorPx: number,
+) {
+  if (!flow) return fitEntryText(el, available, startPx, floorPx);
+  el.classList.remove("cal-entry-break");
+  const fit = fitEntryText(el, available, startPx, floorPx);
+  if (!entryOverflowsWidth(el)) return fit;
+  el.classList.add("cal-entry-break");
+  return fitEntryText(el, available, startPx, floorPx);
+}
+
 export function DayEntry({
   text,
   editing,
@@ -128,6 +148,11 @@ export function DayEntry({
   const pendingRef = useRef<{ value: string; caret: number } | null>(null);
 
   const shown = editing ? draft : text;
+  // What both boxes carry — they are one box in two states, so the class list
+  // is one too: the entry's typography, and, where the note flows around a
+  // margin, the rule that a word which does not fit the shortened line moves
+  // down whole instead of being split into it (`entryFit.ts`).
+  const face = `cal-entry cal-font-entry ${flow ? "cal-entry-flow" : ""}`;
   // The pre-layout guess React renders with. `dynamic` then measures from the
   // band's ceiling down to its floor, so the note ends up at the largest size
   // its cell can actually hold; a pinned step measures only to find out
@@ -167,7 +192,7 @@ export function DayEntry({
       whole();
       el.classList.remove("cal-entry-clamp");
       el.style.removeProperty("-webkit-line-clamp");
-      const fit = fitEntryText(el, available, startPx, floorPx);
+      const fit = breakingFit(el, flow, available, startPx, floorPx);
       if (fit.fits) return;
       if (flow) {
         // Lines that make room for the row's margins cannot be clamped by a
@@ -224,11 +249,16 @@ export function DayEntry({
 
     let fits = true;
     if (bounded) {
-      fits = fitEntryText(el, entrySlotHeight(el), startPx, floorPx).fits;
+      fits = breakingFit(el, flow, entrySlotHeight(el), startPx, floorPx).fits;
     } else {
       // An unbounded box grows with its text on its own — it is flowing
-      // content, not a rectangle to be resized.
+      // content, not a rectangle to be resized. It still has to rule on the
+      // word too long for its line, which has nothing to do with height.
       el.style.fontSize = `${guessPx}px`;
+      if (flow) {
+        el.classList.remove("cal-entry-break");
+        if (entryOverflowsWidth(el)) el.classList.add("cal-entry-break");
+      }
     }
 
     if (!pending) return;
@@ -253,14 +283,22 @@ export function DayEntry({
     seatCaret(el, caret);
     // As above: entering edit mode mounts the box without necessarily changing
     // the draft.
-  }, [draft, editing, bounded, guessPx, startPx, floorPx, onCommit]);
+  }, [draft, editing, bounded, flow, guessPx, startPx, floorPx, onCommit]);
 
   if (!editing) {
     if (text === "") return null;
     return (
       <div
+        // Keyed apart from the editor below, and this is load-bearing: both
+        // are a `<div>` in the same place, so without it the renderer keeps
+        // the element and only diffs its children — and the editor's content
+        // is not the renderer's to diff. It was written in by hand
+        // (`entryDom.ts`), so the renderer, seeing a box it believes to be
+        // empty, appended the text beside what was already there and the note
+        // read as itself twice over until the day was drawn again.
+        key="read"
         ref={readRef}
-        className={`cal-entry cal-font-entry ${className ?? ""}`}
+        className={`${face} ${className ?? ""}`}
         style={{ fontSize: `${guessPx}px` }}
       >
         {text}
@@ -275,6 +313,8 @@ export function DayEntry({
 
   return (
     <div
+      // See the read view's key above: the two must never be the same element.
+      key="edit"
       ref={editorRef}
       // Editable, and nothing more: `plaintext-only` where the engine has it,
       // so a paste arrives as text and the editing commands a rich-text box
@@ -285,7 +325,7 @@ export function DayEntry({
       role="textbox"
       aria-multiline="true"
       aria-label={t("editor.label")}
-      className="cal-entry-editor cal-entry cal-font-entry"
+      className={`cal-entry-editor ${face} ${className ?? ""}`}
       style={{ fontSize: `${guessPx}px` }}
       onInput={(e) => {
         const el = e.currentTarget;
