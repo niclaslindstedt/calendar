@@ -288,7 +288,11 @@ The app owns the domain and the stores ("store stays in the app"):
   in, and at which end: a `lane` on the left and a `rail` on the right, each
   with a top and a bottom, which is what lets the settings designer be the
   same tap-a-quadrant control the month cell uses. Shared by the two strip
-  views for the same reason their sizes are.
+  views for the same reason their sizes are. It also holds the _other_ answer
+  the margins give — `stripNoteFlow`, whether a note may run under them or
+  keeps the column between them — because that is one question about the same
+  row, and its default (**off**) is the strip both views printed before floats
+  were an option.
 - `src/app/monthImage.ts` — the month-image seam. Returns `null` today;
   yearly image packs (2026, 2027, …) plug in here later, with a `large`
   (month view) and `small` (day list) variant per month.
@@ -403,7 +407,11 @@ infer from the diff.
   one place that turns those choices into bands, and the settings sample
   renders through it too — so a change there has to be checked in both. The
   same holds for the strip row: `stripRow.tsx` turns `stripLayout.ts`'s four
-  slots into the two margins, and the sample renders through that.
+  slots into the two margins, and the sample renders through that. A strip row
+  has **two layouts**, not one — `stripNoteFlow` floats the margins or leaves
+  them as columns — so a change to either has to be looked at with the setting
+  both off and on, and neither arrangement's CSS may live on the shared margin
+  rules (`tests/layout_test.ts` fails a stray `float`).
 - **A caption beside a number is aligned on its capitals, not on its line
   box.** `align-items: start` aligns line boxes, and a line box carries the
   font's half-leading and its ascender-to-cap gap — both a share of the font

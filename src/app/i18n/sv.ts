@@ -123,6 +123,9 @@ export const sv: Catalog = {
     cellNoteTop: "Överst",
     cellNoteMiddle: "Mitten",
     cellNoteBottom: "Nederst",
+    stripNoteFlow: "Anteckningar får ta hela raden",
+    stripNoteFlowHint:
+      "Av håller sig anteckningen till spalten mellan de två marginalerna, så datumet och veckonumret får en rak egen kant hela vägen ned. På löper den bredvid dem och sedan över hela radens bredd under dem — ungefär hälften mer plats att skriva på.",
     fonts: "Typsnitt",
     fontYourText: "Din text",
     fontPrint: "Almanacka",

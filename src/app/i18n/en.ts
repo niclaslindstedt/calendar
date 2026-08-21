@@ -135,6 +135,9 @@ export const en = {
     cellNoteTop: "Top",
     cellNoteMiddle: "Middle",
     cellNoteBottom: "Bottom",
+    stripNoteFlow: "Notes may use the whole row",
+    stripNoteFlowHint:
+      "Off, a note keeps to the column between the two margins, so the date and the week number have a straight edge of their own all the way down. On, it runs beside them and then across the row's full width underneath — about half again the room to write in.",
     fonts: "Face",
     fontYourText: "Your text",
     fontPrint: "Almanac",

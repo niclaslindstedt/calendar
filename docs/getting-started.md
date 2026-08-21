@@ -49,10 +49,11 @@ The switcher in the top bar toggles:
   printed column calendar. The date is set big at the head of the row with the
   weekday beside it and the day's name days under that; the right-hand margin
   carries the week number (on the day the week opens) and the holiday's name
-  (along the bottom of the row); and the rest of the row is yours to write in.
-  Those margins are only as tall as what they print, so a long note runs
-  beside them and then takes the row's full width underneath — the way text
-  flows around a picture on a page. The day that opens a week draws a heavier
+  (along the bottom of the row); and the column between them is yours to write
+  in. If you would rather have the room than the straight edges, a setting
+  turns those margins into floats only as tall as what they print, so a long
+  note runs beside them and then takes the row's full width underneath — see
+  [Your note in a row](#your-note-in-a-row). The day that opens a week draws a heavier
   rule above it, so paging through the weeks you can see where one ends and the
   next begins. How big
   the date is set, how the week number is phrased, whether each day's number
@@ -62,8 +63,8 @@ The switcher in the top bar toggles:
 - **Day list** — the month as a vertical scroll, one row per day, laid out
   like the week planner: the date with the weekday beside it and the day's
   names under that, the week number and the holiday's name in the right-hand
-  margin, and your note flowing around both — beside them while they last and
-  across the row's full width underneath. A heavier rule — in the heading's
+  margin, and your note in the column between them (or, with the setting on,
+  flowing around them). A heavier rule — in the heading's
   colour, where the heading is banded — crosses the list wherever the week
   changes, the one thing this view can show that a single-week strip cannot. In Settings → Calendar you can choose whether rows
   keep a fixed height or grow with their text (the week planner has the same
@@ -250,15 +251,36 @@ margins, each with a top and a bottom end: a **lane** on the left, where a
 printed column calendar sets the date, and a **rail** on the right, where it
 sets its marginalia. The defaults are that arrangement — the date at the head
 of the lane with the day's names under it, the week number at the top of the
-rail and the holiday's name along the bottom of it — and the note always takes
-what they leave: the width between them, and the row's full width below them.
+rail and the holiday's name along the bottom of it — and the note takes what
+they leave.
 
 - The weekday's name travels with the day number wherever it goes.
 - A margin nothing is printed in is **not drawn at all**, so a plain English
   month — no name days, no week numbers, the odd holiday — gets its full row
   width for writing instead of a dead gutter down ninety rows.
-- Within a margin that _is_ drawn, a piece is printed only on the days that
-  have one: the six days a week that open no week get those lines back.
+
+##### Your note in a row
+
+A row is a line rather than a cell, so there is no "middle" to place a note in
+the way the month cell has one. The question a row asks instead is how much of
+itself the margins leave you, and **Notes may use the whole row** is the
+answer:
+
+- **Off** (the default). The margins are columns of the row's full height and
+  your note is the width between them. The date on the left and the week
+  number on the right each keep a straight edge of their own all the way down
+  the strip, and nothing you write is ever printed under them.
+- **On.** The margins become only as tall as what they actually print, so your
+  note runs beside them and then takes the row's full width underneath — the
+  way text flows around a picture on a page. That is about half again the room
+  to write in, and it is what you are typing into as well as what you read
+  back. The price is a writing area whose right edge steps in and out down the
+  strip, because a piece is then printed only on the days that have one: the
+  six days a week that open no week get those lines back.
+
+The setting is one setting for both strip views, like everything else in this
+section, and it lands in the sample and in the calendar behind the dialog as
+you tick it.
 
 Captions wrap rather than truncate, and a name is only broken across lines
 when it cannot fit one whole: "Elsa, Isabella" breaks after the comma, while

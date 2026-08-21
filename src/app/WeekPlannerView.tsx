@@ -13,8 +13,8 @@
 //     hundred-odd pixels tall, so a header line spent the row's width on
 //     printing that is read at a glance and left the writing area only what
 //     was under it. A lane on the left and a rail on the right leave the note
-//     the row's full height between them — and, being floats only as tall as
-//     what they print, the row's full width under them (`stripRow.tsx`).
+//     the row's full height between them — and, where the reader has asked for
+//     it, the row's full width under them too (`stripRow.tsx`).
 //   * The week's opening day carries a heavier rule above it. In a view that
 //     shows exactly one week that rule is the strip's top edge — which is the
 //     point: paging through the weeks, the heavy line is where one week ends
@@ -79,6 +79,10 @@ type Props = {
   /** Which margin each piece of a row is printed in — shared with the day
    *  list, which prints the same row (Settings → Calendar → View). */
   layout: StripLayout;
+  /** Whether a note flows under those margins once it has run past them, or
+   *  keeps the column between them — shared with the day list for the same
+   *  reason the arrangement is. */
+  noteFlow: boolean;
   /** Rows all one height, or grown by what is written in them. */
   rowMode: WeekRowMode;
   /** How the margin prints a week number: "Week 34", "w 34", or "34". */
@@ -120,6 +124,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   showNameDays,
   showDayOfYear,
   layout,
+  noteFlow,
   rowMode,
   weekFormat,
   dateSize,
@@ -280,7 +285,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
           cell.isToday ? "bg-surface-2" : ""
         }`}
       >
-        <StripBody day={stripDay} lane={lane} rail={rail}>
+        <StripBody day={stripDay} lane={lane} rail={rail} flow={noteFlow}>
           <DayEntry
             text={entry}
             editing={editingDay === cell.key}
@@ -290,10 +295,10 @@ export const WeekPlannerView = memo(function WeekPlannerView({
             // one has no bound to measure against and simply takes the height
             // the text needs.
             bounded={!grows}
-            // …and either way its lines run beside the row's margins and then
-            // under them, which is what a note that has outgrown the row has
-            // to be ended against.
-            flow
+            // …and where the margins are floats rather than columns, its lines
+            // run beside them and then under them, which is what a note that
+            // has outgrown the row has to be ended against.
+            flow={noteFlow}
             onCommit={(text) => onCommit(cell.key, text)}
             onClose={() => onEditDay(null)}
           />

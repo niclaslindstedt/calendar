@@ -52,7 +52,8 @@ src/
     ├── DayEntry.tsx      shared entry surface — one box, read or written, so
     │                     a note being typed has the shape it will be read in
     ├── stripRow.tsx      the week planner's and the day list's shared row: two
-    │                     floated margins with the note flowing around them
+    │                     margins with the note between them, or — the
+    │                     reader's call — flowing around them
     ├── DayZoom.tsx       one day as a page of its own — what a long press on
     │                     a day opens, where a note the cell had to clamp is
     │                     read and written in full
