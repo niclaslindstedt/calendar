@@ -16,11 +16,14 @@
 // fixed-height by default; the "dynamic" setting lets a row grow with its text
 // for people who write more.
 //
-// The current month opens at the week you are in rather than at its 1st
-// (`listHome.ts`) — the deck does the scrolling, because it owns every pane's
-// offset; this view only marks the row (`DECK_HOME`) and keeps the pinned
-// heading's height clear of it (`scroll-padding-top`), less the tuck that row
-// asks for on top of it ({@link LIST_HOME_TUCK}).
+// Where a month opens is `listHome.ts`'s: the week you are in on the month you
+// opened on, and the edge you came in through on a month you paged to — its
+// 1st going forward, its last day going back, so the page you turn to begins
+// where the page you left ended. The deck does the scrolling, because it owns
+// every pane's offset; this view only marks the row (`DECK_HOME`) — or the
+// whole scroller, where the answer is its far end (`DECK_END`) — and keeps the
+// pinned heading's height clear of it (`scroll-padding-top`), less the tuck
+// that row asks for on top of it ({@link LIST_HOME_TUCK}).
 
 import { memo, useMemo, type CSSProperties } from "react";
 
@@ -47,7 +50,7 @@ import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
-import { listHomeDay } from "./listHome.ts";
+import { listOpensAt, type ListArrival } from "./listHome.ts";
 import {
   HEADING_CLEARANCE,
   HEADING_GAP,
@@ -64,7 +67,7 @@ import {
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
-import { DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
+import { DECK_END, DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import type { CalendarDoc } from "./types.ts";
 import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
@@ -124,6 +127,11 @@ type Props = {
   /** Whether the heading prints its period arrows — off where the reader
    *  pages up and down (`navSwipe.ts`). */
   arrows: boolean;
+  /** How the reader got to this month, which is what decides where its scroll
+   *  opens (`listHome.ts`). The deck's three panes all take the same answer:
+   *  paging on again travels the same way, so the neighbour waiting in that
+   *  direction wants the same edge the month on screen was given. */
+  arrival: ListArrival;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -165,6 +173,7 @@ export const DayListView = memo(function DayListView({
   weekFormat,
   headerInk,
   arrows,
+  arrival,
   pastMark,
   textSize,
   doc,
@@ -209,12 +218,12 @@ export const DayListView = memo(function DayListView({
   const room = useRoom("strip");
   const entryFont = useMemo(() => scaleEntryFont(LIST_ROW_FONT, room), [room]);
 
-  // The row this month opens on — today's week, in the month today is in, and
-  // nothing at all in any other. The deck reads the mark off the DOM when it
-  // puts the pane back to its top, so this is a flag on one row rather than a
-  // scroll of our own: a scroll set from here would be overwritten by the
-  // deck's own a moment later (see `SwipeDeck`).
-  const home = listHomeDay(year, month, today, pack.weekStartsOn);
+  // Where this month opens. The deck reads the mark off the DOM when it puts
+  // the pane back, so this is a flag on one row — or, for the bottom, on the
+  // scroller itself — rather than a scroll of our own: a scroll set from here
+  // would be overwritten by the deck's own a moment later (see `SwipeDeck`).
+  const opensAt = listOpensAt(year, month, today, pack.weekStartsOn, arrival);
+  const home = opensAt === "end" ? null : opensAt;
 
   return (
     // The list is the one paged view that scrolls, so it owns the vertical
@@ -224,6 +233,10 @@ export const DayListView = memo(function DayListView({
     // leave you — not at whatever row you had scrolled to in the month before.
     <div
       {...DECK_SCROLLER}
+      // Paged into backwards: the month opens at its last day, which is the
+      // scroll's own far end (the trailing gutter included) rather than any
+      // row's offset — so the scroller says it about itself.
+      {...(opensAt === "end" ? DECK_END : {})}
       // The heading below is pinned to this scroller's top, so it covers
       // whatever the scroller is scrolled to. `scroll-padding-top` is the
       // browser's own word for that: it keeps the heading's height — and the

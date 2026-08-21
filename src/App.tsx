@@ -42,6 +42,7 @@ import { SwipeDeck, type DeckNav } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { useT } from "./app/i18n/index.ts";
+import type { ListArrival } from "./app/listHome.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
 import { showsArrows, swipeAxis } from "./app/navSwipe.ts";
 import { logStore } from "./app/log.ts";
@@ -201,6 +202,11 @@ export function App() {
   // it already held puts nothing back. So the press is counted, and the deck
   // is keyed on the count as well as the anchor.
   const [homings, setHomings] = useState(0);
+  // How the calendar got to the period it is on: opened on it, or paged
+  // forward or back to it. Only the day list reads it, and only to decide
+  // which end of a month it opens at (`listHome.ts`) — the other two views
+  // fill a screen, so there is no "where in the period" for them to land at.
+  const [arrival, setArrival] = useState<ListArrival>("open");
   const today = dayKeyOf(new Date());
   const parts = parseDayKey(anchor) ?? { year: 2026, month: 1, day: 1 };
 
@@ -297,6 +303,7 @@ export function App() {
 
   const step = (direction: 1 | -1) => {
     setEditingDay(null);
+    setArrival(direction === 1 ? "forward" : "back");
     setAnchor((prev) =>
       settings.view === "week"
         ? addDays(prev, 7 * direction)
@@ -306,6 +313,7 @@ export function App() {
 
   /** Put the calendar back at today: the current period, from its top. */
   const goToday = () => {
+    setArrival("open");
     setAnchor(dayKeyOf(new Date()));
     setHomings((n) => n + 1);
   };
@@ -346,6 +354,7 @@ export function App() {
    *  already showing is the only sensible one to land in. */
   const goToNameDay = (month: number, day: number) => {
     setNameSeed(null);
+    setArrival("open");
     setAnchor(toDayKey({ year: parts.year, month, day }));
   };
 
@@ -461,6 +470,7 @@ export function App() {
           weekFormat={weekFormat}
           headerInk={headerInk}
           arrows={arrows}
+          arrival={arrival}
           pastMark={pastMark}
           textSize={styles.strip.entry.size}
           doc={store.doc}

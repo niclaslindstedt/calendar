@@ -70,13 +70,17 @@ The switcher in the top bar toggles:
   keep a fixed height or grow with their text (the week planner has the same
   choice, made separately). The month heading stays pinned to the top of the
   list as you scroll, so which month you are reading is never off screen. The
-  current month opens at the week you are in rather than at its 1st — a
-  ninety-row scroll can hide today three flicks below the fold, and the week
+  month you _arrive_ on — opening the app, pressing the way home, switching
+  view — opens at the week you are in rather than at its 1st: a ninety-row
+  scroll can hide today three flicks below the fold, and the week
   around a date is what makes it a place in the month rather than a number at
   the top of the screen. The heavier rule that opens that week goes up behind
   the heading as it lands, so the month you are living in opens the way the
   week planner does — the first day flush under the band. Every other month
-  opens at its top.
+  you arrive on opens at its top. A month you **page** to opens at the end you
+  came in through instead — its 1st going forward, its last day going back,
+  today's month included — so turning the page carries on from where the page
+  you left ended rather than dropping you into the middle of the month.
 
 All three views head the month the same way: the name in the wall calendar's
 caps with the year beside it, over the colour band if you have picked one.
@@ -86,15 +90,17 @@ neighbouring period follows your finger and settles into place. The month view
 fills the screen exactly and never scrolls at all, and so does the week planner
 until you let its rows grow; the day list always scrolls up and down, and a
 clearly vertical drag in a view that scrolls scrolls it instead of turning the
-page. The holidays screen pages between years the same way, with
-its header staying put while only the year's list moves.
+page — and in the day list, going forward lands on the month's 1st while going
+back lands on its last day. The holidays screen pages between years the same
+way, with its header staying put while only the year's list moves.
 
 Prefer to page **up and down**? Settings → Calendar → Navigation → **Swipe:
 Up / down** turns the whole app on its side: swipe down for the period before
 and up for the one after, in every view. The day list keeps scrolling the days
 themselves and simply carries on into the month above or below when it reaches
-one end, so it reads as one continuous scroll rather than as a list you have to
-page out of. The heading drops its arrows there — two chevrons pointing
+one end — arriving at that month's own matching end, so the days run unbroken
+across the join and it reads as one continuous scroll rather than as a list you
+have to page out of. The heading drops its arrows there — two chevrons pointing
 sideways over a calendar that turns vertically point at nothing — so the
 gesture is the navigation. Left / right is the default. See
 [Navigation](#navigation).
@@ -105,7 +111,8 @@ of its three buttons. Pressing the view you are already in (Month while in
 Month, Week while in Week) returns to today without changing view; pressing a
 different view switches to it and lands on today there too, so a view is always
 entered at the current day rather than at whatever period you had browsed away
-to — in the day list, at the week you are in rather than at the month's 1st.
+to — in the day list, at the week you are in rather than at the month's 1st or
+at whichever end you had last paged in through.
 The arrows sit on the heading rather than in the top bar so the view
 switcher has room on a portrait phone.
 

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Which row the day list opens a month on. The rule is small; the arithmetic
-// under it is the kind that reads as right and is wrong at the edges — a week
-// that began in the month before, a country whose week opens on Sunday, a
-// month the reader is only paging past.
+// Where the day list opens a month. The rule is small; the arithmetic under it
+// is the kind that reads as right and is wrong at the edges — a week that began
+// in the month before, a country whose week opens on Sunday, a month the reader
+// is only paging past.
 import { describe, expect, it } from "vitest";
 
-import { listHomeDay } from "../src/app/listHome.ts";
+import { listHomeDay, listOpensAt } from "../src/app/listHome.ts";
 
 /** Both packs the app ships are Monday-first; Sunday-first is what a pack
  *  added later brings, and it moves the answer by a day. */
@@ -61,5 +61,41 @@ describe("the row the day list opens on", () => {
 
   it("refuses a day key it cannot read", () => {
     expect(listHomeDay(2026, 8, "not-a-day" as never, MONDAY)).toBeNull();
+  });
+});
+
+describe("which end a paged-to month opens at", () => {
+  // Thursday 20 August 2026, in a Monday-first pack: today's week opened on
+  // the 17th, which is what an *opened*-on August answers.
+  const TODAY = "2026-08-20";
+
+  it("opens on today's week when you land on the month rather than page to it", () => {
+    expect(listOpensAt(2026, 8, TODAY, MONDAY, "open")).toBe(17);
+    expect(listOpensAt(2026, 9, TODAY, MONDAY, "open")).toBeNull();
+  });
+
+  it("opens a month paged forward at its 1st", () => {
+    expect(listOpensAt(2026, 9, TODAY, MONDAY, "forward")).toBeNull();
+  });
+
+  it("opens a month paged back at its last day", () => {
+    expect(listOpensAt(2026, 7, TODAY, MONDAY, "back")).toBe("end");
+  });
+
+  it("gives today's month the same answer as any other", () => {
+    // The whole point of the rule: the page you turn to begins where the page
+    // you left ended, and a month that jumped to today's week because today
+    // happens to be in it is exactly the gap that reads as a lost place.
+    expect(listOpensAt(2026, 8, TODAY, MONDAY, "forward")).toBeNull();
+    expect(listOpensAt(2026, 8, TODAY, MONDAY, "back")).toBe("end");
+  });
+
+  it("does not consult the country's week when the direction already answers", () => {
+    // Sunday opens the week in one pack and closes it in the other, which
+    // moves the *opened*-on answer by six days and neither of the paged ones.
+    expect(listOpensAt(2026, 8, "2026-08-23", MONDAY, "open")).toBe(17);
+    expect(listOpensAt(2026, 8, "2026-08-23", SUNDAY, "open")).toBe(23);
+    expect(listOpensAt(2026, 8, "2026-08-23", MONDAY, "back")).toBe("end");
+    expect(listOpensAt(2026, 8, "2026-08-23", SUNDAY, "back")).toBe("end");
   });
 });

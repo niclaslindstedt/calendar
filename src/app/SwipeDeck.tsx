@@ -128,6 +128,18 @@ export const DECK_SCROLLER = { "data-deck-scroller": "" } as const;
  *  row's own to say, in `scroll-margin-top` — see {@link homeOffset}. */
 export const DECK_HOME = { "data-deck-home": "" } as const;
 
+/** Marks a scroller that opens at its **end** rather than at its top or at a
+ *  row of its own — what the day list asks for on a month it was paged
+ *  *backwards* into, so the page you turn back to begins where the page you
+ *  left ended (`listHome.ts`). Spread onto the same element as
+ *  {@link DECK_SCROLLER}, and it wins over any {@link DECK_HOME} row below it:
+ *  "the bottom" is not a row's offset but the scroll's own far end, gutter and
+ *  all, so a pane says it about itself.
+ *
+ *  Ignored — like every other answer here — on the pane holding the period you
+ *  just left, which keeps the offset it already had while it slides out. */
+export const DECK_END = { "data-deck-end": "" } as const;
+
 /** Where a scroller's top is. Zero, unless the pane marked a row to open on —
  *  and then that row's offset, less the scroller's own `scroll-padding-top`:
  *  the space its pinned chrome needs kept clear is exactly the space the row
@@ -144,6 +156,11 @@ export const DECK_HOME = { "data-deck-home": "" } as const;
  *  rather than passed in, so the pane keeps the whole decision and the deck
  *  keeps none of it. */
 function homeOffset(scroller: Element): number {
+  // As far down as the scroll goes: assigning past the maximum is the
+  // browser's own way of saying "the bottom", and it stays right as the
+  // pane's own height changes under it (a row grown by its text, the trailing
+  // gutter a device's safe area decides).
+  if (scroller.hasAttribute("data-deck-end")) return scroller.scrollHeight;
   const home = scroller.querySelector("[data-deck-home]");
   if (!home) return 0;
   const pad = parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0;
@@ -651,9 +668,18 @@ export function SwipeDeck({
                 // The neighbours carry focusable day cells and heading arrows;
                 // `inert` keeps them out of the tab order and the a11y tree
                 // while they are parked off screen.
-                {...(rel === 0
-                  ? {}
-                  : ({ inert: "" } as Record<string, string>))}
+                //
+                // `true`, not the empty string an attribute would take.
+                // `inert` is a real property on `HTMLElement`, so Preact sets
+                // it as one rather than writing the attribute — and `el.inert
+                // = ""` is `el.inert = false`, which parked two months' worth
+                // of day cells in the tab order and read them out to a screen
+                // reader as part of the page. Neither the property nor the
+                // attribute was there to see it: it is exactly the
+                // string-valued-attribute trap AGENTS.md names for SVG's
+                // `focusable`, one step further along (there the string is
+                // what is wanted; here it is what silently means `false`).
+                {...(rel === 0 ? {} : { inert: true })}
               >
                 {renderItem(rel, nav)}
               </div>
