@@ -23,7 +23,10 @@
 // every pane's offset; this view only marks the row (`DECK_HOME`) — or the
 // whole scroller, where the answer is its far end (`DECK_END`) — and keeps the
 // pinned heading's height clear of it (`scroll-padding-top`), less the tuck
-// that row asks for on top of it ({@link LIST_HOME_TUCK}).
+// that row asks for on top of it ({@link LIST_HOME_TUCK}). The heading leaves
+// no air under itself here (`flush`), so a month you page to opens with its
+// 1st seated on the band — the same place the month you are living in puts the
+// row it opens on.
 
 import { memo, useMemo, type CSSProperties } from "react";
 
@@ -51,11 +54,7 @@ import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { listOpensAt, type ListArrival } from "./listHome.ts";
-import {
-  HEADING_CLEARANCE,
-  HEADING_GAP,
-  PeriodHeading,
-} from "./PeriodHeading.tsx";
+import { HEADING_CLEARANCE, PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import {
   STRIP_ROW_EDGE,
@@ -82,22 +81,25 @@ export const LIST_DATE_BASE = "1.25rem";
  *  taken, as the `scroll-margin-top` that says so (negative: the row asks to
  *  land *past* where the padding would put it).
  *
- *  `scroll-padding-top` is the clearance a row scrolled into view mid-list
- *  wants — the band, and the air the band leaves under itself — and the row
+ *  `scroll-padding-top` is the band ({@link HEADING_CLEARANCE}), and the row
  *  the month *opens* on wants one thing more. It is the row that opens a week,
  *  so it draws the week rule ({@link WEEK_RULE_WIDTH}), and left at the plain
- *  clearance that rule came to rest a few pixels under the masthead: a red line
+ *  clearance that rule came to rest right under the masthead: a red line
  *  across the top of the screen with nothing above it, which reads as a stray
- *  mark rather than as "a week starts here". So the row gives up the air and
- *  the rule's own thickness with it, and the rule ends up behind the band —
- *  which is the same answer the week planner reaches by another route, where
- *  a banded heading makes the first row drop its rule outright
- *  (`opens && !bandedTop`): under a band, the band is the edge.
+ *  mark rather than as "a week starts here". So the row gives up the rule's
+ *  own thickness and the rule ends up behind the band — which is the same
+ *  answer the week planner reaches by another route, where a banded heading
+ *  makes the first row drop its rule outright (`opens && !bandedTop`): under a
+ *  band, the band is the edge.
  *
- *  Carries the room factor because {@link HEADING_GAP} does; it is resolved
- *  from the row's computed style by the deck (`SwipeDeck`), so this is a CSS
- *  length rather than a number. */
-export const LIST_HOME_TUCK = `calc(-1 * (${HEADING_GAP} + ${WEEK_RULE_WIDTH}))`;
+ *  It used to give the air under the band up as well, because the heading
+ *  spent some — which is what made the row a month *opened* on seat against
+ *  the masthead while the 1st of a month you *paged* to floated 12 px below
+ *  it, one list with two different top margins. The heading is `flush` now, so
+ *  there is no air to give up and this is the rule alone: a fixed length with
+ *  no room factor, resolved from the row's computed style by the deck
+ *  (`SwipeDeck`), which is why it stays a CSS length rather than a number. */
+export const LIST_HOME_TUCK = `calc(-1 * ${WEEK_RULE_WIDTH})`;
 
 type Props = {
   year: number;
@@ -271,6 +273,20 @@ export const DayListView = memo(function DayListView({
         accent={headerInk}
         bleed
         arrows={arrows}
+        // Either way this heading ends in an edge — the band, or the hairline
+        // it carries in place of one — so the month's first day seats on it
+        // the way every other row seats on the rule above it, and the masthead
+        // leaves no air for that row to stand off. Unconditional, unlike the
+        // week planner's: an unbanded heading there draws no rule of its own,
+        // so its first row would have nothing to sit on.
+        //
+        // That air was the visible difference between a month you *opened* on
+        // and a month you *paged* to. The first tucks its home row up behind
+        // the band ({@link LIST_HOME_TUCK}); the second simply starts at the
+        // top of the scroll — so the same masthead had a day pressed against
+        // it in one and a day floating 12 px under it in the other, which is
+        // half a row of white where a week's first day is supposed to begin.
+        flush
         className={`bg-page-bg sticky top-0 z-10 ${
           headerInk ? "" : "border-b border-line"
         }`}

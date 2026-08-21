@@ -45,7 +45,9 @@ type Props = {
    *  air of its own ({@link HEADING_GAP}). Set by a view whose first row is
    *  spaced off a rule everywhere else — under a band, the band *is* that
    *  rule, and a gap on top of the row's own padding gives the first day of
-   *  the week more air than the six days under it. */
+   *  the week more air than the six days under it. Both strip views set it:
+   *  the day list unconditionally, because its heading carries the list's own
+   *  hairline where it is not banded (see `DayListView`). */
   flush?: boolean;
   onPrevious: () => void;
   onNext: () => void;
@@ -119,6 +121,9 @@ export const HEADING_HEIGHT = "4.25rem";
  *  either way, for the reason `layout.ts` gives for keeping the shared
  *  measurements in one place.
  *
+ *  So only the month grid actually spends it today — which is why it is no
+ *  longer part of {@link HEADING_CLEARANCE}.
+ *
  *  It carries the room factor (`roomScale.ts`) like every other measured
  *  length here: the rows below it are set larger on a bigger screen, and a
  *  gap left at the phone's 12 px between them would read as the same crowding
@@ -126,12 +131,18 @@ export const HEADING_HEIGHT = "4.25rem";
  *  class the view carries, which is above the heading in all three. */
 export const HEADING_GAP = "calc(0.75rem * var(--cal-room, 1))";
 
-/** How much the heading occupies at the top of a scroller that pins it — the
- *  band itself plus the air under it. The day list keeps this much of its
- *  scrollport clear (`scroll-padding-top`), so a row it scrolls to lands with
- *  the same gap below the band that an unscrolled one has, rather than flush
- *  against it. */
-export const HEADING_CLEARANCE = `calc(${HEADING_HEIGHT} + ${HEADING_GAP})`;
+/** How much the heading occupies at the top of a scroller that pins it. The
+ *  day list keeps this much of its scrollport clear (`scroll-padding-top`),
+ *  so a row it scrolls to lands where an unscrolled one sits rather than
+ *  under the masthead.
+ *
+ *  The band and nothing else, because the day list's heading is `flush`: its
+ *  first row seats on the band the way every other row seats on the hairline
+ *  above it, so there is no air under the masthead for a scrolled-to row to
+ *  match. It kept {@link HEADING_GAP} in here while there was — and the two
+ *  answers have to stay one number, or the month you page to opens a row's
+ *  worth of white lower than the month you are living in. */
+export const HEADING_CLEARANCE = HEADING_HEIGHT;
 
 /** On the page's own ground, and on a colour band. The banded pair are white
  *  at two strengths rather than the theme's muted/foreground tokens: the band

@@ -272,23 +272,43 @@ describe("the pinned heading's height", () => {
     expect(HEADING_GAP).toContain("var(--cal-room");
   });
 
-  it("clears the band and that gap at the top of the scrollport", () => {
-    // What the day list keeps clear is both, or a row it scrolls to lands
-    // flush against the band while an unscrolled one has air under it.
-    expect(HEADING_CLEARANCE).toContain(HEADING_HEIGHT);
-    expect(HEADING_CLEARANCE).toContain(HEADING_GAP);
+  it("clears the band at the top of the scrollport — and only the band", () => {
+    // What the day list keeps clear is the masthead itself. The gap used to
+    // be in here too, and had to be while the list's heading spent it; now
+    // that heading is `flush`, so a row scrolled into view mid-list seats on
+    // the band exactly as the month's own first row does. Keep the gap in the
+    // clearance without the heading spending it and every scrolled-to row
+    // lands a gap short of where an unscrolled one sits.
+    expect(HEADING_CLEARANCE).toBe(HEADING_HEIGHT);
+    expect(HEADING_CLEARANCE).not.toContain(HEADING_GAP);
+  });
+
+  it("is flush in the day list, so its first row seats on the band", () => {
+    // The month you *page* to opens at its 1st, with no home row to tuck up
+    // behind the masthead — so air under the band was the whole difference
+    // between that top margin and the one the month you are living in gets.
+    // Unconditional: banded, the band is the edge the row sits on; unbanded,
+    // the list's heading carries the rows' own hairline in its place.
+    const list = readFileSync(
+      new URL("../src/app/DayListView.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(list).toMatch(/^\s*flush$/m);
   });
 });
 
 describe("the row the day list opens on", () => {
   // The list opens on today's week, and that row opens a week, so it draws
   // the week rule. Left at the scroller's plain clearance the rule came to
-  // rest a few pixels below the masthead — a line across the top of the
-  // screen with nothing above it. The row asks for the difference itself, and
-  // the deck reads it back off the row's computed style.
-  it("gives up the air under the band and the rule's own thickness", () => {
-    expect(LIST_HOME_TUCK).toContain(HEADING_GAP);
+  // rest right below the masthead — a line across the top of the screen with
+  // nothing above it. The row asks for the difference itself, and the deck
+  // reads it back off the row's computed style.
+  it("gives up the rule's own thickness, and nothing else", () => {
     expect(LIST_HOME_TUCK).toContain(WEEK_RULE_WIDTH);
+    // Not the gap. It gave that up too while the heading spent it, and that
+    // is exactly what made the month you opened on sit tight against the band
+    // and the month you paged to sit a dozen pixels under it.
+    expect(LIST_HOME_TUCK).not.toContain(HEADING_GAP);
   });
 
   it("asks for it as a negative scroll margin — past the padding, not short of it", () => {
