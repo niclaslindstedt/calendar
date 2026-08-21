@@ -333,32 +333,83 @@ body {
   );
 }
 
-/* The strip row's flowing body: the two margins and the note, in one
-   formatting context.
-
-   `flow-root` rather than a plain block, because the margins inside it are
-   floats and a block does not grow to contain its floats — on a row that grows
-   with its text (the "dynamic" row setting) the lane would have hung out of
-   the bottom and printed over the day below it. Containing them here also
-   makes an empty day as tall as its own lane, which is what keeps a week of
-   blank rows looking like a week.
-
-   The note *inside* it still wraps around them: they share this context, so it
-   is the line boxes that make room for the margins and not the note's box.
-   That is the whole arrangement — see `stripRow.tsx`. */
-.cal-strip-flow {
-  display: flow-root;
+/* The strip row's body: the two margins and the note, in one formatting
+   context — laid out one of two ways, which is the reader's call (Settings →
+   Calendar → View; `stripLayout.ts` has the whole argument). Everything the
+   two share is here; each arrangement's own rules follow, and they are written
+   as children of their body so a margin can never be floated in a flex row or
+   flexed under a float. */
+.cal-strip-body {
+  min-width: 0;
 }
 
-/* The writing surface. A width, not a column: it is the full row, and what
-   the margins take out of it they take a line at a time.
+/* **Flowing** — the margins are floats and the note's lines make room for
+   them.
+
+   `flow-root` rather than a plain block, because a block does not grow to
+   contain its floats — on a row that grows with its text (the "dynamic" row
+   setting) the lane would have hung out of the bottom and printed over the day
+   below it. Containing them here also makes an empty day as tall as its own
+   lane, which is what keeps a week of blank rows looking like a week.
+
+   The note *inside* it still wraps around them: they share this context, so it
+   is the line boxes that make room for the margins and not the note's box. */
+.cal-strip-body-flow {
+  display: flow-root;
+}
+.cal-strip-body-flow > .cal-strip-lane {
+  /* The float is what puts the note *under* the lane once it has run past it
+     rather than beside it for the row's whole height. The margin is the gap
+     the column arrangement spends as a flex `gap`; it belongs to the float
+     here, because the float is what the text is keeping clear of. */
+  float: left;
+  margin-right: 0.5rem;
+}
+.cal-strip-body-flow > .cal-strip-rail {
+  /* Floated to the other side, for the reason the lane is. */
+  float: right;
+  margin-left: 0.5rem;
+}
+
+/* **Column** (the default) — the margins are columns of the row's height and
+   the note is the width between them, which is the strip both views printed
+   before floats were an option. Nothing here is a float, so a note is never
+   set under the date or the week number and the writing area keeps one
+   straight edge at each end all the way down the strip.
+
+   `align-items: stretch` (the default) is load-bearing rather than incidental:
+   the note is *measured* against its box (`entryFit.ts` reads the slot's
+   height off it), so a note that shrink-wrapped its own text would report the
+   height the text is already using and never shrink. */
+.cal-strip-body-column {
+  display: flex;
+}
+.cal-strip-body-column > .cal-strip-lane {
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+}
+.cal-strip-body-column > .cal-strip-rail {
+  /* Last in the row, though the markup puts it before the note: the note has
+     to follow the lane in source order for the *other* arrangement, where a
+     right float placed after a block simply drops below it. */
+  order: 1;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+.cal-strip-body-column > .cal-strip-note {
+  flex: 1 1 auto;
+}
+
+/* The writing surface. Flowing, a width rather than a column: it is the full
+   row, and what the margins take out of it they take a line at a time.
 
    `height: 100%` is what the note is *measured* against — `entryFit.ts` reads
    the slot's height off this box to decide how far to shrink the text and
    where to end it — so it has to be the room the body has rather than the room
-   the text is using. It must not gain an `overflow` or a `display` that makes
-   it a formatting context of its own: such a box is pushed clear of a float
-   whole, back into the third of the row this layout exists to give up. */
+   the text is using. Flowing, it must not gain an `overflow` or a `display`
+   that makes it a formatting context of its own: such a box is pushed clear of
+   a float whole, back into the third of the row that layout exists to give
+   up. */
 .cal-strip-note {
   height: 100%;
   min-width: 0;
@@ -397,13 +448,10 @@ body {
    length, not a bare `0` — is what keeps the multiplication valid when the
    number is off. */
 .cal-strip-lane {
-  /* Floated, which is what puts the note *under* the lane once it has run
-     past it rather than beside it for the row's whole height. The margin is
-     the gap the row used to spend as a flex `gap`; it belongs to the float
-     now, because the float is what the text is keeping clear of. */
-  float: left;
-  margin-right: 0.5rem;
-  /* The date's own column, which both the lane below and the box itself are
+  /* Whether it is floated or a flex item is the arrangement's answer, above —
+     everything from here down is the width, which is the same either way.
+
+     The date's own column, which both the lane below and the box itself are
      billed for (`.cal-strip-date`), so the two can't disagree: the size the
      view sets the date at, times the reader's day-number scale, times the
      room that face's widest two-digit day needs (`DATE_COLUMN_EM` in
@@ -540,9 +588,8 @@ body {
    names' scale). Left flat, a reader on the ladder's Large step got "Vecka 34"
    broken across two lines in a 96 px margin. */
 .cal-strip-rail {
-  /* Floated to the other side, for the reason the lane is (above). */
-  float: right;
-  margin-left: 0.5rem;
+  /* Floated or a flex item, as above — the width below is the same either
+     way. */
   width: calc(
     var(--cal-rail, 4rem) * var(--cal-room, 1) *
       max(var(--cal-size-week, 1), var(--cal-size-holiday, 1))
@@ -621,7 +668,7 @@ body {
      slot's height off it), and a box that shrink-wrapped its own text would
      report the height the text is already using and never shrink it. Centring
      is for the band beside it. */
-  .cal-week-row .cal-strip-flow {
+  .cal-week-row .cal-strip-body {
     align-self: stretch;
   }
   .cal-week-row .cal-strip-lane {

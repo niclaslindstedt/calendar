@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The strip row's two margins and the writing surface that flows around them,
-// shared by the week planner and the day list.
+// The strip row's two margins and the writing surface they leave, shared by
+// the week planner and the day list.
 //
 // Both views print the same day: the date set big at the head of a lane on the
 // left with the weekday beside it and the day's names under that, and the
@@ -9,21 +9,39 @@
 // the week planner gives a day a seventh of the screen and the day list gives
 // it a line of a month-long scroll. So the row itself stays each view's own
 // (its height, its borders, how it memoizes) and only the margins and the
-// surface between them live here, which is what keeps the two from drifting
-// apart a caption at a time.
+// writing surface live here, which is what keeps the two from drifting apart a
+// caption at a time.
 //
-// The margins are **floats**, which is the whole of how a printed calendar
-// sets a note beside its marginalia: the lane and the rail are only as tall as
-// what they print, so what you write runs beside them while they last and
-// takes the row's full width underneath — the same arrangement the month cell
-// gives its day number (`monthCell.tsx`). A margin that reserved its width for
-// the row's full height instead left the bottom two thirds of every row blank
-// while the note it belonged to was shrunk to fit a third of the width.
+// How much room the note gets out of that is the reader's, and it is the one
+// question with two whole layouts behind it (`stripNoteFlow`, Settings →
+// Calendar → View):
+//
+//   * **Column** (the default). The margins are columns of the row's full
+//     height and the note is the width between them — a strip whose two edges
+//     are the almanac's, straight down the page, and a note that never prints
+//     under the date or the week number. It is what both views drew before
+//     the other arrangement existed, and it is the default because a note
+//     that takes the whole row is a change to what a calendar looks like, not
+//     only to how much fits in it.
+//   * **Flowing.** The margins become **floats** — only as tall as what they
+//     print — so what you write runs beside them while they last and takes the
+//     row's full width underneath, the same arrangement the month cell gives
+//     its day number (`monthCell.tsx`). Half again the room, at the price of
+//     a right edge that moves down the strip.
+//
+// Two things follow the arrangement rather than being decided once. A *piece*
+// is printed per day only where the note flows (`piecesPrinted`): an absent
+// float costs nothing, so the six days a week that open no week get their
+// first lines back — but an absent *column* would move the note's edge on
+// every row, so a reserved margin in column mode is drawn whether or not this
+// day has anything to put in it. And the note's own wrapping differs, because
+// a line shortened by a float is not a line at all in a column (`DayEntry`'s
+// `flow`).
 //
 // Which margin each piece is printed in — and at which end of it — is the
-// reader's call (Settings → Calendar → View, `stripLayout.ts`). The defaults
-// are the arrangement above, so a calendar nobody has rearranged is the one
-// both views have always drawn.
+// reader's call too (`stripLayout.ts`). The defaults are the arrangement
+// above, so a calendar nobody has rearranged is the one both views have always
+// drawn.
 
 import type { CSSProperties, ReactNode } from "react";
 
@@ -59,8 +77,8 @@ import { dayOfYear, weekNumberLabel, type WeekFormat } from "./weekPlanner.ts";
  *  belong to the column, so the row goes back to the view's own padding. */
 export const STRIP_ROW_EDGE = "-mx-3 px-3 sm:mx-0 sm:px-2";
 
-/** The row itself: a column of the flowing body and, under it, whatever the
- *  rail's bottom end prints along the row's edge. Both views (and the settings
+/** The row itself: a column of the body and, under it, whatever the rail's
+ *  bottom end prints along the row's edge. Both views (and the settings
  *  sample) put this on their own row element, which is the one that carries
  *  the height, the rules and the gestures. */
 export const STRIP_ROW_FRAME = "flex flex-col";
@@ -100,26 +118,35 @@ export type StripDay = {
   onOpenHolidays: () => void;
 };
 
-/** A row's contents: the two margins, the note that flows around them, and the
- *  band along the bottom edge that the rail's lower end prints in.
+/** A row's contents: the two margins, the note between (or around) them, and
+ *  the band along the bottom edge that the rail's lower end prints in.
  *
  *  `lane` and `rail` are the period's answer to whether each margin is worth
  *  drawing at all (`marginReserved`) — decided once for a whole week or month,
  *  because a margin that came and went would move the note's edge on every
- *  row. Inside that, a *piece* is printed only on the days that have one: a
- *  week number is printed where a week opens, so the six days that open none
- *  get their first lines back rather than carrying an empty column. That is
- *  the difference floats make — an absent piece costs nothing, where an
- *  absent column used to cost the row its width. */
+ *  row.
+ *
+ *  `flow` is the arrangement (see the file header), and inside a reserved
+ *  margin it decides one more thing: whether the *pieces* are per day. Flowing,
+ *  the rail's top end is drawn only on the days that print something there — a
+ *  week number where a week opens — and the other six days get their first
+ *  lines back, because an absent float costs nothing. In a column it is drawn
+ *  whenever the margin is reserved, empty or not: a column that came and went
+ *  is exactly the moving edge `marginReserved` exists to prevent, one piece
+ *  further down. */
 export function StripBody({
   day,
   lane,
   rail,
+  flow,
   children,
 }: {
   day: StripDay;
   lane: boolean;
   rail: boolean;
+  /** Whether the note flows under the margins, or keeps the column between
+   *  them (`stripNoteFlow`). */
+  flow: boolean;
   children: ReactNode;
 }) {
   const head = rail ? printedIn(day, "rail-top") : [];
@@ -127,12 +154,20 @@ export function StripBody({
 
   return (
     <>
-      {/* The flowing body. `flow-root` so the margins are *inside* it — a block
-          that lets its floats hang out of the bottom would let the lane print
-          over the row below it on a row that grows with its text. */}
-      <div className="cal-strip-flow min-h-0 min-w-0 flex-1">
+      {/* The body. Flowing, it is a `flow-root` so the margins are *inside*
+          it — a block that lets its floats hang out of the bottom would let
+          the lane print over the row below it on a row that grows with its
+          text. In a column it is simply the flex row the two arrangements
+          replaced each other from. */}
+      <div
+        className={`cal-strip-body min-h-0 min-w-0 flex-1 ${
+          flow ? "cal-strip-body-flow" : "cal-strip-body-column"
+        }`}
+      >
         {lane && <StripLane day={day} />}
-        {head.length > 0 && <StripRail day={day} pieces={head} />}
+        {(flow ? head.length > 0 : rail) && (
+          <StripRail day={day} pieces={head} steady={!flow} />
+        )}
         <StripNote>{children}</StripNote>
       </div>
       {tail.length > 0 && <StripTail day={day} pieces={tail} />}
@@ -239,14 +274,25 @@ function StripLane({ day: d }: { day: StripDay }) {
 function StripRail({
   day: d,
   pieces,
+  steady,
 }: {
   day: StripDay;
   /** The pieces to print, already filtered to the ones this day has. */
   pieces: StripPiece[];
+  /** Whether the width is the *period's* question rather than this day's —
+   *  which it is wherever the rail is a column, because a column whose width
+   *  followed what one day happened to print would move the note's right edge
+   *  from row to row. Flowing, the rail is only as wide as what it holds, so
+   *  the day's own pieces answer. */
+  steady: boolean;
 }) {
-  const dateHere = pieces.includes("day");
+  const dateHere = steady
+    ? inMargin(d.layout, "rail", "day")
+    : pieces.includes("day");
   // A rail holding a caption needs more than the two digits of a week number.
-  const wide = pieces.includes("nameDays") || dateHere;
+  const wide = steady
+    ? inMargin(d.layout, "rail", "nameDays") || dateHere
+    : pieces.includes("nameDays") || dateHere;
 
   return (
     <div
@@ -277,12 +323,14 @@ function StripRail({
 /** The rail's bottom end, printed along the row's bottom edge — which is where
  *  a printed almanac sets a holiday's name.
  *
- *  A band rather than the foot of a column: the rail above is only as tall as
- *  the week number it holds, so there is no column left to push anything to
- *  the bottom of. It takes the row's width and stays right-aligned, so the
- *  holiday is in the corner it has always been printed in, and it is only
- *  drawn on the days that have something to print there — an ordinary day
- *  keeps the line for the note. */
+ *  A band rather than the foot of a column, in *both* arrangements: flowing,
+ *  the rail above is only as tall as the week number it holds, so there is no
+ *  column left to push anything to the bottom of — and having it be the same
+ *  band in a column keeps the two arrangements one layout with a float
+ *  switched on rather than two to maintain. It takes the row's width and stays
+ *  right-aligned, so the holiday is in the corner it has always been printed
+ *  in, and it is only drawn on the days that have something to print there —
+ *  an ordinary day keeps the line for the note. */
 function StripTail({
   day: d,
   pieces,
@@ -311,11 +359,12 @@ function StripTail({
  *  because what it is measured against (a band the view fixed, or a line that
  *  grows) is the difference between the two.
  *
- *  It is the row's full width, and the margins beside it are floats, so it is
- *  the *lines* that make room for them rather than the box. That is also why
- *  it must not become a formatting context of its own (no `overflow`, no
- *  flex): a box that did would be pushed clear of the floats whole, back to
- *  the third of the row this arrangement exists to give up. */
+ *  In a column it is the flex item between the two margins. Flowing, it is the
+ *  row's *full* width and the margins beside it are floats, so it is the
+ *  *lines* that make room for them rather than the box — which is why it must
+ *  not become a formatting context of its own there (no `overflow`, no flex):
+ *  a box that did would be pushed clear of the floats whole, back to the third
+ *  of the row that arrangement exists to give up. */
 function StripNote({ children }: { children: ReactNode }) {
   return <div className="cal-strip-note">{children}</div>;
 }

@@ -1,9 +1,8 @@
 ---
 type: Changed
-title: Notes use the whole row
+title: A note is laid out as you type it
 ---
 
-In the week planner and the day list, what you write now runs beside the date
-and the week number and then across the row's full width underneath them, so a
-long note has half again the room it had — and it is laid out that way while
-you are typing it, not only once you put the pen down.
+In the week planner and the day list, what you write is now laid out in the
+shape it will be read in while you are still typing it, rather than reflowing
+once you put the pen down.

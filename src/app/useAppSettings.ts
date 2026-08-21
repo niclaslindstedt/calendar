@@ -49,6 +49,7 @@ import {
 } from "./weekPlanner.ts";
 import {
   DEFAULT_STRIP_LAYOUT,
+  DEFAULT_STRIP_NOTE_FLOW,
   STRIP_PIECES,
   stripSlotOf,
   type StripLayout,
@@ -130,6 +131,11 @@ export type AppSettings = {
   stripHolidaySlot: StripSlot;
   /** Strip row: the slot the week number takes. */
   stripWeekSlot: StripSlot;
+  /** Strip row: whether the note flows under the two margins once it has run
+   *  past them, or keeps to the column between them
+   *  (`DEFAULT_STRIP_NOTE_FLOW`). Off by default — more room to write is not
+   *  everyone's calendar. */
+  stripNoteFlow: boolean;
   /** Month cell: the corner the day number takes. */
   monthDayCorner: CellCorner;
   /** Month cell: the corner the day's names take. */
@@ -197,6 +203,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   stripNameDaySlot: DEFAULT_STRIP_LAYOUT.nameDays,
   stripHolidaySlot: DEFAULT_STRIP_LAYOUT.holidays,
   stripWeekSlot: DEFAULT_STRIP_LAYOUT.week,
+  stripNoteFlow: DEFAULT_STRIP_NOTE_FLOW,
   // The printed wall-calendar arrangement, straight off a Swedish almanac:
   // the number large in the top-right corner, the day's writing space under
   // it, and the captions stacked in the bottom-right corner — the holiday
@@ -235,6 +242,7 @@ export const LOOK_KEYS = [
   "stripNameDaySlot",
   "stripHolidaySlot",
   "stripWeekSlot",
+  "stripNoteFlow",
   "monthDayCorner",
   "monthNameDayCorner",
   "monthHolidayCorner",
@@ -264,6 +272,7 @@ export function pickLook(settings: AppSettings): LookSettings {
     stripNameDaySlot: settings.stripNameDaySlot,
     stripHolidaySlot: settings.stripHolidaySlot,
     stripWeekSlot: settings.stripWeekSlot,
+    stripNoteFlow: settings.stripNoteFlow,
     monthDayCorner: settings.monthDayCorner,
     monthNameDayCorner: settings.monthNameDayCorner,
     monthHolidayCorner: settings.monthHolidayCorner,
@@ -377,6 +386,16 @@ export function stripLayoutOf(
     layout[piece] = stripSlotOf(look[STRIP_PIECE_KEY[piece]]);
   }
   return layout;
+}
+
+/** Whether a strip row's note flows under its margins, held to a boolean — a
+ *  hand-edited settings blob can carry anything, and the two arrangements are
+ *  a class on the row rather than a value, so an unrecognised one must land on
+ *  the quieter of the two rather than on neither. */
+export function stripNoteFlows(
+  look: Pick<AppSettings, "stripNoteFlow">,
+): boolean {
+  return look.stripNoteFlow === true;
 }
 
 export const DEFAULT_LOOK: LookSettings = pickLook(DEFAULT_SETTINGS);

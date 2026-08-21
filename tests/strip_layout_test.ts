@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The strip row's arrangement — the four slots the week planner and the day
-// list share, and the rule that decides whether a margin is drawn at all.
+// list share, the rule that decides whether a margin is drawn at all, and how
+// much of the row those margins leave the note.
 import { describe, expect, it } from "vitest";
 
 import {
   DEFAULT_STRIP_LAYOUT,
+  DEFAULT_STRIP_NOTE_FLOW,
   STRIP_PIECES,
   STRIP_SLOTS,
   inMargin,
@@ -21,6 +23,7 @@ import {
   LOOK_KEYS,
   STRIP_PIECE_KEY,
   stripLayoutOf,
+  stripNoteFlows,
   updateLook,
 } from "../src/app/useAppSettings.ts";
 
@@ -153,5 +156,36 @@ describe("the arrangement as a setting", () => {
     const moved = updateLook(DEFAULT_LOOK, "stripHolidaySlot", "lane-bottom");
     expect(stripLayoutOf(moved).holidays).toBe("lane-bottom");
     expect(stripLayoutOf(moved).day).toBe("lane-top");
+  });
+});
+
+describe("how much of the row the margins leave the note", () => {
+  it("ships the column, not the flow", () => {
+    // A note that runs under the date and the week number is more room to
+    // write in and a different calendar to look at, so it is opt-in: an
+    // install nobody has been into prints the strip both views always drew.
+    expect(DEFAULT_STRIP_NOTE_FLOW).toBe(false);
+    expect(DEFAULT_LOOK.stripNoteFlow).toBe(false);
+    expect(stripNoteFlows(DEFAULT_LOOK)).toBe(false);
+  });
+
+  it("previews the choice rather than saving it straight away", () => {
+    // The whole point of the setting is what the row *looks* like, so it is
+    // judged against the calendar behind the dialog like every other look key.
+    expect(LOOK_KEYS).toContain("stripNoteFlow");
+    expect(
+      stripNoteFlows(updateLook(DEFAULT_LOOK, "stripNoteFlow", true)),
+    ).toBe(true);
+  });
+
+  it("holds a hand-edited value to the quieter arrangement", () => {
+    // The two arrangements are a class on the row rather than a value, so
+    // anything that is not the flow has to land on the column rather than on
+    // neither.
+    for (const value of [undefined, null, 0, "yes", {}]) {
+      expect(
+        stripNoteFlows({ stripNoteFlow: value as unknown as boolean }),
+      ).toBe(false);
+    }
   });
 });

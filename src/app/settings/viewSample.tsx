@@ -3,7 +3,7 @@
 // by the code the view itself draws with.
 //
 // That is the whole point of it. The month cell comes out of `MonthCellFrame`
-// and the strip row out of `StripLane` / `StripRail`, under the scope class
+// and the strip row out of `StripBody`, under the scope class
 // the real view carries, so what the dialog shows is the layout rather than a
 // picture of one: move a piece here and the sample moves because the *cell*
 // moved. Sizes and faces come the same way — through the `.cal-font-*` /
@@ -39,6 +39,7 @@ import {
   monthCellLayout,
   pastMarkOf,
   stripLayoutOf,
+  stripNoteFlows,
   weekDateSizeFor,
   weekFormatFor,
   effectiveToggles,
@@ -199,6 +200,9 @@ export function StripSample({
         day={day}
         lane={marginReserved(layout, "lane", has) || Boolean(day.showDayOfYear)}
         rail={marginReserved(layout, "rail", has)}
+        // The sample is the row, so it is the row's arrangement too: turning
+        // the flow on beneath it moves the sample's own note under the date.
+        flow={stripNoteFlows(look)}
       >
         <DayEntryText
           text={t("settings.textSizeSampleNote")}

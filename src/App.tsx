@@ -74,6 +74,7 @@ import {
   monthCellLayout,
   pastMarkOf,
   stripLayoutOf,
+  stripNoteFlows,
   swipeDirectionFor,
   useAppSettings,
   weekDateSizeFor,
@@ -401,6 +402,10 @@ export function App() {
       live.stripWeekSlot,
     ],
   );
+  // Whether a note in one of those rows flows under the margins or keeps the
+  // column between them — off the live look, so the dialog previews the row
+  // the reader is choosing rather than the one they saved.
+  const noteFlow = stripNoteFlows(live);
   // Crossing off the days that have gone — off unless it has been turned on
   // (Settings → Calendar → Passed days). Resolved once here, from the live
   // look, so the dialog previews the stroke as it is chosen.
@@ -460,6 +465,7 @@ export function App() {
           showNameDays={toggles.nameDays}
           showDayOfYear={live.weekDayOfYear}
           layout={stripLayout}
+          noteFlow={noteFlow}
           rowMode={live.listRows}
           weekFormat={weekFormat}
           headerInk={headerInk}
@@ -487,6 +493,7 @@ export function App() {
         showNameDays={toggles.nameDays}
         showDayOfYear={live.weekDayOfYear}
         layout={stripLayout}
+        noteFlow={noteFlow}
         rowMode={weekRows}
         weekFormat={weekFormat}
         dateSize={weekDateSize}

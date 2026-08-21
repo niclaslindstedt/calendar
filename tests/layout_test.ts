@@ -52,6 +52,21 @@ function declaration(name: string): string {
   return matches[matches.length - 1];
 }
 
+/** Every body the stylesheet gives a selector, joined — a selector can be
+ *  declared more than once, and what matters is that one of them carries the
+ *  declaration, not which. */
+function ruleBodyOf(selector: string): string {
+  const bodies: string[] = [];
+  let at = rules.indexOf(`${selector} {`);
+  while (at >= 0) {
+    const open = rules.indexOf("{", at);
+    bodies.push(rules.slice(open + 1, rules.indexOf("}", open)));
+    at = rules.indexOf(`${selector} {`, open);
+  }
+  if (bodies.length === 0) throw new Error(`${selector} has no rule`);
+  return bodies.join("\n");
+}
+
 describe("the shared bottom gutter", () => {
   it("is a custom property the stylesheet defines", () => {
     expect(() => declaration(varName(CONTENT_BOTTOM_PAD))).not.toThrow();
@@ -250,6 +265,51 @@ describe("the room factor in the stylesheet", () => {
     for (const selector of [".cal-strip-lane", ".cal-strip-rail"]) {
       expect(ruleBody(selector)).toMatch(/max-width:\s*\d+%/);
     }
+  });
+});
+
+describe("the strip row's two arrangements", () => {
+  // The lane and the rail are one pair of margins laid out two ways
+  // (`stripNoteFlow`): floated, so a note runs under them, or flexed, so it
+  // keeps the column between them. Which one a row is in is a class on its
+  // body, and the danger is a rule that leaks — a float left on the shared
+  // margin rule would put the note under the date in *both*, which is the
+  // setting doing nothing.
+  const flowBody = ".cal-strip-body-flow";
+  const columnBody = ".cal-strip-body-column";
+
+  it("floats the margins only under the flowing body", () => {
+    for (const margin of [".cal-strip-lane", ".cal-strip-rail"]) {
+      expect(rules).toContain(`${flowBody} > ${margin} {`);
+    }
+    // …and nothing else in the stylesheet floats anything, so the column
+    // arrangement cannot inherit one by accident.
+    for (const [, selector] of rules.matchAll(
+      /([^{}]+)\{([^{}]*float:[^{}]*)\}/g,
+    )) {
+      expect(selector).toContain(flowBody);
+    }
+  });
+
+  it("keeps the note in a column of its own under the other", () => {
+    // A flex item rather than a box in a formatting context: this is the
+    // arrangement where the margins are columns and the note is what is
+    // between them.
+    expect(rules).toContain(`${columnBody} > .cal-strip-note {`);
+    expect(ruleBodyOf(`${columnBody} > .cal-strip-note`)).toContain("flex:");
+  });
+
+  it("puts the rail last in that row, though the markup puts it first", () => {
+    // Source order is the flowing arrangement's: a right float placed after
+    // the note would simply drop below it. So the column reorders instead.
+    expect(ruleBodyOf(`${columnBody} > .cal-strip-rail`)).toContain("order:");
+  });
+
+  it("measures the note against the body in both", () => {
+    // `entryFit.ts` reads the slot's height off the note's box, so a box that
+    // shrink-wrapped its text would report the height the text is already
+    // using and never shrink it.
+    expect(ruleBodyOf(".cal-strip-note")).toContain("height: 100%");
   });
 });
 

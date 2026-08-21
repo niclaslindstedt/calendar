@@ -20,9 +20,10 @@
 //
 //   1. the sample, which is also the designer: tap a quadrant of the day to
 //      choose what is printed there;
-//   2. where the note sits in what the corners leave (month only — a strip
-//      row's note takes the width between its margins, and there is no
-//      "middle" of a line);
+//   2. what the pieces leave the note — where it sits in the room a month
+//      cell's corners leave, and, in a strip row (which is a line and so has
+//      no "middle"), whether it may run under the margins as well as between
+//      them;
 //   3. one row per piece: the face on the left, the size on the right.
 //
 // Face and size are one row because they are one decision. Two sections asked
@@ -41,6 +42,7 @@ import {
   Section,
   SegmentedControl,
   SelectPicker,
+  ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 import { loadAllFontFamilies } from "@niclaslindstedt/oss-framework/theme";
 
@@ -64,6 +66,7 @@ import {
   STRIP_PIECE_KEY,
   monthCellLayout,
   stripLayoutOf,
+  stripNoteFlows,
   type CellCorner,
   type CellPiece,
   type LookSettings,
@@ -193,10 +196,13 @@ export function ViewStyleSection({
 
       <Designer look={look} onUpdate={onUpdate} view={view} />
 
-      {/* The month cell's note has no corner — it takes the room the corners
-          leave — so it keeps a control of its own. A strip row's note takes
-          the width between the two margins, which is not a choice. */}
-      {view === "month" && (
+      {/* Where the note goes, asked the way each view can answer it. A month
+          cell's note has no corner — it takes the room the corners leave — so
+          it is placed in that room. A strip row is a line, so there is no
+          "middle" to place it in and the question is the other one: how much
+          of the row the margins leave it. Both sit here, under the sample that
+          previews them. */}
+      {view === "month" ? (
         <Field label={t("settings.cellNote")}>
           <SegmentedControl<NotePlacement>
             value={look.monthNote}
@@ -209,6 +215,13 @@ export function ViewStyleSection({
             ]}
           />
         </Field>
+      ) : (
+        <ToggleRow
+          label={t("settings.stripNoteFlow")}
+          hint={t("settings.stripNoteFlowHint")}
+          checked={stripNoteFlows(look)}
+          onChange={(next) => onUpdate("stripNoteFlow", next)}
+        />
       )}
 
       {STYLED_PIECES.map((piece) => (

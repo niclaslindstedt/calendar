@@ -5,8 +5,9 @@
 // the weekday beside it and the day's names under that, the day's ordinal in
 // the year small in the margin behind them, the almanac's marginalia in a rail
 // on the right — the week number where a week opens, the holiday's name along
-// the bottom — and the note flowing around all of it, beside the margins while
-// they last and across the row's full width underneath. A heavier
+// the bottom — and the note in what they leave: the column between them, or
+// (Settings → Calendar → View) flowing around them and across the row's full
+// width underneath. A heavier
 // rule — in the heading's own colour, where the heading is banded — crosses the
 // list wherever the week changes, which is the one thing this view can show
 // that a single-week strip cannot.
@@ -81,6 +82,10 @@ type Props = {
   /** Which margin each piece of a row is printed in — shared with the week
    *  planner, which prints the same row (Settings → Calendar → View). */
   layout: StripLayout;
+  /** Whether a note flows under those margins once it has run past them, or
+   *  keeps the column between them — shared with the week planner for the same
+   *  reason the arrangement is. */
+  noteFlow: boolean;
   rowMode: ListRowMode;
   /** How the rail prints a week number: "Week 34", "w 34", or "34" — the same
    *  setting the week planner reads, because it is the same piece of almanac
@@ -127,6 +132,7 @@ export const DayListView = memo(function DayListView({
   showNameDays,
   showDayOfYear,
   layout,
+  noteFlow,
   rowMode,
   weekFormat,
   headerInk,
@@ -248,6 +254,7 @@ export const DayListView = memo(function DayListView({
               showDayOfYear={showDayOfYear}
               weekFormat={weekFormat}
               layout={layout}
+              noteFlow={noteFlow}
               lane={lane}
               rail={rail}
               headerInk={headerInk}
@@ -298,6 +305,7 @@ const DayRow = memo(function DayRow({
   showDayOfYear,
   weekFormat,
   layout,
+  noteFlow,
   lane,
   rail,
   headerInk,
@@ -327,6 +335,8 @@ const DayRow = memo(function DayRow({
   showDayOfYear: boolean;
   weekFormat: WeekFormat;
   layout: StripLayout;
+  /** Whether a note flows under the row's margins (`stripNoteFlow`). */
+  noteFlow: boolean;
   /** Whether the month reserved each margin (decided once, by the list). */
   lane: boolean;
   rail: boolean;
@@ -436,17 +446,18 @@ const DayRow = memo(function DayRow({
         dayKey === today ? "bg-surface-2" : ""
       }`}
     >
-      <StripBody day={stripDay} lane={lane} rail={rail}>
+      <StripBody day={stripDay} lane={lane} rail={rail} flow={noteFlow}>
         <DayEntry
           text={entry}
           editing={editing}
           font={entryFont}
           size={textSize}
           bounded={fixed}
-          // The row prints its margins beside the note, so the note's lines
-          // make room for them and then take the row's full width — which is
-          // also what a note too long for the row is measured against.
-          flow
+          // Where the row prints its margins beside the note rather than
+          // around it, the note's lines make room for them and then take the
+          // row's full width — which is also what a note too long for the row
+          // has to be ended against.
+          flow={noteFlow}
           onCommit={(text) => onCommit(dayKey, text)}
           onClose={() => onEditDay(null)}
         />
