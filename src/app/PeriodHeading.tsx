@@ -13,8 +13,8 @@
 // …and none at all where the reader pages up and down (Settings → Calendar →
 // Navigation): a chevron is a direction, and two pointing sideways over a
 // calendar that turns vertically are worse than no chevrons at all. The row
-// keeps its height regardless (`min-h-9`, the arrows' own), because the day
-// list pins this over its scroll and measures the clearance from it.
+// keeps its height regardless ({@link HEADING_HEIGHT}), because the day list
+// pins this over its scroll and measures the clearance from it.
 
 import {
   ChevronLeftIcon,
@@ -41,6 +41,12 @@ type Props = {
   /** Whether the two chevrons are printed. Off where a swipe pages up and
    *  down (`navSwipe.ts`); the row keeps its height either way. */
   arrows?: boolean;
+  /** Whether what follows brings its own leading, so the heading leaves no
+   *  air of its own ({@link HEADING_GAP}). Set by a view whose first row is
+   *  spaced off a rule everywhere else — under a band, the band *is* that
+   *  rule, and a gap on top of the row's own padding gives the first day of
+   *  the week more air than the six days under it. */
+  flush?: boolean;
   onPrevious: () => void;
   onNext: () => void;
 };
@@ -85,19 +91,33 @@ const ARROW_BASE =
  *  opens on has to clear exactly this much (`scroll-padding-top`). Derived
  *  from the two classes rather than measured off a screenshot, and
  *  `tests/layout_test.ts` reads those classes back out of this file so the
- *  three can never drift. */
+ *  three can never drift.
+ *
+ *  …and set back on the row as its `min-height`, because on the page where
+ *  the reader turns the calendar vertically there are no arrows and the band
+ *  is then only as tall as its title: 2rem of line box inside the same 2rem of
+ *  padding, which is 4rem rather than this. The row used to guard that with a
+ *  minimum of the arrow's own height — and it never once bound, because every
+ *  box in this app is `border-box`, so a 2.25rem minimum was compared against
+ *  the whole 4rem band rather than against the 2rem of content the arrows
+ *  would have filled. The quarter-rem it left the day list short is a
+ *  quarter-rem the home row's week rule spent below the masthead instead of
+ *  behind it. A minimum written in the same terms as the thing it has to
+ *  match cannot go wrong that way. */
 export const HEADING_HEIGHT = "4.25rem";
 
 /** The air the heading leaves under itself, before the first thing the view
  *  prints.
  *
  *  The band is a solid edge, so whatever follows it sits *on* that edge
- *  unless something holds it off — and the two strip views follow it with a
- *  row whose date starts at the very top of its box, so the first day of the
- *  week read as printed into the masthead rather than under it. The month
- *  grid gets away with less only because its weekday row brings its own
- *  leading; it is the same gap either way, for the reason `layout.ts` gives
- *  for keeping the shared measurements in one place.
+ *  unless something holds it off, and the month grid's weekday row is held
+ *  off by this. What follows it in a strip view is not: a row there already
+ *  carries the leading it is given under every *other* row's hairline
+ *  (`STRIP_ROW_PAD`), so the gap was air on top of air and the first day of
+ *  the week stood further off the masthead than the six days under it stood
+ *  off each other. A view says which it is with `flush`; it is the same gap
+ *  either way, for the reason `layout.ts` gives for keeping the shared
+ *  measurements in one place.
  *
  *  It carries the room factor (`roomScale.ts`) like every other measured
  *  length here: the rows below it are set larger on a bigger screen, and a
@@ -128,6 +148,7 @@ export function PeriodHeading({
   accent = null,
   bleed = false,
   arrows = true,
+  flush = false,
   onPrevious,
   onNext,
 }: Props) {
@@ -149,16 +170,19 @@ export function PeriodHeading({
   const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
   return (
     <div
-      className={`flex min-h-9 shrink-0 items-center gap-1 py-4 ${
+      className={`flex shrink-0 items-center gap-1 py-4 ${
         banded ? "text-white" : ""
       } ${bled ? "-mx-3 px-5 sm:mx-0 sm:px-2" : banded ? "px-2" : ""} ${className}`}
       // The background is inline so it wins over whatever the caller's
       // `className` carries — the day list pins its heading with an opaque
       // `bg-page-bg` so the rows pass under it, and the band has to be what
       // shows. The gap is inline because it is a `calc()` on the room factor
-      // rather than a spacing step.
+      // rather than a spacing step, and the minimum because it is the exported
+      // constant itself: the one number the day list scrolls by is the one
+      // number the band is held to ({@link HEADING_HEIGHT}).
       style={{
-        marginBottom: HEADING_GAP,
+        minHeight: HEADING_HEIGHT,
+        marginBottom: flush ? undefined : HEADING_GAP,
         ...(banded ? { background: accent } : {}),
       }}
     >

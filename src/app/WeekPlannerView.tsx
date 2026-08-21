@@ -213,6 +213,13 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       accent={headerInk}
       bleed
       arrows={arrows}
+      // A banded heading is the first row's rule, the same way it is the
+      // reason that row draws none of its own (`bandedTop` below): the row
+      // brings the leading every other row gets under a hairline, so air
+      // under the band on top of it is the first day of the week standing
+      // further off the masthead than the six days under it stand off each
+      // other. Nothing to sit on with the band off, so the gap stays.
+      flush={headerInk !== null}
       // Grown rows turn the one view that fits a week on a screen into a
       // scroller, so the heading pins itself the way the day list's does —
       // otherwise scrolling to Sunday loses which week you are in.

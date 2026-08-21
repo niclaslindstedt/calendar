@@ -249,6 +249,20 @@ describe("the pinned heading's height", () => {
     expect(HEADING_HEIGHT).toBe(`${scale("h") + 2 * scale("py")}rem`);
   });
 
+  it("is what the row is held to when the arrows are not drawn", () => {
+    // …and on the page where the reader turns the calendar vertically they
+    // are not drawn at all, which leaves the band as tall as its title: 2rem
+    // of line box in the same 2rem of padding. The row has to carry the
+    // arrows' height itself, as a minimum written in the same terms as the
+    // constant. A Tailwind `min-h-*` cannot do it: that is a *border-box*
+    // minimum, so the arrows' own 2.25rem was compared against the whole 4rem
+    // band and never once bound, and the quarter-rem it left the day list
+    // short is a quarter-rem the home row's week rule spent below the
+    // masthead instead of behind it.
+    expect(source).toContain("minHeight: HEADING_HEIGHT");
+    expect(source).not.toMatch(/\bmin-h-\d/);
+  });
+
   it("leaves air under the band, and grows it with the screen", () => {
     // The gap is a measured length like every other one here, so it carries
     // the room factor — a strip row on a desk monitor is set larger, and a
