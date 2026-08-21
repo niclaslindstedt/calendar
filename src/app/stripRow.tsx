@@ -83,6 +83,40 @@ export const STRIP_ROW_EDGE = "-mx-3 px-3 sm:mx-0 sm:px-2";
  *  the height, the rules and the gestures. */
 export const STRIP_ROW_FRAME = "flex flex-col";
 
+/** The air a row keeps at its two ends, shared for the same reason its edges
+ *  are: the day list and the week planner print the same row, and the sample
+ *  in Settings → Calendar → View prints it a third time.
+ *
+ *  Uneven, because the two ends are not the same distance. A row's rule is
+ *  drawn on *its* top edge, and what sits immediately under that rule is the
+ *  date — set at 20 px in the list and up to 3 rem in the planner, and trimmed
+ *  to its own capitals (`text-box-trim`), so there is no leading at all
+ *  between the line and the numeral and the 4 px this used to spend at both
+ *  ends read as a number crowded against a rule. 6 px is two pixels of relief
+ *  rather than a new rhythm: enough that the rule stops touching the date,
+ *  short of the air that would cost a ninety-row scroll a whole day. The
+ *  bottom keeps the 4 px, and not out of thrift — a fixed list row is taller
+ *  than its own contents, so the air under the last name is that 4 px plus
+ *  whatever the row has left over, and the planner prints its holiday along
+ *  the bottom edge where the same 4 px is the gap the caption already had.
+ *
+ *  Both carry the room factor, like every other measured length here: the row
+ *  they space is set larger on a bigger screen (`roomScale.ts`) and its height
+ *  grows with it, so a gap held at the phone's 6 px would be the same crowding
+ *  one size up. */
+export const STRIP_ROW_PAD =
+  "pt-[calc(0.375rem*var(--cal-room,1))] pb-[calc(0.25rem*var(--cal-room,1))]";
+
+/** The week rule's thickness — the heavier line `cal-strip-break` draws across
+ *  the strip where one week ends and the next begins.
+ *
+ *  A TypeScript handle on a length the stylesheet owns, because one thing has
+ *  to do arithmetic on it: the day list opens on today's week and takes that
+ *  row's rule up *behind* the pinned heading, which is this much further than
+ *  the band's own edge (`LIST_HOME_TUCK`). `tests/layout_test.ts` holds the
+ *  two to the same number. */
+export const WEEK_RULE_WIDTH = "1.5px";
+
 /** Everything a row prints, and the arrangement it prints it in. The views
  *  hand this straight down from what they already resolved per day. */
 export type StripDay = {
