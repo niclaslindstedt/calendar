@@ -73,7 +73,10 @@ The switcher in the top bar toggles:
   current month opens at the week you are in rather than at its 1st — a
   ninety-row scroll can hide today three flicks below the fold, and the week
   around a date is what makes it a place in the month rather than a number at
-  the top of the screen. Every other month opens at its top.
+  the top of the screen. The heavier rule that opens that week goes up behind
+  the heading as it lands, so the month you are living in opens the way the
+  week planner does — the first day flush under the band. Every other month
+  opens at its top.
 
 All three views head the month the same way: the name in the wall calendar's
 caps with the year beside it, over the colour band if you have picked one.

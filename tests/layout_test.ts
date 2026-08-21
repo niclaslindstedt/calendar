@@ -23,8 +23,9 @@ import {
   HEADING_META,
   HEADING_TITLE,
 } from "../src/app/PeriodHeading.tsx";
+import { LIST_HOME_TUCK } from "../src/app/DayListView.tsx";
 import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
-import { STRIP_ROW_EDGE } from "../src/app/stripRow.tsx";
+import { STRIP_ROW_EDGE, WEEK_RULE_WIDTH } from "../src/app/stripRow.tsx";
 
 const css = readFileSync(
   fileURLToPath(new URL("../src/styles.css", import.meta.url)),
@@ -160,6 +161,34 @@ describe("the pinned heading's height", () => {
     // flush against the band while an unscrolled one has air under it.
     expect(HEADING_CLEARANCE).toContain(HEADING_HEIGHT);
     expect(HEADING_CLEARANCE).toContain(HEADING_GAP);
+  });
+});
+
+describe("the row the day list opens on", () => {
+  // The list opens on today's week, and that row opens a week, so it draws
+  // the week rule. Left at the scroller's plain clearance the rule came to
+  // rest a few pixels below the masthead — a line across the top of the
+  // screen with nothing above it. The row asks for the difference itself, and
+  // the deck reads it back off the row's computed style.
+  it("gives up the air under the band and the rule's own thickness", () => {
+    expect(LIST_HOME_TUCK).toContain(HEADING_GAP);
+    expect(LIST_HOME_TUCK).toContain(WEEK_RULE_WIDTH);
+  });
+
+  it("asks for it as a negative scroll margin — past the padding, not short of it", () => {
+    // `scroll-margin-top` is the browser's own sign convention: a positive one
+    // holds the target further from the scrollport's edge, so a row that means
+    // to land *behind* the pinned band sets a negative one. Get this backwards
+    // and the rule lands twice as far below the masthead as it started.
+    expect(LIST_HOME_TUCK).toContain("-1 *");
+  });
+
+  it("takes the rule's thickness from the stylesheet that draws it", () => {
+    // The rule is CSS's; the arithmetic on it is TypeScript's. This is what
+    // keeps the two the same number.
+    expect(ruleBodyOf(".cal-strip-row.cal-strip-break")).toContain(
+      `border-top: ${WEEK_RULE_WIDTH}`,
+    );
   });
 });
 

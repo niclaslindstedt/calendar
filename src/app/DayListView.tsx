@@ -19,7 +19,8 @@
 // The current month opens at the week you are in rather than at its 1st
 // (`listHome.ts`) — the deck does the scrolling, because it owns every pane's
 // offset; this view only marks the row (`DECK_HOME`) and keeps the pinned
-// heading's height clear of it (`scroll-padding-top`).
+// heading's height clear of it (`scroll-padding-top`), less the tuck that row
+// asks for on top of it ({@link LIST_HOME_TUCK}).
 
 import { memo, useMemo, type CSSProperties } from "react";
 
@@ -47,12 +48,18 @@ import { PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { monthImageUrl } from "./monthImage.ts";
 import { listHomeDay } from "./listHome.ts";
-import { HEADING_CLEARANCE, PeriodHeading } from "./PeriodHeading.tsx";
+import {
+  HEADING_CLEARANCE,
+  HEADING_GAP,
+  PeriodHeading,
+} from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import {
   STRIP_ROW_EDGE,
   STRIP_ROW_FRAME,
+  STRIP_ROW_PAD,
   StripBody,
+  WEEK_RULE_WIDTH,
   type StripDay,
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
@@ -67,6 +74,27 @@ import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
  *  high, so its date is sized to the two caption lines beside it and stays
  *  there. The shared day-number scale still multiplies it. */
 export const LIST_DATE_BASE = "1.25rem";
+
+/** How much further than the scroller's own clearance the month's home row is
+ *  taken, as the `scroll-margin-top` that says so (negative: the row asks to
+ *  land *past* where the padding would put it).
+ *
+ *  `scroll-padding-top` is the clearance a row scrolled into view mid-list
+ *  wants — the band, and the air the band leaves under itself — and the row
+ *  the month *opens* on wants one thing more. It is the row that opens a week,
+ *  so it draws the week rule ({@link WEEK_RULE_WIDTH}), and left at the plain
+ *  clearance that rule came to rest a few pixels under the masthead: a red line
+ *  across the top of the screen with nothing above it, which reads as a stray
+ *  mark rather than as "a week starts here". So the row gives up the air and
+ *  the rule's own thickness with it, and the rule ends up behind the band —
+ *  which is the same answer the week planner reaches by another route, where
+ *  a banded heading makes the first row drop its rule outright
+ *  (`opens && !bandedTop`): under a band, the band is the edge.
+ *
+ *  Carries the room factor because {@link HEADING_GAP} does; it is resolved
+ *  from the row's computed style by the deck (`SwipeDeck`), so this is a CSS
+ *  length rather than a number. */
+export const LIST_HOME_TUCK = `calc(-1 * (${HEADING_GAP} + ${WEEK_RULE_WIDTH}))`;
 
 type Props = {
   year: number;
@@ -417,31 +445,39 @@ const DayRow = memo(function DayRow({
           onEditDay(dayKey);
         }
       }}
-      // The week rule's ink, where a week opens and the heading is banded: the
-      // same colour the rail's week numbers are printed in, so the two marks
-      // that say "a week starts here" say it in one voice. Nothing to set with
-      // the band off — the rule falls back to the hairline's own colour.
+      // Two things, and both are about the rule this row draws where a week
+      // opens. Its ink, where the heading is banded: the same colour the rail's
+      // week numbers are printed in, so the two marks that say "a week starts
+      // here" say it in one voice (nothing to set with the band off — the rule
+      // falls back to the hairline's own colour). And, on the one row the month
+      // opens at, the tuck that takes the rule up behind the masthead
+      // ({@link LIST_HOME_TUCK}) — read back off this style by the deck, which
+      // is what actually does the scrolling.
       style={
-        opens && headerInk
-          ? ({ "--cal-week-rule": headerInk } as CSSProperties)
-          : undefined
+        {
+          ...(opens && headerInk ? { "--cal-week-rule": headerInk } : {}),
+          ...(home ? { scrollMarginTop: LIST_HOME_TUCK } : {}),
+        } as CSSProperties
       }
-      // 3.25 rem is the row measured rather than chosen: a weekday line
+      // 3.375 rem is the row measured rather than chosen: a weekday line
       // (14 px), the gap under it, and *two* lines of names — which is not an
       // edge case but the ordinary Swedish day ("Bernhard, Bernt" does not
-      // hold an 88 px lane) — come to 41 px, and the row's own padding takes
-      // the rest. A shorter fixed row clipped the second name away.
+      // hold an 88 px lane) — come to 41 px, the row's own padding
+      // (`STRIP_ROW_PAD`) takes 10 more, and the rest is the slack that keeps
+      // a font rounding a pixel the other way from clipping the second name
+      // away. It was 3.25 rem while that padding was 4 px at both ends, and it
+      // grows by exactly the two pixels the top end gained.
       //
       // It is multiplied by the room factor for exactly that reason: those
       // are 14 px lines on the phone the row was measured on, and a screen
       // with more room prints them larger (`src/app/roomScale.ts`), so a row
       // held at the phone's height would clip the same second name again.
-      className={`cal-day cal-strip-row relative ${STRIP_ROW_FRAME} cursor-text border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+      className={`cal-day cal-strip-row relative ${STRIP_ROW_FRAME} ${STRIP_ROW_PAD} cursor-text border-line focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
         closes ? "" : "border-b"
       } ${
         fixed
-          ? "h-[calc(3.25rem*var(--cal-room,1))] overflow-hidden"
-          : "min-h-[calc(3.25rem*var(--cal-room,1))]"
+          ? "h-[calc(3.375rem*var(--cal-room,1))] overflow-hidden"
+          : "min-h-[calc(3.375rem*var(--cal-room,1))]"
       } ${opens ? "cal-strip-break" : ""} ${
         dayKey === today ? "bg-surface-2" : ""
       }`}

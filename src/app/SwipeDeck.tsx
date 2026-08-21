@@ -124,7 +124,8 @@ export const DECK_SCROLLER = { "data-deck-scroller": "" } as const;
  *  opens where you are in it rather than at the 1st. Spread onto the row
  *  (`{...DECK_HOME}`), at most one per scroller, and only while the pane
  *  actually has such a row: without it the scroller opens at the very top,
- *  which is what every other period wants. */
+ *  which is what every other period wants. Where the row wants to land is the
+ *  row's own to say, in `scroll-margin-top` — see {@link homeOffset}. */
 export const DECK_HOME = { "data-deck-home": "" } as const;
 
 /** Where a scroller's top is. Zero, unless the pane marked a row to open on —
@@ -132,14 +133,24 @@ export const DECK_HOME = { "data-deck-home": "" } as const;
  *  the space its pinned chrome needs kept clear is exactly the space the row
  *  underneath it has to clear. Measured from the rects rather than read off
  *  `offsetTop`, which is relative to whichever ancestor happens to be
- *  positioned rather than to the scroller. */
+ *  positioned rather than to the scroller.
+ *
+ *  …and less whatever the row itself adds to that clearance, which is CSS's
+ *  own word for the same thing one step down (`scroll-margin-top`, and the
+ *  same sign the browser gives it: a row asking to land *past* the padding
+ *  sets a negative one). The day list's home row does exactly that — it opens
+ *  a week, so it draws the week rule, and it wants that rule behind the
+ *  masthead rather than stranded a few pixels under it. Read off the row
+ *  rather than passed in, so the pane keeps the whole decision and the deck
+ *  keeps none of it. */
 function homeOffset(scroller: Element): number {
   const home = scroller.querySelector("[data-deck-home]");
   if (!home) return 0;
   const pad = parseFloat(getComputedStyle(scroller).scrollPaddingTop) || 0;
+  const tuck = parseFloat(getComputedStyle(home).scrollMarginTop) || 0;
   const above =
     home.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-  return Math.max(0, above + scroller.scrollTop - pad);
+  return Math.max(0, above + scroller.scrollTop - pad - tuck);
 }
 
 /** Animated period stepping, handed to whatever chrome a pane draws so the

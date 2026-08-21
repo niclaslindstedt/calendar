@@ -33,7 +33,12 @@ import { WEEK_GUTTER_COLUMN } from "../layout.ts";
 import { getLocale, weekdayName, type Holiday } from "../locale/index.ts";
 import { MonthCellFrame } from "../monthCell.tsx";
 import { MarkedDate, PastMark } from "../PastMark.tsx";
-import { STRIP_ROW_FRAME, StripBody, type StripDay } from "../stripRow.tsx";
+import {
+  STRIP_ROW_FRAME,
+  STRIP_ROW_PAD,
+  StripBody,
+  type StripDay,
+} from "../stripRow.tsx";
 import {
   headerInkOf,
   monthCellLayout,
@@ -189,7 +194,7 @@ export function StripSample({
     // media query hangs the lie-flat lane on, and the day list does not have
     // that problem.
     <div
-      className={`${SCOPE_CLASS.strip} cal-strip-row relative ${STRIP_ROW_FRAME} h-full overflow-hidden px-2 py-1 ${
+      className={`${SCOPE_CLASS.strip} cal-strip-row relative ${STRIP_ROW_FRAME} ${STRIP_ROW_PAD} h-full overflow-hidden px-2 ${
         week ? "cal-week-row" : ""
       }`}
       // Pinned to the measured sizes, for the reason {@link MonthSample}

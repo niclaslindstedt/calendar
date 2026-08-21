@@ -51,6 +51,7 @@ import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import {
   STRIP_ROW_EDGE,
   STRIP_ROW_FRAME,
+  STRIP_ROW_PAD,
   StripBody,
   type StripDay,
 } from "./stripRow.tsx";
@@ -279,7 +280,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         // sizes each row by its own contents instead, with the fixed row's
         // height as the floor so an empty week still looks like a week.
         style={grows ? { minHeight: WEEK_ROW_MIN_HEIGHT } : undefined}
-        className={`cal-day cal-strip-row cal-week-row relative ${STRIP_ROW_FRAME} cursor-text border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+        className={`cal-day cal-strip-row cal-week-row relative ${STRIP_ROW_FRAME} ${STRIP_ROW_PAD} cursor-text border-b border-line focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
           grows ? "" : "min-h-0 flex-1 overflow-hidden"
         } ${opens && !bandedTop ? "cal-strip-break" : ""} ${
           cell.isToday ? "bg-surface-2" : ""
