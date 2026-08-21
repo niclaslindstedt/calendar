@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The bottom gutter and the top menu's leading space are runtime values with
-// a TypeScript handle and a stylesheet fallback, so this is a contract
-// between the three: `layout.ts` must name variables the stylesheet actually
-// defines, the fallbacks must be usable on their own, and — the reason all of
-// this moved out of CSS — the stylesheet must never wrap `env()` in a
-// `min()`, `max()` or `clamp()` again.
+// The bottom gutter and the top menu's leading space are the stylesheet's
+// arithmetic over named constants, so this is the contract between the two:
+// `layout.ts` must name variables the stylesheet actually defines, the
+// stylesheet's numbers must be the constants `safeArea.ts` names, every value
+// on the page must be one that computes — and, the rule all of this exists
+// for, `env()` must never be wrapped in a `min()`, `max()` or `clamp()`.
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
@@ -25,12 +25,11 @@ import {
 } from "../src/app/PeriodHeading.tsx";
 import { LIST_HOME_TUCK } from "../src/app/DayListView.tsx";
 import {
-  bottomGutter,
   GUTTER_MARGIN,
   HEADER_PAD,
   HOME_INDICATOR,
+  LIST_EXTRA,
 } from "../src/app/safeArea.ts";
-import type { Insets } from "../src/app/viewportInfo.ts";
 import { STRIP_ROW_EDGE, WEEK_RULE_WIDTH } from "../src/app/stripRow.tsx";
 
 const css = readFileSync(
@@ -98,14 +97,19 @@ describe("the shared bottom gutter", () => {
     );
   });
 
-  it("falls back to the device's band plus the visible margin", () => {
-    // Whatever the fallback is, it is what the app lays out with until
-    // `safeArea.ts` has measured — so it clears the device's own band and
-    // still leaves something to read as an end. This is the tab's answer, the
-    // first of the two the stylesheet gives; the installed app's is below.
-    const fallback = declarations(varName(CONTENT_BOTTOM_PAD))[0];
-    expect(fallback).toContain("env(safe-area-inset-bottom, 0px)");
-    expect(fallback).toContain("var(--cal-gutter-margin)");
+  it("is the device's own band plus the visible margin in a browser tab", () => {
+    // A tab's chrome is honest about what it leaves, so the inset is taken at
+    // its word here. This is the first of the two answers the stylesheet
+    // gives; the installed app's is below.
+    const tab = declarations(varName(CONTENT_BOTTOM_PAD))[0];
+    expect(tab).toContain("env(safe-area-inset-bottom, 0px)");
+    expect(tab).toContain("var(--cal-gutter-margin)");
+  });
+
+  it("adds the scrolling views' share to the shared gutter", () => {
+    expect(declaration(varName(LIST_BOTTOM_PAD))).toContain(
+      `+ ${LIST_EXTRA}px`,
+    );
   });
 
   it("leaves a visible margin below the last row on every device", () => {
@@ -125,42 +129,36 @@ describe("what an installed iOS app falls back to", () => {
   // them inline, which wins over this block — but a fallback only earns its
   // place by being right where it is used.
 
-  /** The `:root` block behind the iOS probe and `display-mode: standalone`. */
+  /** Everything behind the *second* iOS probe — the block that carries the
+   *  answers, rather than the `100vh` shell above it. */
   const installed = (() => {
-    const at = rules.indexOf("@supports (-webkit-touch-callout: none)", 0);
-    const next = rules.indexOf(
-      "@supports (-webkit-touch-callout: none)",
-      at + 1,
-    );
-    const region = rules.slice(next < 0 ? at : next);
-    const open = region.indexOf(":root {");
-    if (open < 0) throw new Error("no installed-iOS :root block");
-    return region.slice(open, region.indexOf("}", open));
+    const probe = "@supports (-webkit-touch-callout: none)";
+    const at = rules.indexOf(probe);
+    const next = rules.indexOf(probe, at + 1);
+    if (next < 0) throw new Error("no installed-iOS answers block");
+    return rules.slice(next, rules.indexOf("\n}", next));
   })();
 
-  it("makes the status-bar band the whole lead, as safeArea.ts does", () => {
-    // `topbarLead(59, true)` is 59, not 59 + the pad: the band already leaves
-    // room below the island.
-    expect(installed).toContain(
-      "--cal-topbar-lead: env(safe-area-inset-top, 0px)",
-    );
+  it("is scoped to an installed app on iOS, and to nothing else", () => {
+    // The scope *is* the comparison: inside it the app is known to be
+    // installed and known to be an iPhone, which is what lets both answers be
+    // plain values rather than a `max()`.
+    expect(installed).toContain("@media (display-mode: standalone)");
+  });
+
+  it("makes the status-bar band the whole lead", () => {
+    // Not the band plus the pad. The band already leaves room below the
+    // island, and what it leaves is about the pad — so spending the pad again
+    // on top of it is the air over the buttons that had no match under them.
+    expect(installed).toContain("padding-top: env(safe-area-inset-top, 0px)");
   });
 
   it("takes the home indicator's band as a constant, not from the inset", () => {
-    // The same floor `safeArea.ts` applies, for the same reason — and stated
-    // here rather than inherited, because the inset this fallback used to
-    // trust is the one that reports nothing.
-    expect(installed).toContain(`--cal-home-indicator: ${HOME_INDICATOR}px`);
-    expect(installed).toContain("--cal-home-indicator");
+    expect(declaration("--cal-home-indicator")).toBe(`${HOME_INDICATOR}px`);
+    expect(installed).toContain("var(--cal-home-indicator)");
     expect(installed).toContain("var(--cal-gutter-margin)");
+    // The reading that has been wrong twice is not consulted here.
     expect(installed).not.toContain("env(safe-area-inset-bottom");
-  });
-
-  it("agrees with the gutter safeArea.ts resolves on the same phone", () => {
-    // 34 + 24. The block and the module are two languages saying one number;
-    // this is what keeps them saying the same one.
-    const island: Insets = { top: 59, right: 0, bottom: 34, left: 0 };
-    expect(bottomGutter(island, true)).toBe(HOME_INDICATOR + GUTTER_MARGIN);
   });
 
   it("leaves the day list's gutter to follow the shared one", () => {
@@ -168,6 +166,33 @@ describe("what an installed iOS app falls back to", () => {
     // custom property substitutes at use, so overriding the shared gutter here
     // moves the list's too — restating it would be the drift this avoids.
     expect(installed).not.toContain("--cal-list-gutter");
+  });
+
+  it("spends the same margin the tab's answer does", () => {
+    // One margin, two bands. `GUTTER_MARGIN` is the visible part of both.
+    expect(declaration("--cal-gutter-margin")).toBe(`${GUTTER_MARGIN}px`);
+    expect(HEADER_PAD).toBe(12);
+  });
+});
+
+describe("every value the safe-area arithmetic puts on the page", () => {
+  it("computes — no custom property can take a padding down to zero", () => {
+    // The failure this file exists to prevent: a `var()` that is invalid at
+    // computed-value time falls back to the property's *initial* value, so
+    // `padding-bottom: var(--cal-bottom-gutter)` silently became `0` and the
+    // last week row ran off the bottom of the screen. Every value in the
+    // substitution path is a literal or a plain `calc()` over `env()` and the
+    // constants — nothing that can fail late.
+    for (const name of [
+      "--cal-gutter-margin",
+      "--cal-home-indicator",
+      "--cal-bottom-gutter",
+      "--cal-list-gutter",
+    ]) {
+      for (const value of declarations(name)) {
+        expect(value).toMatch(/^(\d+px|calc\([^;]*\))$/);
+      }
+    }
   });
 });
 
@@ -178,14 +203,20 @@ describe("the top menu's vertical rhythm", () => {
     expect(declaration("--cal-header-pad")).toBe(`${HEADER_PAD / 16}rem`);
   });
 
-  it("takes its leading space from the published custom property", () => {
-    expect(declaration("padding-top")).toContain("--cal-topbar-lead");
+  it("stacks the pad on the inset in a browser tab", () => {
+    // 0 in portrait, so the bar simply gets its `py-3`; a notched phone in
+    // landscape still clears the notch.
+    const tab = declarations("padding-top")[0];
+    expect(tab).toContain("var(--cal-header-pad)");
+    expect(tab).toContain("env(safe-area-inset-top, 0px)");
   });
 
-  it("falls back to the pad stacked on the inset, which is what a tab wants", () => {
-    const fallback = declaration("padding-top");
-    expect(fallback).toContain("var(--cal-header-pad)");
-    expect(fallback).toContain("env(safe-area-inset-top, 0px)");
+  it("routes neither measurement through a value JavaScript writes", () => {
+    // The published-from-JS arrangement is gone: whenever the value did not
+    // land, the installed app laid itself out with a tab's answers. Nothing
+    // here may name it again.
+    expect(rules).not.toContain("--cal-topbar-lead");
+    expect(css).not.toContain("safeAreaVars");
   });
 });
 
