@@ -93,8 +93,8 @@ describe("safeAreaVars", () => {
     // resolved here is that the device would not compute those.
     expect(safeAreaVars(ISLAND, true)).toEqual({
       "--cal-topbar-lead": "59px",
-      "--cal-bottom-gutter": "50px",
-      "--cal-list-gutter": "70px",
+      "--cal-bottom-gutter": "58px",
+      "--cal-list-gutter": "78px",
     });
   });
 

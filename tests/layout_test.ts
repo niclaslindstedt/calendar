@@ -24,7 +24,13 @@ import {
   HEADING_TITLE,
 } from "../src/app/PeriodHeading.tsx";
 import { LIST_HOME_TUCK } from "../src/app/DayListView.tsx";
-import { GUTTER_MARGIN, HEADER_PAD } from "../src/app/safeArea.ts";
+import {
+  bottomGutter,
+  GUTTER_MARGIN,
+  HEADER_PAD,
+  HOME_INDICATOR,
+} from "../src/app/safeArea.ts";
+import type { Insets } from "../src/app/viewportInfo.ts";
 import { STRIP_ROW_EDGE, WEEK_RULE_WIDTH } from "../src/app/stripRow.tsx";
 
 const css = readFileSync(
@@ -44,13 +50,22 @@ function varName(reference: string): string {
   return match[1];
 }
 
-/** The declaration's value, from the last place the stylesheet sets it. */
-function declaration(name: string): string {
+/** Every value the stylesheet gives a property, in source order. A property
+ *  is declared more than once on purpose here — the base `:root` carries a
+ *  browser tab's answer and the installed-iOS block overrides it — so which
+ *  one a test means has to be said rather than assumed. */
+function declarations(name: string): string[] {
   const matches = [
     ...rules.matchAll(new RegExp(`${name}:\\s*([^;]+);`, "g")),
   ].map((m) => m[1].replace(/\s+/g, " ").trim());
   if (matches.length === 0) throw new Error(`${name} is never declared`);
-  return matches[matches.length - 1];
+  return matches;
+}
+
+/** The declaration's value, from the last place the stylesheet sets it. */
+function declaration(name: string): string {
+  const all = declarations(name);
+  return all[all.length - 1];
 }
 
 /** Every body the stylesheet gives a selector, joined — a selector can be
@@ -86,17 +101,73 @@ describe("the shared bottom gutter", () => {
   it("falls back to the device's band plus the visible margin", () => {
     // Whatever the fallback is, it is what the app lays out with until
     // `safeArea.ts` has measured — so it clears the device's own band and
-    // still leaves something to read as an end.
-    const fallback = declaration(varName(CONTENT_BOTTOM_PAD));
+    // still leaves something to read as an end. This is the tab's answer, the
+    // first of the two the stylesheet gives; the installed app's is below.
+    const fallback = declarations(varName(CONTENT_BOTTOM_PAD))[0];
     expect(fallback).toContain("env(safe-area-inset-bottom, 0px)");
     expect(fallback).toContain("var(--cal-gutter-margin)");
   });
 
   it("leaves a visible margin below the last row on every device", () => {
-    // 16 px of breathing room, not the hairline the gutter used to leave once
-    // the home indicator had taken its share. The stylesheet's margin and the
-    // one `safeArea.ts` adds are the same margin.
+    // Real breathing room, not the hairline the gutter used to leave once the
+    // home indicator had taken its share. The stylesheet's margin and the one
+    // `safeArea.ts` adds are the same margin.
     expect(declaration("--cal-gutter-margin")).toBe(`${GUTTER_MARGIN}px`);
+  });
+});
+
+describe("what an installed iOS app falls back to", () => {
+  // The fallbacks above are a browser tab's arithmetic, and on the installed
+  // app a tab's arithmetic is how both of these went wrong: the pad stacked on
+  // a 59 px status-bar band put half again as much air over the buttons as
+  // under them, and `env(safe-area-inset-bottom)` reporting 0 left the last
+  // week row under the swipe bar. `safeArea.ts` gets both right and publishes
+  // them inline, which wins over this block — but a fallback only earns its
+  // place by being right where it is used.
+
+  /** The `:root` block behind the iOS probe and `display-mode: standalone`. */
+  const installed = (() => {
+    const at = rules.indexOf("@supports (-webkit-touch-callout: none)", 0);
+    const next = rules.indexOf(
+      "@supports (-webkit-touch-callout: none)",
+      at + 1,
+    );
+    const region = rules.slice(next < 0 ? at : next);
+    const open = region.indexOf(":root {");
+    if (open < 0) throw new Error("no installed-iOS :root block");
+    return region.slice(open, region.indexOf("}", open));
+  })();
+
+  it("makes the status-bar band the whole lead, as safeArea.ts does", () => {
+    // `topbarLead(59, true)` is 59, not 59 + the pad: the band already leaves
+    // room below the island.
+    expect(installed).toContain(
+      "--cal-topbar-lead: env(safe-area-inset-top, 0px)",
+    );
+  });
+
+  it("takes the home indicator's band as a constant, not from the inset", () => {
+    // The same floor `safeArea.ts` applies, for the same reason — and stated
+    // here rather than inherited, because the inset this fallback used to
+    // trust is the one that reports nothing.
+    expect(installed).toContain(`--cal-home-indicator: ${HOME_INDICATOR}px`);
+    expect(installed).toContain("--cal-home-indicator");
+    expect(installed).toContain("var(--cal-gutter-margin)");
+    expect(installed).not.toContain("env(safe-area-inset-bottom");
+  });
+
+  it("agrees with the gutter safeArea.ts resolves on the same phone", () => {
+    // 34 + 24. The block and the module are two languages saying one number;
+    // this is what keeps them saying the same one.
+    const island: Insets = { top: 59, right: 0, bottom: 34, left: 0 };
+    expect(bottomGutter(island, true)).toBe(HOME_INDICATOR + GUTTER_MARGIN);
+  });
+
+  it("leaves the day list's gutter to follow the shared one", () => {
+    // `--cal-list-gutter` is `calc(var(--cal-bottom-gutter) + 20px)` and a
+    // custom property substitutes at use, so overriding the shared gutter here
+    // moves the list's too — restating it would be the drift this avoids.
+    expect(installed).not.toContain("--cal-list-gutter");
   });
 });
 
