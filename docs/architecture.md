@@ -42,8 +42,10 @@ src/
     │                     it — the editable box's text and caret
     ├── pastDays.ts       which days are past and what the "crossed off" mark
     │                     is made of (pure, tested); PastMark.tsx draws it
-    ├── listHome.ts       the row the day list opens a month on — today's
-    │                     week, in the month today is in (pure, tested)
+    ├── listHome.ts       where the day list opens a month — today's week on
+    │                     the month you arrive on, and the edge you paged in
+    │                     through (its 1st forward, its last day back) on one
+    │                     you turned the page to (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── monthCell.tsx     the month cell's arrangement: the corners its pieces
