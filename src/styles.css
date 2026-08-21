@@ -271,6 +271,50 @@ body {
   );
 }
 
+/* The strip row's flowing body: the two margins and the note, in one
+   formatting context.
+
+   `flow-root` rather than a plain block, because the margins inside it are
+   floats and a block does not grow to contain its floats — on a row that grows
+   with its text (the "dynamic" row setting) the lane would have hung out of
+   the bottom and printed over the day below it. Containing them here also
+   makes an empty day as tall as its own lane, which is what keeps a week of
+   blank rows looking like a week.
+
+   The note *inside* it still wraps around them: they share this context, so it
+   is the line boxes that make room for the margins and not the note's box.
+   That is the whole arrangement — see `stripRow.tsx`. */
+.cal-strip-flow {
+  display: flow-root;
+}
+
+/* The writing surface. A width, not a column: it is the full row, and what
+   the margins take out of it they take a line at a time.
+
+   `height: 100%` is what the note is *measured* against — `entryFit.ts` reads
+   the slot's height off this box to decide how far to shrink the text and
+   where to end it — so it has to be the room the body has rather than the room
+   the text is using. It must not gain an `overflow` or a `display` that makes
+   it a formatting context of its own: such a box is pushed clear of a float
+   whole, back into the third of the row this layout exists to give up. */
+.cal-strip-note {
+  height: 100%;
+  min-width: 0;
+}
+
+/* The rail's bottom end, along the row's bottom edge. It is right-aligned
+   rather than a column of its own, so the holiday stays in the corner the
+   printed almanac sets it in, and it is only in the row on the days that
+   print something there.
+
+   Its gap is a margin rather than padding for a reason that is nothing to do
+   with the band: `tests/layout_test.ts` reads the top menu's leading space off
+   the stylesheet's last `padding-top`, and a second one further down the file
+   would answer in its place. */
+.cal-strip-tail {
+  margin-top: 0.125rem;
+}
+
 /* The strip row's almanac lane (the week planner and the day list share it). Its base width comes from the view (as a
    `[--cal-lane:…]` utility, so it can keep a responsive variant and a narrower
    value for a pack that prints no name days); the scale the reader has the
@@ -291,6 +335,12 @@ body {
    length, not a bare `0` — is what keeps the multiplication valid when the
    number is off. */
 .cal-strip-lane {
+  /* Floated, which is what puts the note *under* the lane once it has run
+     past it rather than beside it for the row's whole height. The margin is
+     the gap the row used to spend as a flex `gap`; it belongs to the float
+     now, because the float is what the text is keeping clear of. */
+  float: left;
+  margin-right: 0.5rem;
   /* The date's own column, which both the lane below and the box itself are
      billed for (`.cal-strip-date`), so the two can't disagree: the size the
      view sets the date at, times the reader's day-number scale, times the
@@ -428,6 +478,9 @@ body {
    names' scale). Left flat, a reader on the ladder's Large step got "Vecka 34"
    broken across two lines in a 96 px margin. */
 .cal-strip-rail {
+  /* Floated to the other side, for the reason the lane is (above). */
+  float: right;
+  margin-left: 0.5rem;
   width: calc(
     var(--cal-rail, 4rem) * var(--cal-room, 1) *
       max(var(--cal-size-week, 1), var(--cal-size-holiday, 1))
@@ -493,7 +546,21 @@ body {
      landscape tablet keeps the portrait shape and a landscape phone does
      not. */
   .cal-week-row {
+    /* Back to a row. In portrait the row is a column — the flowing body, and
+       under it the band the rail's bottom end prints in — and on a screen this
+       short that band is a line the row does not have. Laid out as a row again
+       it is the old rail position: the note's body, and the holiday's name at
+       the end of the same line. */
+    flex-direction: row;
     align-items: center;
+  }
+  /* The body is the row's full height even though the row centres what it
+     holds: the note is *measured* against this box (`entryFit.ts` reads the
+     slot's height off it), and a box that shrink-wrapped its own text would
+     report the height the text is already using and never shrink it. Centring
+     is for the band beside it. */
+  .cal-week-row .cal-strip-flow {
+    align-self: stretch;
   }
   .cal-week-row .cal-strip-lane {
     /* A line, not a two-column block — so the measured widths above have
@@ -527,11 +594,13 @@ body {
     width: auto;
     max-width: none;
   }
-  /* The rail's bottom end is pushed to the bottom of a tall rail with
-     `mt-auto`, and an auto margin outranks the alignment above — so it is
-     cleared here rather than fought with. */
-  .cal-week-row .cal-strip-rail-tail {
+  /* …and the band comes up beside it rather than under it, which is what the
+     row direction above turns it into: one line, the holiday at the end of
+     it. */
+  .cal-week-row .cal-strip-tail {
     margin-top: 0;
+    margin-left: 0.5rem;
+    align-items: center;
   }
   /* A date that is a heading in the lane is just the day number again on a
      line — the size the other views print it at. */
@@ -597,34 +666,49 @@ body {
   line-height: 1.25;
 }
 
-/* A note that has run out of room: clamped to the lines the cell has left
-   over after the day number and the captions, ending in an ellipsis rather
-   than sliding under them. The line count is measured (`entryFit.ts`) and set
-   inline — only the box it needs lives here. */
+/* A note that has run out of room in a *cell*: clamped to the lines the cell
+   has left over after the day number and the captions, ending in an ellipsis
+   rather than sliding under them. The line count is measured (`entryFit.ts`)
+   and set inline — only the box it needs lives here.
+
+   Only a cell. `-webkit-box` line boxes ignore floats (the month cell's
+   caption band says the same thing from the other side), so a strip row's
+   note — whose whole layout is lines making room for the row's margins —
+   cannot be clamped this way. It ends its last line in an ellipsis of its
+   own instead: `clipEntryText` measures how much of the text fits and prints
+   that much. */
 .cal-entry-clamp {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
-/* The in-cell editor inherits the cell's typography so entering edit mode
-   doesn't jump. It never scrolls: a bounded cell refuses the keystroke that
-   would overflow it, so there is nothing below the fold to scroll to. */
+/* The in-cell editor. It is the read view's own box turned editable
+   (`DayEntry`), so it carries `.cal-entry` beside this class and inherits the
+   day's typography without a rule of its own — entering edit mode changes the
+   caret, not the layout.
+
+   That is also why it is not a `<textarea>` any more. A textarea is a
+   rectangle: its lines cannot wrap around the row's margins the way the read
+   view's do, so a note being typed into a strip row was laid out in the third
+   of the row a textarea could have, and what it committed then reflowed into
+   the whole of it. The one box is the fix — what you type is what the day
+   holds.
+
+   `min-height` rather than `height`, so the box still fills the slot it is
+   given (a tap anywhere in the day's writing area lands in the text) while a
+   note that outgrows it — the zoom's page, a day-list row that grows —
+   simply takes the room it needs. It never scrolls: a bounded cell refuses
+   the keystroke that would overflow it, and an unbounded one grows. And no
+   `overflow`, deliberately: that would make it a formatting context and push
+   it clear of the margins whole. */
 .cal-entry-editor {
-  resize: none;
-  overflow: hidden;
-  background: transparent;
-  border: none;
+  min-height: 100%;
   outline: none;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  color: inherit;
-  font: inherit;
-  /* After the `font` shorthand, which would otherwise reset the family back
-     to the cell's (the shorthand resets every longhand it doesn't name). */
-  font-family: var(--cal-font-entry, inherit);
-  line-height: 1.25;
+  /* Long words break the way they do when read, not by extending the box:
+     `.cal-entry` sets the wrapping, this keeps a run of characters with no
+     break opportunity from widening the row. */
+  overflow-wrap: break-word;
 }
 
 /* The stroke over a day that has passed (Settings → Calendar → Passed days).

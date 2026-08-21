@@ -33,12 +33,7 @@ import { WEEK_GUTTER_COLUMN } from "../layout.ts";
 import { getLocale, weekdayName, type Holiday } from "../locale/index.ts";
 import { MonthCellFrame } from "../monthCell.tsx";
 import { MarkedDate, PastMark } from "../PastMark.tsx";
-import {
-  StripLane,
-  StripNote,
-  StripRail,
-  type StripDay,
-} from "../stripRow.tsx";
+import { STRIP_ROW_FRAME, StripBody, type StripDay } from "../stripRow.tsx";
 import {
   headerInkOf,
   monthCellLayout,
@@ -193,24 +188,24 @@ export function StripSample({
     // media query hangs the lie-flat lane on, and the day list does not have
     // that problem.
     <div
-      className={`${SCOPE_CLASS.strip} cal-strip-row relative flex h-full items-stretch gap-2 overflow-hidden px-2 py-1 ${
+      className={`${SCOPE_CLASS.strip} cal-strip-row relative ${STRIP_ROW_FRAME} h-full overflow-hidden px-2 py-1 ${
         week ? "cal-week-row" : ""
       }`}
       // Pinned to the measured sizes, for the reason {@link MonthSample}
       // gives: the sample is a box in a dialog, not a row of the calendar.
       style={{ "--cal-room": "1" } as CSSProperties}
     >
-      {(marginReserved(layout, "lane", has) || day.showDayOfYear) && (
-        <StripLane day={day} />
-      )}
-      <StripNote>
+      <StripBody
+        day={day}
+        lane={marginReserved(layout, "lane", has) || Boolean(day.showDayOfYear)}
+        rail={marginReserved(layout, "rail", has)}
+      >
         <DayEntryText
           text={t("settings.textSizeSampleNote")}
           font={week ? WEEK_ROW_FONT : LIST_ROW_FONT}
           size={look.styles.strip.entry.size}
         />
-      </StripNote>
-      {marginReserved(layout, "rail", has) && <StripRail day={day} />}
+      </StripBody>
       {pastMark.scope === "cell" && <PastMark style={pastMark.style} />}
     </div>
   );

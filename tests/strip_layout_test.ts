@@ -11,6 +11,7 @@ import {
   marginReserved,
   piecesInMargin,
   piecesInSlot,
+  piecesPrinted,
   stripEnd,
   stripMargin,
   stripSlotOf,
@@ -106,6 +107,37 @@ describe("marginReserved", () => {
     const has = { ...ALL, nameDays: false, week: false, holidays: false };
     expect(marginReserved(layout, "lane", has)).toBe(false);
     expect(marginReserved(layout, "rail", has)).toBe(true);
+  });
+});
+
+describe("piecesPrinted", () => {
+  it("prints what the day has, in the slot's own order", () => {
+    expect(piecesPrinted(DEFAULT_STRIP_LAYOUT, "lane-top", ALL)).toEqual([
+      "day",
+    ]);
+    expect(piecesPrinted(DEFAULT_STRIP_LAYOUT, "rail-top", ALL)).toEqual([
+      "week",
+    ]);
+  });
+
+  it("leaves out a piece this day has nothing for", () => {
+    // Six days of seven open no week, and the margin is a float: an absent
+    // piece costs nothing, so those days get their first lines back rather
+    // than carrying an empty column.
+    const has = { ...ALL, week: false };
+    expect(piecesPrinted(DEFAULT_STRIP_LAYOUT, "rail-top", has)).toEqual([]);
+    expect(piecesPrinted(DEFAULT_STRIP_LAYOUT, "rail-bottom", has)).toEqual([
+      "holidays",
+    ]);
+  });
+
+  it("follows a piece the reader has moved", () => {
+    const layout = { ...DEFAULT_STRIP_LAYOUT, week: "rail-bottom" } as const;
+    expect(piecesPrinted(layout, "rail-top", ALL)).toEqual([]);
+    expect(piecesPrinted(layout, "rail-bottom", ALL)).toEqual([
+      "holidays",
+      "week",
+    ]);
   });
 });
 

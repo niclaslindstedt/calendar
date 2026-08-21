@@ -13,8 +13,10 @@
 // tap-a-quadrant control the month cell uses.
 //
 // Two things stay fixed rather than becoming settings. The note always takes
-// the room between the margins: a row is a line, not a cell, so there is no
-// "middle" for it to sit at. And the weekday's name travels with the day
+// what the margins leave — the room between them, and the row's full width
+// under them, because the margins are floats and only as tall as what they
+// print (`stripRow.tsx`); a row is a line, not a cell, so there is no "middle"
+// for the note to sit at. And the weekday's name travels with the day
 // number wherever it goes — "Mon" without the date beside it is not a piece a
 // calendar prints.
 
@@ -96,6 +98,23 @@ export function inMargin(
   piece: StripPiece,
 ): boolean {
   return stripMargin(layout[piece]) === margin;
+}
+
+/** The pieces one slot prints for a given day: the arrangement's answer,
+ *  filtered to what the day actually has.
+ *
+ *  Where {@link marginReserved} asks the question once for a whole period —
+ *  whether the margin is drawn at all — this asks it per day. The two are not
+ *  the same question, because the margins are floats: an empty *margin* would
+ *  still move the note's edge on every row, but an empty *piece* costs
+ *  nothing, so a week number is printed on the day that opens the week and the
+ *  other six get their first lines back. */
+export function piecesPrinted(
+  layout: StripLayout,
+  slot: StripSlot,
+  has: Record<StripPiece, boolean>,
+): StripPiece[] {
+  return piecesInSlot(layout, slot).filter((piece) => has[piece]);
 }
 
 /** Whether a margin is worth reserving at all, given what the period has to

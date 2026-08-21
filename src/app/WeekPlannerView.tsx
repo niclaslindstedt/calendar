@@ -13,7 +13,8 @@
 //     hundred-odd pixels tall, so a header line spent the row's width on
 //     printing that is read at a glance and left the writing area only what
 //     was under it. A lane on the left and a rail on the right leave the note
-//     the row's full height between them.
+//     the row's full height between them — and, being floats only as tall as
+//     what they print, the row's full width under them (`stripRow.tsx`).
 //   * The week's opening day carries a heavier rule above it. In a view that
 //     shows exactly one week that rule is the strip's top edge — which is the
 //     point: paging through the weeks, the heavy line is where one week ends
@@ -49,9 +50,8 @@ import { PeriodHeading } from "./PeriodHeading.tsx";
 import { marginReserved, type StripLayout } from "./stripLayout.ts";
 import {
   STRIP_ROW_EDGE,
-  StripLane,
-  StripNote,
-  StripRail,
+  STRIP_ROW_FRAME,
+  StripBody,
   type StripDay,
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
@@ -274,15 +274,13 @@ export const WeekPlannerView = memo(function WeekPlannerView({
         // sizes each row by its own contents instead, with the fixed row's
         // height as the floor so an empty week still looks like a week.
         style={grows ? { minHeight: WEEK_ROW_MIN_HEIGHT } : undefined}
-        className={`cal-day cal-strip-row cal-week-row relative flex cursor-text items-stretch gap-2 border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
+        className={`cal-day cal-strip-row cal-week-row relative ${STRIP_ROW_FRAME} cursor-text border-b border-line py-1 focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
           grows ? "" : "min-h-0 flex-1 overflow-hidden"
         } ${opens && !bandedTop ? "cal-strip-break" : ""} ${
           cell.isToday ? "bg-surface-2" : ""
         }`}
       >
-        {lane && <StripLane day={stripDay} />}
-
-        <StripNote>
+        <StripBody day={stripDay} lane={lane} rail={rail}>
           <DayEntry
             text={entry}
             editing={editingDay === cell.key}
@@ -292,12 +290,14 @@ export const WeekPlannerView = memo(function WeekPlannerView({
             // one has no bound to measure against and simply takes the height
             // the text needs.
             bounded={!grows}
+            // …and either way its lines run beside the row's margins and then
+            // under them, which is what a note that has outgrown the row has
+            // to be ended against.
+            flow
             onCommit={(text) => onCommit(cell.key, text)}
             onClose={() => onEditDay(null)}
           />
-        </StripNote>
-
-        {rail && <StripRail day={stripDay} />}
+        </StripBody>
 
         {/* The whole-row stroke — drawn over the row's content, and
             transparent to taps so the day still opens under it. */}

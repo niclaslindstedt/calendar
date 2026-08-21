@@ -36,14 +36,20 @@ src/
     ├── entryFont.ts      entry sizing: the shrink-to-fit curve and the three
     │                     fixed steps (pure, tested)
     ├── entryFit.ts       the same sizing measured against the real box: shrink
-    │                     to fit, clamp to an ellipsis, refuse a full day
+    │                     to fit, end an overlong note in an ellipsis, refuse a
+    │                     full day
+    ├── entryDom.ts       the note as the browser holds it while you write in
+    │                     it — the editable box's text and caret
     ├── pastDays.ts       which days are past and what the "crossed off" mark
     │                     is made of (pure, tested); PastMark.tsx draws it
     ├── listHome.ts       the row the day list opens a month on — today's
     │                     week, in the month today is in (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
-    ├── DayEntry.tsx      shared read/edit entry surface
+    ├── DayEntry.tsx      shared entry surface — one box, read or written, so
+    │                     a note being typed has the shape it will be read in
+    ├── stripRow.tsx      the week planner's and the day list's shared row: two
+    │                     floated margins with the note flowing around them
     ├── DayZoom.tsx       one day as a page of its own — what a long press on
     │                     a day opens, where a note the cell had to clamp is
     │                     read and written in full
