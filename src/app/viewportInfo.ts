@@ -107,9 +107,9 @@ export function readViewportInfo(): ViewportInfo | null {
   }
 
   // The gutter is *resolved* rather than read off `:root`: a custom property
-  // hands back whatever it was written as, and on this device that is either
-  // a `calc()` or the plain pixel length `safeArea.ts` published — neither of
-  // which is the question. The height of a throwaway element set to it is.
+  // hands back whatever it was written as, which here is a `calc()` over an
+  // `env()` — not the question. The height of a throwaway element set to it
+  // is.
   const probe = document.createElement("div");
   probe.style.cssText = `position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:var(--cal-bottom-gutter)`;
   document.body.appendChild(probe);
@@ -117,13 +117,14 @@ export function readViewportInfo(): ViewportInfo | null {
   probe.remove();
 
   // The top menu's leading space, the other half of the same story — the two
-  // numbers a chrome bug report is argued from.
+  // numbers a chrome bug report is argued from. Read off the bar the app is
+  // actually wearing rather than off a variable: which rule won is the whole
+  // question (a browser tab and an installed app get different ones), and a
+  // used `padding-top` is the only answer that cannot be argued with. `0px`
+  // where the bar is not mounted, which the Developer tab never is.
+  const bar = document.querySelector(".cal-topbar");
   const topbarLead = `${Math.round(
-    pxOf(
-      getComputedStyle(document.documentElement).getPropertyValue(
-        "--cal-topbar-lead",
-      ),
-    ),
+    bar ? pxOf(getComputedStyle(bar).paddingTop) : 0,
   )}px`;
 
   return {

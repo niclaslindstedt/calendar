@@ -56,20 +56,24 @@ dev (`npm run dev`) no service worker registers at all.
 
 **The bottom row is hidden behind the home indicator** — it should not be:
 every view keeps a clear margin below its last row, and on an installed iOS
-PWA that margin is measured against the home indicator's own band rather than
-against `env(safe-area-inset-bottom)`, which cannot be relied on to report it
-there. The margin is also worked out in JavaScript now rather than in the
-stylesheet: the CSS the gutter used to be written as computed to nothing at
-all on the installed app, which is why the last row could arrive with no gap
-under it whatsoever. If a row still comes out under the swipe bar, open
-Settings → Developer → Device and quote the **Safe areas** and **Bottom
-gutter** lines in the report — those are the numbers the gutter is derived
+PWA that margin is measured against the home indicator's own band (34 px)
+rather than against `env(safe-area-inset-bottom)`, which cannot be relied on
+to report it there. **First check you are on the current build** — an
+installed PWA keeps serving the version it cached until you accept the update
+(Settings → Developer → Check for updates, then reload), and this is a layout
+the app has shipped two fixes for. Settings → Developer → Build names the
+version you are actually running. If the current build still puts a row under
+the swipe bar, quote the **Safe areas** and **Bottom gutter** lines from
+Settings → Developer → Device — those are the numbers the gutter is derived
 from.
 
 **The top menu sits too far below the Dynamic Island** — the gap over the
-buttons should match the gap under them. It is resolved from the status-bar
-inset the device reports; Settings → Developer → Device prints it as **Top
-menu lead**, next to the **Safe areas** it came from.
+buttons should match the gap under them. On an installed iOS app the whole
+status-bar band is the gap, and the band already leaves room under the island;
+if the buttons sit a further ~12 px down, the app is laying itself out with a
+browser tab's arithmetic, which again means it is running a cached older
+build. Settings → Developer → Device prints the resolved value as **Top menu
+lead**, next to the **Safe areas** it came from.
 
 **The app sits up under the status bar / Dynamic Island** — it should settle
 back within a moment on its own. This was iOS's doing: opening the keyboard

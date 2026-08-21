@@ -47,7 +47,6 @@ import { showsArrows, swipeAxis } from "./app/navSwipe.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
-import { applySafeAreaVars } from "./app/safeArea.ts";
 import {
   completeOauthOnBoot,
   connectDropbox,
@@ -152,40 +151,18 @@ export function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [signature]);
 
-  // Keep the safe-area lengths on `<html>` current. `main.tsx` publishes them
-  // before the first render; they change afterwards when the device rotates
-  // (the insets swap sides), and when the app is launched from the home
-  // screen after having been open in a tab, which is a different display mode
-  // and so a different answer for the top menu's leading space.
+  // Keep the room factor current: every printed size is multiplied by it, and
+  // it is a function of the window's size, so a rotation or a resized desktop
+  // window is a different answer. The safe areas need no such listener — they
+  // are the stylesheet's own arithmetic (`src/app/safeArea.ts` explains why),
+  // and `env()` re-resolves on its own.
   useEffect(() => {
-    const media = window.matchMedia("(display-mode: standalone)");
-    // The room factor rides along: it is a function of the same two numbers a
-    // resize changes, and every printed size is multiplied by it.
-    const measure = () => {
-      applySafeAreaVars();
-      applyRoomVars();
-    };
-    // Once more now the app is mounted. `main.tsx` measures before the first
-    // render so the calendar never paints the fallback geometry and then
-    // shifts, but a cold launch of the installed app measures into a document
-    // that iOS has not finished laying out into the full screen — and an inset
-    // read a beat too early is a wrong lead and a wrong gutter that nothing
-    // afterwards corrects, because a phone that never rotates never resizes.
-    measure();
-    // A PWA is resumed far more often than it is launched, and iOS re-lays the
-    // web view out when it comes back — the two events that say so, since
-    // neither one is a resize.
+    const measure = () => applyRoomVars();
     window.addEventListener("resize", measure);
     window.addEventListener("orientationchange", measure);
-    window.addEventListener("pageshow", measure);
-    document.addEventListener("visibilitychange", measure);
-    media.addEventListener("change", measure);
     return () => {
       window.removeEventListener("resize", measure);
       window.removeEventListener("orientationchange", measure);
-      window.removeEventListener("pageshow", measure);
-      document.removeEventListener("visibilitychange", measure);
-      media.removeEventListener("change", measure);
     };
   }, []);
 

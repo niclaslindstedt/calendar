@@ -27,23 +27,31 @@
     "Times New Roman", serif;
 }
 
-/* Full-viewport, app-like shell. The month view manages its own scroll. */
+/* Full-viewport, app-like shell. The month view manages its own scroll.
+
+   `100svh` — the *small* viewport, the one that stays visible with the
+   browser's toolbars out — rather than the `height: 100%` this used to be.
+   On iOS a percentage height resolves against the initial containing block,
+   which is the **large** viewport, so in a Safari tab the shell was taller
+   than the screen and the last row of every view sat behind the toolbar. Same
+   answer as the sibling `contacts` app, whose shell is
+   `h-[var(--app-height,100svh)]`. */
 html,
 body {
-  height: 100%;
+  height: 100svh;
 }
 
 /* Installed iOS PWA, edge-to-edge: iOS only extends the page under the status
    bar and the home indicator when the *root* element carries a fixed `100vh`
-   height. With a percentage height (the `height: 100%` above — or `100svh`,
-   or any percentage) the document stops at the letterboxed viewport and iOS
-   paints the bands outside it from the canvas background instead of from the
-   app's own chrome: the top menu then reads as a white strip under the status
-   bar on a dark theme, because the canvas is white until `body` claims it
-   (see the background below). Scoped to iOS via the `-webkit-touch-callout`
-   probe (no other engine supports it) and to `display-mode: standalone`, so a
-   normal Safari tab keeps the percentage-height shell and its dynamic
-   toolbars. Same fix, same reasoning, as the sibling `notes` app. */
+   height. With a percentage height (`100svh`, `100%`, any percentage) the
+   document stops at the letterboxed viewport and iOS paints the bands outside
+   it from the canvas background instead of from the app's own chrome: the top
+   menu then reads as a white strip under the status bar on a dark theme,
+   because the canvas is white until `body` claims it (see the background
+   below). Scoped to iOS via the `-webkit-touch-callout` probe (no other engine
+   supports it) and to `display-mode: standalone`, so a normal Safari tab keeps
+   the small-viewport shell and its dynamic toolbars. Same fix, same reasoning,
+   as the sibling `contacts` app. */
 @supports (-webkit-touch-callout: none) {
   @media (display-mode: standalone) {
     html,
@@ -53,102 +61,93 @@ body {
   }
 }
 
-/* The gap under a view's last row, and the day list's taller version of it.
-   Both are *computed in JavaScript* — `src/app/safeArea.ts` resolves the
-   device's insets and publishes these two properties on `<html>` — and what
-   is written here is only the value that holds until it does.
+/* ── The two safe-area measurements ──────────────────────────────────────────
 
-   They used to be arithmetic in this file, and the arithmetic was
-   `max(25px, calc(env(safe-area-inset-bottom, 0px) + 16px))`. A custom
-   property swallows anything at parse time, so that expression looked fine
-   here and failed where it was *used*: on the installed iOS app
-   `padding-bottom: var(--cal-bottom-gutter)` was invalid at computed-value
-   time and fell back to the property's initial value — zero — which is why
-   the last week row ran clean off the bottom of the screen instead of
-   arriving with a gutter that was merely too small. Fixing the number inside
-   that expression twice changed nothing, because the number was never what
-   was wrong.
+   The gap a view leaves under its last row, and the clear space the top menu
+   leaves above its buttons. Both are this file's, and the whole point is that
+   they are *only* this file's.
 
-   Hence the rule this file now follows: **no `env()` inside `min()`, `max()`
-   or `clamp()`.** A plain `calc(env(…) + <length>)` is the one form every
-   engine computes, so that is what the fallback below is — the device's own
-   band plus the visible margin, with the floor built into the constant rather
-   than compared against it. Everything that needs a real comparison (the home
-   indicator's 34 px floor, the display mode) is `safeArea.ts`'s job. */
+   They were JavaScript's for a while: `src/app/safeArea.ts` read the insets
+   and published both on `<html>` as inline lengths, with a fallback here for
+   the moment before it had measured. That arrangement had one failure mode
+   and the app hit it — if the published value never lands, for any reason at
+   all, the layout falls back to what is written here, and what was written
+   here was a *browser tab's* arithmetic. On the installed app a tab's answers
+   are visibly wrong in both directions: the pad stacked on a 62 px status-bar
+   band puts half again as much air over the buttons as under them, and
+   `env(safe-area-inset-bottom)` reporting `0` (which it does there) leaves
+   the last week row under the swipe bar.
+
+   So the arithmetic is back in CSS, where the sibling `contacts` app has kept
+   it all along, and JavaScript no longer writes these properties at all. Two
+   rules make that safe:
+
+     1. **Every value here computes.** A custom property swallows anything at
+        parse time and fails later, at substitution, where an invalid `var()`
+        takes the whole property down to its initial value — which is how
+        `padding-bottom` silently became `0` and the last week row ran clean
+        off the bottom of the screen. Nothing below can do that: every value
+        is a literal or a plain `calc(env(…) + <length>)`.
+     2. **No `env()` inside `min()`, `max()` or `clamp()`** — the expression
+        that started all of this. Anything needing a comparison is answered by
+        *scope* instead: the installed-app block below is entered only where
+        the comparison's answer is already known.
+
+   `tests/layout_test.ts` holds both rules, and holds the numbers here to the
+   named constants in `src/app/safeArea.ts`. */
 :root {
+  /* The visible margin below a view's last row, on top of whatever band the
+     device reserves for itself. */
   --cal-gutter-margin: 24px;
+  /* The band an iPhone's home indicator occupies. A constant rather than a
+     reading, because the inset that is supposed to describe it reports `0` in
+     the installed app while the swipe bar is still very much on screen. */
+  --cal-home-indicator: 34px;
+  /* A browser tab's answer: the device's own band plus the margin. In a tab
+     the inset is what the chrome leaves, and it is honest about it. */
   --cal-bottom-gutter: calc(
     env(safe-area-inset-bottom, 0px) + var(--cal-gutter-margin)
   );
   /* The day list scrolls its last row into view instead of laying it out on
      screen, so it carries the shared gutter plus a little more — see
-     `LIST_BOTTOM_PAD` in `src/app/layout.ts`. */
+     `LIST_BOTTOM_PAD` in `src/app/layout.ts`. Derived, so the two can never
+     drift apart, and derived *lazily*: a custom property substitutes at use,
+     so overriding the shared gutter below carries this one with it. */
   --cal-list-gutter: calc(var(--cal-bottom-gutter) + 20px);
 }
 
-/* The top menu's vertical rhythm. The pad under the buttons is this file's;
-   the space *above* them is `--cal-topbar-lead`, which `src/app/safeArea.ts`
-   publishes on `<html>` once it has read the device's insets.
-
-   It has to be computed there rather than here because the two environments
-   want different arithmetic on the same inset. In a browser tab the pad adds
-   to the inset — 0 in portrait, so the bar simply gets its `py-3`, and a
-   notched phone in landscape still clears the notch. In an installed app the
-   inset is the whole status-bar band (59 px on a Dynamic Island phone, 20 px
-   without one) and it already leaves room below the island, so stacking the
-   pad on top of it put roughly twice as much air over the buttons as under
-   them; there the two are *compared* instead.
-
-   That comparison shipped once, as
-   `padding-top: max(var(--cal-header-pad), env(safe-area-inset-top))`, and
-   the installed app dropped the whole declaration on the floor — `env()`
-   inside `max()` is the same thing that was quietly zeroing the bottom gutter
-   above — leaving the bar on the stacked value it was meant to replace. So
-   the comparison moved to where comparing is free, and the fallback here is
-   the plain `calc()` a browser tab wants anyway. */
+/* The top menu's vertical rhythm. The pad under the buttons is a constant; the
+   space above them is the inset plus that same pad, which is what a browser
+   tab wants — 0 in portrait, so the bar simply gets its `py-3`, and a notched
+   phone in landscape still clears the notch. The installed app overrides it
+   below. */
 .cal-topbar {
   --cal-header-pad: 0.75rem;
-  padding-top: var(
-    --cal-topbar-lead,
-    calc(var(--cal-header-pad) + env(safe-area-inset-top, 0px))
-  );
+  padding-top: calc(var(--cal-header-pad) + env(safe-area-inset-top, 0px));
   padding-bottom: var(--cal-header-pad);
 }
 
-/* …and what an *installed iOS app* falls back to, which is a different answer
-   from the two above. Both fallbacks so far are a browser tab's arithmetic —
-   the pad added on top of the inset over the buttons, the device's own word
-   for its bottom band under the last row — and on the installed app both come
-   out wrong:
+/* ── …and the installed iOS app's answers ────────────────────────────────────
 
-     - the status-bar inset is the whole band and already leaves room under
-       the notch, so adding the pad to it puts half again as much air over the
-       buttons as under them;
-     - `env(safe-area-inset-bottom)` has been seen reporting `0` there while
-       the home indicator was very much still on screen, which leaves the last
-       week row sitting under the swipe bar with the margin alone for a
-       gutter instead of the home indicator's band plus the margin.
-
-   `src/app/safeArea.ts` resolves both properly and publishes them on `<html>`
-   as inline lengths, which win over this block. This is what holds if that
-   never lands — a stale worker, an inset read before the app was laid out
-   into the full screen, anything — because the *fallback* an installed app
-   uses should be the installed app's answer, not a tab's. It says the same
-   thing in the one form iOS computes: plain values, and no `min()`, `max()`
-   or `clamp()` anywhere near an `env()`.
-
-   Scoped exactly like the `100vh` shell above: `-webkit-touch-callout` is the
-   iOS probe (no other engine supports it) and `display-mode: standalone` is
-   the installed app. A Safari tab keeps the tab's answers. */
+   Scoped exactly like the `100vh` shell above, and for the same reason: inside
+   this block the two questions the arithmetic could not otherwise answer are
+   already answered. The app is installed, so the status-bar inset is the whole
+   band rather than nothing; and it is an iPhone, so there is a home indicator
+   down there whatever the bottom inset claims. That is why no `max()` is
+   needed — the scope *is* the comparison. */
 @supports (-webkit-touch-callout: none) {
   @media (display-mode: standalone) {
+    /* The band already leaves room below the notch, so the band *is* the
+       lead. Stacking the pad on top of it is what put the extra air over the
+       buttons; without it the gap above them (the inset less the island's own
+       height) matches the pad below them. */
+    .cal-topbar {
+      padding-top: env(safe-area-inset-top, 0px);
+    }
+
+    /* The home indicator's own band plus the margin — not the inset's word for
+       the band, which is the reading that has now been wrong twice. */
     :root {
-      /* The band *is* the lead — it already leaves room below the island. */
-      --cal-topbar-lead: env(safe-area-inset-top, 0px);
-      /* The band the home indicator occupies, taken as a constant rather than
-         from the inset that has twice denied it. `safeArea.ts` floors the
-         measured inset at this same number. */
-      --cal-home-indicator: 34px;
       --cal-bottom-gutter: calc(
         var(--cal-home-indicator) + var(--cal-gutter-margin)
       );
