@@ -38,13 +38,13 @@ import {
   SettingsModal,
   type SettingsDraft,
 } from "./app/settings/SettingsModal.tsx";
-import { SwipeDeck, type DeckNav } from "./app/SwipeDeck.tsx";
+import { SwipeDeck } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
+import { WeekSearch } from "./app/WeekSearch.tsx";
 import { useT } from "./app/i18n/index.ts";
 import type { ListArrival } from "./app/listHome.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
-import { showsArrows, swipeAxis } from "./app/navSwipe.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
@@ -76,11 +76,11 @@ import {
   pastMarkOf,
   stripLayoutOf,
   stripNoteFlows,
-  swipeDirectionFor,
   useAppSettings,
   weekDateSizeFor,
   weekFormatFor,
   weekRowsOf,
+  type ViewMode,
 } from "./app/useAppSettings.ts";
 import {
   SCOPE_OF_VIEW,
@@ -112,6 +112,16 @@ const BACKUP_DEFAULTS = {
  *  keeps off screen are handed the *same* do-nothing function every render —
  *  a fresh `() => {}` would defeat the memoization the views rely on. */
 const NOOP = () => {};
+
+/** The three views, in the order a sideways swipe walks them.
+ *
+ *  Left to right is the order they are listed in the top bar, and the order
+ *  they zoom in through: a month, a week of it, a day of that. So the gesture
+ *  and the switcher agree about which way is which, and the deck's own ends
+ *  are the switcher's own ends — there is no wrapping from the day list back
+ *  round to the month grid, because a carousel of three would put "left" and
+ *  "right" in charge of the same move. */
+const VIEW_ORDER: readonly ViewMode[] = ["month", "week", "list"];
 
 export function App() {
   const t = useT();
@@ -233,6 +243,15 @@ export function App() {
   const [nameSeed, setNameSeed] = useState<string | null>(null);
   const [nameQuery, setNameQuery] = useState("");
 
+  // The week screen, when open: a day inside the week whose number was tapped
+  // (where the table opens, and which year's table it is) and the live query.
+  // A dialog over the calendar for the same reason the almanac is one — you
+  // are asking where a week is, and the answer is a place in the calendar
+  // behind. A day rather than a number, because "week 1" does not say which
+  // side of New Year it is on (`WeekSearch`).
+  const [weekSeed, setWeekSeed] = useState<DayKey | null>(null);
+  const [weekQuery, setWeekQuery] = useState("");
+
   // Calendars: separate calendars in the same app, each its own document in
   // the same backend. The registry and the active pointer live in the app
   // (`useCalendars`, the framework's "store stays in the app" seam); the
@@ -334,6 +353,7 @@ export function App() {
   const openHolidays = useCallback((year: number) => {
     setEditingDay(null);
     setNameSeed(null);
+    setWeekSeed(null);
     setZoomDay(null);
     setHolidayYear(year);
   }, []);
@@ -348,11 +368,45 @@ export function App() {
   /** Leave the name-day search. */
   const closeNames = () => setNameSeed(null);
 
+  /** Leave the week list. */
+  const closeWeeks = () => setWeekSeed(null);
+
+  /** Open it on the week the tapped number belongs to. Stable, for the same
+   *  reason as {@link openHolidays}: every day of every period the deck holds
+   *  carries a reference to it. */
+  const openWeeks = useCallback((day: DayKey) => {
+    setEditingDay(null);
+    setZoomDay(null);
+    setNameSeed(null);
+    setWeekQuery("");
+    setWeekSeed(day);
+  }, []);
+
+  /** A picked week: go to it, in the view that shows a week.
+   *
+   *  The other two answers are both worse. Staying in the month grid answers
+   *  "which week is 34" with a month and leaves you to find it; staying in the
+   *  day list answers it with a scroll position. You asked for a week, so the
+   *  calendar hands you the week — and the switcher is one tap away if you
+   *  wanted the month around it. */
+  const goToWeek = (start: DayKey) => {
+    setWeekSeed(null);
+    setEditingDay(null);
+    setArrival("open");
+    if (settings.view !== "week") update("view", "week");
+    setAnchor(start);
+    // Counted like a press of Today: the week you picked can be the week the
+    // anchor is already on, and a `setAnchor` that lands on the value it held
+    // puts nothing back.
+    setHomings((n) => n + 1);
+  };
+
   /** Open it on the name that was tapped — as a list, not a search. Stable,
    *  for the same reason as {@link openHolidays}. */
   const openNames = useCallback((name: string) => {
     setEditingDay(null);
     setZoomDay(null);
+    setWeekSeed(null);
     setNameQuery("");
     setNameSeed(name);
   }, []);
@@ -432,37 +486,73 @@ export function App() {
   const weekRows = weekRowsOf(live);
   const weekFormat = weekFormatFor(live);
   const weekDateSize = weekDateSizeFor(live);
-  // Which way a swipe turns the page, and — the same answer read again —
-  // whether the heading still has arrows to point with. Off the live look, so
-  // the dialog's preview shows both as they are chosen.
-  const swipe = swipeDirectionFor(live);
-  const arrows = showsArrows(swipe);
-  // Every view pages horizontally, so each renders three periods at a time:
-  // the one on screen and the two waiting either side of it. The month and
-  // week views fill exactly one screen; the day list scrolls inside its own
-  // pane, which the deck is told about so a vertical drag still scrolls it.
+  // The calendar is a deck inside a deck (`SwipeDeck`): the period turns up
+  // and down and the view turns left and right. Both are dropped while the
+  // holidays screen is open — it brings a deck of its own, for its years.
   const paged = holidayYear === null;
+  // Where along the row the calendar is. Floored at the first view, because
+  // settings are a hand-editable JSON blob: an unrecognised `view` would put
+  // the deck at -1, where all three panes are past an end and the calendar is
+  // a blank screen. The month grid is the shipped default and the answer here
+  // for the same reason `renderPane` falls through to it.
+  const viewAt = Math.max(0, VIEW_ORDER.indexOf(settings.view));
+  const view = VIEW_ORDER[viewAt];
 
-  /** The anchor `rel` periods away — a week in week view, a month otherwise. */
-  const shiftAnchor = (rel: -1 | 0 | 1): DayKey =>
+  /** Whether a view's pane scrolls inside its own deck. The month grid and a
+   *  fixed week fill exactly one screen and never do; the day list and a grown
+   *  week planner do, and the deck has to be told so a vertical drag is left
+   *  to the pane until the pane runs out of room to give. */
+  const viewScrolls = (view: ViewMode) =>
+    view === "list" || (view === "week" && weekRows === "dynamic");
+
+  /** The anchor `rel` periods away — a week in the week planner, a month in
+   *  the other two. */
+  const shiftAnchor = (view: ViewMode, rel: -1 | 0 | 1): DayKey =>
     rel === 0
       ? anchor
-      : settings.view === "week"
+      : view === "week"
         ? addDays(anchor, 7 * rel)
         : addMonths(anchor, rel);
 
-  const renderPeriod = (rel: -1 | 0 | 1, nav: DeckNav) => {
-    const at = shiftAnchor(rel);
+  /** Turn to the view on one side or the other.
+   *
+   *  Unlike a press of the top bar's switcher, this keeps the period you are
+   *  on. The press means "show me this view" and is answered with today,
+   *  because a segmented control that lands you in a March you cannot see the
+   *  name of is a worse answer than the one you asked for. The swipe means
+   *  "show me *this* — the other way round": the neighbouring view is already
+   *  under your finger at the period you are reading, and jumping to today as
+   *  it settles would change the answer after you had seen it. */
+  const stepView = (direction: 1 | -1) => {
+    const next = VIEW_ORDER[viewAt + direction];
+    if (!next) return;
+    setEditingDay(null);
+    // The list opens on the week you were reading rather than at an edge —
+    // you did not page here, you turned the same period on its side.
+    setArrival("open");
+    update("view", next);
+  };
+
+  /** One view at one period.
+   *
+   *  `interactive` is false for every pane the deck is holding off screen —
+   *  the periods either side, and the whole of the neighbouring views — so a
+   *  tap that lands on a parked pane mid-swipe can never open an editor in a
+   *  month, or a view, you are not looking at. */
+  const renderPane = (
+    view: ViewMode,
+    rel: -1 | 0 | 1,
+    interactive: boolean,
+  ) => {
+    const at = shiftAnchor(view, rel);
     const on = parseDayKey(at) ?? parts;
-    // Only the pane on screen takes input: a tap that lands on a parked
-    // neighbour mid-swipe must not open an editor in an off-screen month.
-    const interactive = rel === 0;
     const editing = interactive ? editingDay : null;
     const onEditDay = interactive ? setEditingDay : NOOP;
     const onCommit = interactive ? store.setEntry : NOOP;
     const onOpenNames = interactive ? openNames : NOOP;
+    const onOpenWeeks = interactive ? openWeeks : NOOP;
     const onZoomDay = interactive ? openZoom : NOOP;
-    if (settings.view === "list") {
+    if (view === "list") {
       return (
         <DayListView
           year={on.year}
@@ -477,7 +567,6 @@ export function App() {
           rowMode={live.listRows}
           weekFormat={weekFormat}
           headerInk={headerInk}
-          arrows={arrows}
           arrival={arrival}
           pastMark={pastMark}
           textSize={styles.strip.entry.size}
@@ -485,15 +574,14 @@ export function App() {
           editingDay={editing}
           onEditDay={onEditDay}
           onCommit={onCommit}
-          onPrevious={nav.previous}
-          onNext={nav.next}
           onOpenHolidays={openHolidays}
           onOpenNames={onOpenNames}
+          onOpenWeeks={onOpenWeeks}
           onZoomDay={onZoomDay}
         />
       );
     }
-    return settings.view === "week" ? (
+    return view === "week" ? (
       <WeekPlannerView
         anchor={at}
         today={today}
@@ -507,17 +595,15 @@ export function App() {
         weekFormat={weekFormat}
         dateSize={weekDateSize}
         headerInk={headerInk}
-        arrows={arrows}
         pastMark={pastMark}
         textSize={styles.strip.entry.size}
         doc={store.doc}
         editingDay={editing}
         onEditDay={onEditDay}
         onCommit={onCommit}
-        onPrevious={nav.previous}
-        onNext={nav.next}
         onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
+        onOpenWeeks={onOpenWeeks}
         onZoomDay={onZoomDay}
       />
     ) : (
@@ -530,7 +616,6 @@ export function App() {
         showNameDays={toggles.nameDays}
         layout={cellLayout}
         headerInk={headerInk}
-        arrows={arrows}
         pastMark={pastMark}
         textSize={styles.month.entry.size}
         nameDayScale={styles.month.nameDays.size}
@@ -539,10 +624,9 @@ export function App() {
         editingDay={editing}
         onEditDay={onEditDay}
         onCommit={onCommit}
-        onPrevious={nav.previous}
-        onNext={nav.next}
         onOpenHolidays={openHolidays}
         onOpenNames={onOpenNames}
+        onOpenWeeks={onOpenWeeks}
         onZoomDay={onZoomDay}
       />
     );
@@ -567,6 +651,7 @@ export function App() {
           setEditingDay(null);
           closeHolidays();
           closeNames();
+          closeWeeks();
           if (view !== settings.view) update("view", view);
           goToday();
         }}
@@ -576,6 +661,7 @@ export function App() {
           setEditingDay(null);
           closeHolidays();
           closeNames();
+          closeWeeks();
           calendars.switchTo(slug);
         }}
         onManageCalendars={() => setCalendarsOpen(true)}
@@ -600,26 +686,58 @@ export function App() {
           />
         )}
         {paged && (
+          // The view deck. Left and right walk the three views, which is the
+          // one move on a calendar that really is a move sideways: you are
+          // stepping to what is beside the thing you are reading, not to
+          // another month. It ends where the switcher ends — no wrapping —
+          // and a drag past either end gives a little and springs back.
           <SwipeDeck
-            // Remounting on a view switch drops any half-finished gesture and
-            // re-centres, rather than carrying a month's drag into a week. The
-            // paging axis is in the key for the same reason: the track's
-            // resting transform is written to the DOM directly, so turning the
-            // deck on its side is a fresh deck rather than a re-styled one.
-            key={`${settings.view}:${swipe}`}
-            itemKey={`${anchor}@${homings}`}
-            // Left/right by default; up/down for a reader who would rather
-            // scroll a calendar than flick through it, in which case the day
-            // list simply carries on scrolling into the month above or below
-            // (`navSwipe.ts`, and `atScrollEnd` in the deck).
-            axis={swipeAxis(swipe)}
-            scrolls={
-              settings.view === "list" ||
-              (settings.view === "week" && weekRows === "dynamic")
-            }
-            onPrevious={() => step(-1)}
-            onNext={() => step(1)}
-            renderItem={renderPeriod}
+            itemKey={view}
+            axis="x"
+            // The *centre* view's answer, because that is the pane a finger
+            // actually goes down on: `touch-action` is resolved from the
+            // element under the touch and every ancestor of it, so a view deck
+            // that claimed both axes over a scrolling list would take the
+            // list's own scrolling away from it.
+            scrolls={viewScrolls(view)}
+            canPrevious={viewAt > 0}
+            canNext={viewAt < VIEW_ORDER.length - 1}
+            onPrevious={() => stepView(-1)}
+            onNext={() => stepView(1)}
+            renderItem={(rel) => {
+              const pane = VIEW_ORDER[viewAt + rel];
+              if (!pane) return null;
+              const showing = rel === 0;
+              return (
+                // The period deck: up and down turns the month, the week, or
+                // the month a list is showing. One per view rather than one
+                // for the calendar, and keyed by the view rather than by the
+                // slot it is parked in — so the deck that was the neighbour
+                // *is* the deck that becomes the centre. The pane a swipe
+                // brought in is already rendered and simply starts taking
+                // input, instead of being torn down and built again under the
+                // finger that just landed it.
+                //
+                // A parked view renders its current period and nothing else:
+                // it is a preview to be dragged into place, and the two
+                // periods either side of it are not on their way anywhere.
+                <SwipeDeck
+                  key={pane}
+                  itemKey={`${anchor}@${homings}`}
+                  axis="y"
+                  scrolls={viewScrolls(pane)}
+                  onPrevious={showing ? () => step(-1) : NOOP}
+                  onNext={showing ? () => step(1) : NOOP}
+                  renderItem={(at) =>
+                    showing
+                      ? renderPane(pane, at, true)
+                      : at === 0
+                        ? renderPane(pane, 0, false)
+                        : null
+                  }
+                />
+              );
+            }}
           />
         )}
       </main>
@@ -640,6 +758,7 @@ export function App() {
         onClose={() => setZoomDay(null)}
         onOpenHolidays={openHolidays}
         onOpenNames={openNames}
+        onOpenWeeks={openWeeks}
       />
 
       {/* Tapping one of a day's names opens the almanac at that name; the
@@ -653,6 +772,20 @@ export function App() {
         onQueryChange={setNameQuery}
         onClose={closeNames}
         onPick={goToNameDay}
+      />
+
+      {/* …and tapping a week number opens the year's weeks at that one. Same
+          shape of answer as the almanac's: a coordinate you are already
+          looking at, a table you can search either half of, and a way back
+          into the calendar at what you picked. */}
+      <WeekSearch
+        open={weekSeed !== null}
+        pack={pack}
+        seed={weekSeed ?? today}
+        query={weekQuery}
+        onQueryChange={setWeekQuery}
+        onClose={closeWeeks}
+        onPick={goToWeek}
       />
 
       {/* Create / switch / rename / restyle / delete a calendar. The app owns

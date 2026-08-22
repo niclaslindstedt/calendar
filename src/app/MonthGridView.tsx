@@ -59,9 +59,6 @@ type Props = {
   layout: MonthCellLayout;
   /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
   headerInk: string | null;
-  /** Whether the heading prints its period arrows — off where the reader
-   *  pages up and down (`navSwipe.ts`). */
-  arrows: boolean;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -77,14 +74,14 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
-  onPrevious: () => void;
-  onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen. Takes the year so
    *  the handler can stay one stable function across every day of every
    *  period the deck holds, rather than a fresh closure per cell. */
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** Tapping a week number in the gutter opens the week list on it. */
+  onOpenWeeks: (day: DayKey) => void;
   /** A long press holds the day up close (`DayZoom`) — the way to read, and
    *  write, a note the 47 px column had to shrink. */
   onZoomDay: (day: DayKey) => void;
@@ -103,7 +100,6 @@ export const MonthGridView = memo(function MonthGridView({
   showNameDays,
   layout,
   headerInk,
-  arrows,
   pastMark,
   textSize,
   nameDayScale,
@@ -112,10 +108,9 @@ export const MonthGridView = memo(function MonthGridView({
   editingDay,
   onEditDay,
   onCommit,
-  onPrevious,
-  onNext,
   onOpenHolidays,
   onOpenNames,
+  onOpenWeeks,
   onZoomDay,
 }: Props) {
   const t = useT();
@@ -168,16 +163,13 @@ export const MonthGridView = memo(function MonthGridView({
         className="flex min-h-0 flex-1 flex-col px-3 sm:px-6"
         style={{ paddingBottom: CONTENT_BOTTOM_PAD }}
       >
-        {/* The serif month title, wall-calendar style, between the arrows —
-            banded edge to edge on a phone, as in the other two views. */}
+        {/* The serif month title, wall-calendar style — banded edge to edge
+            on a phone, as in the other two views. */}
         <PeriodHeading
           title={monthName(pack, month)}
           meta={String(year)}
           accent={headerInk}
           bleed
-          arrows={arrows}
-          onPrevious={onPrevious}
-          onNext={onNext}
         />
 
         {/* Weekday headers. The rule under them is the row's, not each
@@ -217,15 +209,23 @@ export const MonthGridView = memo(function MonthGridView({
               {showWeekNumbers && (
                 // Bare number, flush to the lane's left edge. The prefix
                 // survives in the accessible name, where there is no width to
-                // pay for it.
-                <div
-                  className="text-muted cal-font-week cal-size-week pt-1 [--cal-base:10px]"
-                  aria-label={t("topbar.week", {
+                // pay for it — and so does what pressing it does, because the
+                // number is also the way into the week list, exactly as a
+                // holiday's name is the way into the holidays screen.
+                //
+                // A `button` rather than a cell with a handler: the gutter is
+                // its own column with nothing else in it, so there is no
+                // click-to-type underneath for the press to fall through to.
+                <button
+                  type="button"
+                  onClick={() => onOpenWeeks(week[0].key)}
+                  className="text-muted cal-font-week cal-size-week cursor-pointer pt-1 text-left [--cal-base:10px] focus-visible:outline-2"
+                  aria-label={t("weeks.open", {
                     n: weekNumber(pack, week[0].key),
                   })}
                 >
                   {weekNumber(pack, week[0].key)}
-                </div>
+                </button>
               )}
               {week.map((cell) => (
                 <DayCell

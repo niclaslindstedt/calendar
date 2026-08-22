@@ -10,6 +10,12 @@
 // did not follow the cell's arrangement, faces and sizes into the View
 // section.
 //
+// How you move between periods is not among them any more. It used to be the
+// first question here, and the answer is now the app's rather than the
+// reader's: a swipe up or down turns the period, a swipe left or right turns
+// the view (`SwipeDeck`). Two axes, both spoken for, and nothing left to
+// choose between.
+//
 // Part of the previewed look — the edits stream to the calendar behind the
 // dialog and are only written on Save.
 
@@ -32,11 +38,9 @@ import {
   type PastMarkScope,
   type PastMarkStyle,
 } from "../pastDays.ts";
-import { SWIPE_DIRECTIONS, type SwipeDirection } from "../navSwipe.ts";
 import {
   headerColorFor,
   pastMarkOf,
-  swipeDirectionFor,
   weekDateSizeFor,
   weekFormatFor,
   weekRowsOf,
@@ -75,11 +79,6 @@ const WEEK_DATE_LABELS: Record<WeekDateSize, MessageKey> = {
   huge: "settings.textSizeHuge",
 };
 
-const SWIPE_LABELS: Record<SwipeDirection, MessageKey> = {
-  horizontal: "settings.swipeHorizontal",
-  vertical: "settings.swipeVertical",
-};
-
 const PAST_MARK_LABELS: Record<PastMarkStyle, MessageKey> = {
   none: "settings.pastMarkNone",
   cross: "settings.pastMarkCross",
@@ -109,31 +108,6 @@ export function CalendarSection({
 
   return (
     <>
-      {/* Which way the pages turn — the first of this section's questions,
-        under the sample the View section ends with, because it is the one
-        setting here that changes what your thumb does rather than what the
-        page looks like. It is on the Calendar tab rather than in General for
-        the reason the rest of these are: it is the calendar's own behaviour,
-        not the device's. */}
-      <Section title={t("settings.navigation")}>
-        <p className="text-muted text-xs">{t("settings.navigationHint")}</p>
-
-        <Field label={t("settings.swipeDirection")}>
-          <SegmentedControl<SwipeDirection>
-            value={swipeDirectionFor(look)}
-            onChange={(next) => onUpdate("swipeDirection", next)}
-            ariaLabel={t("settings.swipeDirection")}
-            options={SWIPE_DIRECTIONS.map((direction) => ({
-              value: direction,
-              label: t(SWIPE_LABELS[direction]),
-            }))}
-          />
-          <p className="text-muted text-xs">
-            {t("settings.swipeDirectionHint")}
-          </p>
-        </Field>
-      </Section>
-
       {/* Crossing off what has gone. Off by default: a calendar you have
         written on is a preference, not an improvement. */}
       <Section title={t("settings.pastDays")}>

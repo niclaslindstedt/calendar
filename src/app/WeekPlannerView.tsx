@@ -93,9 +93,6 @@ type Props = {
   /** The heading band's colour, which the week numbers are printed in too —
    *  `null` for the plain heading, and then the page's own ink. */
   headerInk: string | null;
-  /** Whether the heading prints its period arrows — off where the reader
-   *  pages up and down (`navSwipe.ts`). */
-  arrows: boolean;
   /** The stroke drawn over the days that have passed, if any. */
   pastMark: PastMarkSetting;
   textSize: EntryTextSize;
@@ -103,14 +100,14 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
-  onPrevious: () => void;
-  onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen. Takes the year so the
    *  handler can stay one stable function across every day of every period the
    *  deck holds, rather than a fresh closure per row. */
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** Tapping the week number opens the week list on that week. */
+  onOpenWeeks: (day: DayKey) => void;
   /** A long press holds the day up close (`DayZoom`). */
   onZoomDay: (day: DayKey) => void;
 };
@@ -130,17 +127,15 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   weekFormat,
   dateSize,
   headerInk,
-  arrows,
   pastMark,
   textSize,
   doc,
   editingDay,
   onEditDay,
   onCommit,
-  onPrevious,
-  onNext,
   onOpenHolidays,
   onOpenNames,
+  onOpenWeeks,
   onZoomDay,
 }: Props) {
   // Press and hold to zoom (`DayZoom`). One hook for the seven rows rather
@@ -212,7 +207,6 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       meta={mid ? String(mid.year) : ""}
       accent={headerInk}
       bleed
-      arrows={arrows}
       // A banded heading is the first row's rule, the same way it is the
       // reason that row draws none of its own (`bandedTop` below): the row
       // brings the leading every other row gets under a hairline, so air
@@ -224,8 +218,6 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       // scroller, so the heading pins itself the way the day list's does —
       // otherwise scrolling to Sunday loses which week you are in.
       className={grows ? "bg-page-bg sticky top-0 z-10" : ""}
-      onPrevious={onPrevious}
-      onNext={onNext}
     />
   );
 
@@ -263,6 +255,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       ink: headerInk,
       showDayOfYear,
       onOpenNames,
+      onOpenWeeks,
       onOpenHolidays: () => onOpenHolidays(year),
     };
     return (

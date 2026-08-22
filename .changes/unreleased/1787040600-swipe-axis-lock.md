@@ -1,8 +1,7 @@
 ---
 type: Fixed
-title: Swipes survive a vertical drift
+title: Swipes survive a sideways drift
 ---
 
-A left or right page swipe now follows through even when the finger drifts
-vertically before lifting — once a swipe starts, only its horizontal travel
-counts.
+A page swipe now follows through even when the finger drifts across it before
+lifting — once a swipe starts, only its travel along the paging axis counts.

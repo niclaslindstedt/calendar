@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The top menu — the app's only chrome (no sidebar): the calendar switcher
 // on the left, the view switcher in the middle, and the settings cogwheel top
-// right. Period navigation is deliberately NOT here: the ‹ › arrows sit on
-// the month heading (`PeriodHeading`), which is where the eye already is and
-// which leaves the switcher room to breathe on a portrait phone.
+// right. Period navigation is deliberately NOT here, and is not a button
+// anywhere else either: the period turns with a swipe up or down, and the
+// view with a swipe left or right (`SwipeDeck`) — which is what leaves this
+// bar three slots wide enough to breathe on a portrait phone. The switcher
+// stays because a gesture nobody has made yet is not a way in.
 //
 // Going back to today is not a button either. Every press of the switcher
 // returns to today, whether it lands on the view you are already in or moves

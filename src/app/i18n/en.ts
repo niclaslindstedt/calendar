@@ -155,14 +155,6 @@ export const en = {
     textSizeHuge: "Huge",
     textSizeSampleHoliday: "All Saints",
     textSizeSampleNote: "Dinner 18:00",
-    navigation: "Navigation",
-    navigationHint:
-      "How you move between months and weeks. Whichever way you choose, the day list still scrolls the days themselves.",
-    swipeDirection: "Swipe",
-    swipeHorizontal: "Left / right",
-    swipeVertical: "Up / down",
-    swipeDirectionHint:
-      "Up and down turns the page the way you already scroll — swipe down for the period before, up for the one after — and takes the arrows out of the heading. In the day list you simply keep scrolling into the month above or below.",
     pastDays: "Passed days",
     pastDaysHint:
       "Cross off the days that have gone, the way you would on a paper calendar. Today is never crossed — the run of marks stops at it.",
@@ -376,6 +368,20 @@ export const en = {
     oneMatch: "1 name",
     noResults: "No name like “{query}” in the almanac.",
     unavailable: "This country calendar has no name days.",
+  },
+  // The week list — what tapping a week number anywhere in the calendar opens.
+  weeks: {
+    /** Title of the week list. */
+    title: "Weeks",
+    placeholder: "Week number or date",
+    clear: "Clear the search",
+    close: "Close the week list",
+    /** The accessible name of every printed week number: it is a way in. */
+    open: "Week {n} — open the week list",
+    matches: "{n} weeks",
+    oneMatch: "1 week",
+    noResults: "No week matches \u201c{query}\u201d.",
+    hint: "Search a week number, or a date — 8 Aug, 8/8, 2026‑08‑08. A date like 12/8 is read both ways.",
   },
   logs: {
     heading: "In-app log",
