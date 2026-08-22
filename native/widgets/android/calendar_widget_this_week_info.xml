@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+  This week: every day of the week you are in.
+
+  `updatePeriodMillis` is 0 on purpose. The system's own period is capped at
+  30 minutes and would wake the provider for nothing most of the time; the
+  content changes when the app publishes a snapshot (the bridge module sends
+  an explicit APPWIDGET_UPDATE) and when the date rolls over, which the
+  receiver listens for (see plugins/with-widgets.js).
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:initialLayout="@layout/calendar_widget_days"
+    android:description="@string/calendar_widget_this_week_description"
+    android:minWidth="180dp"
+    android:minHeight="200dp"
+    android:targetCellWidth="4"
+    android:targetCellHeight="4"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen"
+    android:updatePeriodMillis="0" />

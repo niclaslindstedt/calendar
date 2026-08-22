@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+  THE LIST WIDGETS' LAYOUT — shared by Next 3 days, This week and Work week,
+  which differ only in how many of these rows they fill.
+
+  RemoteViews cannot build a list, so the rows are FIXED: seven of them (a
+  whole week, the longest span any widget asks for), all starting hidden, and
+  filled one by one by CalendarWidgetProvider. Adding a row here means bumping
+  MAX_ROWS and ROW_IDS there — the two are one declaration split across two
+  files by the platform, not by choice.
+
+  Every colour is set at bind time from the snapshot's palette (the reader's
+  theme, as the app resolved it), so nothing is hard-coded here. The root
+  carries the id the click handler and the background both address, which is
+  why it is the same id in the Today layout.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calendar_widget_click"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingBottom="4dp">
+
+    <TextView
+        android:id="@+id/calendar_widget_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        tools:text="This week" />
+
+    <TextView
+        android:id="@+id/calendar_widget_calendar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:gravity="end"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="11sp"
+        tools:text="Personal" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_0"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_0"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_0"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_0"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_1"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_1"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_1"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_2"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_2"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_2"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_3"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_3"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_3"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_4"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_4"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_4"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_5"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_5"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_5"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_5"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+  <LinearLayout
+      android:id="@+id/calendar_widget_row_6"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:paddingTop="2dp"
+      android:paddingBottom="2dp"
+      android:visibility="gone">
+
+    <TextView
+        android:id="@+id/calendar_widget_weekday_6"
+        android:layout_width="30dp"
+        android:layout_height="wrap_content"
+        android:textSize="9sp"
+        android:textStyle="bold"
+        tools:text="MON" />
+
+    <TextView
+        android:id="@+id/calendar_widget_date_6"
+        android:layout_width="18dp"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <TextView
+        android:id="@+id/calendar_widget_note_6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="6dp"
+        android:maxLines="1"
+        android:ellipsize="end"
+        android:textSize="12sp"
+        tools:text="Dentist, 14:00" />
+  </LinearLayout>
+
+</LinearLayout>

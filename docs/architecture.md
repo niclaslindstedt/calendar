@@ -98,3 +98,22 @@ and the plugin must agree on; change them together.
 
 See [storage.md](storage.md) for the backend model, and
 `src/app/storage/backends.ts` for the wiring.
+
+## The native wrapper
+
+`native/` is a separate Expo / React Native project — its own `package.json`,
+lockfile and `node_modules` — that ships this same app to the App Store and
+Google Play. It packs `dist/` into `native/assets/webroot.zip`, unpacks it on
+first launch and serves it from a loopback HTTP server, then points a WebView
+at that origin. The one thing it adds is Home Screen widgets.
+
+The dependency direction is one-way and strict: **nothing in `src/` knows the
+wrapper exists.** The wrapper reads the shipped app from the outside — a
+script injected into the page reports the `calendar:` / `oss:cache:` slice of
+`localStorage`, and `native/src/snapshot.ts` derives a small widget snapshot
+from it. That module is therefore the only reader of the app's storage layout
+that is not the app, which is why it is pure and pinned by
+`tests/native_snapshot_test.ts` in the root suite.
+
+See [features/native-app.md](features/native-app.md) for what it gives a
+reader, and `native/README.md` for how it is put together.

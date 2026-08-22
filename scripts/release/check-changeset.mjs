@@ -61,6 +61,15 @@ const SKIP_PATTERNS = [
   /^vitest\.config\.ts$/,
   /^tsconfig.*\.json$/,
   /^package-lock\.json$/,
+  // The native wrapper's own plumbing. `native/src` and `native/widgets` are
+  // deliberately NOT here: a change to the shell or to a widget IS visible to
+  // someone with the app installed, and needs a fragment like any other.
+  /^native\/package-lock\.json$/,
+  /^native\/tsconfig\.json$/,
+  /^native\/scripts\//,
+  /^native\/\.env\.example$/,
+  /^native\/\.easignore$/,
+  /^native\/\.gitignore$/,
 ];
 
 const changed = execSync(`git diff --name-only ${BASE_SHA}...HEAD`, {

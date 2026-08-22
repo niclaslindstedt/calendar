@@ -1,0 +1,30 @@
+// SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The local Expo module behind the Home Screen widgets, Android side (see
+// ../index.ts). Autolinked from ../expo-module.config.json; there is no npm
+// package and nothing to publish — `expo prebuild` wires it into the generated
+// Gradle project.
+
+apply plugin: 'com.android.library'
+
+group = 'se.niclaslindstedt.calendar.widgetbridge'
+version = '1.0.0'
+
+def expoModulesCorePlugin = new File(
+  project(":expo-modules-core").projectDir.absolutePath,
+  "ExpoModulesCorePlugin.gradle"
+)
+apply from: expoModulesCorePlugin
+applyKotlinExpoModulesCorePlugin()
+useCoreDependencies()
+useDefaultAndroidSdkVersions()
+
+android {
+  namespace "se.niclaslindstedt.calendar.widgetbridge"
+  defaultConfig {
+    versionCode 1
+    versionName "1.0.0"
+  }
+  lintOptions {
+    abortOnError false
+  }
+}
