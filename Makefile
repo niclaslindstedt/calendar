@@ -1,4 +1,4 @@
-.PHONY: build test lint fmt fmt-check actionlint shellcheck release clean docs website website-preview website-dev install icons check-seo changelog bump
+.PHONY: build test lint fmt fmt-check actionlint shellcheck release clean docs website website-preview website-dev install icons check-seo changelog bump native-install native-bundle native-typecheck native-prebuild
 
 build:
 	npm run build
@@ -70,3 +70,28 @@ website-dev:
 
 check-seo:
 	npm run build && npm run check:seo
+
+# --- the native wrapper (native/) -------------------------------------------
+#
+# A thin Expo/React Native shell that bundles this web app and serves it in a
+# WebView, plus Home Screen widgets. It has its OWN dependency tree — `make
+# install` at the root does not touch it — so every target here reaches in
+# with `--prefix`. Release builds run on EAS and are triggered by dispatching
+# .github/workflows/native.yml; see native/RELEASING.md.
+
+native-install:
+	npm --prefix native install
+
+# Build the web app and pack it into native/assets/webroot.zip — the copy the
+# wrapper serves. Required before any native build; CI does it for you.
+native-bundle:
+	npm --prefix native run bundle
+
+native-typecheck:
+	npm --prefix native run typecheck
+
+# Regenerate native/ios and native/android from app.config.js and the config
+# plugins. Both are gitignored build output — this is only for inspecting what
+# the plugins produce.
+native-prebuild:
+	npm --prefix native run prebuild

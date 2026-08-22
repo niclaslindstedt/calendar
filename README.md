@@ -148,6 +148,18 @@ a maintainer parks there for review). Releases are cut by dispatching the
 `.changes/unreleased/`, collates them into `CHANGELOG.md`, tags, and deploys.
 See [`docs/deployment.md`](docs/deployment.md).
 
+## Native app (iOS & Android)
+
+[`native/`](native/) is a **thin** Expo / React Native wrapper: it packs the
+built web app inside itself, serves it from a loopback origin in a WebView,
+and adds the one thing a PWA cannot have — **Home Screen widgets** showing
+today's note and the next days you have written on. Nothing in `src/` knows it
+exists, and it adds no feature the web app does not already have.
+
+Builds run on EAS and are cut by dispatching the `native` workflow. See
+[`native/README.md`](native/README.md) and
+[`native/RELEASING.md`](native/RELEASING.md).
+
 ## Examples
 
 [`examples/`](examples/) contains a sample calendar document
@@ -172,6 +184,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - [Configuration](docs/configuration.md)
 - [Storage & sync](docs/storage.md)
 - [Deployment & releases](docs/deployment.md)
+- [The native app & its widgets](docs/features/native-app.md)
 - [Calendars (keeping several)](docs/features/calendars.md)
 - [Locale packs (adding a country)](docs/features/locales.md)
 - [Weeks (the list and the search)](docs/features/weeks.md)

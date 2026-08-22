@@ -73,6 +73,22 @@ merged artifact, and fails the deploy if it is missing. The canonical URL in
 `public/robots.txt` and that CNAME must all name the same host —
 `scripts/check-seo.mjs` fails CI if they drift.
 
+## The app stores
+
+The PWA is the primary channel, but the calendar also ships as a native app
+built from [`native/`](../native) — a thin wrapper that carries the same
+`dist/` inside it and adds Home Screen widgets. Those builds are **not** part
+of the Pages pipeline and are never cut automatically: a maintainer dispatches
+`.github/workflows/native.yml`, which builds the web app, packs it into the
+wrapper and queues the build on EAS. Every run costs EAS build credits, which
+is why it is dispatch-only.
+
+The app's marketing version is read from the root `package.json`, so a store
+build carries the same version as the site; store build numbers are
+auto-incremented by EAS. The full setup — the Expo project, the CI token,
+store credentials, iOS capabilities — is in
+[`native/RELEASING.md`](../native/RELEASING.md).
+
 ## Cutting a release
 
 Dispatch `.github/workflows/release.yml` and leave `bump` on `auto`. There is
