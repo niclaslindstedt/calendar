@@ -144,6 +144,39 @@ Import and export are unavailable while **demo data** is on: there is nothing
 real to copy out of an in-memory sample, and nothing that would survive an
 import into it.
 
+## Reset — emptying a calendar
+
+Settings → Storage → **Reset the calendar** is the other end of the same
+question: import and export are for keeping your notes, this is for throwing
+them away. **Remove all notes…** empties the calendar you are looking at —
+or, with the scope set to **Every calendar**, all of them at once (the scope
+picker only appears when there is more than one calendar to choose between).
+
+A reset removes **notes and nothing else**. The calendars themselves stay in
+the registry with their names, icons and colours; your settings, your theme
+and your storage connection are untouched; each emptied calendar keeps the
+storage location it had. That is the whole difference between this and
+deleting a calendar from the calendar manager, which drops the calendar as
+well as its notes.
+
+Two safeguards, and no more:
+
+- the button is dead when the calendar on screen has no notes to remove;
+- the confirmation names the calendar and **counts** what is about to go
+  ("Every note in “Personal” is removed — 37 of them"), because a number you
+  can recognise as wrong is a better safeguard than a promise. At the
+  all-calendars scope it counts the calendars instead.
+
+There is no undo — export a backup first if you might want the notes back.
+The emptied documents are written straight through the active backend, one
+per calendar, so the reset reaches Dropbox or Drive the same way an ordinary
+edit does; a calendar whose write fails is named rather than silently skipped.
+Like the backup pair above it, a reset applies immediately — the dialog's
+**Cancel** does not put the notes back.
+
+Reset is unavailable while **demo data** is on, for the same reason import and
+export are.
+
 ## Demo data
 
 Settings → Developer → **Demo data** swaps storage for an in-memory

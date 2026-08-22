@@ -56,6 +56,9 @@ optionally synced to a storage backend you control.
 - **Take it with you**: export your settings and every calendar to one file,
   and import it on another device — a merge, not an overwrite, so it only asks
   you where the two actually disagree.
+- **Start over when you want to**: reset a calendar — or every one of them —
+  to a clean sheet from Settings → Storage, counted and confirmed first, with
+  your calendars, settings and storage connection left as they were.
 
 ## Prerequisites
 

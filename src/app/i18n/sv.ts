@@ -267,6 +267,28 @@ export const sv: Catalog = {
     resultSettingsTaken: "Från filen",
     resultSettingsKept: "Behållna",
   },
+  reset: {
+    heading: "Töm kalendern",
+    hint: "Tar bort alla anteckningar från alla dagar. Kalendrarna behåller sina namn och ikoner, dina inställningar och din lagringsanslutning rörs inte \u2014 bara det du har skrivit slängs. Exportera en säkerhetskopia först om du kan tänkas vilja ha det tillbaka.",
+    scope: "Vad som ska tömmas",
+    scopeActive: "Den här kalendern",
+    scopeAll: "Alla kalendrar",
+    action: "Ta bort alla anteckningar\u2026",
+    working: "Tömmer\u2026",
+    demoBlocked: "Stäng av demodata för att tömma dina riktiga kalendrar.",
+    nothingToRemove: "\u201d{name}\u201d har inga anteckningar att ta bort.",
+    confirmTitle: "Ta bort alla anteckningar?",
+    confirmOne:
+      "Alla anteckningar i \u201d{name}\u201d tas bort \u2014 {n} stycken. Det går inte att ångra.",
+    confirmOneNote:
+      "Den enda anteckningen i \u201d{name}\u201d tas bort. Det går inte att ångra.",
+    confirmAll:
+      "Alla anteckningar i samtliga {n} kalendrar tas bort. Det går inte att ångra.",
+    confirmAction: "Ta bort",
+    doneOne: "\u201d{name}\u201d är tom.",
+    doneAll: "Alla {n} kalendrar är tomma.",
+    failed: "Dessa kalendrar kunde inte tömmas: {calendars}",
+  },
   developer: {
     devMode: "Utvecklarläge",
     devModeHint: "Låser upp demodata, loggar och bygginformation.",

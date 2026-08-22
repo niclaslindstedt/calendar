@@ -235,7 +235,11 @@ The app owns the domain and the stores ("store stays in the app"):
   it lands on (add what is missing, keep every day only one side has, ask only
   where the two disagree); pure and tested, with `backupIo.ts` doing the
   round-trip through the adapters and `useBackup.ts` wiring both to the
-  stores. See `docs/storage.md`.
+  stores. `reset.ts` is the other end of the same question — which documents
+  emptying a calendar names and what it leaves behind (an empty document, not
+  an absent one: a reset takes the notes, never the calendar) — pure and
+  tested too, riding `backupIo.ts`'s writes with `useReset.ts` as its hook.
+  See `docs/storage.md`.
 - `src/app/MonthGridView.tsx`, `WeekPlannerView.tsx`, `DayListView.tsx` — the
   three views; `DayEntry.tsx` is the shared click-to-type entry surface with
   the auto-shrinking text. `DayZoom.tsx` is the same day as a **page** — what
@@ -499,6 +503,7 @@ looks fine at 393 px can be a margin taking three quarters of a strip row at
 | locale packs / name days           | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
 | storage backends                   | `docs/storage.md`, `docs/configuration.md`                                                                  |
 | import / export (the backup file)  | `docs/storage.md`, `tests/backup_test.ts`                                                                   |
+| resetting (emptying a calendar)    | `docs/storage.md`, `tests/reset_test.ts`                                                                    |
 | calendars / where a document lives | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`    |
 | settings surface                   | `docs/getting-started.md`                                                                                   |
 | user-visible features              | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |

@@ -171,9 +171,14 @@ stock look without touching your storage connections or developer switches.
   wall calendar is printed on paper), **Follow device** (tracks your device's
   light / dark preference), **Dark**, or **Custom**, plus the palette variant
   within the light and dark families.
-- **Storage** — where your calendar lives, and **Import and export**: one file
+- **Storage** — where your calendar lives, **Import and export** (one file
   carrying your settings and every calendar with its notes, merged back in
-  where it lands. See [storage.md](storage.md).
+  where it lands), and **Reset the calendar**: removing every note from the
+  calendar on screen, or from all of them. A reset takes the notes and nothing
+  else — your calendars, settings and storage connection stay as they are —
+  and it names and counts what is about to go before it does. There is no
+  undo, so export first if you might want it back. See
+  [storage.md](storage.md).
 - **Developer** — demo data, log capture, build info, the update check, and
   the device's own geometry (visible in developer mode). The **Device** block
   prints the viewport, the four safe-area insets in CSS order

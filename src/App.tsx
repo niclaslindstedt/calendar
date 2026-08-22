@@ -61,6 +61,7 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useBackup } from "./app/useBackup.ts";
+import { useReset } from "./app/useReset.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
 import { useCalendars } from "./app/useCalendars.ts";
 import { pinShell } from "./app/shellScroll.ts";
@@ -254,6 +255,13 @@ export function App() {
     store,
     commitLook,
     setAppearance,
+  });
+  // Emptying a calendar, over the same backend: the other thing you can do to
+  // the notes as a whole once you have a copy of them.
+  const reset = useReset({
+    backend: store.effectiveBackend,
+    calendars,
+    store,
   });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [calendarsOpen, setCalendarsOpen] = useState(false);
@@ -699,6 +707,8 @@ export function App() {
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
         calendarSlug={calendars.activeSlug}
+        calendarName={calendars.activeCalendar.name}
+        calendarCount={calendars.list.length}
         storage={{
           setActive: setActiveBackend,
           folderConnected,
@@ -723,6 +733,7 @@ export function App() {
           },
         }}
         backup={backup}
+        reset={reset}
         updateChecking={pwa.checking}
         updateAvailable={pwa.needRefresh}
         onCheckUpdate={pwa.checkForUpdate}
