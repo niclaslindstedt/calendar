@@ -1,20 +1,27 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Period paging for the month, week and list views. The month and week views
-// fill exactly one screen and never scroll, which frees an axis for
-// navigation: drag along it and the neighbouring period follows your finger,
-// then springs into place. The framework ships no pager — `useRowSwipe` is a
-// per-row reveal/commit gesture and `useSwipeDownToClose` is for sheets — so
-// this is app-local.
+// The pager the whole app navigates with: drag along an axis and the
+// neighbour follows your finger, then springs into place. The framework ships
+// no pager — `useRowSwipe` is a per-row reveal/commit gesture and
+// `useSwipeDownToClose` is for sheets — so this is app-local.
 //
-// Which axis that is, is the reader's (Settings → Calendar → Navigation,
-// `navSwipe.ts`). Left/right is the default and the one the app shipped with;
-// up/down is for a thumb that would rather scroll a calendar than flick
-// through it, and it takes the arrows out of the heading, since a pair of
-// chevrons pointing the wrong way is worse than no chevrons at all. Only the
-// axis moves: everything below — the axis lock, the commit thresholds, the
+// Everything below — the axis lock, the commit thresholds, the
 // swap-then-animate order — is written in terms of the *main* axis (the one
-// pages travel on) and the *cross* axis, so there is one pager rather than
-// two.
+// pages travel on) and the *cross* axis, so one component serves both of the
+// app's two directions: **up and down turns the period** (the month, the week,
+// the month a list is showing) and **left and right turns the view** (month
+// grid → week planner → day list). The calendar stacks one of each,
+// perpendicular, which is what {@link claim} and {@link CROSS_BIAS} are for:
+// a drag belongs to exactly one of the two, and the pair have to agree on
+// which without either of them knowing the other exists.
+//
+// Up and down for the period is not a preference — it is the direction a
+// phone is already scrolled in, and in the day list it is the direction the
+// days themselves run, so paging down into the month above is the same gesture
+// as scrolling there. It leaves the heading no chevrons to draw (a chevron is
+// a direction, and the two that would be right here point at the top and the
+// bottom of the screen, which reads as "scroll") and it hands the sideways
+// axis to the view switch, where a page turn really is a move to the left or
+// the right of where you are.
 //
 // The track holds three panes (previous, current, next), each exactly one
 // container wide (or tall), and rests at `-100%` so the current one is on
@@ -52,12 +59,21 @@ import { useMediaQuery } from "@niclaslindstedt/oss-framework/hooks";
  *  page's. Low enough that a deliberate swipe engages immediately, high enough
  *  that a tap on a day cell with a shaky thumb still opens the editor. */
 const AXIS_LOCK_PX = 10;
-/** How much more cross-axis than main-axis a drag must be before it counts as
- *  scrolling rather than paging, on the decks whose pane actually scrolls. A
- *  thumb swiping across a phone travels in an arc, so a plain
- *  `|cross| >= |main|` test hands far too many honest side-swipes to the
- *  list. */
-const SCROLL_BIAS = 1.4;
+/** How much more cross-axis than main-axis a drag must be before this deck
+ *  gives it up — to the pane's own scrolling, or to the deck paging the other
+ *  way round it.
+ *
+ *  A thumb swiping across a phone travels in an arc, so a plain
+ *  `|cross| >= |main|` test hands far too many honest side-swipes away. The
+ *  bias leaves a band around the diagonal that neither deck refuses, which is
+ *  what {@link claim} settles: the first to lock keeps it, and since a nested
+ *  pair sees the same move innermost-first, that is the period rather than the
+ *  view — the gesture you make forty times a day wins the ambiguous ones. */
+const CROSS_BIAS = 1.4;
+/** How much of a drag toward a neighbour that does not exist actually moves —
+ *  the day list has nothing to its right, and a page that gives a little and
+ *  springs back says so better than one that ignores the finger. */
+const EDGE_RESISTANCE = 0.25;
 /** A drag past this share of the page commits even if it ends slowly. */
 const COMMIT_FRACTION = 0.22;
 /** …and a flick faster than this (px/ms) commits however short it was. */
@@ -78,6 +94,16 @@ const RELATIVE: readonly (-1 | 0 | 1)[] = [-1, 0, 1];
 
 /** The axis pages travel on: `x` is left/right, `y` is up/down. */
 export type DeckAxis = "x" | "y";
+
+/** The deck that owns the gesture in flight, or null between gestures.
+ *
+ *  Module-level because the two decks that have to agree are *nested* — the
+ *  view deck wraps the period deck — and a nested pair sees every pointer
+ *  event twice, innermost first. Each deck already turns away a drag that is
+ *  clearly the other's ({@link CROSS_BIAS}); this settles the band in between,
+ *  where both would otherwise lock and the page would turn in two directions
+ *  at once. One pointer is down at a time, so one slot is enough. */
+let claim: unknown = null;
 
 /** Where the track sits when nothing is happening: the centre pane on
  *  screen. A percentage transform is of the track's own border box, and the
@@ -204,9 +230,15 @@ type Props = {
    *  nowhere to go. A scrolling pane keeps `pan-y` and leans on the biased
    *  axis lock. */
   scrolls?: boolean;
-  /** Which way a page turn travels (Settings → Calendar → Navigation).
-   *  Defaults to the left/right paging the app shipped with. */
+  /** Which way a page turn travels: `y` for the period decks, `x` for the
+   *  view deck around them and for the holidays screen's years. */
   axis?: DeckAxis;
+  /** Whether there is anything on either side to turn to. The period decks
+   *  run forever and leave both at their default; the view deck is a row of
+   *  three with two ends, and a drag past an end gives {@link EDGE_RESISTANCE}
+   *  and springs back rather than committing to a pane that would be blank. */
+  canPrevious?: boolean;
+  canNext?: boolean;
 };
 
 type Drag = {
@@ -237,6 +269,8 @@ export function SwipeDeck({
   renderChrome,
   scrolls = false,
   axis = "x",
+  canPrevious = true,
+  canNext = true,
 }: Props) {
   const vertical = axis === "y";
   /** The pointer's position along the paging axis. */
@@ -392,8 +426,8 @@ export function SwipeDeck({
   // moves, which is exactly the gesture {@link atScrollEnd} is looking for.
   //
   // Set here rather than in the views' own classes because it is the *deck's*
-  // reason: the same list scrolled under left/right paging should keep its
-  // bounce.
+  // reason: a list that is not paged on the axis it scrolls on — the holidays
+  // screen's, whose years turn sideways — should keep its bounce.
   useLayoutEffect(() => {
     const el = host.current;
     if (!el) return;
@@ -422,8 +456,8 @@ export function SwipeDeck({
     // `itemKey` alone, deliberately. This is the "someone moved the anchor
     // from outside" effect; `place` is in it only because it writes the
     // track, and it counts as reactive only because it reads the paging axis
-    // — which cannot change under a mounted deck anyway, since `App.tsx` keys
-    // the deck on it.
+    // — which is fixed for the life of a deck: the period decks page up and
+    // down, the view deck around them left and right.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [itemKey]);
 
@@ -462,7 +496,17 @@ export function SwipeDeck({
     runHome();
   };
 
+  /** Whether there is a pane that way to turn to. */
+  const canStep = (direction: -1 | 1) =>
+    direction === 1 ? canNext : canPrevious;
+
   const commit = (direction: -1 | 1) => {
+    // The end of the row. Whatever asked — a drag, a queued step — there is
+    // nothing over there, so the track goes back where it was.
+    if (!canStep(direction)) {
+      if (offset.current !== 0) rest();
+      return;
+    }
     if (settling.current) {
       queued.current = direction;
       return;
@@ -508,6 +552,9 @@ export function SwipeDeck({
   );
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    // A fresh gesture is nobody's yet. Set by both decks of a nested pair —
+    // they both see this event, and both are writing the same null.
+    claim = null;
     if (settling.current || e.button !== 0) return;
     const target = e.target as HTMLElement | null;
     // A drag across the open entry editor is a text selection, not a month
@@ -539,14 +586,19 @@ export function SwipeDeck({
     if (!d.locked) {
       const sideways = Math.abs(across(e) - d.cross);
       if (Math.abs(moved) < AXIS_LOCK_PX && sideways < AXIS_LOCK_PX) return;
-      // Only a pane that scrolls has anything to give the gesture up for, and
-      // even then it takes a clearly cross-axis drag to win it.
-      if (scrolls && sideways > Math.abs(moved) * SCROLL_BIAS) {
-        // The pane's axis, not ours — hand the gesture back to the page.
+      // A clearly cross-axis drag is not ours: it belongs to the pane's own
+      // scrolling, or to the deck paging the other way round this one.
+      if (sideways > Math.abs(moved) * CROSS_BIAS) {
         drag.current = null;
         return;
       }
       if (Math.abs(moved) < AXIS_LOCK_PX) return;
+      // …and in the band around the diagonal that neither deck refuses, the
+      // one that got here first has it (see {@link claim}).
+      if (claim !== null && claim !== host.current) {
+        drag.current = null;
+        return;
+      }
       // Paging up and down over a pane that scrolls up and down: the scroll
       // comes first and the page turn is what is left once the pane has run
       // out. Handing the gesture back here is what keeps the day list a list.
@@ -555,6 +607,7 @@ export function SwipeDeck({
         return;
       }
       d.locked = true;
+      claim = host.current;
       swiped.current = true;
       const el = track.current;
       if (el) el.style.willChange = "transform";
@@ -574,8 +627,12 @@ export function SwipeDeck({
       d.sampleT = e.timeStamp;
     }
     // Capped at one period: a long drag reveals the neighbour and no further,
-    // because there is no fourth pane behind it.
-    offset.current = Math.max(-d.size, Math.min(d.size, moved));
+    // because there is no fourth pane behind it. A drag toward a neighbour
+    // that does not exist at all gives only a little, and gives it back.
+    const travel = Math.max(-d.size, Math.min(d.size, moved));
+    offset.current = canStep(travel < 0 ? 1 : -1)
+      ? travel
+      : travel * EDGE_RESISTANCE;
     place(offset.current);
   };
 
@@ -594,6 +651,7 @@ export function SwipeDeck({
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
     const d = drag.current;
     drag.current = null;
+    if (claim === host.current) claim = null;
     if (!d || !d.locked) return;
     setSelectable(true);
     finish(d, along(e));
@@ -602,6 +660,7 @@ export function SwipeDeck({
   const onPointerCancel = () => {
     const d = drag.current;
     drag.current = null;
+    if (claim === host.current) claim = null;
     if (!d) return;
     setSelectable(true);
     // A cancel after the axis lock means the browser stole a gesture that was

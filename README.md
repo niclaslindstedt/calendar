@@ -98,12 +98,15 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **Press and hold a day** to open it as a page of its own — the whole note,
   at about four times the size a month cell can hold it at, and a comfortable
   place to write it.
-- **Swipe** in any view to turn the page — left and right by default, or up
-  and down if you set Settings → Calendar → Navigation that way, in which case
-  the day list simply keeps scrolling into the month above or below.
-- **Arrows** flanking the month heading page between months (or weeks, in the
-  week planner). They are printed only while the swipe is left/right, which is
-  the way they point.
+- **Swipe up and down** in any view to turn the period — down for the one
+  before, up for the one after. The day list scrolls the days themselves and
+  keeps going into the month above or below when it runs out.
+- **Swipe left and right** to change view: month grid → week planner → day
+  list, at the period you are already reading. There is nothing past either
+  end, and no arrows on the heading — both directions are spoken for.
+- **Tap a week number** anywhere to open the week list: every week of the year
+  with its dates, searchable by week number or by date — `34`, `8 aug`, `8/8`,
+  `2026-08-08`. An ambiguous `12/8` is offered both ways round.
 - **View switcher** in the top bar toggles Month grid / Week planner / Day
   list — and every press of it jumps back to today, including a press on the
   view you are already in. The day list opens the current month at the week
@@ -113,7 +116,7 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   backend.
 - **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
   (English / Swedish), week numbers and name days on/off, which holiday eves
-  you work, the month cell's layout, which way a swipe turns the page,
+  you work, the month cell's layout,
   crossing off the days that have passed, a
   face per part of a day (date, holiday, name days, your text), a size per
   part of a day (small / medium / large, plus dynamic for your own text,
@@ -171,6 +174,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 - [Deployment & releases](docs/deployment.md)
 - [Calendars (keeping several)](docs/features/calendars.md)
 - [Locale packs (adding a country)](docs/features/locales.md)
+- [Weeks (the list and the search)](docs/features/weeks.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ## Contributing

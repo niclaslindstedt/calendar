@@ -1,20 +1,20 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The heading every view shares: ‹ MONTH 2026 ›. The period arrows live here
-// rather than in the top menu — on a portrait phone the menu has no room for
-// them beside the view switcher, and the arrows read better flanking the
-// thing they move. All three views render this, so the navigation sits in the
-// same place whichever one is open — and, since this build, in the same type.
-// The month grid used to set its masthead larger and in caps while the two
-// strip views set theirs smaller and in lower case, which read as three
-// calendars rather than three views of one; the wall-calendar caps won,
+// The heading every view shares: MONTH 2026. All three views render this, so
+// the period is named in the same place whichever one is open — and in the
+// same type. The month grid used to set its masthead larger and in caps while
+// the two strip views set theirs smaller and in lower case, which read as
+// three calendars rather than three views of one; the wall-calendar caps won,
 // because that is what a printed month title looks like, and the size came
 // down to what the longest month name can hold (see {@link HEADING_TITLE}).
 //
-// …and none at all where the reader pages up and down (Settings → Calendar →
-// Navigation): a chevron is a direction, and two pointing sideways over a
-// calendar that turns vertically are worse than no chevrons at all. The row
-// keeps its height regardless ({@link HEADING_HEIGHT}), because the day list
-// pins this over its scroll and measures the clearance from it.
+// The three calendar views hand it no navigation at all, so it draws no
+// chevrons for them: their periods turn up and down (`SwipeDeck`), and a
+// chevron is a direction — the two that would be right there point at the top
+// and the bottom of the screen, which reads as "scroll". A caller that really
+// does page sideways passes the pair and gets ‹ › back: the holidays screen's
+// years do. The row keeps its height either way ({@link HEADING_HEIGHT}),
+// because the day list pins this over its scroll and measures the clearance
+// from it.
 
 import {
   ChevronLeftIcon,
@@ -38,9 +38,6 @@ type Props = {
   /** Whether the band runs edge to edge on a phone (see below). Only a band
    *  can bleed — an unbanded heading has nothing to reach the edges with. */
   bleed?: boolean;
-  /** Whether the two chevrons are printed. Off where a swipe pages up and
-   *  down (`navSwipe.ts`); the row keeps its height either way. */
-  arrows?: boolean;
   /** Whether what follows brings its own leading, so the heading leaves no
    *  air of its own ({@link HEADING_GAP}). Set by a view whose first row is
    *  spaced off a rule everywhere else — under a band, the band *is* that
@@ -49,8 +46,12 @@ type Props = {
    *  the day list unconditionally, because its heading carries the list's own
    *  hairline where it is not banded (see `DayListView`). */
   flush?: boolean;
-  onPrevious: () => void;
-  onNext: () => void;
+  /** Paging, for a caller whose periods really do turn left and right. Hand
+   *  over both and the heading flanks its title with the two chevrons; leave
+   *  them out — as all three calendar views do — and it is a masthead and
+   *  nothing else. */
+  onPrevious?: () => void;
+  onNext?: () => void;
 };
 
 /** The masthead's type, the same in every view.
@@ -158,12 +159,12 @@ export function PeriodHeading({
   className = "",
   accent = null,
   bleed = false,
-  arrows = true,
   flush = false,
   onPrevious,
   onNext,
 }: Props) {
   const t = useT();
+  const arrows = onPrevious !== undefined && onNext !== undefined;
   // On a phone the band reaches the screen's edges, the way printed furniture
   // reaches the paper's — in every view, because in every view the rules under
   // it do. The month grid used to be the exception, on the reasoning that its

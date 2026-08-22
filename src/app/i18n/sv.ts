@@ -143,14 +143,6 @@ export const sv: Catalog = {
     textSizeHuge: "Störst",
     textSizeSampleHoliday: "Alla helgon",
     textSizeSampleNote: "Middag 18:00",
-    navigation: "Navigering",
-    navigationHint:
-      "Hur du byter månad och vecka. Vilket du än väljer skrollar daglistan fortfarande bland dagarna.",
-    swipeDirection: "Svep",
-    swipeHorizontal: "Vänster / höger",
-    swipeVertical: "Upp / ner",
-    swipeDirectionHint:
-      "Upp och ner bläddrar åt samma håll som du redan skrollar — svep nedåt för perioden före och uppåt för den efter — och tar bort pilarna ur rubriken. I daglistan skrollar du helt enkelt vidare in i månaden före eller efter.",
     pastDays: "Passerade dagar",
     pastDaysHint:
       "Kryssa av dagarna som gått, som i en papperskalender. Dagens datum kryssas aldrig — raden av kryss slutar där.",
@@ -341,6 +333,17 @@ export const sv: Catalog = {
     oneMatch: "1 namn",
     noResults: "Inget namn som ”{query}” i almanackan.",
     unavailable: "Den här landskalendern har inga namnsdagar.",
+  },
+  weeks: {
+    title: "Veckor",
+    placeholder: "Veckonummer eller datum",
+    clear: "Rensa sökningen",
+    close: "Stäng veckolistan",
+    open: "Vecka {n} — öppna veckolistan",
+    matches: "{n} veckor",
+    oneMatch: "1 vecka",
+    noResults: "Ingen vecka matchar ”{query}”.",
+    hint: "Sök på veckonummer eller datum — 8 aug, 8/8, 2026‑08‑08. Ett datum som 12/8 läses på båda sätten.",
   },
   logs: {
     heading: "Appens logg",

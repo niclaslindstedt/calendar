@@ -47,6 +47,14 @@ src/
     │                     through (its 1st forward, its last day back) on one
     │                     you turned the page to (pure, tested)
     ├── monthImage.ts     the month-image seam (packs plug in later)
+    ├── weekSearch.ts     the year's weeks and the readings a typed query has
+    │                     — a week number, or a date written any of the ways
+    │                     people write one, `12/8` meaning both (pure, tested);
+    │                     WeekSearch.tsx is the screen a tapped week number
+    │                     opens
+    ├── SwipeDeck.tsx     the pager both directions are built from: up and down
+    │                     turns the period, left and right turns the view, and
+    │                     the calendar stacks one of each
     ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
     ├── monthCell.tsx     the month cell's arrangement: the corners its pieces
     │                     are parked in, and the note flowing around the day

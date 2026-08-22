@@ -150,6 +150,9 @@ export type StripDay = {
   showDayOfYear?: boolean;
   onOpenNames: (name: string) => void;
   onOpenHolidays: () => void;
+  /** Tapping the week number opens the week list on this week — the same
+   *  "the thing you are asking about is the way in" as the two above. */
+  onOpenWeeks: (day: DayKey) => void;
 };
 
 /** A row's contents: the two margins, the note between (or around) them, and
@@ -506,18 +509,34 @@ function HolidayName({ day: d, holiday }: { day: StripDay; holiday: Holiday }) {
   );
 }
 
+/** Also the way into the week list, the way a holiday's name is the way into
+ *  the holidays screen. */
 function WeekMark({ day: d }: { day: StripDay }) {
   const t = useT();
   const n = d.weekNumber ?? 0;
+  const open = () => d.onOpenWeeks(d.dayKey);
   return (
     <span
-      className={`cal-font-week cal-size-week block leading-none italic [--cal-base:0.875rem] ${
+      role="button"
+      tabIndex={0}
+      onClick={(e) => {
+        e.stopPropagation();
+        open();
+      }}
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        e.preventDefault();
+        e.stopPropagation();
+        open();
+      }}
+      className={`cal-font-week cal-size-week block cursor-pointer leading-none italic [--cal-base:0.875rem] focus-visible:outline-2 ${
         d.ink ? "" : "text-fg"
       }`}
       style={d.ink ? { color: d.ink } : undefined}
-      // Spelled out for a screen reader whatever the margin prints: "34" on
-      // its own is a number, not a week.
-      aria-label={t("topbar.week", { n })}
+      // Spelled out for a screen reader whatever the margin prints — "34" on
+      // its own is a number, not a week — and saying what pressing it does,
+      // since it is a button rather than a caption.
+      aria-label={t("weeks.open", { n })}
     >
       {weekNumberLabel(d.weekFormat, n, {
         long: t("topbar.week", { n }),

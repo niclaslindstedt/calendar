@@ -22,8 +22,10 @@ does not fit one without demoting Month, Week, or Day list. Any top-menu
 action (a view switch, a press of the view you are already in) leaves the
 screen again, as does the back arrow.
 
-Swipe left and right — or use the ‹ › arrows — to move between years, exactly
-as the month and week views move between periods.
+Swipe left and right — or use the ‹ › arrows — to move between years. This is
+the one screen that still pages sideways, and the one heading that still has
+chevrons: in the calendar itself those two directions belong to the view
+switch, and the period turns up and down.
 
 ## The two modes
 

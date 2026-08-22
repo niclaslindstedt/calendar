@@ -186,6 +186,7 @@ export function StripSample({
     // so the sample shows it whichever of the two is being previewed.
     showDayOfYear: look.weekDayOfYear,
     onOpenNames: NOOP,
+    onOpenWeeks: NOOP,
     onOpenHolidays: NOOP,
   };
 

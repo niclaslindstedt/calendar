@@ -73,6 +73,9 @@ type Props = {
   onOpenHolidays: (year: number) => void;
   /** …and one of the day's names for the name-day search. */
   onOpenNames: (name: string) => void;
+  /** …and the week number for the week list. Every printed week number in
+   *  the app is a way in, and the card prints one. */
+  onOpenWeeks: (day: DayKey) => void;
 };
 
 export function DayZoom({
@@ -88,6 +91,7 @@ export function DayZoom({
   onClose,
   onOpenHolidays,
   onOpenNames,
+  onOpenWeeks,
 }: Props) {
   const t = useT();
   // Whether the caret is in the note. The card opens as a page to read — the
@@ -178,15 +182,18 @@ export function DayZoom({
             >
               <CloseIcon className="h-5 w-5" />
             </button>
-            {showWeekNumbers && (
-              <span
-                className={`cal-font-week cal-size-week leading-none italic [--cal-base:0.9375rem] ${
+            {showWeekNumbers && day && (
+              <button
+                type="button"
+                onClick={() => onOpenWeeks(day)}
+                aria-label={t("weeks.open", { n: week })}
+                className={`cal-font-week cal-size-week cursor-pointer leading-none italic [--cal-base:0.9375rem] focus-visible:outline-2 ${
                   headerInk ? "" : "text-muted"
                 }`}
                 style={headerInk ? { color: headerInk } : undefined}
               >
                 {t("topbar.week", { n: week })}
-              </span>
+              </button>
             )}
           </div>
         </header>

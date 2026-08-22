@@ -126,9 +126,6 @@ type Props = {
   weekFormat: WeekFormat;
   /** The heading band's colour (Settings → Calendar → Heading), or `null`. */
   headerInk: string | null;
-  /** Whether the heading prints its period arrows — off where the reader
-   *  pages up and down (`navSwipe.ts`). */
-  arrows: boolean;
   /** How the reader got to this month, which is what decides where its scroll
    *  opens (`listHome.ts`). The deck's three panes all take the same answer:
    *  paging on again travels the same way, so the neighbour waiting in that
@@ -141,14 +138,14 @@ type Props = {
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
   onCommit: (day: DayKey, text: string) => void;
-  onPrevious: () => void;
-  onNext: () => void;
   /** Tapping a holiday's name opens the holidays screen. Takes the year so the
    *  handler can stay one stable function across every row of every period the
    *  deck holds, rather than a fresh closure per day. */
   onOpenHolidays: (year: number) => void;
   /** Tapping one of the day's names opens the name-day search on it. */
   onOpenNames: (name: string) => void;
+  /** Tapping the week number opens the week list on that week. */
+  onOpenWeeks: (day: DayKey) => void;
   /** A long press holds the day up close (`DayZoom`) — a fixed row clips its
    *  note exactly as a month cell does. */
   onZoomDay: (day: DayKey) => void;
@@ -174,7 +171,6 @@ export const DayListView = memo(function DayListView({
   rowMode,
   weekFormat,
   headerInk,
-  arrows,
   arrival,
   pastMark,
   textSize,
@@ -182,10 +178,9 @@ export const DayListView = memo(function DayListView({
   editingDay,
   onEditDay,
   onCommit,
-  onPrevious,
-  onNext,
   onOpenHolidays,
   onOpenNames,
+  onOpenWeeks,
   onZoomDay,
 }: Props) {
   const image = monthImageUrl(year, month, "small");
@@ -260,8 +255,7 @@ export const DayListView = memo(function DayListView({
       )}
 
       {/* Pinned to the top of the list's own scroller: this is the one view
-          that scrolls far enough to lose sight of which month you are in, and
-          the arrows come along so paging never means scrolling back up. The
+          that scrolls far enough to lose sight of which month you are in. The
           background is opaque — rows pass underneath it — and the hairline it
           carries is the one the rows below used to start with, so the heading
           keeps the list's top border rather than adding a second line. A
@@ -272,7 +266,6 @@ export const DayListView = memo(function DayListView({
         meta={String(year)}
         accent={headerInk}
         bleed
-        arrows={arrows}
         // Either way this heading ends in an edge — the band, or the hairline
         // it carries in place of one — so the month's first day seats on it
         // the way every other row seats on the rule above it, and the masthead
@@ -290,8 +283,6 @@ export const DayListView = memo(function DayListView({
         className={`bg-page-bg sticky top-0 z-10 ${
           headerInk ? "" : "border-b border-line"
         }`}
-        onPrevious={onPrevious}
-        onNext={onNext}
       />
 
       <div>
@@ -331,6 +322,7 @@ export const DayListView = memo(function DayListView({
               onCommit={onCommit}
               onOpenHolidays={onOpenHolidays}
               onOpenNames={onOpenNames}
+              onOpenWeeks={onOpenWeeks}
               onZoomDay={onZoomDay}
             />
           );
@@ -379,6 +371,7 @@ const DayRow = memo(function DayRow({
   onCommit,
   onOpenHolidays,
   onOpenNames,
+  onOpenWeeks,
   onZoomDay,
 }: {
   dayKey: DayKey;
@@ -415,6 +408,7 @@ const DayRow = memo(function DayRow({
   onCommit: (day: DayKey, text: string) => void;
   onOpenHolidays: (year: number) => void;
   onOpenNames: (name: string) => void;
+  onOpenWeeks: (day: DayKey) => void;
   onZoomDay: (day: DayKey) => void;
 }) {
   // Press and hold to zoom — see the month cell's copy of this; the rule is
@@ -457,6 +451,7 @@ const DayRow = memo(function DayRow({
     ink: headerInk,
     showDayOfYear,
     onOpenNames,
+    onOpenWeeks,
     onOpenHolidays: () => onOpenHolidays(year),
   };
 
