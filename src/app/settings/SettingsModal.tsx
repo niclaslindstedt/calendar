@@ -53,6 +53,7 @@ import { GeneralSection } from "./GeneralSection.tsx";
 import { LogsSection } from "./LogsSection.tsx";
 import { StorageSection, type StorageActions } from "./StorageSection.tsx";
 import type { BackupActions, ImportResult } from "../useBackup.ts";
+import type { ResetActions } from "../useReset.ts";
 import { ViewStyleSection } from "./ViewStyleSection.tsx";
 import { TabSidebar, SettingsHeader, type TabDef } from "./tabs.tsx";
 
@@ -104,9 +105,15 @@ type Props = {
   effectiveBackend: BackendId;
   /** The active calendar's slug, for the Storage tab's file locations. */
   calendarSlug: string;
+  /** The active calendar's name and how many there are — the Storage tab's
+   *  reset block names the one it is about. */
+  calendarName: string;
+  calendarCount: number;
   storage: StorageActions;
   /** Import / export, for the Storage tab's backup pair. */
   backup: BackupActions;
+  /** Emptying a calendar, for the Storage tab's reset block. */
+  reset: ResetActions;
   updateChecking: boolean;
   updateAvailable: boolean;
   onCheckUpdate: () => Promise<PwaUpdateCheckResult>;
@@ -126,8 +133,11 @@ export function SettingsModal({
   saveState,
   effectiveBackend,
   calendarSlug,
+  calendarName,
+  calendarCount,
   storage,
   backup,
+  reset,
   updateChecking,
   updateAvailable,
   onCheckUpdate,
@@ -314,10 +324,13 @@ export function SettingsModal({
                 saveState={saveState}
                 effectiveBackend={effectiveBackend}
                 calendarSlug={calendarSlug}
+                calendarName={calendarName}
+                calendarCount={calendarCount}
                 storage={storage}
                 devMode={settings.devMode}
                 demoData={settings.demoData}
                 backup={backup}
+                reset={reset}
                 onImported={handleImported}
               />
             )}

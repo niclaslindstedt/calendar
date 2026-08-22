@@ -7,7 +7,8 @@
 //
 // Under the backends sits the backup pair (`BackupSection`): a place is where
 // your calendar lives, a file is a copy of it you can carry to another one —
-// the same tab answers both.
+// the same tab answers both. Last comes `ResetSection`, which is the third
+// thing you can do to the notes as a whole: throw them away.
 
 import {
   Badge,
@@ -27,7 +28,9 @@ import {
 } from "../storage/backends.ts";
 import type { SaveState } from "../useCalendarStore.ts";
 import type { BackupActions, ImportResult } from "../useBackup.ts";
+import type { ResetActions } from "../useReset.ts";
 import { BackupSection } from "./BackupSection.tsx";
+import { ResetSection } from "./ResetSection.tsx";
 
 export type StorageActions = {
   setActive: (id: BackendId) => void;
@@ -42,10 +45,13 @@ export function StorageSection({
   saveState,
   effectiveBackend,
   calendarSlug,
+  calendarName,
+  calendarCount,
   storage,
   devMode,
   demoData,
   backup,
+  reset,
   onImported,
 }: {
   saveState: SaveState;
@@ -53,10 +59,15 @@ export function StorageSection({
   /** The active calendar's slug — Dropbox files each calendar in a folder of
    *  its own, and the row prints which one. */
   calendarSlug: string;
+  /** The active calendar's name, and how many there are — what the reset
+   *  block names, and whether it has a scope to offer. */
+  calendarName: string;
+  calendarCount: number;
   storage: StorageActions;
   devMode: boolean;
   demoData: boolean;
   backup: BackupActions;
+  reset: ResetActions;
   /** An applied import, so the dialog can re-seat the draft it holds. */
   onImported: (result: ImportResult) => void;
 }) {
@@ -166,6 +177,12 @@ export function StorageSection({
         backup={backup}
         demoData={demoData}
         onImported={onImported}
+      />
+      <ResetSection
+        reset={reset}
+        calendarName={calendarName}
+        calendarCount={calendarCount}
+        demoData={demoData}
       />
     </>
   );

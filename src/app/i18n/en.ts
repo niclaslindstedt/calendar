@@ -286,6 +286,35 @@ export const en = {
     resultSettingsTaken: "From the file",
     resultSettingsKept: "Kept",
   },
+  // Emptying a calendar — the Storage tab's last block. A reset removes the
+  // notes and nothing else: the calendars, the settings and the storage
+  // connection are all still there afterwards.
+  reset: {
+    heading: "Reset the calendar",
+    hint: "Removes every note from every day. Your calendars keep their names and icons, your settings and storage connection are untouched \u2014 only what you have written is thrown away. Export a backup first if you might want it back.",
+    /** The scope picker, shown only when there is more than one calendar. */
+    scope: "What to empty",
+    scopeActive: "This calendar",
+    scopeAll: "Every calendar",
+    action: "Remove all notes\u2026",
+    working: "Emptying\u2026",
+    demoBlocked: "Turn demo data off to reset your real calendars.",
+    nothingToRemove: "\u201c{name}\u201d has no notes to remove.",
+    /** The confirmation. It counts what is about to go: a number the reader
+     *  can recognise as wrong is a better safeguard than a promise. */
+    confirmTitle: "Remove all notes?",
+    confirmOne:
+      "Every note in \u201c{name}\u201d is removed \u2014 {n} of them. This can't be undone.",
+    confirmOneNote:
+      "The one note in \u201c{name}\u201d is removed. This can't be undone.",
+    confirmAll:
+      "Every note in all {n} calendars is removed. This can't be undone.",
+    confirmAction: "Remove",
+    /** The line under the button once a reset has run. */
+    doneOne: "\u201c{name}\u201d is empty.",
+    doneAll: "All {n} calendars are empty.",
+    failed: "These calendars could not be emptied: {calendars}",
+  },
   developer: {
     devMode: "Developer mode",
     devModeHint: "Unlocks the demo-data backend, logs, and build info.",
