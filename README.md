@@ -152,8 +152,8 @@ See [`docs/deployment.md`](docs/deployment.md).
 
 [`native/`](native/) is a **thin** Expo / React Native wrapper: it packs the
 built web app inside itself, serves it from a loopback origin in a WebView,
-and adds the one thing a PWA cannot have — **Home Screen widgets** showing
-today's note and the next days you have written on. Nothing in `src/` knows it
+and adds the one thing a PWA cannot have — **Home Screen widgets**: today, the
+next three days, this week, and the work week. Nothing in `src/` knows it
 exists, and it adds no feature the web app does not already have.
 
 Builds run on EAS and are cut by dispatching the `native` workflow. See

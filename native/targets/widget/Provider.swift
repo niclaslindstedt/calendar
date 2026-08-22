@@ -58,6 +58,82 @@ struct CalendarProvider: TimelineProvider {
   }
 }
 
+// MARK: - spans
+
+/// WHAT EVERY WIDGET IS: a span of days, printed in order, each one whether or
+/// not it carries a note.
+///
+/// That is the whole difference between them — Today is a span of one, the
+/// week widgets are a span of seven (less the days the country does not work).
+/// Keeping it one idea is what lets four widgets share one row renderer, and
+/// what keeps "which days does this widget show" answerable in one place.
+///
+/// Empty days are printed too, on purpose: this is a wall calendar, and a
+/// wall calendar shows you the days, not just the ones you have written on.
+enum WidgetSpan {
+  /// Today alone.
+  case today
+  /// Today and the two days after it. Today is included deliberately — a
+  /// widget sitting beside the Today one is still the wrong place to hide
+  /// what is on today.
+  case nextThree
+  /// The whole week today falls in, from the pack's first day of the week.
+  case week
+  /// That same week, minus the days the country does not work.
+  case workWeek
+
+  /// The day keys this span covers, in order, relative to `today`.
+  func keys(from today: Date, week rules: WidgetWeek) -> [String] {
+    switch self {
+    case .today:
+      return [dayKey(today)]
+    case .nextThree:
+      return (0..<3).compactMap { shiftKey(today, by: $0) }
+    case .week, .workWeek:
+      guard let start = startOfWeek(today, startsOn: rules.startsOn) else {
+        return [dayKey(today)]
+      }
+      let calendar = Calendar.current
+      return (0..<7).compactMap { offset -> String? in
+        guard let day = calendar.date(byAdding: .day, value: offset, to: start)
+        else { return nil }
+        if self == .workWeek {
+          // `Calendar.weekday` is 1-based from Sunday; the pack numbers days
+          // the way JavaScript's `Date.getDay()` does, 0-based from Sunday.
+          let weekday = calendar.component(.weekday, from: day) - 1
+          if rules.restDays.contains(weekday) { return nil }
+        }
+        return dayKey(day)
+      }
+    }
+  }
+}
+
+/// The first day of the week `date` falls in, for a pack that starts its week
+/// on `startsOn` (`Date.getDay()` numbering, 1 = Monday).
+///
+/// Deliberately NOT `Calendar.dateInterval(of: .weekOfYear:)` — that uses the
+/// device locale's first weekday, which is the phone's answer rather than the
+/// calendar pack's. A reader who set the app to a Monday-start country on a
+/// US phone would get a Sunday-start widget.
+func startOfWeek(_ date: Date, startsOn: Int) -> Date? {
+  let calendar = Calendar.current
+  let midnight = calendar.startOfDay(for: date)
+  let weekday = calendar.component(.weekday, from: midnight) - 1 // 0 = Sunday
+  let back = ((weekday - startsOn) % 7 + 7) % 7
+  return calendar.date(byAdding: .day, value: -back, to: midnight)
+}
+
+/// `dayKey` for a date `offset` days after `from`.
+func shiftKey(_ from: Date, by offset: Int) -> String? {
+  let calendar = Calendar.current
+  guard
+    let day = calendar.date(
+      byAdding: .day, value: offset, to: calendar.startOfDay(for: from))
+  else { return nil }
+  return dayKey(day)
+}
+
 // MARK: - shared formatting
 
 /// The snapshot names the country pack the reader chose; dates are formatted

@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+  THE TODAY WIDGET'S LAYOUT: the wall calendar's cell blown up to a home
+  screen — a big day number with the weekday and month beside it, and the
+  note underneath.
+
+  The root carries `calendar_widget_click`, the same id the list layout uses,
+  so one code path in CalendarWidgetProvider paints the background and
+  attaches the launch intent for both.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calendar_widget_click"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="12dp">
+
+  <LinearLayout
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:orientation="horizontal"
+      android:baselineAligned="false">
+
+    <TextView
+        android:id="@+id/calendar_today_date"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        tools:text="12" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:orientation="vertical">
+
+      <TextView
+          android:id="@+id/calendar_today_weekday"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textSize="10sp"
+          android:textStyle="bold"
+          tools:text="MON" />
+
+      <TextView
+          android:id="@+id/calendar_today_month"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textSize="12sp"
+          tools:text="March" />
+    </LinearLayout>
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/calendar_today_note"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_weight="1"
+      android:paddingTop="6dp"
+      android:maxLines="4"
+      android:ellipsize="end"
+      android:textSize="13sp"
+      tools:text="Dentist, 14:00" />
+
+  <TextView
+      android:id="@+id/calendar_today_calendar"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:maxLines="1"
+      android:ellipsize="end"
+      android:textSize="10sp"
+      tools:text="Personal" />
+</LinearLayout>

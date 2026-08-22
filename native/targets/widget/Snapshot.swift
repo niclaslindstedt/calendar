@@ -40,13 +40,31 @@ struct WidgetTheme: Codable {
   let accent: String
 }
 
+/// How the reader's country pack cuts a week up: where a week starts, and
+/// which of its days are not worked. Both come from `src/app/locale/*.ts` by
+/// way of the snapshot — the widgets lay a week out with them, and the work
+/// week is the week minus `restDays`.
+struct WidgetWeek: Codable {
+  let startsOn: Int
+  let restDays: [Int]
+
+  /// What a snapshot with no week rules falls back to: a Monday-start week
+  /// with the weekend off, which is what both shipped packs say.
+  static let fallback = WidgetWeek(startsOn: 1, restDays: [0, 6])
+}
+
 struct CalendarSnapshot: Codable {
   let version: Int
   let updatedAt: String
   let calendar: WidgetCalendar
   let locale: String
+  /// Optional so a snapshot written by an older build still decodes rather
+  /// than dropping the widget to its placeholder; read it through `weekRules`.
+  let week: WidgetWeek?
   let theme: WidgetTheme
   let days: [WidgetDay]
+
+  var weekRules: WidgetWeek { week ?? .fallback }
 
   /// What a widget shows before the app has ever run — and what it falls back
   /// to when the container holds something this build cannot read.
@@ -55,6 +73,7 @@ struct CalendarSnapshot: Codable {
     updatedAt: "",
     calendar: WidgetCalendar(name: "Calendar", color: nil),
     locale: "en-GB",
+    week: .fallback,
     theme: WidgetTheme(
       background: "#f6f8fa", foreground: "#1f2328",
       muted: "#57606a", accent: "#0969da"
@@ -86,11 +105,6 @@ struct CalendarSnapshot: Codable {
     days.first(where: { $0.date == key })?.text
   }
 
-  /// The days from `key` onwards, soonest first — what the upcoming widget
-  /// lists. The snapshot is already sorted and windowed by the app.
-  func upcoming(from key: String) -> [WidgetDay] {
-    days.filter { $0.date >= key }
-  }
 }
 
 // MARK: - day keys

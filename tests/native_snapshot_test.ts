@@ -14,9 +14,13 @@
 
 import { describe, expect, it } from "vitest";
 
+import { LOCALES } from "../src/app/locale/index.ts";
 import {
   MAX_NOTE_CHARS,
   SNAPSHOT_VERSION,
+  WEEK_RULES,
+  WINDOW_DAYS_AHEAD,
+  WINDOW_DAYS_BACK,
   activeCalendar,
   buildSnapshot,
   cacheScope,
@@ -26,6 +30,7 @@ import {
   readLocale,
   shiftDay,
   snapshotSignature,
+  weekRules,
   type PageReport,
 } from "../native/src/snapshot.ts";
 
@@ -138,6 +143,37 @@ describe("readLocale", () => {
   });
 });
 
+describe("week rules", () => {
+  // `native/src/snapshot.ts` mirrors each pack's `weekStartsOn` and
+  // `restWeekdays`, because the wrapper cannot import app code. These two
+  // tests are the whole justification for that duplication: they read the
+  // REAL packs, so the mirror cannot drift without CI going red, and a new
+  // country pack cannot be added without adding its row.
+  it("matches every shipped country pack", () => {
+    for (const pack of LOCALES) {
+      expect(weekRules(pack.id)).toEqual({
+        startsOn: pack.weekStartsOn,
+        restDays: [...pack.restWeekdays],
+      });
+    }
+  });
+
+  it("has a row for every pack and no rows for packs that don't exist", () => {
+    expect(Object.keys(WEEK_RULES).sort()).toEqual(
+      LOCALES.map((pack) => pack.id).sort(),
+    );
+  });
+
+  it("falls back rather than throwing on a locale it has never heard of", () => {
+    expect(weekRules("xx-XX")).toEqual({ startsOn: 1, restDays: [0, 6] });
+  });
+
+  it("hands out a copy, so a caller cannot mutate the table", () => {
+    weekRules("sv-SE").restDays.push(3);
+    expect(weekRules("sv-SE").restDays).toEqual([0, 6]);
+  });
+});
+
 describe("buildSnapshot", () => {
   it("windows the notes around today and sorts them", () => {
     const snapshot = buildSnapshot(
@@ -159,21 +195,56 @@ describe("buildSnapshot", () => {
     ]);
   });
 
-  it("includes the last day of the window and excludes the next one", () => {
+  it("reaches back far enough to cover the whole of the current week", () => {
+    // The week widgets print the week TODAY is in, and on the last day of the
+    // week that week began six days ago. A window that only reached back a
+    // day or two would leave those notes out of the snapshot entirely, and
+    // the widget would show a half-empty week with no way to tell why.
+    expect(WINDOW_DAYS_BACK).toBeGreaterThanOrEqual(6);
+
+    // 2026-03-15 is a Sunday — the last day of a Monday-start week.
+    const sunday = new Date(2026, 2, 15);
+    expect(sunday.getDay()).toBe(0);
     const snapshot = buildSnapshot(
       report({
         "calendar:document": doc({
-          [shiftDay(NOW, 60)]: "in",
-          [shiftDay(NOW, 61)]: "out",
-          [shiftDay(NOW, -1)]: "yesterday, in",
-          [shiftDay(NOW, -2)]: "out",
+          "2026-03-09": "Monday, the start of this week",
+          "2026-03-15": "Sunday, today",
+        }),
+      }),
+      sunday,
+    );
+    expect(snapshot.days.map((day) => day.date)).toEqual([
+      "2026-03-09",
+      "2026-03-15",
+    ]);
+  });
+
+  it("carries the active pack's week rules", () => {
+    const snapshot = buildSnapshot(
+      report({ "calendar:settings": '{"localeId":"sv-SE"}' }),
+      NOW,
+    );
+    expect(snapshot.week).toEqual({ startsOn: 1, restDays: [0, 6] });
+  });
+
+  it("includes the last day of the window and excludes the next one", () => {
+    // Derived from the constants rather than written out, so widening the
+    // window is a one-line change instead of a test to go and fix.
+    const snapshot = buildSnapshot(
+      report({
+        "calendar:document": doc({
+          [shiftDay(NOW, WINDOW_DAYS_AHEAD)]: "last day ahead, in",
+          [shiftDay(NOW, WINDOW_DAYS_AHEAD + 1)]: "out",
+          [shiftDay(NOW, -WINDOW_DAYS_BACK)]: "first day back, in",
+          [shiftDay(NOW, -WINDOW_DAYS_BACK - 1)]: "out",
         }),
       }),
       NOW,
     );
     expect(snapshot.days.map((day) => day.text)).toEqual([
-      "yesterday, in",
-      "in",
+      "first day back, in",
+      "last day ahead, in",
     ]);
   });
 

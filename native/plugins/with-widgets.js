@@ -36,10 +36,52 @@ const {
 // every installed widget's data.
 const APP_GROUP = "group.se.niclaslindstedt.calendar";
 
-// The receiver's fully-qualified name. Mirrored in the Kotlin file's `package`
-// declaration and in the bridge module's update broadcast.
+// The package the widgets' Kotlin lives in. Mirrored in the Kotlin files'
+// `package` declaration and in the bridge module's update broadcast.
 const ANDROID_PKG = "se.niclaslindstedt.calendar.widget";
-const RECEIVER = `${ANDROID_PKG}.CalendarWidgetProvider`;
+
+// The four widgets, as the launcher's picker sees them. Each is one receiver
+// pointing at its own `<appwidget-provider>` metadata; the classes differ only
+// in which span of days they print (widgets/android/CalendarWidgetProvider.kt).
+//
+// `labelText` is what the picker shows under the preview and `descriptionText`
+// the line beneath it. Both are spelled out per widget rather than shared,
+// because the picker is where a reader chooses between "This week" and "Work
+// week" — that choice IS the configuration, so the wording has to carry it.
+const WIDGETS = [
+  {
+    className: "TodayWidgetProvider",
+    info: "calendar_widget_today_info",
+    label: "calendar_widget_today",
+    labelText: "Today",
+    description: "calendar_widget_today_description",
+    descriptionText: "The date, and the note you left on it",
+  },
+  {
+    className: "NextThreeWidgetProvider",
+    info: "calendar_widget_next_three_info",
+    label: "calendar_widget_next_three",
+    labelText: "Next 3 days",
+    description: "calendar_widget_next_three_description",
+    descriptionText: "Today and the two days after it",
+  },
+  {
+    className: "ThisWeekWidgetProvider",
+    info: "calendar_widget_this_week_info",
+    label: "calendar_widget_this_week",
+    labelText: "This week",
+    description: "calendar_widget_this_week_description",
+    descriptionText: "Every day of the week you are in",
+  },
+  {
+    className: "WorkWeekWidgetProvider",
+    info: "calendar_widget_work_week_info",
+    label: "calendar_widget_work_week",
+    labelText: "Work week",
+    description: "calendar_widget_work_week_description",
+    descriptionText: "This week without the days your country does not work",
+  },
+];
 
 function copyFile(from, to) {
   fs.mkdirSync(path.dirname(to), { recursive: true });
@@ -78,80 +120,79 @@ module.exports = function withWidgets(config) {
         }
       }
 
-      // `calendar_widget.xml` is a LAYOUT and `calendar_widget_info.xml` is
-      // provider metadata; Android resolves them from different resource
-      // folders, so they cannot both go in `res/xml`.
-      copyFile(
-        path.join(src, "calendar_widget.xml"),
-        path.join(main, "res", "layout", "calendar_widget.xml"),
-      );
-      copyFile(
-        path.join(src, "calendar_widget_info.xml"),
-        path.join(main, "res", "xml", "calendar_widget_info.xml"),
-      );
+      // Android resolves LAYOUTS and provider METADATA from different
+      // resource folders, so the two kinds cannot share one. The `_info`
+      // suffix is what tells them apart — keep naming new metadata files
+      // that way, or they land in res/layout and the widget fails to inflate
+      // with an error that names neither file.
+      for (const file of fs.readdirSync(src)) {
+        if (!file.endsWith(".xml")) continue;
+        const folder = file.endsWith("_info.xml") ? "xml" : "layout";
+        copyFile(path.join(src, file), path.join(main, "res", folder, file));
+      }
       return c;
     },
   ]);
 
-  // --- Android: the strings the layout and the metadata reference ----------
+  // --- Android: the strings the layouts and the metadata reference ---------
   config = withStringsXml(config, (c) => {
     c.modResults = AndroidConfig.Strings.setStringItem(
-      [
-        {
-          $: { name: "calendar_widget_description" },
-          _: "The next days you have written something on",
-        },
-        {
-          $: { name: "calendar_widget_empty" },
-          _: "Nothing coming up.",
-        },
-      ],
+      WIDGETS.flatMap((widget) => [
+        { $: { name: widget.label }, _: widget.labelText },
+        { $: { name: widget.description }, _: widget.descriptionText },
+      ]),
       c.modResults,
     );
     return c;
   });
 
-  // --- Android: declare the receiver ---------------------------------------
+  // --- Android: declare the receivers --------------------------------------
   config = withAndroidManifest(config, (c) => {
     const app = AndroidConfig.Manifest.getMainApplicationOrThrow(c.modResults);
     app.receiver = app.receiver ?? [];
-    if (app.receiver.some((r) => r.$?.["android:name"] === RECEIVER)) return c;
 
-    app.receiver.push({
-      $: {
-        "android:name": RECEIVER,
-        // The launcher is a different app, so the receiver has to be
-        // exported for APPWIDGET_UPDATE to reach it at all.
-        "android:exported": "true",
-        "android:label": "@string/calendar_widget_description",
-      },
-      "intent-filter": [
-        {
-          action: [
-            {
-              $: {
-                "android:name": "android.appwidget.action.APPWIDGET_UPDATE",
+    for (const widget of WIDGETS) {
+      const name = `${ANDROID_PKG}.${widget.className}`;
+      if (app.receiver.some((r) => r.$?.["android:name"] === name)) continue;
+
+      app.receiver.push({
+        $: {
+          "android:name": name,
+          // The launcher is a different app, so the receiver has to be
+          // exported for APPWIDGET_UPDATE to reach it at all.
+          "android:exported": "true",
+          "android:label": `@string/${widget.label}`,
+        },
+        "intent-filter": [
+          {
+            action: [
+              {
+                $: {
+                  "android:name": "android.appwidget.action.APPWIDGET_UPDATE",
+                },
               },
-            },
-            // The widget's content is relative to "today", so it has to
-            // re-render when the day changes under it — including after a
-            // timezone change or a manual clock adjustment, which is why all
-            // three are listed rather than relying on a polling period.
-            { $: { "android:name": "android.intent.action.DATE_CHANGED" } },
-            { $: { "android:name": "android.intent.action.TIME_SET" } },
-            { $: { "android:name": "android.intent.action.TIMEZONE_CHANGED" } },
-          ],
-        },
-      ],
-      "meta-data": [
-        {
-          $: {
-            "android:name": "android.appwidget.provider",
-            "android:resource": "@xml/calendar_widget_info",
+              // A widget's content is relative to "today", so it has to
+              // re-render when the day changes under it — including after a
+              // timezone change or a manual clock adjustment, which is why
+              // all three are listed rather than relying on a polling period.
+              { $: { "android:name": "android.intent.action.DATE_CHANGED" } },
+              { $: { "android:name": "android.intent.action.TIME_SET" } },
+              {
+                $: { "android:name": "android.intent.action.TIMEZONE_CHANGED" },
+              },
+            ],
           },
-        },
-      ],
-    });
+        ],
+        "meta-data": [
+          {
+            $: {
+              "android:name": "android.appwidget.provider",
+              "android:resource": `@xml/${widget.info}`,
+            },
+          },
+        ],
+      });
+    }
     return c;
   });
 

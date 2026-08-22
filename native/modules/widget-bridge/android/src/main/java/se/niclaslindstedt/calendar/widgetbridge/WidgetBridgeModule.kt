@@ -8,14 +8,13 @@
 // `SharedPreferences` file is readable by both, and that is the whole
 // container.
 //
-// The provider is not notified by the write itself, so an explicit
+// The providers are not notified by the write itself, so an explicit
 // APPWIDGET_UPDATE broadcast follows it — the same one the launcher sends on
-// the provider's own schedule.
+// a provider's own schedule.
 
 package se.niclaslindstedt.calendar.widgetbridge
 
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import expo.modules.kotlin.exception.Exceptions
@@ -27,11 +26,6 @@ private const val PREFS = "calendar_widget"
 
 /** The key the snapshot JSON sits under inside that file. */
 private const val SNAPSHOT_KEY = "snapshot"
-
-/** The provider the update broadcast is addressed to. Mirrored in
- *  `plugins/with-widgets.js`, which registers this exact name in the app's
- *  manifest, and in the Kotlin file that declares it. */
-private const val PROVIDER = "se.niclaslindstedt.calendar.widget.CalendarWidgetProvider"
 
 class WidgetBridgeModule : Module() {
   override fun definition() = ModuleDefinition {
@@ -55,19 +49,28 @@ class WidgetBridgeModule : Module() {
 }
 
 /**
- * Poke every placed instance of the widget.
+ * Poke every placed instance of every widget this app declares.
  *
- * `getAppWidgetIds` returning an empty array is the normal case — the user has
- * not put the widget on a home screen — and the broadcast is then a no-op
- * rather than an error worth reporting.
+ * The providers are ASKED FOR rather than named: the app ships four of them
+ * (Today, Next 3 days, This week, Work week) and a hard-coded list here would
+ * be a fourth place the set is written down — after the Kotlin classes, the
+ * manifest receivers the config plugin writes, and the iOS bundle. A widget
+ * added later and forgotten here would simply never refresh, which is exactly
+ * the kind of silence this file cannot afford.
+ *
+ * Finding no ids is the normal case — nobody has put a widget on a home
+ * screen — and is a no-op rather than an error worth reporting.
  */
 private fun notifyProvider(context: Context) {
-  val component = ComponentName(context.packageName, PROVIDER)
-  val ids = AppWidgetManager.getInstance(context).getAppWidgetIds(component)
-  if (ids.isEmpty()) return
-  val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
-    this.component = component
-    putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+  val manager = AppWidgetManager.getInstance(context)
+  val providers = manager.getInstalledProvidersForPackage(context.packageName, null)
+  for (provider in providers) {
+    val ids = manager.getAppWidgetIds(provider.provider)
+    if (ids.isEmpty()) continue
+    val intent = Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+      component = provider.provider
+      putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+    }
+    context.sendBroadcast(intent)
   }
-  context.sendBroadcast(intent)
 }

@@ -30,7 +30,7 @@ has stopped being thin.
 | `src/widgets.ts`          | Publishes a snapshot through the native bridge; degrades to "no widgets" when it is absent.          |
 | `modules/widget-bridge/`  | A local Expo module: writes the snapshot into the shared container and reloads the widget timelines. |
 | `targets/widget/`         | The iOS WidgetKit extension (SwiftUI), generated into Xcode by `@bacons/apple-targets`.              |
-| `widgets/android/`        | The Android app widget (`RemoteViews`), copied into the app module by `plugins/with-widgets.js`.     |
+| `widgets/android/`        | The Android app widgets (`RemoteViews`), copied into the app module by `plugins/with-widgets.js`.    |
 | `plugins/with-widgets.js` | Wires the widgets into both native projects during `expo prebuild`.                                  |
 | `scripts/bundle-web.mjs`  | Builds the web app and packs `dist/` into `assets/webroot.zip`.                                      |
 
@@ -67,16 +67,38 @@ EXPO_PUBLIC_CALENDAR_URL=https://calendar.niclaslindstedt.se/preview/ npm run io
 
 ## The widgets
 
-Two on iOS, one on Android, all read-only:
+Four of them, on both platforms, all read-only. Every one is the same idea —
+**a span of days, each printed whether or not it carries a note** (see
+`WidgetSpan` in `targets/widget/Provider.swift` and `Span` in
+`widgets/android/CalendarWidgetProvider.kt`, which have to agree):
 
-- **Today** (iOS, small + medium) — the date, and the note you left on it.
-- **Upcoming** (iOS, medium + large) — the next days you have written on.
-- **Upcoming** (Android, resizable) — the same list.
+| Widget          | Span                                       | iOS sizes |
+| --------------- | ------------------------------------------ | --------- |
+| **Today**       | Today.                                     | S, M      |
+| **Next 3 days** | Today and the two days after it.           | S, M      |
+| **This week**   | The whole week today falls in.             | S, M, L   |
+| **Work week**   | That week minus the pack's `restWeekdays`. | S, M, L   |
 
-They print **the date and your note**, and deliberately not name days or
+Empty days are printed, not skipped: a week with two things in it should look
+like a week with two things in it. That is what makes these calendar widgets
+rather than to-do lists.
+
+Whole week and work week are **two widgets, not one with a setting**. A
+configurable widget on iOS means an `AppIntent` configuration, which raises
+the widget's floor to iOS 17 and has no equivalent on the Android side short
+of a configuration Activity; two entries in the picker cost a `Widget` struct
+and a receiver each, and work everywhere.
+
+They print **the date and the note**, and deliberately not name days or
 holidays: those come from the country packs in `src/app/locale/`, which
 compute moving feasts per year, and reproducing that in Swift and Kotlin would
 be a second implementation of the app's domain.
+
+Where a week starts and which of its days are not worked **do** travel in the
+snapshot, mirrored from the packs by `WEEK_RULES` in `src/snapshot.ts`. That
+mirror is duplication, and what makes it safe is the root suite's
+`tests/native_snapshot_test.ts`: it reads the real packs, so the table cannot
+drift, and a new country pack cannot be added without adding its row.
 
 ### How the data gets there
 
@@ -94,9 +116,11 @@ Android: SharedPreferences("calendar_widget")
 targets/widget (SwiftUI)  /  widgets/android (RemoteViews)
 ```
 
-The snapshot is windowed (yesterday → +60 days), capped, and written only when
-it actually changed — publishing wakes a widget process on both platforms, and
-a note is saved keystroke by keystroke.
+The snapshot is windowed (a week back → +60 days), capped, and written only
+when it actually changed — publishing wakes a widget process on both
+platforms, and a note is saved keystroke by keystroke. It reaches a week back
+because the week widgets print the week TODAY is in, and on the last day of
+that week it began six days ago.
 
 **The App Group id is pinned in four files that must agree**:
 `app.config.js`, `plugins/with-widgets.js`, `modules/widget-bridge/index.ts`

@@ -358,6 +358,11 @@ follow, and both matter more than they look:
   and the user's note, and deliberately not name days or holidays — those come
   from the country packs in `src/app/locale/`, which compute moving feasts per
   year, and a Swift and a Kotlin copy of that arithmetic would drift silently.
+  The one thing that _is_ mirrored is `WEEK_RULES` — each pack's
+  `weekStartsOn` and `restWeekdays`, which the week widgets need to lay a week
+  out at all. That is allowed only because it is two values per pack and
+  because the test reads the real packs and fails the moment they disagree; a
+  mirror without that test is the thing this rule forbids.
 
 ### What breaks quietly
 
@@ -571,20 +576,21 @@ looks fine at 393 px can be a margin taking three quarters of a strip row at
 
 ## Documentation sync points
 
-| When you change…                   | Update…                                                                                                     |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| the document model / migrations    | `docs/storage.md`, `tests/migrations_test.ts`                                                               |
-| locale packs / name days           | `docs/features/locales.md`, `tests/locale_test.ts`                                                          |
-| storage backends                   | `docs/storage.md`, `docs/configuration.md`                                                                  |
-| import / export (the backup file)  | `docs/storage.md`, `tests/backup_test.ts`                                                                   |
-| resetting (emptying a calendar)    | `docs/storage.md`, `tests/reset_test.ts`                                                                    |
-| calendars / where a document lives | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`    |
-| settings surface                   | `docs/getting-started.md`                                                                                   |
-| user-visible features              | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/` |
-| deployment slots / hosting         | `docs/deployment.md`, `tests/slot_test.ts`                                                                  |
-| the release flow / fragments       | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                       |
-| the native wrapper / the widgets   | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`   |
-| the web app's localStorage keys    | `native/src/snapshot.ts` **and** `tests/native_snapshot_test.ts` — the widgets read those keys from outside |
+| When you change…                                                         | Update…                                                                                                                                                |
+| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| the document model / migrations                                          | `docs/storage.md`, `tests/migrations_test.ts`                                                                                                          |
+| locale packs / name days                                                 | `docs/features/locales.md`, `tests/locale_test.ts`                                                                                                     |
+| storage backends                                                         | `docs/storage.md`, `docs/configuration.md`                                                                                                             |
+| import / export (the backup file)                                        | `docs/storage.md`, `tests/backup_test.ts`                                                                                                              |
+| resetting (emptying a calendar)                                          | `docs/storage.md`, `tests/reset_test.ts`                                                                                                               |
+| calendars / where a document lives                                       | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`                                               |
+| settings surface                                                         | `docs/getting-started.md`                                                                                                                              |
+| user-visible features                                                    | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/`                                            |
+| deployment slots / hosting                                               | `docs/deployment.md`, `tests/slot_test.ts`                                                                                                             |
+| the release flow / fragments                                             | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                                                                  |
+| the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                              |
+| the web app's localStorage keys                                          | `native/src/snapshot.ts` **and** `tests/native_snapshot_test.ts` — the widgets read those keys from outside                                            |
+| a locale pack's week (`weekStartsOn` / `restWeekdays`), or adding a pack | `WEEK_RULES` in `native/src/snapshot.ts` — the week widgets lay a week out with it, and `tests/native_snapshot_test.ts` fails until the mirror matches |
 
 ## Website staleness
 

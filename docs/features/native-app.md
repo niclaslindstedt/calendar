@@ -28,42 +28,38 @@ expect and what the sign-in pages require.
 ## The widgets
 
 All of them are **read-only**: a widget shows you what you wrote, and tapping
-it opens the app on that calendar. Nothing is edited from the Home Screen.
+it opens the app. Nothing is edited from the Home Screen.
 
-### iOS
+Every one is the same idea — **a span of days, each printed whether or not you
+wrote on it.** They differ only in how long that span is:
 
-| Widget       | Sizes         | Shows                                                |
-| ------------ | ------------- | ---------------------------------------------------- |
-| **Today**    | small, medium | The day of the month, the weekday, and today's note. |
-| **Upcoming** | medium, large | The next days you have written something on.         |
+| Widget          | Days                                      | iOS sizes | Android |
+| --------------- | ----------------------------------------- | --------- | ------- |
+| **Today**       | Today.                                    | S, M      | ✓       |
+| **Next 3 days** | Today and the two days after it.          | S, M      | ✓       |
+| **This week**   | Every day of the week you are in.         | S, M, L   | ✓       |
+| **Work week**   | That week, minus the days you don't work. | S, M, L   | ✓       |
 
-Add them the usual way: long-press the Home Screen → **+** → search for
-_Calendar_.
+Empty days are shown, not skipped. A week with two things in it should look
+like a week with two things in it — that is what makes these calendar widgets
+rather than to-do lists. Today's row is tinted and its date picked out in your
+calendar's colour, so it is findable at a glance.
 
-### Android
+**iOS**: long-press the Home Screen → **+** → search for _Calendar_.
+**Android**: long-press the Home Screen → **Widgets** → _Calendar_.
 
-| Widget       | Sizes     | Shows                                        |
-| ------------ | --------- | -------------------------------------------- |
-| **Upcoming** | resizable | The next days you have written something on. |
+### Whole week or work week
 
-Long-press the Home Screen → **Widgets** → _Calendar_.
+These are **two separate widgets** rather than one with a setting, so you pick
+which you want when you add it. Changing your mind means removing one and
+adding the other — the trade for that is that both work on every phone the app
+runs on, with no per-widget configuration screen to go and find.
 
-## What a widget shows, and what it doesn't
-
-A widget prints **the date and your note**. It does not print name days,
-holidays or week numbers — those come from the country packs the app computes
-per year (see [Locale packs](locales.md)), and duplicating that arithmetic
-inside a widget would be a second, silently-drifting copy of the calendar. The
-full month, with all of it, is one tap away.
-
-A widget follows:
-
-- **the calendar you have open in the app** — switch calendars and the widgets
-  follow, taking that calendar's name and its colour with them;
-- **your theme** — the widget is painted in the same colours the app resolved,
-  so it matches whatever preset you picked;
-- **your country pack** — weekday names are printed in it, not in the phone's
-  language.
+Which days count as work days comes from your **country pack**, not from a
+fixed Monday–Friday: both the UK and Sweden rest on Saturday and Sunday, and a
+country pack added later brings its own answer with it. The week also starts
+where your pack says it starts, not where the phone's language would put it —
+so a Swedish calendar on an American phone still begins its weeks on Monday.
 
 ## When a widget updates
 
@@ -79,10 +75,10 @@ does not sync on its own.
 
 ## Which days it covers
 
-The widgets are handed the notes from **yesterday** through the **next 60
-days**. Yesterday is in so the widget still finds "today" if it renders just
-after midnight; sixty days ahead is far past anything an "upcoming" list would
-show. Anything further out is in the app.
+The widgets are handed the notes from **a week back** through the **next 60
+days**. A week back, because on a Sunday the week you are in began six days
+ago and the week widgets have to be able to show it; sixty ahead is far past
+anything these spans reach. Anything outside that is in the app.
 
 ## Building and releasing it
 

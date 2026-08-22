@@ -32,14 +32,18 @@
  *  widgets refuse a version they don't know rather than mis-rendering it. */
 export const SNAPSHOT_VERSION = 1;
 
-/** How far back the snapshot reaches. Yesterday is included so a widget read
- *  just after midnight — or on a device whose timezone has drifted a few
- *  hours from the one the snapshot was written in — still finds "today". */
-export const WINDOW_DAYS_BACK = 1;
+/** How far back the snapshot reaches.
+ *
+ *  A full week, because the week widgets print the week TODAY is in — and on a
+ *  Sunday that week began six days ago. Seven covers it whatever day the
+ *  snapshot is derived on and wherever a pack starts its week, with a day to
+ *  spare for a widget rendering just after midnight (or on a device whose
+ *  timezone has drifted from the one the snapshot was written in). */
+export const WINDOW_DAYS_BACK = 7;
 
-/** How far forward the snapshot reaches. Sixty days covers the upcoming
- *  widget's list many times over while keeping the payload small; a note
- *  further out than that is not "upcoming" by any useful reading. */
+/** How far forward the snapshot reaches. The widgets never look past next
+ *  week, but a timeline is built once and re-read for days — sixty keeps the
+ *  payload small while leaving no chance of a widget outrunning it. */
 export const WINDOW_DAYS_AHEAD = 60;
 
 /** Hard ceiling on how many days ride along, whatever the window implies. The
@@ -71,6 +75,8 @@ export type WidgetSnapshot = {
   calendar: { name: string; color: string | null };
   /** BCP-47 tag the widget formats dates with (the app's country pack). */
   locale: string;
+  /** Where that pack starts its week, and which of its days are not worked. */
+  week: WidgetWeek;
   /** The resolved page colours, so a widget matches the app's theme instead
    *  of guessing. Authored CSS colours as the page computed them. */
   theme: WidgetTheme;
@@ -83,6 +89,20 @@ export type WidgetTheme = {
   foreground: string;
   muted: string;
   accent: string;
+};
+
+/** How the reader's country pack cuts a week up.
+ *
+ *  The week widgets lay out a week, so they have to know where one starts and
+ *  which of its days are not worked. Both answers belong to the country pack
+ *  (`src/app/locale/*.ts`), which is app code the wrapper cannot import — so
+ *  they travel in the snapshot, mirrored from `WEEK_RULES` below. */
+export type WidgetWeek = {
+  /** First day of the week, `Date.getDay()` numbering (1 = Monday). */
+  startsOn: number;
+  /** The weekdays this country does not work, same numbering (0 = Sunday).
+   *  The "work week" widget is the week minus these. */
+  restDays: number[];
 };
 
 /** What the injected script posts out of the page: the `calendar:` /
@@ -135,6 +155,37 @@ export const FALLBACK_THEME: WidgetTheme = {
 
 /** The locale the snapshot falls back on, matching the app's own fallback. */
 export const FALLBACK_LOCALE = "en-GB";
+
+/**
+ * How each country pack cuts a week up — a MIRROR of `weekStartsOn` and
+ * `restWeekdays` in `src/app/locale/<id>.ts`.
+ *
+ * This is duplication, and it is deliberate: it is two numbers and a pair per
+ * pack, it is structural (the widgets lay a week out with it) rather than
+ * domain data, and it is the only way the wrapper can have the answer without
+ * importing app code. What keeps it honest is the test —
+ * `tests/native_snapshot_test.ts` reads the real packs and fails the moment
+ * one of them disagrees with this table, so **a new country pack must add a
+ * row here or CI goes red.** That is the whole reason the mirror is allowed
+ * where the name-day tables are not.
+ */
+export const WEEK_RULES: Record<string, WidgetWeek> = {
+  "en-GB": { startsOn: 1, restDays: [0, 6] },
+  "sv-SE": { startsOn: 1, restDays: [0, 6] },
+};
+
+/** The week shape a locale this build has never heard of falls back to: a
+ *  Monday-start week with the weekend off, which is what both shipped packs
+ *  say and what the app's own fallback pack would answer. */
+export const FALLBACK_WEEK: WidgetWeek = { startsOn: 1, restDays: [0, 6] };
+
+/** The week rules for a locale id, falling back rather than throwing. */
+export function weekRules(localeId: string): WidgetWeek {
+  const found = WEEK_RULES[localeId];
+  return found
+    ? { startsOn: found.startsOn, restDays: [...found.restDays] }
+    : FALLBACK_WEEK;
+}
 
 // --- derivation --------------------------------------------------------------
 
@@ -276,6 +327,7 @@ export function buildSnapshot(report: PageReport, now: Date): WidgetSnapshot {
   const backend = storage[BACKEND_KEY] ?? "browser";
   const calendar = activeCalendar(storage);
   const entries = readEntries(storage, backend, calendar.slug);
+  const locale = readLocale(storage);
 
   const first = shiftDay(now, -WINDOW_DAYS_BACK);
   const last = shiftDay(now, WINDOW_DAYS_AHEAD);
@@ -295,7 +347,8 @@ export function buildSnapshot(report: PageReport, now: Date): WidgetSnapshot {
     version: SNAPSHOT_VERSION,
     updatedAt: now.toISOString(),
     calendar: { name: calendar.name, color: calendar.color },
-    locale: readLocale(storage),
+    locale: locale,
+    week: weekRules(locale),
     theme: theme(report.theme ?? {}),
     days,
   };
