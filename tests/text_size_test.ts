@@ -6,6 +6,7 @@
 import { describe, expect, it } from "vitest";
 
 import { MIN_HYPHENATED_LETTERS } from "../src/app/locale/hyphenate.ts";
+import { BIRTHDAY_GLYPH_LETTERS } from "../src/app/people/PeopleMarks.tsx";
 import {
   DEFAULT_TEXT_SCALE,
   DEFAULT_TEXT_STEP,
@@ -140,6 +141,49 @@ describe("minHyphenatedLetters", () => {
   it("keeps the shortest words whole at any size", () => {
     for (const step of TEXT_SCALES) {
       expect(minHyphenatedLetters(step)).toBeGreaterThanOrEqual(4);
+    }
+  });
+});
+
+describe("minHyphenatedLetters — a lead at the head of the line", () => {
+  it("costs the same letters at every step of the ladder", () => {
+    // The lead is the cake glyph a birthday is printed with, and it is set in
+    // the caption's own font — so it grows with the scale exactly as the
+    // letters beside it do. Subtracting it AFTER the division is what makes
+    // its cost constant; taking it off the measured constant instead would
+    // charge more letters as the reader made the caption bigger.
+    for (const scale of TEXT_SCALES) {
+      expect(minHyphenatedLetters(scale, 2)).toBe(
+        Math.max(4, minHyphenatedLetters(scale) - 2),
+      );
+    }
+  });
+
+  it("matches what was measured in a real month cell at the default size", () => {
+    // 44.8 px band, caption font, 393 px viewport: "Bartolomeus" (11) is the
+    // longest name that holds a whole line, and "Margareta" (9) the longest
+    // that still holds one after the glyph. So a name of 10 letters or more
+    // needs break points in a birthday run, where 12 is the plain caption's
+    // threshold. See `BIRTHDAY_GLYPH_LETTERS`.
+    expect(minHyphenatedLetters(1)).toBe(12);
+    expect(minHyphenatedLetters(1, BIRTHDAY_GLYPH_LETTERS)).toBe(10);
+  });
+
+  it("hyphenates a name the plain caption would have left whole", () => {
+    const threshold = minHyphenatedLetters(1, BIRTHDAY_GLYPH_LETTERS);
+    // The case this was built for: stranded alone above its name before.
+    expect("Bartolomeus".length).toBeGreaterThanOrEqual(threshold);
+    // …and one the glyph still leaves room for, which must stay whole.
+    expect("Margareta".length).toBeLessThan(threshold);
+  });
+
+  it("keeps the floor of 4, so a short name is never split", () => {
+    expect(minHyphenatedLetters(1.5, 99)).toBe(4);
+  });
+
+  it("is unchanged with no lead", () => {
+    for (const scale of TEXT_SCALES) {
+      expect(minHyphenatedLetters(scale, 0)).toBe(minHyphenatedLetters(scale));
     }
   });
 });

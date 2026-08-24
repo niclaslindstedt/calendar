@@ -116,23 +116,34 @@ export function textStepScale(step: TextStep): number {
 }
 
 /** The letter count above which a month-cell caption word is offered soft
- *  hyphens, at a given caption scale.
+ *  hyphens, at a given caption scale — and, optionally, with something
+ *  already printed at the head of the line.
  *
  *  {@link MIN_HYPHENATED_LETTERS} is measured at the caption's own size: the
- *  longest name that holds the 45.8 px band whole is 11 letters, so 12 is
- *  where a word starts needing break points. The band does not grow with the
+ *  longest name that holds the band whole is 11 letters, so 12 is where a
+ *  word starts needing break points. The band does not grow with the
  *  setting, so what fits it is that measured 11 letters divided by the scale
  *  — at 1.5 only seven fit, and an eight-letter "Fredrika" needs the hyphens
  *  a twelve-letter word needed before. The floor of 4 keeps the shortest
  *  words whole even at the ladder's top: a hyphen inside "Elsa" would be
  *  worse than the overflow it avoids.
  *
+ *  `lead` is how many of those letters something else has already taken —
+ *  today, the cake glyph a birthday is printed with
+ *  ({@link import("./people/PeopleMarks.tsx").BIRTHDAY_GLYPH_LETTERS}). It is
+ *  subtracted **after** the division rather than before, and that is the
+ *  whole of the arithmetic: the glyph is set in the caption's own font, so it
+ *  grows with the scale exactly as the letters beside it do, and therefore
+ *  costs the same *number of letters* at every step of the ladder. A lead
+ *  taken off the measured constant instead would cost more letters as the
+ *  reader made the caption bigger, which is the wrong way round.
+ *
  *  An approximation — letters are not all one width — but the same one the
  *  measured constant is: it is the widest name that sets the threshold, and
  *  a word that happens to fit is unharmed, because the breaker still prefers
  *  the space after it over any hyphen inside it. */
-export function minHyphenatedLetters(scale: number): number {
+export function minHyphenatedLetters(scale: number, lead = 0): number {
   const n = clampTextScale(scale);
-  const fits = Math.floor((MIN_HYPHENATED_LETTERS - 1) / n);
+  const fits = Math.floor((MIN_HYPHENATED_LETTERS - 1) / n - lead);
   return Math.max(4, fits + 1);
 }

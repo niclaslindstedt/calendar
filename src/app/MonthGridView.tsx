@@ -441,7 +441,10 @@ const DayCell = memo(function DayCell({
                     people={celebrations.birthdays}
                     pack={pack}
                     hyphenated
-                    minWordLength={minHyphenatedLetters(nameDayScale)}
+                    // The scale, not the names' finished threshold: this run
+                    // prints a glyph before the first name, so it fits fewer
+                    // letters than the line below it does.
+                    scale={nameDayScale}
                   />
                 )}
                 {names.length > 0 && (

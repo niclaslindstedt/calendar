@@ -17,27 +17,48 @@ import {
   hyphenate as hyphenateText,
   type LocalePack,
 } from "../locale/index.ts";
+import { minHyphenatedLetters } from "../textSize.ts";
 import type { Contact } from "./types.ts";
+
+/**
+ * What the cake glyph costs the caption line, in letters.
+ *
+ * Measured the way every other length in this app is (AGENTS.md): with
+ * `canvas.measureText` over the real strings, in a real month cell's computed
+ * caption font, at 393 px of viewport. The band is 44.8 px there; the longest
+ * name that holds it whole is "Bartolomeus" at 11 letters, which is the
+ * measured constant `MIN_HYPHENATED_LETTERS - 1` and confirms it. "🎂 " is
+ * 11.2 px, and after it the longest name that still holds the line whole is
+ * "Margareta" at **9** — so the glyph costs two letters of the threshold, not
+ * the three its raw width against an average letter would suggest. Letters are
+ * not all one width, which is exactly why the constant comes from the strings
+ * rather than from the arithmetic.
+ *
+ * Re-measure it with the caption font, alongside `MIN_HYPHENATED_LETTERS`.
+ */
+export const BIRTHDAY_GLYPH_LETTERS = 2;
 
 type Props = {
   people: readonly Contact[];
   pack: LocalePack;
-  /** Soft-hyphenate each name — for the month cell, whose line is 46 px wide.
+  /** Soft-hyphenate each name — for the month cell, whose line is 45 px wide.
    *  The wider views leave names whole (same contract as `NameDayNames`). */
   hyphenated?: boolean;
-  /** The letter count below which a name is left whole; the month cell
-   *  derives it from the size its captions are set at. */
-  minWordLength?: number;
+  /** The scale the caption band is set at (Settings → Calendar → View).
+   *
+   *  A scale rather than a finished letter count, unlike `NameDayNames`,
+   *  because this run's first line is not a whole line: the glyph is in front
+   *  of it. Handing in the names' own threshold would leave a long first name
+   *  unhyphenated and strand the glyph alone on the line above it — which is
+   *  what this prop exists to stop. */
+  scale?: number;
 };
 
-export function PeopleMarks({
-  people,
-  pack,
-  hyphenated,
-  minWordLength,
-}: Props) {
+export function PeopleMarks({ people, pack, hyphenated, scale = 1 }: Props) {
   const t = useT();
   if (people.length === 0) return null;
+  // The threshold for THIS run: the caption line, less what the glyph took.
+  const minWordLength = minHyphenatedLetters(scale, BIRTHDAY_GLYPH_LETTERS);
   return (
     <span className="cal-people block leading-[1.25]">
       {/* The cake carries the whole meaning of this line, which is why it is
