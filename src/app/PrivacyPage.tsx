@@ -20,6 +20,13 @@
 import type { ReactNode } from "react";
 
 import { ArrowLeftIcon } from "@niclaslindstedt/oss-framework/components";
+import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
+import {
+  useApplyTheme,
+  type ThemeAppearance,
+} from "@niclaslindstedt/oss-framework/theme";
+
+import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 
 // Last meaningful change to the policy text below. Bump it whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
@@ -27,6 +34,19 @@ import { ArrowLeftIcon } from "@niclaslindstedt/oss-framework/components";
 const LAST_UPDATED = "2026-08-24";
 
 export function PrivacyPage() {
+  // The page mounts on its own, outside the app shell, so it has to paint its
+  // own theme — the shell is what normally runs the engine, and without this
+  // the policy inherited the light `data-theme` seeded in `index.html` and
+  // stayed light on a device set to dark. Reading the reader's own stored
+  // choice rather than `prefers-color-scheme` is the point: somebody who set
+  // the calendar to a dark preset should not be handed a white page when they
+  // tap through to the policy.
+  const [appearance] = useLocalStorageState<ThemeAppearance>(
+    APPEARANCE_KEY,
+    DEFAULT_APPEARANCE,
+  );
+  useApplyTheme(appearance);
+
   // The deploy-slot root (`/`, `/preview/`, …) — the link back to the app.
   const homeUrl = import.meta.env.BASE_URL;
   return (

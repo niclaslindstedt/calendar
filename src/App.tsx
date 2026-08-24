@@ -22,12 +22,11 @@ import {
 } from "@niclaslindstedt/oss-framework/namespaces";
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
-  DEFAULT_THEME_APPEARANCE,
-  FAMILY_DEFAULT_THEME,
   useApplyTheme,
   type ThemeAppearance,
 } from "@niclaslindstedt/oss-framework/theme";
 
+import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./app/appearance.ts";
 import { DayListView } from "./app/DayListView.tsx";
 import { DayZoom } from "./app/DayZoom.tsx";
 import { loadCalFonts } from "./app/fonts.ts";
@@ -91,15 +90,6 @@ import {
 } from "./app/viewStyle.ts";
 import { status } from "./output.ts";
 
-// The default look is the printed one: paper is light, so the calendar opens
-// light whatever the device is set to. "Follow device" is one tap away in
-// Settings → Appearance (with the dark palettes behind it), persisted per
-// device.
-const DEFAULT_APPEARANCE: ThemeAppearance = {
-  ...DEFAULT_THEME_APPEARANCE,
-  theme: FAMILY_DEFAULT_THEME.light,
-};
-
 // What an untouched install reads like — the yardstick an import measures a
 // file's settings against. A device still sitting on both of these has made no
 // choice to defend, so it adopts the file's rather than asking (see
@@ -128,7 +118,7 @@ export function App() {
   const t = useT();
   const { settings, update, commitLook } = useAppSettings();
   const [appearance, setAppearance] = useLocalStorageState<ThemeAppearance>(
-    "calendar:appearance",
+    APPEARANCE_KEY,
     DEFAULT_APPEARANCE,
   );
   // The open Settings dialog streams its unsaved draft here, so the calendar

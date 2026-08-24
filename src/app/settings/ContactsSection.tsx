@@ -30,6 +30,7 @@ import {
   ClearableInput,
   GiftIcon,
   Section,
+  SearchIcon,
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
@@ -151,13 +152,25 @@ export function ContactsSection({
         <Empty people={people} />
       ) : (
         <>
-          <div className="mt-3">
+          {/* `ClearableInput` is bare — the surrounding element supplies the
+              chrome, the way the almanac's own search bar does
+              (`NameDaySearch`). Same rule, same look, so the two read as one
+              kind of field rather than two. */}
+          <div className="border-line bg-surface mt-3 flex items-center gap-2 rounded border px-2 py-1.5">
+            <SearchIcon className="text-muted h-4 w-4 shrink-0" />
             <ClearableInput
               value={query}
               onValueChange={setQuery}
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="words"
+              spellcheck={false}
               aria-label={t("contacts.search")}
               placeholder={t("contacts.searchPlaceholder")}
               clearLabel={t("contacts.searchClear")}
+              wrapperClassName="min-w-0 flex-1"
             />
           </div>
 

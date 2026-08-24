@@ -49,6 +49,11 @@ optionally synced to a storage backend you control.
 - **Finds your name day even if the almanac spells it differently**: tap a
   name to browse the almanac alphabetically, and search it by how a name
   sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
+- **Marks your people's days** (App Store / Play app): let it read your
+  contacts and it prints their birthdays, and bolds their name in the
+  almanac's own run on their name day — folded the same way the search is, so
+  a Nicklas is celebrated on Niklas's day. Opt in one contact at a time;
+  nothing about a contact is stored or sent anywhere.
 - **Storage your way**: browser storage, a local folder, Dropbox (a folder per
   calendar in the app folder), or Google Drive.
 - **Separate calendars in one app**: keep home and work apart — each calendar
@@ -121,8 +126,10 @@ and persists in your browser. The cogwheel (top right) opens Settings.
   face per part of a day (date, holiday, name days, your text), a size per
   part of a day (small / medium / large, plus dynamic for your own text,
   each with a sample beside the buttons), the theme,
-  storage backend, import / export, developer mode, and logs. Look changes
-  preview live behind the dialog and are kept with Save; Cancel drops them.
+  storage backend, import / export, developer mode, and logs — plus, in the
+  App Store / Play app only, which of your contacts the calendar marks. Look
+  changes preview live behind the dialog and are kept with Save; Cancel drops
+  them.
 
 ## Configuration
 
@@ -152,9 +159,12 @@ See [`docs/deployment.md`](docs/deployment.md).
 
 [`native/`](native/) is a **thin** Expo / React Native wrapper: it packs the
 built web app inside itself, serves it from a loopback origin in a WebView,
-and adds the one thing a PWA cannot have — **Home Screen widgets**: today, the
-next three days, this week, and the work week. Nothing in `src/` knows it
-exists, and it adds no feature the web app does not already have.
+and adds the two things a PWA cannot have: **Home Screen widgets** (today, the
+next three days, this week, and the work week) and reading the device's
+**contacts**, so the calendar can mark your people's birthdays and name days.
+Nothing in `src/` knows the wrapper exists — the widgets read the shipped app
+from the outside, and contacts arrive as a capability the host offers rather
+than as a check for the app.
 
 Builds run on EAS and are cut by dispatching the `native` workflow. See
 [`native/README.md`](native/README.md) and

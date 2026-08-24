@@ -335,29 +335,57 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does four things:
+**Thin is a constraint, not an aspiration.** The wrapper does five things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
 2. points a `WebView` at that origin and otherwise gets out of the way;
-3. injects one script into the page (`src/injected.ts`) that reports the
-   resolved theme and the `calendar:` / `oss:cache:` slice of `localStorage`,
-   and unregisters the service worker;
+3. injects two scripts into the page — `src/injected.ts`, which reports the
+   resolved theme and the `calendar:` / `oss:cache:` slice of `localStorage`
+   and unregisters the service worker, and `src/contactsBridge.ts`, which
+   offers the page a way to ask the device for its contacts;
 4. turns that report into a widget snapshot and publishes it
-   (`src/snapshot.ts` → `src/widgets.ts` → `modules/widget-bridge`).
+   (`src/snapshot.ts` → `src/widgets.ts` → `modules/widget-bridge`);
+5. answers those contacts requests (`src/contacts.ts`, via `expo-contacts`).
 
-**Home Screen widgets are the only feature it adds, and the only one it may
-add.** Everything else a reader sees is the web app, unchanged. Two rules
-follow, and both matter more than they look:
+### The two native-only features, and why there have to be two
+
+**Widgets and contacts are the only features the wrapper adds.** Everything
+else a reader sees is the web app, unchanged.
+
+They are also the reason the wrapper is shippable at all. **App Store
+guideline 4.2 (minimum functionality) rejects a build that is only a viewer
+for a website**, so this app has to do things the browser cannot, and be seen
+to: it serves the calendar from inside the download (no network at all), it
+puts the month on the Home Screen, and it reads the address book so the
+calendar can mark the reader's people's birthdays and name days. A change that
+removes a native-only feature does not just lose the feature — it weakens the
+4.2 case for the whole listing. A change that _adds_ one is not forbidden, but
+it has to clear both rules below and it has to be worth its own row here.
 
 - **Nothing in `src/` may learn that the wrapper exists.** No `window.__native`
   feature detection, no native-only branch, no build flag. The wrapper reads
-  the shipped app from the outside, the way a second reader would. If a change
-  seems to need the web app's cooperation, the change is wrong.
+  the shipped app from the outside, the way a second reader would.
+
+  A native-only feature that the web app has to _render_ — contacts is the
+  first — is done as a **capability the host may offer**, never as a check for
+  this wrapper. `src/app/people/contactsHost.ts` asks whether a contacts
+  provider is present on `window`; it never asks what it is running inside. A
+  browser offers none, so the feature and its Settings tab are simply absent
+  there, and a second host offering the same three methods would light it up
+  with no change to `src/`. If a change seems to need the web app to know it
+  is native, the change is wrong; if it needs a capability the host can offer,
+  name the capability.
+
 - **The wrapper may not reimplement the domain.** The widgets print the date
   and the user's note, and deliberately not name days or holidays — those come
   from the country packs in `src/app/locale/`, which compute moving feasts per
   year, and a Swift and a Kotlin copy of that arithmetic would drift silently.
+  Contacts obey the same rule from the other direction: `src/contacts.ts`
+  reads names and birthdays and hands them over, and **which day a name is
+  celebrated on, how a spelling folds, and what a 29 February birthday does in
+  a common year are all decided in `src/app/people/celebrations.ts`** against
+  the packs the app already ships.
   The one thing that _is_ mirrored is `WEEK_RULES` — each pack's
   `weekStartsOn` and `restWeekdays`, which the week widgets need to lay a week
   out at all. That is allowed only because it is two values per pack and
@@ -373,6 +401,18 @@ follow, and both matter more than they look:
   module is pure and why `tests/native_snapshot_test.ts` spells the keys out as
   literals rather than importing the app's constants: importing them would
   make the test agree with the app instead of pinning it.
+- **The contacts bridge is three strings that must agree with `src/`**: the
+  property the provider installs itself on (`window.__calendarContacts`), the
+  announcement event (`calendar:contacts-host`), and the three method names.
+  None of them fails loudly on a mismatch — the Settings tab simply never
+  appears, on a device where the reader can see nothing wrong.
+  `tests/native_contacts_test.ts` pins all three against the app's own
+  constants.
+- **Contacts must never reach the widget container.** The opt-in list is
+  excluded by name in `src/injected.ts`'s `SECRET_KEYS`, beside the OAuth
+  tokens. Dropping it there does not fail either — it quietly starts shipping
+  the identifiers of real people into the App Group, which the privacy policy
+  says it does not.
 - **The loopback port is fixed** (`src/local-server.ts`). A web origin is
   scheme + host + port and `localStorage` is keyed by origin, so a random port
   hands the WebView an empty store on every launch — every note the user wrote
@@ -412,6 +452,7 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | LLM prompt       | `prompts/<name>/<major>_<minor>_<patch>.md` (see `prompts/README.md`)     |
 | Changelog entry  | `.changes/unreleased/<unix-ts>-<slug>.md` (never `CHANGELOG.md` directly) |
 | Native wrapper   | `native/...` — and read "The native wrapper" below first                  |
+| Privacy policy   | `src/app/PrivacyPage.tsx` (served at `<base>privacy/`)                    |
 
 ## Portrait mobile is the primary target
 
@@ -576,21 +617,23 @@ looks fine at 393 px can be a margin taking three quarters of a strip row at
 
 ## Documentation sync points
 
-| When you change…                                                         | Update…                                                                                                                                                |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| the document model / migrations                                          | `docs/storage.md`, `tests/migrations_test.ts`                                                                                                          |
-| locale packs / name days                                                 | `docs/features/locales.md`, `tests/locale_test.ts`                                                                                                     |
-| storage backends                                                         | `docs/storage.md`, `docs/configuration.md`                                                                                                             |
-| import / export (the backup file)                                        | `docs/storage.md`, `tests/backup_test.ts`                                                                                                              |
-| resetting (emptying a calendar)                                          | `docs/storage.md`, `tests/reset_test.ts`                                                                                                               |
-| calendars / where a document lives                                       | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`                                               |
-| settings surface                                                         | `docs/getting-started.md`                                                                                                                              |
-| user-visible features                                                    | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/`                                            |
-| deployment slots / hosting                                               | `docs/deployment.md`, `tests/slot_test.ts`                                                                                                             |
-| the release flow / fragments                                             | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                                                                  |
-| the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                              |
-| the web app's localStorage keys                                          | `native/src/snapshot.ts` **and** `tests/native_snapshot_test.ts` — the widgets read those keys from outside                                            |
-| a locale pack's week (`weekStartsOn` / `restWeekdays`), or adding a pack | `WEEK_RULES` in `native/src/snapshot.ts` — the week widgets lay a week out with it, and `tests/native_snapshot_test.ts` fails until the mirror matches |
+| When you change…                                                         | Update…                                                                                                                                                  |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| the document model / migrations                                          | `docs/storage.md`, `tests/migrations_test.ts`                                                                                                            |
+| locale packs / name days                                                 | `docs/features/locales.md`, `tests/locale_test.ts`                                                                                                       |
+| storage backends                                                         | `docs/storage.md`, `docs/configuration.md`                                                                                                               |
+| import / export (the backup file)                                        | `docs/storage.md`, `tests/backup_test.ts`                                                                                                                |
+| resetting (emptying a calendar)                                          | `docs/storage.md`, `tests/reset_test.ts`                                                                                                                 |
+| calendars / where a document lives                                       | `docs/features/calendars.md`, `docs/storage.md`, `docs/configuration.md`, `tests/calendar_paths_test.ts`                                                 |
+| settings surface                                                         | `docs/getting-started.md`                                                                                                                                |
+| user-visible features                                                    | a fragment in `.changes/unreleased/` (the changelog is collated from those at release time); update `docs/`                                              |
+| deployment slots / hosting                                               | `docs/deployment.md`, `tests/slot_test.ts`                                                                                                               |
+| the release flow / fragments                                             | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                                                                    |
+| the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                                |
+| contacts (the host seam, the matching, the Settings tab)                 | `docs/features/contacts.md`, `src/app/PrivacyPage.tsx`, `tests/celebrations_test.ts`, `tests/contact_selection_test.ts`, `tests/native_contacts_test.ts` |
+| what the app reads, stores or sends                                      | `src/app/PrivacyPage.tsx` — it is what the app stores' privacy questionnaires are answered against, so it is code, not marketing                         |
+| the web app's localStorage keys                                          | `native/src/snapshot.ts` **and** `tests/native_snapshot_test.ts` — the widgets read those keys from outside                                              |
+| a locale pack's week (`weekStartsOn` / `restWeekdays`), or adding a pack | `WEEK_RULES` in `native/src/snapshot.ts` — the week widgets lay a week out with it, and `tests/native_snapshot_test.ts` fails until the mirror matches   |
 
 ## Website staleness
 

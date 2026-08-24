@@ -1,8 +1,9 @@
 # The native wrapper
 
 A **thin** Expo / React Native shell around the calendar web app, so it can
-ship to the App Store and Google Play — and so it can put **Home Screen
-widgets** on a phone, which a PWA cannot.
+ship to the App Store and Google Play — and so it can do the two things a PWA
+cannot: put **Home Screen widgets** on a phone, and read the device's
+**contacts** so the calendar can mark the reader's people.
 
 Thin is the design, not an aspiration. The wrapper:
 
@@ -12,27 +13,45 @@ Thin is the design, not an aspiration. The wrapper:
   and safe-area bands follow the page's own theme, off-origin links go to the
   system browser, and Android's back button drives the WebView's history;
 - copies the page's notes into a shared container so the **widgets** can print
-  them (`src/injected.ts` → `src/snapshot.ts` → `modules/widget-bridge`).
+  them (`src/injected.ts` → `src/snapshot.ts` → `modules/widget-bridge`);
+- answers the page when it asks for **contacts** (`src/contactsBridge.ts` →
+  `src/contacts.ts`), handing over names and birthdays and nothing else.
 
-That is the entire list. **Nothing in the repo's `src/` knows this exists**,
-and no feature is added here that the web app does not already have. If the
-wrapper ever needs the web app changed to accommodate it, that is a sign it
-has stopped being thin.
+That is the entire list, and it is deliberately not empty: **App Store
+guideline 4.2 rejects a build that is only a viewer for a website**, so the
+wrapper has to do things the browser cannot. Widgets and contacts are those
+things. Adding a third is allowed; adding one that makes `src/` aware of this
+wrapper is not.
+
+**Nothing in the repo's `src/` knows this exists.** The widgets read the
+shipped app from the outside. Contacts, which the web app has to _render_,
+work the other way round without breaking that rule: the app looks for a
+contacts **capability** on `window` and this installs one, so a browser
+(which has none) simply does not show the feature. The app never asks what it
+is running inside.
+
+The wrapper also decides nothing about the calendar. It reads names and
+birthdays; which day a name is celebrated on, how a spelling folds, and what a
+29 February birthday does in a common year are the web app's, in
+`src/app/people/celebrations.ts`, against the country packs it already
+ships.
 
 ## Layout
 
-| Path                      | What it is                                                                                           |
-| ------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `App.tsx`                 | The whole app: a WebView, a spinner, and a failure screen.                                           |
-| `src/local-server.ts`     | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                             |
-| `src/injected.ts`         | The one script injected into the page: reports theme + storage, kills the service worker.            |
-| `src/snapshot.ts`         | **Pure.** Raw `localStorage` → the widget snapshot. Tested from the root suite.                      |
-| `src/widgets.ts`          | Publishes a snapshot through the native bridge; degrades to "no widgets" when it is absent.          |
-| `modules/widget-bridge/`  | A local Expo module: writes the snapshot into the shared container and reloads the widget timelines. |
-| `targets/widget/`         | The iOS WidgetKit extension (SwiftUI), generated into Xcode by `@bacons/apple-targets`.              |
-| `widgets/android/`        | The Android app widgets (`RemoteViews`), copied into the app module by `plugins/with-widgets.js`.    |
-| `plugins/with-widgets.js` | Wires the widgets into both native projects during `expo prebuild`.                                  |
-| `scripts/bundle-web.mjs`  | Builds the web app and packs `dist/` into `assets/webroot.zip`.                                      |
+| Path                      | What it is                                                                                               |
+| ------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `App.tsx`                 | The whole app: a WebView, a spinner, and a failure screen.                                               |
+| `src/local-server.ts`     | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                 |
+| `src/injected.ts`         | The one script injected into the page: reports theme + storage, kills the service worker.                |
+| `src/snapshot.ts`         | **Pure.** Raw `localStorage` → the widget snapshot. Tested from the root suite.                          |
+| `src/contactsBridge.ts`   | **Pure.** The injected contacts provider, and the request/response plumbing. Tested from the root suite. |
+| `src/contacts.ts`         | Reads names and birthdays through `expo-contacts`. Two fields, read-only, no storage.                    |
+| `src/widgets.ts`          | Publishes a snapshot through the native bridge; degrades to "no widgets" when it is absent.              |
+| `modules/widget-bridge/`  | A local Expo module: writes the snapshot into the shared container and reloads the widget timelines.     |
+| `targets/widget/`         | The iOS WidgetKit extension (SwiftUI), generated into Xcode by `@bacons/apple-targets`.                  |
+| `widgets/android/`        | The Android app widgets (`RemoteViews`), copied into the app module by `plugins/with-widgets.js`.        |
+| `plugins/with-widgets.js` | Wires the widgets into both native projects during `expo prebuild`.                                      |
+| `scripts/bundle-web.mjs`  | Builds the web app and packs `dist/` into `assets/webroot.zip`.                                          |
 
 `ios/` and `android/` are **prebuild output**: regenerated from `app.config.js`
 and `plugins/` by `expo prebuild --clean`, gitignored, and the source of truth

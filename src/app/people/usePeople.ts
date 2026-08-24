@@ -73,9 +73,8 @@ export type PeopleStore = {
 
 export function usePeople(pack: LocalePack): PeopleStore {
   const host = useContactsHost();
-  const [permission, setPermission] = useState<ContactsPermission>(
-    "unavailable",
-  );
+  const [permission, setPermission] =
+    useState<ContactsPermission>("unavailable");
   const [contacts, setContacts] = useState<readonly Contact[]>([]);
   const [loading, setLoading] = useState(false);
   const [stored, setStored] = useLocalStorageState<ContactSelection>(
@@ -169,7 +168,8 @@ export function usePeople(pack: LocalePack): PeopleStore {
   }, [pack, contacts, selection]);
 
   const toggle = useCallback(
-    (id: string) => setStored((prev) => toggleSelected(parseSelection(prev), id)),
+    (id: string) =>
+      setStored((prev) => toggleSelected(parseSelection(prev), id)),
     [setStored],
   );
   const selectMany = useCallback(
