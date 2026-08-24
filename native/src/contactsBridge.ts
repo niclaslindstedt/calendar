@@ -21,7 +21,12 @@
 // dependency-free and ES5-ish — it runs in the WebView, not in Metro's
 // bundle, so nothing in it is transpiled or polyfilled.
 
-import type { ContactsPermission, WireContact } from "./contacts";
+// From `contactsWire.ts`, NOT from `contacts.ts`: this module is pure and is
+// exercised by the root test suite, which runs against an install that has no
+// `expo-contacts` in it. Importing the types from their reader — even as a
+// type-only import — puts `expo-contacts` back in the root's type graph and
+// turns CI red on a machine where it passes.
+import type { ContactsPermission, WireContact } from "./contactsWire";
 
 /** The message the page posts to ask for something. Namespaced like the
  *  storage report so the two are never confused. */

@@ -15,6 +15,8 @@
 // re-implementation would prove nothing, so they are imported directly and
 // the module is kept import-light enough for that to work.
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import {
@@ -117,6 +119,37 @@ describe("resolveScript", () => {
     expect(script).not.toContain(" ");
     expect(script).toContain("\\u2028");
   });
+});
+
+describe("what the root install can type-check", () => {
+  // A root `npm ci` does not install `native/`'s dependencies, but the root
+  // `tsc` type-checks `tests/` — and this test file imports the bridge. So
+  // anything reachable from here that imports `expo-contacts` turns a
+  // fully-installed machine GREEN and CI RED, which is the worst shape a
+  // failure can have. It happened once already: `contactsBridge.ts` took its
+  // two wire types from `contacts.ts`, and a type-only import is still an
+  // import as far as module resolution is concerned.
+  //
+  // `tsc` cannot be the guard here, because locally it has the dependency and
+  // passes. Reading the source is crude, and it is crude on purpose: it fails
+  // on the developer's own machine, which is the only place that helps.
+  for (const file of ["contactsBridge.ts", "contactsWire.ts"]) {
+    it(`keeps expo out of ${file}`, () => {
+      const source = readFileSync(
+        new URL(`../native/src/${file}`, import.meta.url),
+        "utf8",
+      );
+      // Import statements only — the files talk ABOUT expo-contacts in their
+      // comments, and they should.
+      const imports = source.match(
+        /^\s*(?:import|export)[^;]*from\s+"([^"]+)"/gm,
+      );
+      for (const line of imports ?? []) {
+        expect(line).not.toContain("expo-");
+        expect(line).not.toContain('./contacts"');
+      }
+    });
+  }
 });
 
 describe("what never leaves the page", () => {

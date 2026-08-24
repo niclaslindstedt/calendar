@@ -408,6 +408,16 @@ it has to clear both rules below and it has to be worth its own row here.
   appears, on a device where the reader can see nothing wrong.
   `tests/native_contacts_test.ts` pins all three against the app's own
   constants.
+- **Nothing the root `tsc` can reach may import `expo-contacts`** (or any
+  other `native/`-only dependency). The root config type-checks `tests/`, and
+  `tests/native_contacts_test.ts` imports `native/src/contactsBridge.ts` — but
+  a root `npm ci` does not install `native/`'s dependencies, so such an import
+  passes on a fully-installed machine and fails only in CI. A **type-only**
+  import is still an import here. That is why the wire shapes live in
+  `native/src/contactsWire.ts`, which imports nothing at all, and why only
+  `native/src/contacts.ts` reaches for expo. `tsc` cannot guard this locally,
+  so `tests/native_contacts_test.ts` reads the two files' import lines
+  instead — crudely, and on purpose, because that fails where it helps.
 - **Contacts must never reach the widget container.** The opt-in list is
   excluded by name in `src/injected.ts`'s `SECRET_KEYS`, beside the OAuth
   tokens. Dropping it there does not fail either — it quietly starts shipping

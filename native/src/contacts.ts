@@ -24,21 +24,12 @@
 
 import * as Contacts from "expo-contacts";
 
-/** Mirrors `src/app/people/contactsHost.ts`'s `ContactsPermission`. Kept as a
- *  literal union rather than imported: `native/` is a separate npm project
- *  that a root `npm ci` does not install, and reaching across would make the
- *  wrapper's typecheck depend on the web app's module resolution. The bridge
- *  test pins the two together instead. */
-export type ContactsPermission =
-  "granted" | "denied" | "undetermined" | "unavailable";
+// The wire shapes live apart, in a module with no imports at all — this file
+// is the one that reaches for `expo-contacts`, and nothing the root `tsc`
+// type-checks is allowed to reach this file. See `contactsWire.ts`.
+import type { ContactsPermission, WireContact } from "./contactsWire";
 
-/** Mirrors the web app's `Contact`, for the same reason. */
-export type WireContact = {
-  id: string;
-  name: string;
-  firstName?: string;
-  birthday?: { month: number; day: number; year?: number };
-};
+export type { ContactsPermission, WireContact };
 
 /** The only fields asked for. Every other `Contacts.Fields` value is a piece
  *  of somebody's life this calendar has no use for; a birthday and a name are
