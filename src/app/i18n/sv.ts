@@ -100,6 +100,10 @@ export const sv: Catalog = {
     vacationOpenPlanner: "Öppna semesterplaneraren",
     vacationOpenPlannerHint:
       "Sparar dina inställningar och öppnar planeraren för året du tittar på. Du kan också trycka på en helgdags namn i valfri vy.",
+    privacy: "Integritet",
+    privacyOpen: "Integritetspolicy",
+    privacyHint:
+      "Vad appen sparar, vad den aldrig skickar och vad de valfria synkbackenderna b\u00e4r med sig. \u00d6ppnas som en egen sida \u2014 p\u00e5 engelska, oavsett vilket spr\u00e5k appen st\u00e5r p\u00e5.",
     viewStyle: "Vy",
     viewStyleHint:
       "Hur varje vy trycker en dag. Välj vy, tryck sedan på en fjärdedel av exempeldagen för att välja vad som står där, och ställ in varje del nedanför. Exemplet är den riktiga varan — varje ändring syns i det direkt.",

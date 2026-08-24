@@ -5,4 +5,13 @@
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
+  <!-- The standalone privacy policy (`src/app/PrivacyPage.tsx`), which the
+       build mirrors to `privacy/index.html` in every deployment slot. It is
+       the page the app stores' privacy questionnaires point at, so it has to
+       be reachable and indexable on its own. -->
+  <url>
+    <loc>https://calendar.niclaslindstedt.se/privacy/</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
 </urlset>

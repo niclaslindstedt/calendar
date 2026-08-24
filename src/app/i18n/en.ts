@@ -112,6 +112,10 @@ export const en = {
     vacationOpenPlanner: "Open the vacation planner",
     vacationOpenPlannerHint:
       "Saves your settings and opens the planner for the year you are looking at. You can also get there by tapping a holiday's name in any view.",
+    privacy: "Privacy",
+    privacyOpen: "Privacy policy",
+    privacyHint:
+      "What the app stores, what it never sends, and what the optional sync backends carry. Opens as a page of its own \u2014 in English, whatever this app's language is set to.",
     viewStyle: "View",
     viewStyleHint:
       "How each view prints a day. Pick the view, then tap a quadrant of the sample to choose what is printed there and set each piece below. The sample is the real thing — every change lands in it as you make it.",

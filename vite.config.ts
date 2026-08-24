@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 
 import { appPwa } from "./pwa-plugin.ts";
 import { slotForBase, slotSuffix } from "./src/app/slot.ts";
@@ -64,6 +64,37 @@ const version = process.env.GITHUB_SHA
   ? buildLabel
   : `${buildLabel}+${new Date().toISOString()}`;
 
+// Mirror the built `index.html` to `privacy/index.html`, so Pages serves the
+// same SPA at the clean URL `/privacy/` — and does it in *every* deployment
+// slot, because the alias is emitted by the build rather than configured per
+// deploy: `/preview/` and `/branch/` are the same build under another base and
+// get `/preview/privacy/` and `/branch/privacy/` for free. `src/main.tsx`
+// reads `location.pathname` and mounts the policy there.
+//
+// The copied HTML loads the same hashed asset URLs — they are origin-absolute
+// under the slot's base — so nothing needs rewriting. It runs late
+// (`enforce: "post"`) so the PWA plugin's manifest-link and robots injection
+// is already baked into the source it copies; the service worker serves this
+// path the app shell like any other navigation under the base, which is what
+// makes the page work offline too.
+function emitPrivacyAlias(): Plugin {
+  return {
+    name: "emit-privacy-alias",
+    apply: "build",
+    enforce: "post",
+    generateBundle(_options, bundle) {
+      const index = bundle["index.html"];
+      if (index && index.type === "asset") {
+        this.emitFile({
+          type: "asset",
+          fileName: "privacy/index.html",
+          source: String(index.source),
+        });
+      }
+    },
+  };
+}
+
 export default defineConfig({
   base,
   define: {
@@ -83,5 +114,10 @@ export default defineConfig({
   // app's `import … from "react"` lines and the pre-built framework chunks —
   // which import `react`, `react-dom`, and `react/jsx-runtime` as externals —
   // resolve to Preact. Nothing from React itself reaches the bundle.
-  plugins: [preact(), tailwindcss(), appPwa({ base, version })],
+  plugins: [
+    preact(),
+    tailwindcss(),
+    appPwa({ base, version }),
+    emitPrivacyAlias(),
+  ],
 });
