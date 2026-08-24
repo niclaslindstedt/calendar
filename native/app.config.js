@@ -30,6 +30,17 @@ const MARK_INK = "#1b2027";
 // simply unlinked and `eas build` will ask — it is not a build failure.
 const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? "";
 
+// What the system prompt says when the calendar asks for contacts. Both
+// stores read this string as the app's declared purpose, and a reviewer
+// compares it against what the build actually does — so it names the two
+// fields read and nothing broader. The web app asks for this only from
+// Settings → Contacts, never at launch, and stores no contact data at all
+// (see `docs/features/contacts.md` and the privacy policy at /privacy).
+const CONTACTS_PERMISSION =
+  "Calendar marks your contacts' birthdays and name days. It reads names and " +
+  "birthdays only, keeps them on this device, and never sends them anywhere. " +
+  "You choose which contacts appear in your calendar.";
+
 module.exports = () => ({
   expo: {
     name: "Calendar",
@@ -70,11 +81,21 @@ module.exports = () => ({
         },
         // Skips the App Store export-compliance prompt: no non-exempt crypto.
         ITSAppUsesNonExemptEncryption: false,
+        // The contacts prompt. `expo-contacts`'s config plugin writes this
+        // too; it is spelled out here as well so the key is present even if
+        // the plugin list is ever reordered or trimmed — a missing usage
+        // description is not a warning on iOS, it is a crash the moment the
+        // prompt would appear.
+        NSContactsUsageDescription: CONTACTS_PERMISSION,
       },
     },
 
     android: {
       package: BUNDLE_ID,
+      // Read only. The calendar never adds, edits or deletes a contact, so
+      // `WRITE_CONTACTS` is deliberately absent — and Play's data-safety form
+      // is answered against this list.
+      permissions: ["android.permission.READ_CONTACTS"],
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
         backgroundColor: MARK_INK,
@@ -98,6 +119,11 @@ module.exports = () => ({
         "expo-build-properties",
         { android: { minSdkVersion: 28, usesCleartextTraffic: true } },
       ],
+      // Reading the device's contacts, so the calendar can mark the reader's
+      // people's birthdays and name days. The second of the wrapper's two
+      // native-only features (the widgets are the first) — see `App.tsx` on
+      // why it needs two.
+      ["expo-contacts", { contactsPermission: CONTACTS_PERMISSION }],
       // The Home Screen widgets: the App Group on iOS, the receiver and its
       // resources on Android.
       "./plugins/with-widgets",

@@ -10,6 +10,8 @@
 //     bands) and the widgets match whichever preset the reader picked; and
 //   • the `calendar:` / `oss:cache:` slice of `localStorage`, which is where
 //     the notes live. `src/snapshot.ts` turns that into the widget snapshot.
+//     The OAuth tokens and the contacts opt-in list are excluded by name
+//     (`SECRET_KEYS`) — neither is the widgets' business.
 //
 // It also unregisters the service worker (see `SW_TEARDOWN`).
 //
@@ -29,16 +31,24 @@ const REPORT_DEBOUNCE_MS = 600;
 
 /** The `localStorage` prefixes worth carrying out of the page. Everything the
  *  snapshot reads is under one of them; the OAuth tokens under
- *  `calendar:dropbox:*` / `calendar:gdrive:*` are excluded by name below, so
- *  a credential never crosses the bridge. */
+ *  `calendar:dropbox:*` / `calendar:gdrive:*` and the contacts opt-in list are
+ *  excluded by name below, so neither a credential nor a contact ever crosses
+ *  the bridge. */
 const KEY_PREFIXES = ["calendar:", "oss:cache:"];
 
-/** Keys matching these never leave the page, whatever their prefix. Access
- *  tokens are the app's business, not the wrapper's. */
+/** Keys matching these never leave the page, whatever their prefix.
+ *
+ *  Access tokens are the app's business, not the wrapper's. So is the
+ *  contacts opt-in list: it is the identifiers of real people in the reader's
+ *  address book, the widgets have no use for it (they print the date and the
+ *  note, never a name day or a birthday), and the privacy policy says that
+ *  nothing about a contact reaches the App Group container. This line is
+ *  where that is true. `tests/native_snapshot_test.ts` pins the key. */
 const SECRET_KEYS = [
   "calendar:dropbox:access",
   "calendar:dropbox:refresh",
   "calendar:gdrive:token",
+  "calendar:contacts:selected",
 ];
 
 /**
