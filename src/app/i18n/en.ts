@@ -112,6 +112,10 @@ export const en = {
     vacationOpenPlanner: "Open the vacation planner",
     vacationOpenPlannerHint:
       "Saves your settings and opens the planner for the year you are looking at. You can also get there by tapping a holiday's name in any view.",
+    privacy: "Privacy",
+    privacyOpen: "Privacy policy",
+    privacyHint:
+      "What the app stores, what it never sends, and what the optional sync backends carry. Opens as a page of its own \u2014 in English, whatever this app's language is set to.",
     viewStyle: "View",
     viewStyleHint:
       "How each view prints a day. Pick the view, then tap a quadrant of the sample to choose what is printed there and set each piece below. The sample is the real thing — every change lands in it as you make it.",
@@ -331,6 +335,57 @@ export const en = {
     /** The space this device is leaving above the top menu's buttons. */
     topbarLead: "Top menu lead",
     displayMode: "Display mode",
+  },
+  // The contacts feature: whose birthdays and name days the calendar marks.
+  // Only ever seen where a host offers contacts (`people/contactsHost.ts`),
+  // which today means the app-store builds — but nothing here says "native",
+  // and the strings are written so they would still read true in another
+  // host.
+  people: {
+    // Screen-reader-only, in front of the cake glyph a birthday is drawn
+    // with. The glyph carries the meaning on screen; this carries it aloud.
+    birthdayLabel: "Birthday:",
+  },
+  contacts: {
+    tab: "Contacts",
+    heading: "Birthdays and name days",
+    blurb:
+      "Mark the days your people are celebrated \u2014 their birthday, and the day the almanac celebrates their name. Nothing is sent anywhere: your contacts are read on this device, and only the ones you pick are marked.",
+    // The permission gate, before anything has been granted.
+    askTitle: "Let the calendar read your contacts",
+    askBody:
+      "The calendar reads names and birthdays, and nothing else \u2014 no numbers, no addresses, no photos. They stay on this device, are never written to storage or to a synced calendar, and never appear in a widget. Granting this marks nobody: you pick who shows up afterwards.",
+    ask: "Choose contacts\u2026",
+    // Permission was refused, and only the system can hand it back.
+    deniedTitle: "Contacts are turned off",
+    deniedBody:
+      "You have declined access to your contacts, so the calendar cannot see them. Turn contacts on for this app in your device's settings, then come back here to pick who shows up.",
+    // Granted, but the address book is empty.
+    emptyTitle: "No contacts found",
+    emptyBody:
+      "Your device's contact list is empty, so there is nobody to mark. Add a contact with a birthday and press Refresh.",
+    loading: "Reading your contacts\u2026",
+    refresh: "Refresh",
+    search: "Search contacts",
+    searchPlaceholder: "Search by name",
+    searchClear: "Clear the search",
+    selectAll: "Select all",
+    deselectAll: "Deselect all",
+    // "3 of altogether 214 contacts are in your calendar."
+    selectedCount: "{n} of {total} in your calendar",
+    // Shown under a filtered list, where the two buttons act on what is
+    // showing rather than on everything.
+    filteredHint:
+      "Select all and Deselect all act on the contacts showing here.",
+    noMatches: "No contact matches that.",
+    // What a row says beneath the name.
+    birthdayOn: "Birthday {date}",
+    noBirthday: "No birthday saved",
+    // "Name day: Niklas" \u2014 the almanac's spelling, which may not be theirs.
+    nameDayOn: "Name day {date} ({name})",
+    nameDayNone: "No name day in this country's almanac",
+    privacyNote:
+      "Only the contacts you tick are remembered, and only by the identifier your device gave them \u2014 never a name or a birthday. Read the privacy policy for the whole of it.",
   },
   holidays: {
     /** Title of the holidays screen. */

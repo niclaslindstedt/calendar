@@ -100,6 +100,10 @@ export const sv: Catalog = {
     vacationOpenPlanner: "Öppna semesterplaneraren",
     vacationOpenPlannerHint:
       "Sparar dina inställningar och öppnar planeraren för året du tittar på. Du kan också trycka på en helgdags namn i valfri vy.",
+    privacy: "Integritet",
+    privacyOpen: "Integritetspolicy",
+    privacyHint:
+      "Vad appen sparar, vad den aldrig skickar och vad de valfria synkbackenderna b\u00e4r med sig. \u00d6ppnas som en egen sida \u2014 p\u00e5 engelska, oavsett vilket spr\u00e5k appen st\u00e5r p\u00e5.",
     viewStyle: "Vy",
     viewStyleHint:
       "Hur varje vy trycker en dag. Välj vy, tryck sedan på en fjärdedel av exempeldagen för att välja vad som står där, och ställ in varje del nedanför. Exemplet är den riktiga varan — varje ändring syns i det direkt.",
@@ -302,6 +306,42 @@ export const sv: Catalog = {
     bottomGutter: "Nedre marginal",
     topbarLead: "Övre marginal",
     displayMode: "Visningsläge",
+  },
+  people: {
+    birthdayLabel: "F\u00f6delsedag:",
+  },
+  contacts: {
+    tab: "Kontakter",
+    heading: "F\u00f6delsedagar och namnsdagar",
+    blurb:
+      "Markera dagarna dina n\u00e4rmaste firas \u2014 deras f\u00f6delsedag, och dagen almanackan firar deras namn. Ingenting skickas n\u00e5gonstans: kontakterna l\u00e4ses p\u00e5 den h\u00e4r enheten, och bara de du v\u00e4ljer markeras.",
+    askTitle: "L\u00e5t kalendern l\u00e4sa dina kontakter",
+    askBody:
+      "Kalendern l\u00e4ser namn och f\u00f6delsedagar, ingenting annat \u2014 inga nummer, inga adresser, inga bilder. De stannar p\u00e5 den h\u00e4r enheten, sparas aldrig och syns aldrig i en widget. Att ge \u00e5tkomst markerar ingen: du v\u00e4ljer vilka som visas efter\u00e5t.",
+    ask: "V\u00e4lj kontakter\u2026",
+    deniedTitle: "Kontakter \u00e4r avst\u00e4ngt",
+    deniedBody:
+      "Du har nekat \u00e5tkomst till dina kontakter, s\u00e5 kalendern kan inte se dem. Sl\u00e5 p\u00e5 kontakter f\u00f6r appen i enhetens inst\u00e4llningar och kom tillbaka hit f\u00f6r att v\u00e4lja vilka som ska visas.",
+    emptyTitle: "Hittade inga kontakter",
+    emptyBody:
+      "Enhetens kontaktlista \u00e4r tom, s\u00e5 det finns ingen att markera. L\u00e4gg till en kontakt med f\u00f6delsedag och tryck p\u00e5 Uppdatera.",
+    loading: "L\u00e4ser dina kontakter\u2026",
+    refresh: "Uppdatera",
+    search: "S\u00f6k kontakter",
+    searchPlaceholder: "S\u00f6k p\u00e5 namn",
+    searchClear: "Rensa s\u00f6kningen",
+    selectAll: "V\u00e4lj alla",
+    deselectAll: "V\u00e4lj bort alla",
+    selectedCount: "{n} av {total} i din kalender",
+    filteredHint:
+      "V\u00e4lj alla och V\u00e4lj bort alla g\u00e4ller kontakterna som visas h\u00e4r.",
+    noMatches: "Ingen kontakt matchar det.",
+    birthdayOn: "F\u00f6delsedag {date}",
+    noBirthday: "Ingen f\u00f6delsedag sparad",
+    nameDayOn: "Namnsdag {date} ({name})",
+    nameDayNone: "Ingen namnsdag i det h\u00e4r landets almanacka",
+    privacyNote:
+      "Bara kontakterna du kryssar i sparas, och bara med identifieraren enheten gav dem \u2014 aldrig ett namn eller en f\u00f6delsedag. L\u00e4s integritetspolicyn f\u00f6r hela bilden.",
   },
   holidays: {
     title: "Helgdagar",

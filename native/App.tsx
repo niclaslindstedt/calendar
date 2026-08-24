@@ -3,10 +3,18 @@
 //
 // This is a deliberately thin wrapper. It starts a loopback server, points a
 // WebView at it, keeps the native chrome in step with the page's theme, sends
-// off-origin links to the system browser, and forwards the page's storage to
-// the widget publisher. There is no native UI beyond a spinner and a failure
-// screen, and no native feature beyond the widgets — everything a reader sees
-// is the web app, unchanged.
+// off-origin links to the system browser, forwards the page's storage to the
+// widget publisher, and answers the page when it asks the device for its
+// contacts. There is no native UI at all beyond a spinner and a failure
+// screen — everything a reader sees is the web app, unchanged.
+//
+// The wrapper adds exactly two things the browser cannot do, and it has to add
+// something: App Store guideline 4.2 rejects a build that is only a viewer for
+// a website. Those two are the Home Screen WIDGETS and reading the device's
+// CONTACTS, so the calendar can mark the reader's people's birthdays and name
+// days. Both are read from the OUTSIDE — the page is served unchanged and
+// looks for a capability rather than for this wrapper — and neither
+// reimplements any of the calendar's domain. See `native/README.md`.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -40,6 +48,17 @@ import {
   BEFORE_LOAD_SCRIPT,
   isReport,
 } from "./src/injected";
+import {
+  CONTACTS_SCRIPT,
+  isContactsRequest,
+  resolveScript,
+  type ContactsMethod,
+} from "./src/contactsBridge";
+import {
+  contactsPermission,
+  listContacts,
+  requestContacts,
+} from "./src/contacts";
 import { dayKey } from "./src/snapshot";
 import { forgetPublished, publishReport, reloadWidgets } from "./src/widgets";
 
@@ -119,29 +138,56 @@ export default function App() {
 
   // --- the page's reports ---------------------------------------------------
 
-  const onMessage = useCallback((event: WebViewMessageEvent) => {
-    let parsed: unknown;
-    try {
-      parsed = JSON.parse(event.nativeEvent.data) as unknown;
-    } catch {
-      return; // not ours — the page is free to postMessage whatever it likes
-    }
-    if (!isReport(parsed)) return;
+  // One inbound question about the address book. Kept off the render path —
+  // a permission prompt takes as long as the reader takes — and deliberately
+  // NOT stored anywhere: the answer goes straight back into the page, which
+  // holds it in memory and drops it on close. Nothing about a contact is
+  // written to disk, to the widget container, or to a log.
+  const answerContacts = useCallback(
+    async (id: string, method: ContactsMethod) => {
+      const value =
+        method === "list"
+          ? await listContacts()
+          : method === "request"
+            ? await requestContacts()
+            : await contactsPermission();
+      webViewRef.current?.injectJavaScript(resolveScript(id, value));
+    },
+    [],
+  );
 
-    // The theme travels with every report; the native chrome follows it so the
-    // status bar and the safe-area bands match the page instead of guessing.
-    const reported = parsed.theme?.background;
-    if (typeof reported === "string" && reported.trim() !== "") {
-      setBackground(reported.trim());
-    }
+  const onMessage = useCallback(
+    (event: WebViewMessageEvent) => {
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(event.nativeEvent.data) as unknown;
+      } catch {
+        return; // not ours — the page may postMessage whatever it likes
+      }
 
-    const now = new Date();
-    publishedDay.current = dayKey(now);
-    void publishReport(
-      { storage: parsed.storage, theme: parsed.theme ?? {} },
-      now,
-    );
-  }, []);
+      if (isContactsRequest(parsed)) {
+        void answerContacts(parsed.id, parsed.method);
+        return;
+      }
+      if (!isReport(parsed)) return;
+
+      // The theme travels with every report; the native chrome follows it so
+      // the status bar and the safe-area bands match the page instead of
+      // guessing.
+      const reported = parsed.theme?.background;
+      if (typeof reported === "string" && reported.trim() !== "") {
+        setBackground(reported.trim());
+      }
+
+      const now = new Date();
+      publishedDay.current = dayKey(now);
+      void publishReport(
+        { storage: parsed.storage, theme: parsed.theme ?? {} },
+        now,
+      );
+    },
+    [answerContacts],
+  );
 
   // Coming back to the foreground after midnight: the notes are unchanged, so
   // the publisher would skip the write — but "today" has moved, so the widgets
@@ -162,8 +208,9 @@ export default function App() {
 
   // --- navigation -----------------------------------------------------------
 
-  // The app opens a few documents of its own (the privacy page from the side
-  // menu), so the wrapper has to provide the "back" the browser chrome would.
+  // The app opens a document of its own (the privacy policy, linked from
+  // Settings → General), so the wrapper has to provide the "back" the browser
+  // chrome would.
   // Android routes the hardware button; iOS gets the edge swipe below.
   useEffect(() => {
     if (Platform.OS !== "android") return;
@@ -240,7 +287,11 @@ export default function App() {
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
             injectedJavaScriptBeforeContentLoaded={BEFORE_LOAD_SCRIPT}
-            injectedJavaScript={AFTER_LOAD_SCRIPT}
+            // Two scripts, one prop: the storage reporter the widgets need,
+            // and the contacts provider the calendar looks for. Both run once
+            // the page has loaded, and both are guarded against a second
+            // injection (a reload re-runs this).
+            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CONTACTS_SCRIPT}`}
             onMessage={onMessage}
             onLoadEnd={hideSplash}
             onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}

@@ -58,6 +58,11 @@ import {
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_SCROLLER } from "./SwipeDeck.tsx";
+import {
+  celebrationsOn,
+  NO_CELEBRATIONS,
+  type PeopleIndex,
+} from "./people/celebrations.ts";
 import type { CalendarDoc } from "./types.ts";
 import {
   WEEK_ROW_MIN_HEIGHT,
@@ -75,6 +80,10 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Whose days these are — the reader's chosen contacts, indexed against the
+   *  country pack (`people/celebrations.ts`). A stable object (the shared
+   *  `EMPTY_PEOPLE` when contacts are off), because the rows are memoized. */
+  people: PeopleIndex;
   /** Whether each row prints the day's ordinal in the year (1–366). */
   showDayOfYear: boolean;
   /** Which margin each piece of a row is printed in — shared with the day
@@ -120,6 +129,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   pack,
   showWeekNumbers,
   showNameDays,
+  people,
   showDayOfYear,
   layout,
   noteFlow,
@@ -233,6 +243,10 @@ export const WeekPlannerView = memo(function WeekPlannerView({
     const names =
       showNameDays && parts ? nameDaysFor(pack, parts.month, parts.day) : [];
     const entry = doc.entries[cell.key] ?? "";
+    // Whose day this is — see the month cell for why the lookup is here.
+    const celebrations = parts
+      ? celebrationsOn(people, parts.year, parts.month, parts.day)
+      : NO_CELEBRATIONS;
     const marked = pastMarkSlot(pastMark, cell.key, today);
     const opens = startsWeek(weekday, pack.weekStartsOn);
     // The week-change rule, except where the band above has already drawn the
@@ -246,6 +260,7 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       pack,
       weekday,
       names,
+      celebrations,
       holiday,
       weekNumber: showWeekNumbers && opens ? weekNumber(pack, cell.key) : null,
       weekFormat,

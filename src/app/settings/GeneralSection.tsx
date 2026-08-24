@@ -15,6 +15,7 @@ import {
   Section,
   SegmentedControl,
   SelectPicker,
+  ShieldIcon,
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
@@ -175,6 +176,26 @@ export function GeneralSection({
           checked={devMode}
           onChange={onDevModeChange}
         />
+      </Section>
+
+      {/* The privacy policy, at the foot of the landing tab. It is a page of
+          its own rather than a section here (`src/app/PrivacyPage.tsx`,
+          served at `<base>privacy/`), because it is a legal document the app
+          stores link to from outside the app — so it needs a URL, and it is
+          English-only wherever the UI language is set.
+
+          The trailing slash is load-bearing in the installed app: the native
+          wrapper serves the build off a static file server, which resolves a
+          directory's `index.html` for `…/privacy/` and 404s for `…/privacy`. */}
+      <Section title={t("settings.privacy")}>
+        <a
+          href={`${import.meta.env.BASE_URL}privacy/`}
+          className="text-link inline-flex items-center gap-1.5 text-sm hover:underline"
+        >
+          <ShieldIcon className="h-4 w-4" />
+          {t("settings.privacyOpen")}
+        </a>
+        <p className="text-muted mt-2 text-xs">{t("settings.privacyHint")}</p>
       </Section>
     </>
   );

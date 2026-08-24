@@ -5,10 +5,11 @@ The calendar is a PWA first: open
 from the browser, and you have the whole app offline with nothing downloaded
 from a store.
 
-The native app exists for the one thing that route cannot give you: **widgets
-on the Home Screen.** Everything else is the same app — the same three views,
-the same notes, the same storage backends — running inside a wrapper thin
-enough that it adds no behaviour of its own.
+The native app exists for the two things that route cannot give you: **widgets
+on the Home Screen**, and reading your **contacts** so the calendar can mark
+[your people's birthdays and name days](contacts.md). Everything else is the
+same app — the same three views, the same notes, the same storage backends —
+running inside a wrapper thin enough that it adds nothing else.
 
 ## What the app is
 
@@ -24,6 +25,21 @@ loopback address on your phone. So:
 Links that leave the app (a Dropbox sign-in, a URL you wrote in a note) open in
 your normal browser rather than inside the app, which is both what the stores
 expect and what the sign-in pages require.
+
+## Contacts
+
+The app can mark the days your contacts are celebrated —
+[the whole feature is documented here](contacts.md). Three things are worth
+repeating in this file, because they are what the wrapper does rather than
+what the calendar does:
+
+- the app asks for contacts permission from **Settings → Contacts** and
+  nowhere else, and granting it marks nobody until you tick somebody;
+- only names and birthdays are ever read, they are held in memory, and only
+  the identifiers you ticked are stored;
+- **the widgets never see any of it.** They print the date and your note, and
+  the opt-in list is excluded by name from the bridge that feeds them, so
+  nothing about a contact reaches the container they read from.
 
 ## The widgets
 

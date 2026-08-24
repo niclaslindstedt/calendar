@@ -47,6 +47,12 @@ import {
   type LocalePack,
 } from "./locale/index.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import {
+  celebratedNames,
+  celebrationsOn,
+  type PeopleIndex,
+} from "./people/celebrations.ts";
+import { PeopleMarks } from "./people/PeopleMarks.tsx";
 import { SCOPE_CLASS, SCOPE_OF_VIEW, type StyleView } from "./viewStyle.ts";
 
 type Props = {
@@ -59,6 +65,8 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Whose day this is — see the views' copy of this prop. */
+  people: PeopleIndex;
   /** The heading band's colour, which the week number is printed in — the
    *  same ink the strip's margin uses, for the same reason. */
   headerInk: string | null;
@@ -84,6 +92,7 @@ export function DayZoom({
   pack,
   showWeekNumbers,
   showNameDays,
+  people,
   headerInk,
   textSize,
   text,
@@ -108,6 +117,12 @@ export function DayZoom({
   const holiday = holidayFor(pack, parts.year, parts.month, parts.day);
   const red = isRedDay(pack, parts.year, parts.month, parts.day, weekday);
   const names = showNameDays ? nameDaysFor(pack, parts.month, parts.day) : [];
+  const celebrations = celebrationsOn(
+    people,
+    parts.year,
+    parts.month,
+    parts.day,
+  );
   const week = weekNumber(pack, day);
 
   return (
@@ -166,9 +181,22 @@ export function DayZoom({
                 {holiday.name}
               </p>
             )}
+            {/* The people whose day this is, above the almanac's names and
+                at the same size — the same one slot the three views give
+                them, on the one surface with room to print it whole. */}
+            {celebrations.birthdays.length > 0 && (
+              <p className="cal-font-nameday cal-size-nameday mt-0.5 leading-snug [--cal-base:0.9375rem]">
+                <PeopleMarks people={celebrations.birthdays} pack={pack} />
+              </p>
+            )}
             {names.length > 0 && (
               <p className="cal-font-nameday cal-size-nameday text-muted mt-0.5 leading-snug [--cal-base:0.9375rem]">
-                <NameDayNames names={names} pack={pack} onOpen={onOpenNames} />
+                <NameDayNames
+                  names={names}
+                  pack={pack}
+                  onOpen={onOpenNames}
+                  celebrated={celebratedNames(celebrations)}
+                />
               </p>
             )}
           </div>

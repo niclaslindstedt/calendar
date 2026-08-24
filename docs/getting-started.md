@@ -178,6 +178,13 @@ stock look without touching your storage connections or developer switches.
   (default 25) is the allowance the vacation planner spends, and **Open the
   vacation planner** saves the dialog and jumps to the planner for the year on
   display.
+- **Contacts** — _App Store / Play app only._ Which of your contacts the
+  calendar marks: their birthday, and the day the almanac celebrates their
+  name. The tab is absent in a browser, which has no way to read an address
+  book. Permission is asked for here and nowhere else, granting it marks
+  nobody, and **Select all** / **Deselect all** act on the contacts showing —
+  so they follow the search box above them. Nothing about a contact is stored
+  or sent anywhere; see [Contacts](features/contacts.md).
 - **Calendar** — **Holiday eves** (which of the country's eves you actually
   work), then **View**: how each view prints a day — what sits where, the face
   each piece is set in, and how big it is — arranged on a live sample of the
@@ -454,6 +461,18 @@ exactly as wide as the calendar under it.
 The five colours are chosen to hold white text on the band and to stay legible
 as ink in both the light and the dark theme, so the choice does not have to be
 revisited when the theme changes.
+
+## Privacy
+
+**Settings → General → Privacy policy** opens the policy as a page of its own,
+at `/privacy` — the same page the App Store and Play listings link to. It is
+in English whatever the app's language is set to, because it is a legal
+document rather than app chrome.
+
+The short version: the calendar runs entirely on your device, there is no
+backend and no account, and nothing is sent anywhere unless you switch on one
+of the optional sync backends — and then only to your own account with that
+provider.
 
 ## Install as an app
 

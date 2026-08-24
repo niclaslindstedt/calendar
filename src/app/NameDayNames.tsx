@@ -23,6 +23,12 @@ type Props = {
    *  has the captions set at (`minHyphenatedLetters`), because the band the
    *  names have to fit does not grow with them. */
   minWordLength?: number;
+  /** The names on this day that belong to one of the reader's contacts, as
+   *  the almanac spells them (`people/celebrations.ts`). Those are set apart
+   *  inside the run — a name day is a name the calendar was already printing,
+   *  so marking it is the whole of showing it. Empty, and normally absent,
+   *  for a reader with no contacts in their calendar. */
+  celebrated?: ReadonlySet<string>;
 };
 
 export function NameDayNames({
@@ -31,6 +37,7 @@ export function NameDayNames({
   onOpen,
   hyphenated,
   minWordLength,
+  celebrated,
 }: Props) {
   return (
     <>
@@ -53,7 +60,9 @@ export function NameDayNames({
               e.stopPropagation();
               onOpen(name);
             }}
-            className="cursor-pointer focus-visible:outline-2"
+            className={`cursor-pointer focus-visible:outline-2 ${
+              celebrated?.has(name) ? "cal-nameday-mine" : ""
+            }`}
           >
             {/* Hyphenated a name at a time, which is what `hyphenate` does
                 inside a joined string anyway — it works word by word. */}

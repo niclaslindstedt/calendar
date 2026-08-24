@@ -110,6 +110,23 @@ if (existsSync(cnamePath) && canonicalHost) {
   );
 }
 
+// The privacy policy has to actually ship at its clean URL. It is emitted by
+// the `emit-privacy-alias` plugin rather than written as a file, and it is
+// what the app stores' privacy questionnaires point at — so a build that
+// quietly stopped emitting it would break a store listing, not just a link.
+const privacyPath = join(dist, "privacy", "index.html");
+assert(
+  existsSync(privacyPath),
+  "missing dist/privacy/index.html (the privacy policy's clean URL)",
+);
+if (existsSync(join(dist, "sitemap.xml")) && canonicalHost) {
+  const sitemap = readFileSync(join(dist, "sitemap.xml"), "utf8");
+  assert(
+    sitemap.includes(`https://${canonicalHost}/privacy/`),
+    "sitemap.xml has no <loc> for the privacy policy",
+  );
+}
+
 // PWA shape: the emitted worker + manifests usePwaUpdate reads.
 for (const f of ["sw.js", "version.json", "precache-manifest.json"]) {
   assert(existsSync(join(dist, f)), `missing dist/${f} (PWA build output)`);

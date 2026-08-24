@@ -36,6 +36,13 @@ document from the new backend.
 | **Google Drive** | `calendar.json` in a Drive folder the app creates | GIS popup OAuth; requires `VITE_GOOGLE_CLIENT_ID`. |
 | **Demo data**    | In memory only                                    | Developer mode; a static sample calendar.          |
 
+None of these carries anything about your **contacts**. If you turn on
+[contacts](features/contacts.md) in the App Store / Play app, the identifiers
+of the people you ticked are kept in `localStorage` under
+`calendar:contacts:selected`, on that device only — never in the document,
+never in a backup file, and never in whichever backend is active above. The
+names and birthdays themselves are never written down at all.
+
 The file names above are the **default** calendar's. Every other calendar is
 a sibling document beside it — `calendar:document:<slug>` in the browser,
 `calendar.<slug>.json` in a local folder or on Drive — reached through the

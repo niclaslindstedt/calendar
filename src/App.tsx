@@ -22,12 +22,11 @@ import {
 } from "@niclaslindstedt/oss-framework/namespaces";
 import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
 import {
-  DEFAULT_THEME_APPEARANCE,
-  FAMILY_DEFAULT_THEME,
   useApplyTheme,
   type ThemeAppearance,
 } from "@niclaslindstedt/oss-framework/theme";
 
+import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./app/appearance.ts";
 import { DayListView } from "./app/DayListView.tsx";
 import { DayZoom } from "./app/DayZoom.tsx";
 import { loadCalFonts } from "./app/fonts.ts";
@@ -45,6 +44,7 @@ import { WeekSearch } from "./app/WeekSearch.tsx";
 import { useT } from "./app/i18n/index.ts";
 import type { ListArrival } from "./app/listHome.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
+import { usePeople } from "./app/people/usePeople.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
@@ -90,15 +90,6 @@ import {
 } from "./app/viewStyle.ts";
 import { status } from "./output.ts";
 
-// The default look is the printed one: paper is light, so the calendar opens
-// light whatever the device is set to. "Follow device" is one tap away in
-// Settings → Appearance (with the dark palettes behind it), persisted per
-// device.
-const DEFAULT_APPEARANCE: ThemeAppearance = {
-  ...DEFAULT_THEME_APPEARANCE,
-  theme: FAMILY_DEFAULT_THEME.light,
-};
-
 // What an untouched install reads like — the yardstick an import measures a
 // file's settings against. A device still sitting on both of these has made no
 // choice to defend, so it adopts the file's rather than asking (see
@@ -127,7 +118,7 @@ export function App() {
   const t = useT();
   const { settings, update, commitLook } = useAppSettings();
   const [appearance, setAppearance] = useLocalStorageState<ThemeAppearance>(
-    "calendar:appearance",
+    APPEARANCE_KEY,
     DEFAULT_APPEARANCE,
   );
   // The open Settings dialog streams its unsaved draft here, so the calendar
@@ -437,6 +428,12 @@ export function App() {
   // `withEveChoices` caches its derived packs, so this is a stable reference
   // for as long as the choices hold — which is what the memoized views need.
   const pack = withEveChoices(getLocale(live.localeId), eveChoices(live));
+  // Whose days these are. Only lit where the host offers contacts at all
+  // (`people/contactsHost.ts`) — on the website `people.available` is false,
+  // the index is the shared empty one, and the Contacts tab never appears.
+  // Indexed against the pack above, so a change of country re-reads the
+  // almanac the same way every other caption does.
+  const people = usePeople(pack);
   const toggles = useMemo(
     () => effectiveToggles(live),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -561,6 +558,7 @@ export function App() {
           pack={pack}
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
+          people={people.index}
           showDayOfYear={live.weekDayOfYear}
           layout={stripLayout}
           noteFlow={noteFlow}
@@ -588,6 +586,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         showDayOfYear={live.weekDayOfYear}
         layout={stripLayout}
         noteFlow={noteFlow}
@@ -614,6 +613,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         layout={cellLayout}
         headerInk={headerInk}
         pastMark={pastMark}
@@ -751,6 +751,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         headerInk={headerInk}
         textSize={styles[SCOPE_OF_VIEW[settings.view]].entry.size}
         text={zoomDay ? (store.doc.entries[zoomDay] ?? "") : ""}
@@ -839,6 +840,8 @@ export function App() {
         onOpenPlanner={openPlanner}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
+        people={people}
+        pack={pack}
         calendarSlug={calendars.activeSlug}
         calendarName={calendars.activeCalendar.name}
         calendarCount={calendars.list.length}
