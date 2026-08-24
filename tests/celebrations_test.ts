@@ -207,6 +207,64 @@ describe("celebratedNames", () => {
   it("is empty on a day nobody is celebrated", () => {
     expect(celebratedNames({ birthdays: [], nameDays: [] }).size).toBe(0);
   });
+
+  it("leaves out somebody already named on the birthday line", () => {
+    // 24 August is Bartolomeus's name day in the Swedish almanac. A contact
+    // called Bartolomeus who was BORN on it has both facts on one day, and
+    // printing both puts his name on the cell twice, in the same colour, one
+    // line apart. The birthday names him outright, so it wins.
+    const him = contact({
+      id: "1",
+      name: "Bartolomeus Lindqvist",
+      firstName: "Bartolomeus",
+      birthday: { month: 8, day: 24 },
+    });
+    const index = indexPeople(svSE, [him]);
+    const day = celebrationsOn(index, 2026, 8, 24);
+    expect(day.birthdays).toEqual([him]);
+    // The name day is still *known* — it is only the mark that is dropped.
+    expect(day.nameDays.map((n) => n.almanacName)).toEqual(["Bartolomeus"]);
+    expect([...celebratedNames(day)]).toEqual([]);
+  });
+
+  it("still marks the name when somebody ELSE holds it", () => {
+    // Per contact, not per name: one Bartolomeus born that day does not take
+    // another Bartolomeus's name day off the calendar.
+    const born = contact({
+      id: "1",
+      name: "Bartolomeus Lindqvist",
+      firstName: "Bartolomeus",
+      birthday: { month: 8, day: 24 },
+    });
+    const other = contact({
+      id: "2",
+      name: "Bartolomeus Ek",
+      firstName: "Bartolomeus",
+    });
+    const index = indexPeople(svSE, [born, other]);
+    const day = celebrationsOn(index, 2026, 8, 24);
+    expect([...celebratedNames(day)]).toEqual(["Bartolomeus"]);
+  });
+
+  it("leaves a name day alone when the birthday is somebody else's", () => {
+    // A birthday on a day whose almanac name belongs to a different contact
+    // is two people, not one — both marks stand.
+    const birthdayBoy = contact({
+      id: "1",
+      name: "Erik Ek",
+      firstName: "Erik",
+      birthday: { month: 8, day: 24 },
+    });
+    const named = contact({
+      id: "2",
+      name: "Bartolomeus Berg",
+      firstName: "Bartolomeus",
+    });
+    const index = indexPeople(svSE, [birthdayBoy, named]);
+    const day = celebrationsOn(index, 2026, 8, 24);
+    expect(day.birthdays).toEqual([birthdayBoy]);
+    expect([...celebratedNames(day)]).toEqual(["Bartolomeus"]);
+  });
 });
 
 describe("the empty index", () => {

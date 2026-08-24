@@ -199,14 +199,33 @@ export function celebrationsOn(
   };
 }
 
-/** The almanac names on a day that belong to somebody — what the views mark
- *  inside the run of names they were already printing. Empty for a day with
- *  no name-day celebrant, which is almost every day. */
+/**
+ * The almanac names on a day that belong to somebody — what the views mark
+ * inside the run of names they were already printing. Empty for a day with no
+ * name-day celebrant, which is almost every day.
+ *
+ * A contact who is ALREADY on the day's birthday line is left out, and that is
+ * the whole of the rule: somebody born on their own name day would otherwise
+ * be printed twice on the same day, in the same colour, one line apart — "🎂
+ * Bartolomeus" above a bolded "Bartolomeus" — which reads as a rendering bug
+ * rather than as two facts. The birthday is the more specific of the two and
+ * it names them outright, so it wins; the almanac's name stays in the run,
+ * printed the way any other name is.
+ *
+ * Per CONTACT, not per name. Two people can share an almanac name, and if only
+ * one of them has a birthday that day the other's name day is still theirs and
+ * is still marked.
+ */
 export function celebratedNames(
   celebrations: DayCelebrations,
 ): ReadonlySet<string> {
   if (celebrations.nameDays.length === 0) return EMPTY_NAMES;
-  return new Set(celebrations.nameDays.map((n) => n.almanacName));
+  const named = new Set(celebrations.birthdays.map((contact) => contact.id));
+  const marks = new Set<string>();
+  for (const nameDay of celebrations.nameDays) {
+    if (!named.has(nameDay.contact.id)) marks.add(nameDay.almanacName);
+  }
+  return marks.size === 0 ? EMPTY_NAMES : marks;
 }
 
 /** Shared empty set, for the same memoization reason as {@link EMPTY_PEOPLE}. */

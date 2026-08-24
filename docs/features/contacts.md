@@ -29,6 +29,16 @@ repeated — the name already on the page is set in the accent colour and
 bolded, in place. On 2 August a Swedish calendar prints "Karin, Kajsa"; with
 an Anna-Karin in your contacts it prints **Karin**, Kajsa.
 
+The two are told apart by the cake, by position (birthdays sit above the
+almanac's run), and by weight (a name day is bolded where a birthday is not).
+
+**Nobody is printed twice.** If a contact was born on their own name day —
+24 August is Bartolomeus's day, and a Bartolomeus born on it has both — the
+birthday wins and the almanac's name is left plain. It names them outright,
+and the same word twice in the same colour one line apart reads as a bug
+rather than as two facts. This is decided per person, not per name: another
+Bartolomeus in your contacts still has their name day marked that day.
+
 Both ride in the slot the view gives the day's names, which means they move
 with it: send your name days to the bottom-left corner of a month cell
 (Settings → Calendar → View) and the birthdays go there too. It also means a
