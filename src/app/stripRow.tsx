@@ -50,6 +50,11 @@ import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { useT } from "./i18n/index.ts";
 import { weekdayName, type Holiday, type LocalePack } from "./locale/index.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import {
+  celebratedNames,
+  type DayCelebrations,
+} from "./people/celebrations.ts";
+import { PeopleMarks } from "./people/PeopleMarks.tsx";
 import { MarkedDate } from "./PastMark.tsx";
 import type { PastMarkStyle } from "./pastDays.ts";
 import {
@@ -128,6 +133,10 @@ export type StripDay = {
   weekday: number;
   /** The day's names, already resolved (empty when the pack prints none). */
   names: readonly string[];
+  /** Whose day this is: the reader's contacts with a birthday or a name day
+   *  on it (`people/celebrations.ts`). Both marks ride in the slot the names
+   *  take — see `Names` below for why that is one slot and not two. */
+  celebrations: DayCelebrations;
   /** The day's holiday, or null. */
   holiday: Holiday | null;
   /** The week this day opens, or `null` on a day that opens none (and on a
@@ -230,8 +239,7 @@ export function StripBody({
  *  underneath them. */
 function StripLane({ day: d }: { day: StripDay }) {
   const dateHere = inMargin(d.layout, "lane", "day");
-  const namesHere =
-    inMargin(d.layout, "lane", "nameDays") && d.names.length > 0;
+  const namesHere = inMargin(d.layout, "lane", "nameDays") && hasNames(d);
   const stack = laneStack(d.layout);
   const showDayOfYear = d.showDayOfYear ?? false;
 
@@ -414,7 +422,7 @@ function printedIn(
 ): StripPiece[] {
   return piecesPrinted(d.layout, slot, {
     day: true,
-    nameDays: d.names.length > 0,
+    nameDays: hasNames(d),
     holidays: d.holiday !== null,
     week: d.weekNumber !== null,
   });
@@ -442,7 +450,7 @@ function piecePart(piece: StripPiece, d: StripDay): ReactNode {
         </div>
       );
     case "nameDays":
-      return d.names.length > 0 ? <Names day={d} /> : null;
+      return hasNames(d) ? <Names day={d} /> : null;
     case "holidays":
       return d.holiday ? <HolidayName day={d} holiday={d.holiday} /> : null;
     case "week":
@@ -474,11 +482,39 @@ function Weekday({ day: d }: { day: StripDay }) {
   );
 }
 
+/** Whether the names slot prints anything on this day.
+ *
+ *  Not just the almanac's names: the reader's contacts' birthdays ride in the
+ *  same slot, so a day whose only caption is "\ud83c\udf82 Anna" still fills it.
+ *  Asked in three places — whether the lane draws the piece, whether the
+ *  arrangement prints it, and what the piece renders — which is exactly why it
+ *  is one function rather than three copies of the condition. */
+function hasNames(d: StripDay): boolean {
+  return d.names.length > 0 || d.celebrations.birthdays.length > 0;
+}
+
+/** The day's names, and the people whose day it is.
+ *
+ *  One slot, not two. A birthday and a name day are the same kind of caption —
+ *  "whose day is this" — and giving birthdays a slot of their own would make
+ *  them a fifth thing to arrange in `stripLayout.ts`'s four, for a line that
+ *  wants exactly the size and the margin the names already have. So a reader
+ *  who moved their name days into the rail takes the birthdays along, and a
+ *  country with no name-day tradition still prints birthdays here. */
 function Names({ day: d }: { day: StripDay }) {
   return (
     <span className="cal-font-nameday cal-size-nameday text-muted block [--cal-base:10px]">
-      {/* Every name is also the way into the name-day search. */}
-      <NameDayNames names={d.names} pack={d.pack} onOpen={d.onOpenNames} />
+      <PeopleMarks people={d.celebrations.birthdays} pack={d.pack} />
+      {d.names.length > 0 && (
+        // Every name is also the way into the name-day search — and one that
+        // belongs to a contact is set apart inside the run.
+        <NameDayNames
+          names={d.names}
+          pack={d.pack}
+          onOpen={d.onOpenNames}
+          celebrated={celebratedNames(d.celebrations)}
+        />
+      )}
     </span>
   );
 }

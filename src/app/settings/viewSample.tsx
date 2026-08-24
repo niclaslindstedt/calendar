@@ -175,6 +175,11 @@ export function StripSample({
     pack,
     weekday: SAMPLE_WEEKDAY,
     names: toggles.nameDays ? SAMPLE_NAMES : [],
+    // No contacts in the sample. The reader is arranging a row here, and a
+    // birthday in it would be somebody's — the sample would have to invent a
+    // person, and inventing one is worse than the alternative, which is that
+    // a birthday simply prints in the names' slot like the names do.
+    celebrations: { birthdays: [], nameDays: [] },
     holiday: sampleHoliday(t),
     weekNumber: toggles.weekNumbers ? SAMPLE_WEEK : null,
     weekFormat: weekFormatFor(look),

@@ -28,6 +28,7 @@ import {
   DatabaseIcon,
   Modal,
   PaletteIcon,
+  PersonIcon,
   ScrollTextIcon,
   SlidersIcon,
 } from "@niclaslindstedt/oss-framework/components";
@@ -37,6 +38,8 @@ import type { PwaUpdateCheckResult } from "@niclaslindstedt/oss-framework/pwa";
 import { useT, type TFunction } from "../i18n/index.ts";
 import { blurActiveField } from "../shellScroll.ts";
 import type { SaveState } from "../useCalendarStore.ts";
+import type { LocalePack } from "../locale/index.ts";
+import type { PeopleStore } from "../people/usePeople.ts";
 import type { BackendId } from "../storage/backends.ts";
 import {
   DEFAULT_LOOK,
@@ -47,6 +50,7 @@ import {
 } from "../useAppSettings.ts";
 import { AppearanceSection } from "./AppearanceSection.tsx";
 import { CalendarSection } from "./CalendarSection.tsx";
+import { ContactsSection } from "./ContactsSection.tsx";
 import { DeveloperSection } from "./DeveloperSection.tsx";
 import { EvesSection } from "./EvesSection.tsx";
 import { GeneralSection } from "./GeneralSection.tsx";
@@ -66,7 +70,13 @@ export type SettingsDraft = {
 };
 
 type TabId =
-  "general" | "appearance" | "calendar" | "storage" | "developer" | "logs";
+  | "general"
+  | "appearance"
+  | "calendar"
+  | "contacts"
+  | "storage"
+  | "developer"
+  | "logs";
 
 const BASE_TABS: readonly TabDef<TabId>[] = [
   { id: "general", labelKey: "settings.tabGeneral", Icon: SlidersIcon },
@@ -74,6 +84,17 @@ const BASE_TABS: readonly TabDef<TabId>[] = [
   { id: "calendar", labelKey: "settings.tabCalendar", Icon: CalendarIcon },
   { id: "storage", labelKey: "settings.tabStorage", Icon: DatabaseIcon },
 ];
+
+/** Contacts sits between Calendar and Storage: it is about what the calendar
+ *  SAYS (like Calendar) rather than about where it is kept (like Storage),
+ *  and it is the one tab whose presence is not the reader's choice — it
+ *  appears only where the host can offer contacts at all, which a browser
+ *  cannot. See `ContactsSection.tsx`. */
+const CONTACTS_TAB: TabDef<TabId> = {
+  id: "contacts",
+  labelKey: "contacts.tab",
+  Icon: PersonIcon,
+};
 
 const DEVELOPER_TAB: TabDef<TabId> = {
   id: "developer",
@@ -103,6 +124,12 @@ type Props = {
   onOpenPlanner: () => void;
   saveState: SaveState;
   effectiveBackend: BackendId;
+  /** The contacts store. Its `available` flag is what decides whether the
+   *  Contacts tab exists at all. */
+  people: PeopleStore;
+  /** The active country pack — Contacts reads it to say when each person is
+   *  celebrated, in the country's own almanac and collation. */
+  pack: LocalePack;
   /** The active calendar's slug, for the Storage tab's file locations. */
   calendarSlug: string;
   /** The active calendar's name and how many there are — the Storage tab's
@@ -132,6 +159,8 @@ export function SettingsModal({
   onOpenPlanner,
   saveState,
   effectiveBackend,
+  people,
+  pack,
   calendarSlug,
   calendarName,
   calendarCount,
@@ -154,10 +183,15 @@ export function SettingsModal({
 
   const tabs = useMemo<readonly TabDef<TabId>[]>(() => {
     const list = [...BASE_TABS];
+    // Contacts keeps its place in the middle rather than being appended: the
+    // two diagnostic tabs are what belong at the end, and a tab that jumped
+    // the rail's order depending on the host would be a different dialog on
+    // two devices.
+    if (people.available) list.splice(3, 0, CONTACTS_TAB);
     if (settings.devMode) list.push(DEVELOPER_TAB);
     if (settings.captureLogs) list.push(LOGS_TAB);
     return list;
-  }, [settings.devMode, settings.captureLogs]);
+  }, [people.available, settings.devMode, settings.captureLogs]);
 
   // Always reopen on the General tab. Resetting while closed keeps the next
   // open clean without a visible flash of the old tab.
@@ -318,6 +352,13 @@ export function SettingsModal({
                 />
                 <CalendarSection look={draft.look} onUpdate={updateDraftLook} />
               </>
+            )}
+            {/* Contacts applies immediately rather than riding the draft:
+                ticking somebody is not a look to preview and cancel, it is a
+                switch like developer mode — and the calendar behind the
+                dialog marks their day the moment it is ticked. */}
+            {activeTab === "contacts" && (
+              <ContactsSection people={people} pack={pack} />
             )}
             {activeTab === "storage" && (
               <StorageSection

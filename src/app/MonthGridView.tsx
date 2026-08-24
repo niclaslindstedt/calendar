@@ -41,6 +41,12 @@ import { MonthCellFrame, monthNoteFlows } from "./monthCell.tsx";
 import { MarkedDate, PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import {
+  celebratedNames,
+  celebrationsOn,
+  type PeopleIndex,
+} from "./people/celebrations.ts";
+import { PeopleMarks } from "./people/PeopleMarks.tsx";
 import { monthImageUrl } from "./monthImage.ts";
 import { minHyphenatedLetters } from "./textSize.ts";
 import { useRoom } from "./useRoom.ts";
@@ -70,6 +76,11 @@ type Props = {
    *  an unrelated piece is re-sized. */
   nameDayScale: number;
   holidayScale: number;
+  /** Whose days these are — the reader's chosen contacts, indexed against the
+   *  country pack (`people/celebrations.ts`). A stable object (the shared
+   *  `EMPTY_PEOPLE` when contacts are off), because the cells below are
+   *  memoized on it. */
+  people: PeopleIndex;
   doc: CalendarDoc;
   editingDay: DayKey | null;
   onEditDay: (day: DayKey | null) => void;
@@ -104,6 +115,7 @@ export const MonthGridView = memo(function MonthGridView({
   textSize,
   nameDayScale,
   holidayScale,
+  people,
   doc,
   editingDay,
   onEditDay,
@@ -241,6 +253,7 @@ export const MonthGridView = memo(function MonthGridView({
                   entryFont={entryFont}
                   nameDayScale={nameDayScale}
                   holidayScale={holidayScale}
+                  people={people}
                   entry={doc.entries[cell.key] ?? ""}
                   editing={editingDay === cell.key}
                   onEditDay={onEditDay}
@@ -291,6 +304,7 @@ const DayCell = memo(function DayCell({
   entryFont,
   nameDayScale,
   holidayScale,
+  people,
   entry,
   editing,
   onEditDay,
@@ -311,6 +325,7 @@ const DayCell = memo(function DayCell({
   entryFont: EntryFontOptions;
   nameDayScale: number;
   holidayScale: number;
+  people: PeopleIndex;
   entry: string;
   editing: boolean;
   onEditDay: (day: DayKey | null) => void;
@@ -334,6 +349,14 @@ const DayCell = memo(function DayCell({
     : false;
   const names =
     showNameDays && parts ? nameDaysFor(pack, parts.month, parts.day) : [];
+  // Whose day this is. Looked up here rather than handed in per cell, because
+  // the cell is memoized: a fresh object per render would re-render three
+  // months of days on every unrelated tap. The index itself is stable, and a
+  // reader with contacts off short-circuits on its `empty` flag.
+  const celebrations = parts
+    ? celebrationsOn(people, parts.year, parts.month, parts.day)
+    : null;
+  const mine = celebrations ? celebratedNames(celebrations) : undefined;
   // Asked once per day, handed to whichever box carries the stroke.
   const marked = pastMarkSlot(pastMark, cell.key, today);
 
@@ -399,16 +422,38 @@ const DayCell = memo(function DayCell({
           // search, seeded with the name you touched. They are still one run
           // of text: the separators sit outside the spans, so the line breaks
           // exactly where `hyphenate` says and not at the tap targets' edges.
+          // The day's names, and — above them, in the same slot — the
+          // birthdays the reader's contacts have on it. One slot rather than
+          // two, on purpose: they are the same kind of thing (a caption
+          // saying whose day this is), they want the same size and the same
+          // band, and a corner of their own would be a fifth thing to
+          // arrange in a 47 px cell. So a reader who moved their name days
+          // to another corner takes the birthdays along.
+          //
+          // The birthdays do NOT ride on `showNameDays`: a British reader
+          // has no name-day tradition to switch on, and their contacts'
+          // birthdays are the whole feature.
           nameDays:
-            names.length > 0 ? (
+            names.length > 0 || (celebrations?.birthdays.length ?? 0) > 0 ? (
               <span className="cal-font-nameday cal-cell-nameday text-muted block leading-[1.25]">
-                <NameDayNames
-                  names={names}
-                  pack={pack}
-                  onOpen={onOpenNames}
-                  hyphenated
-                  minWordLength={minHyphenatedLetters(nameDayScale)}
-                />
+                {celebrations && (
+                  <PeopleMarks
+                    people={celebrations.birthdays}
+                    pack={pack}
+                    hyphenated
+                    minWordLength={minHyphenatedLetters(nameDayScale)}
+                  />
+                )}
+                {names.length > 0 && (
+                  <NameDayNames
+                    names={names}
+                    pack={pack}
+                    onOpen={onOpenNames}
+                    hyphenated
+                    minWordLength={minHyphenatedLetters(nameDayScale)}
+                    celebrated={mine}
+                  />
+                )}
               </span>
             ) : null,
           note: (

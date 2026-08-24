@@ -801,6 +801,31 @@ body {
   color: var(--cal-red);
 }
 
+/* The people a day belongs to. Two marks, one colour: the theme's accent,
+   which is the app's own "this one is yours" ink and the one colour on the
+   page that is neither the calendar's print red nor its text.
+
+   Sizing is deliberately absent. Both marks sit inside the slot the view
+   gives the day's NAMES, and take that slot's size class with them
+   (`.cal-cell-nameday` in a month cell, `.cal-size-nameday` in a strip row) —
+   so they follow the reader's caption setting and the room the screen has
+   without carrying a third copy of that arithmetic. A size of their own here
+   is how one piece ends up stuck at phone size while everything around it
+   grows; don't add one.
+
+   `.cal-people` is a birthday, which is text the calendar did not have
+   before. `.cal-nameday-mine` is a name the almanac already printed, set
+   apart inside the run it is part of — bold as well as accented, because it
+   has to be findable in "Kasper, Melker, Baltsar" at 7.5 px, where colour
+   alone is a thin signal on a cheap screen. */
+.cal-people {
+  color: var(--color-accent);
+}
+.cal-nameday-mine {
+  color: var(--color-accent);
+  font-weight: 700;
+}
+
 /* A day cell's entry text: preserve the user's line breaks, and break a word
    only when it cannot fit a line of its own — the text is measured down to a
    size that fits (`entryFit.ts`), so a word that still doesn't fit the width

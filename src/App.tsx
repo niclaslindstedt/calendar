@@ -45,6 +45,7 @@ import { WeekSearch } from "./app/WeekSearch.tsx";
 import { useT } from "./app/i18n/index.ts";
 import type { ListArrival } from "./app/listHome.ts";
 import { getLocale, withEveChoices } from "./app/locale/index.ts";
+import { usePeople } from "./app/people/usePeople.ts";
 import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
@@ -437,6 +438,12 @@ export function App() {
   // `withEveChoices` caches its derived packs, so this is a stable reference
   // for as long as the choices hold — which is what the memoized views need.
   const pack = withEveChoices(getLocale(live.localeId), eveChoices(live));
+  // Whose days these are. Only lit where the host offers contacts at all
+  // (`people/contactsHost.ts`) — on the website `people.available` is false,
+  // the index is the shared empty one, and the Contacts tab never appears.
+  // Indexed against the pack above, so a change of country re-reads the
+  // almanac the same way every other caption does.
+  const people = usePeople(pack);
   const toggles = useMemo(
     () => effectiveToggles(live),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -561,6 +568,7 @@ export function App() {
           pack={pack}
           showWeekNumbers={toggles.weekNumbers}
           showNameDays={toggles.nameDays}
+          people={people.index}
           showDayOfYear={live.weekDayOfYear}
           layout={stripLayout}
           noteFlow={noteFlow}
@@ -588,6 +596,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         showDayOfYear={live.weekDayOfYear}
         layout={stripLayout}
         noteFlow={noteFlow}
@@ -614,6 +623,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         layout={cellLayout}
         headerInk={headerInk}
         pastMark={pastMark}
@@ -751,6 +761,7 @@ export function App() {
         pack={pack}
         showWeekNumbers={toggles.weekNumbers}
         showNameDays={toggles.nameDays}
+        people={people.index}
         headerInk={headerInk}
         textSize={styles[SCOPE_OF_VIEW[settings.view]].entry.size}
         text={zoomDay ? (store.doc.entries[zoomDay] ?? "") : ""}
@@ -839,6 +850,8 @@ export function App() {
         onOpenPlanner={openPlanner}
         saveState={store.saveState}
         effectiveBackend={store.effectiveBackend}
+        people={people}
+        pack={pack}
         calendarSlug={calendars.activeSlug}
         calendarName={calendars.activeCalendar.name}
         calendarCount={calendars.list.length}

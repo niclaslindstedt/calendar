@@ -68,6 +68,7 @@ import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
 import { DECK_END, DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
+import { celebrationsOn, type PeopleIndex } from "./people/celebrations.ts";
 import type { CalendarDoc } from "./types.ts";
 import { startsWeek, type WeekFormat } from "./weekPlanner.ts";
 
@@ -108,6 +109,10 @@ type Props = {
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Whose days these are — the reader's chosen contacts, indexed against the
+   *  country pack (`people/celebrations.ts`). A stable object (the shared
+   *  `EMPTY_PEOPLE` when contacts are off), because the rows are memoized. */
+  people: PeopleIndex;
   /** Whether each row prints the day's ordinal in the year (1–366) — the same
    *  setting the week planner reads, because it is the same gloss printed in
    *  the same lane. */
@@ -165,6 +170,7 @@ export const DayListView = memo(function DayListView({
   pack,
   showWeekNumbers,
   showNameDays,
+  people,
   showDayOfYear,
   layout,
   noteFlow,
@@ -299,6 +305,7 @@ export const DayListView = memo(function DayListView({
               pack={pack}
               showWeekNumbers={showWeekNumbers}
               showNameDays={showNameDays}
+              people={people}
               showDayOfYear={showDayOfYear}
               weekFormat={weekFormat}
               layout={layout}
@@ -351,6 +358,7 @@ const DayRow = memo(function DayRow({
   pack,
   showWeekNumbers,
   showNameDays,
+  people,
   showDayOfYear,
   weekFormat,
   layout,
@@ -382,6 +390,10 @@ const DayRow = memo(function DayRow({
   pack: LocalePack;
   showWeekNumbers: boolean;
   showNameDays: boolean;
+  /** Whose days these are — the reader's chosen contacts, indexed against the
+   *  country pack (`people/celebrations.ts`). A stable object (the shared
+   *  `EMPTY_PEOPLE` when contacts are off), because the rows are memoized. */
+  people: PeopleIndex;
   showDayOfYear: boolean;
   weekFormat: WeekFormat;
   layout: StripLayout;
@@ -418,6 +430,10 @@ const DayRow = memo(function DayRow({
   const holiday = holidayFor(pack, year, month, day);
   const red = isRedDay(pack, year, month, day, weekday);
   const names = showNameDays ? nameDaysFor(pack, month, day) : [];
+  // Whose day this is. Looked up per row rather than handed in, for the same
+  // reason the month cell does it: the row is memoized and a fresh object per
+  // render would defeat that.
+  const celebrations = celebrationsOn(people, year, month, day);
   const marked = pastMarkSlot(pastMark, dayKey, today);
   // The week number is printed on the day that opens the week — and on the
   // 1st, whatever weekday it falls on, so a month never starts without saying
@@ -442,6 +458,7 @@ const DayRow = memo(function DayRow({
     pack,
     weekday,
     names,
+    celebrations,
     holiday,
     weekNumber: showWeekNumbers && marks ? weekNumber(pack, dayKey) : null,
     weekFormat,
