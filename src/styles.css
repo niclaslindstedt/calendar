@@ -97,8 +97,10 @@ body {
    named constants in `src/app/safeArea.ts`. */
 :root {
   /* The visible margin below a view's last row, on top of whatever band the
-     device reserves for itself. */
-  --cal-gutter-margin: 24px;
+     device reserves for itself. Generous on purpose: the month grid closes on
+     a rule drawn edge to edge, and a closing rule is read against the space
+     under it — see `GUTTER_MARGIN` in `src/app/safeArea.ts`. */
+  --cal-gutter-margin: 40px;
   /* The band an iPhone's home indicator occupies. A constant rather than a
      reading, because the inset that is supposed to describe it reports `0` in
      the installed app while the swipe bar is still very much on screen. */
