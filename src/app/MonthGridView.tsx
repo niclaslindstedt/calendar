@@ -41,6 +41,7 @@ import { MonthCellFrame, monthNoteFlows } from "./monthCell.tsx";
 import { MarkedDate, PastMark } from "./PastMark.tsx";
 import { pastMarkSlot, type PastMark as PastMarkSetting } from "./pastDays.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import { MAX_PRINTED_NAMES } from "./nameDayFit.ts";
 import {
   celebratedNames,
   celebrationsOn,
@@ -455,6 +456,7 @@ const DayCell = memo(function DayCell({
                     hyphenated
                     minWordLength={minHyphenatedLetters(nameDayScale)}
                     celebrated={mine}
+                    limit={MAX_PRINTED_NAMES}
                   />
                 )}
               </span>

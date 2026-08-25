@@ -135,7 +135,23 @@ describe("what a query can mean", () => {
     expect(read("august").months).toEqual([8]);
     // Two letters would be March and May at once, which is not an answer.
     expect(read("ma").months).toEqual([]);
-    expect(read("mar").months).toEqual([3]);
+    expect(read("maa").months).toEqual([3]);
+  });
+
+  it("offers every month a word can name, across the packs' languages", () => {
+    // The search accepts every shipped pack's month names, so a prefix that
+    // is unambiguous in one language can name two months once another pack
+    // ships. Both of these are real readings rather than a defect, and the
+    // list is short enough to spell out: "mar" is March and Finnish
+    // marraskuu (November), "jui" is French juin and juillet — ambiguous
+    // inside French itself, which is the case no minimum length can fix.
+    expect(read("mar").months).toEqual([3, 11]);
+    expect(read("jui").months).toEqual([6, 7]);
+    // One more letter settles each of them.
+    expect(read("marc").months).toEqual([3]);
+    expect(read("marr").months).toEqual([11]);
+    expect(read("juin").months).toEqual([6]);
+    expect(read("juil").months).toEqual([7]);
   });
 
   it("takes four digits as a year of its own", () => {

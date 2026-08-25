@@ -208,13 +208,24 @@ The app owns the domain and the stores ("store stays in the app"):
 
 - `src/app/types.ts` — the `CalendarDoc` model: `entries` keyed by `DayKey`
   (`"YYYY-MM-DD"`), plain text per day.
-- `src/app/locale/` — the **country packs** (en-GB, sv-SE): start of week,
-  week numbers, name days, month/weekday names. Each pack is one
+- `src/app/locale/` — the **country packs** (de-DE, en-GB, fi-FI, fr-FR,
+  nb-NO, nl-NL, sv-SE): start of week, week numbers, name days, holidays and
+  their eves, hyphenation and name-spelling rules. Each pack is one
   self-contained file so a new country is a copy-paste + register. **Keep it
   that way** — no cross-imports between packs, no country conditionals
-  outside this folder.
+  outside this folder. A pack carries a name-day table only where the
+  country's calendars actually print one and the list can be sourced whole:
+  `sv-SE`, `fi-FI` and `nb-NO` do, the rest are `null`. Half a table is worse
+  than none — the same table feeds the name search and the contacts matching,
+  so a trimmed or guessed one is wrong twice over.
 - `src/app/i18n/` — UI strings (framework `createI18n`); `en.ts` is the
-  catalog's type source, `sv.ts` must satisfy it.
+  catalog's type source and every other catalog (`sv`, `de`, `fr`, `nl`,
+  `fi`, `nb`) must satisfy it. English is bundled; the rest are code-split.
+  Adding a language is a catalog file, a loader and a BCP-47 tag in
+  `i18n/index.ts`, and a row in its `LANGUAGES` table (which is what the
+  settings picker renders). The UI language and the country calendar are
+  **separate settings** — a Finn abroad reads the app in English over the
+  Finnish calendar.
 - `src/app/useCalendarStore.ts` — the document store over the framework's
   storage adapters (debounced save, migrations, offline cache). Which
   document it holds is (backend, calendar); a change to either flushes any
@@ -456,6 +467,7 @@ job only type-checks. See `native/README.md` and `native/RELEASING.md`.
 | ---------------- | ------------------------------------------------------------------------- |
 | New feature      | `src/app/...`                                                             |
 | New country pack | `src/app/locale/<bcp47>.ts` + register in `src/app/locale/index.ts`       |
+| New UI language  | `src/app/i18n/<lang>.ts` + loader, tag and `LANGUAGES` row in `index.ts`  |
 | Tests            | `tests/...`                                                               |
 | Docs update      | `docs/...`                                                                |
 | Examples         | `examples/...`                                                            |
@@ -492,10 +504,13 @@ const ctx = await browser.newContext({
 ```
 
 Check **all three views** (month, week, day list) in **both themes** and
-**both country packs** — the packs differ in whether week numbers and name
-days are on, which changes the column count in the day list and the grid
-template in the month view. Screenshot, then _look at the screenshot_; do not
-infer from the diff.
+across the **country packs that differ in shape** — a pack with week numbers
+and name days on (`sv-SE`, `fi-FI`) against one with both off (`en-GB`,
+`fr-FR`), because that changes the column count in the day list and the grid
+template in the month view. Finland is the widest case there is: its almanac
+puts up to thirteen names on a day, so it is the pack that finds a cell
+which cannot clamp. Screenshot, then _look at the screenshot_; do not infer
+from the diff.
 
 ### What to check
 

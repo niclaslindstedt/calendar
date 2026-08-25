@@ -39,13 +39,15 @@ accounts, no server — your entries are a small JSON document on your device,
 optionally synced to a storage backend you control.
 
 - **Local-first**: works offline, installable as a PWA.
-- **Internationalized properly**: country packs (UK & Sweden today) adjust the
-  start of week, week numbers, name days, and the holidays — each pack is one
-  self-contained file that's easy to copy for a new country.
-- **Knows which eves you actually work**: Julafton and Midsommarafton are
-  working days by law and days off under almost every collective agreement,
-  so they ship that way — and every Swedish eve can be set to a day off, a
-  half day, or a working day when your workplace differs.
+- **Internationalized properly**: country packs — Germany, France, the
+  Netherlands, Norway, Finland, Sweden and the UK today — adjust the start of
+  week, week numbers, name days, and the holidays. Each pack is one
+  self-contained file that's easy to copy for a new country, and the UI itself
+  reads in seven languages.
+- **Knows which eves you actually work**: Julafton, Heiligabend, jouluaatto
+  and julaften are working days by law and days off under almost every
+  collective agreement, so they ship that way — and every eve can be set to a
+  day off, a half day, or a working day when your workplace differs.
 - **Finds your name day even if the almanac spells it differently**: tap a
   name to browse the almanac alphabetically, and search it by how a name
   sounds — "Nicklas" finds Niklas, "Sophia" finds Sofia.
@@ -119,8 +121,8 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 - **Calendar switcher** (top left) keeps separate calendars in the same app:
   one for home, one for work, each with its own notes in the same storage
   backend.
-- **Settings (cogwheel)**: a tabbed dialog — country (UK / Sweden), language
-  (English / Swedish), week numbers and name days on/off, which holiday eves
+- **Settings (cogwheel)**: a tabbed dialog — the country calendar and the UI
+  language (seven of each), week numbers and name days on/off, which holiday eves
   you work, the month cell's layout,
   crossing off the days that have passed, a
   face per part of a day (date, holiday, name days, your text), a size per

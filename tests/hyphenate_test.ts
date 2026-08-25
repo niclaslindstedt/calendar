@@ -12,7 +12,7 @@ import {
   hyphenPoints,
   hyphenate,
 } from "../src/app/locale/hyphenate.ts";
-import { getLocale } from "../src/app/locale/index.ts";
+import { LOCALES, getLocale } from "../src/app/locale/index.ts";
 
 const sv = getLocale("sv-SE");
 const en = getLocale("en-GB");
@@ -235,4 +235,94 @@ describe("English rules", () => {
       }
     }
   });
+});
+
+// The Swedish almanac gets the full treatment above because it is the table
+// this machinery was written against. Every *other* pack gets the same
+// invariants applied to everything it can put on a line — its name days and
+// the names of its holidays — because the rules are per-language data and a
+// new pack's onset list is exactly the kind of thing that is wrong in a way
+// nothing else notices: a break is still offered, it is just illegal, and the
+// month cell prints "Pfing-stmontag" on somebody's wall.
+describe("every pack breaks its own words legally", () => {
+  /** Every word a pack can print in a caption: name days and holiday names.
+   *  Two years of holidays, so the Easter chain's names are included whatever
+   *  the computus does. */
+  function wordsOf(pack: (typeof LOCALES)[number]): string[] {
+    const words = new Set<string>();
+    for (const names of Object.values(pack.nameDays ?? {})) {
+      for (const name of names) {
+        for (const word of name.split(/\P{L}+/u)) if (word) words.add(word);
+      }
+    }
+    for (const year of [2026, 2027]) {
+      for (const holiday of pack.holidays(year)) {
+        for (const word of holiday.name.split(/\P{L}+/u)) {
+          if (word) words.add(word);
+        }
+      }
+    }
+    return [...words];
+  }
+
+  for (const pack of LOCALES) {
+    describe(pack.id, () => {
+      const words = wordsOf(pack);
+      const { vowels, onsets, minLeading, minTrailing } = pack.hyphenation;
+
+      it("has something to check", () => {
+        expect(words.length).toBeGreaterThan(0);
+      });
+
+      it("never strands one or two letters at either end", () => {
+        for (const word of words) {
+          for (const p of hyphenPoints(word, pack.hyphenation)) {
+            expect(p, word).toBeGreaterThanOrEqual(minLeading);
+            expect(word.length - p, word).toBeGreaterThanOrEqual(minTrailing);
+          }
+        }
+      });
+
+      it("never leaves a consonant run no syllable could start with", () => {
+        for (const word of words) {
+          const lower = word.toLowerCase();
+          for (const p of hyphenPoints(word, pack.hyphenation)) {
+            let run = "";
+            for (
+              let i = p;
+              i < lower.length && !vowels.includes(lower[i]);
+              i++
+            ) {
+              run += lower[i];
+            }
+            if (run.length > 1) {
+              expect(
+                onsets.includes(run),
+                `${pack.id}: ${word} breaks at ${p} leaving illegal onset "${run}"`,
+              ).toBe(true);
+            }
+          }
+        }
+      });
+
+      it("always leaves a vowel on both sides of a break", () => {
+        const hasVowel = (s: string) =>
+          [...s.toLowerCase()].some((c) => vowels.includes(c));
+        for (const word of words) {
+          for (const p of hyphenPoints(word, pack.hyphenation)) {
+            expect(hasVowel(word.slice(0, p)), `${word}@${p} left`).toBe(true);
+            expect(hasVowel(word.slice(p)), `${word}@${p} right`).toBe(true);
+          }
+        }
+      });
+
+      it("gives the text back unchanged once the hyphens are removed", () => {
+        for (const word of words) {
+          expect(
+            hyphenate(word, pack.hyphenation).replaceAll(SOFT_HYPHEN, ""),
+          ).toBe(word);
+        }
+      });
+    });
+  }
 });
