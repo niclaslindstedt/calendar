@@ -10,7 +10,8 @@
 // sized to its digits (AGENTS.md — those are measurements, not taste calls).
 // So a setting here moves a **scale** of the measured size rather than a px
 // value: one ladder of steps that means the same thing wherever the piece is
-// drawn, with 1 — the measured size — as its middle and its default.
+// drawn, standing on the measurement — 1 is the ladder's bottom rung, and the
+// step above it is the default.
 //
 // The scales reach the views as CSS variables on `<html>` (`viewStyle.ts`
 // publishes them per view, `src/styles.css` multiplies each site's base size
@@ -38,33 +39,40 @@ export type TextStep = (typeof TEXT_STEPS)[number];
 
 /** What each step scales the measured size by.
  *
- *  `medium` is the measurement itself — the month cell's caption size is what
- *  lets the widest name hold a 47 px line — so it is the middle button and
- *  the default.
+ *  `small` is the measurement itself — the month cell's caption size is what
+ *  lets the widest name hold a 47 px line — and it sits at the **bottom** of
+ *  the ladder rather than in its middle. That is the point of this ladder: a
+ *  measurement is what a 47 px cell *can* set, which is the floor of what is
+ *  worth printing rather than the middle of what anybody wants to read. The
+ *  step that used to sit under it (0.85) was a denser almanac nobody had
+ *  asked for — the complaint has only ever run the other way — so the ladder
+ *  drops it, moves the two useful steps down a rung, and spends the room at
+ *  the top instead.
  *
- *  The two outer steps used to sit at 0.8 and 1.25, which is a sixth either
- *  side of the middle: three buttons that a reader could not tell apart
- *  without switching back and forth, and a Large that answered "this is too
- *  small for me" with four per cent per press. They are 0.85 and 1.5 now — a
- *  half again at the top, which is a step somebody with tired eyes can
- *  actually feel, and a Small that is a denser almanac rather than a smaller
- *  one, because the complaint about the old ladder was never that its bottom
- *  was too big.
+ *  `medium` is half again the measurement: the middle button, and the
+ *  default, so a fresh install prints the almanac at what the ladder before
+ *  this one called Large. A *stored* size is untouched by that — the setting
+ *  is persisted as a scale rather than as a button, so a document carrying 1
+ *  keeps printing at 1 and simply reads as Small from here on.
  *
- *  1.5 is as far as the *month cell* goes: past it the caption band stops
- *  holding two names even hyphenated (`minHyphenatedLetters` reseeds the
- *  break points from this same number) and the week lane's two digits start
- *  crowding the first day column. It is not, however, as far as the type
- *  goes — the other factor in every printed size is the room the screen has
- *  (`roomScale.ts`), and a desk monitor multiplies this ladder by up to two
- *  again. */
+ *  `large` is twice the measurement, and is deliberately past what a phone
+ *  can hold: at 2 a 47 px month cell no longer sets two names whole even
+ *  hyphenated (`minHyphenatedLetters` reseeds the break points from this
+ *  same number, and reseeds them deepest here) and the week lane takes a good
+ *  half of a portrait strip row. It is the step for an iPad mini and up,
+ *  where the cell is wide enough to take it — and where the *other* factor in
+ *  every printed size, the room the screen has (`roomScale.ts`), has usually
+ *  added some of its own already. The two multiply, so a desk monitor on
+ *  Large prints four times the measurement. */
 export const TEXT_STEP_SCALE: Record<TextStep, number> = {
-  small: 0.85,
-  medium: 1,
-  large: 1.5,
+  small: 1,
+  medium: 1.5,
+  large: 2,
 };
 
-/** The step every piece ships at. */
+/** The step every piece ships at — the middle button, not the bottom one:
+ *  the measured size is the smallest the almanac is worth printing at, not
+ *  the size it should arrive at. */
 export const DEFAULT_TEXT_STEP: TextStep = "medium";
 
 /** The scales the steps set, smallest first — the ladder a stored value is
@@ -73,23 +81,23 @@ export const TEXT_SCALES: readonly number[] = TEXT_STEPS.map(
   (step) => TEXT_STEP_SCALE[step],
 );
 
-/** The measured size — the middle step, and what every piece ships at. */
+/** The scale every piece ships at: the middle step, half again the measured
+ *  size. (The measurement itself is {@link TEXT_STEP_SCALE}`.small`.) */
 export const DEFAULT_TEXT_SCALE = TEXT_STEP_SCALE[DEFAULT_TEXT_STEP];
 
 /** The scale a stored value resolves to: the nearest step on the ladder, and
- *  the measured size for anything a hand-edited document might carry. Every
+ *  the default step for anything a hand-edited document might carry. Every
  *  read goes through here, so a scale off the ladder can never reach the CSS
- *  — including the in-between stops a document written against the older
- *  six-stop ladder, and the 0.8 / 1.25 a document written against the older
- *  three-stop one, still carry.
+ *  — including the 0.85 that was this ladder's own Small until the steps
+ *  shifted up, the 0.8 / 1.25 of the three-stop ladder before that, and the
+ *  in-between stops of the six-stop one before that.
  *
- *  A value equidistant from two steps resolves to the **larger** of them.
- *  That tie is not hypothetical: 1.25 was this ladder's own Large until the
- *  steps were spread, and it sits exactly halfway between the 1 and the 1.5
- *  that replaced them — so a reader who had pressed Large would have been
- *  quietly moved to Medium by the build that was supposed to make Large
- *  bigger. Reading a tie upwards is also the right way round in general: a
- *  stored size above the measurement was somebody asking for more. */
+ *  A value equidistant from two steps resolves to the **larger** of them, and
+ *  that tie is not hypothetical: 1.25 was an older ladder's Large and sits
+ *  exactly halfway between the 1 and the 1.5 that outlived it, so reading the
+ *  tie downwards would quietly shrink a reader who had pressed the biggest
+ *  button there was. Reading it upwards is the right way round in general
+ *  too: a stored size above the measurement was somebody asking for more. */
 export function clampTextScale(value: unknown): number {
   const n = Number(value);
   if (!Number.isFinite(n)) return DEFAULT_TEXT_SCALE;
@@ -119,14 +127,15 @@ export function textStepScale(step: TextStep): number {
  *  hyphens, at a given caption scale — and, optionally, with something
  *  already printed at the head of the line.
  *
- *  {@link MIN_HYPHENATED_LETTERS} is measured at the caption's own size: the
- *  longest name that holds the band whole is 11 letters, so 12 is where a
- *  word starts needing break points. The band does not grow with the
- *  setting, so what fits it is that measured 11 letters divided by the scale
- *  — at 1.5 only seven fit, and an eight-letter "Fredrika" needs the hyphens
- *  a twelve-letter word needed before. The floor of 4 keeps the shortest
- *  words whole even at the ladder's top: a hyphen inside "Elsa" would be
- *  worse than the overflow it avoids.
+ *  {@link MIN_HYPHENATED_LETTERS} is measured at the caption's own size — the
+ *  ladder's Small, which is where the measurement sits: the longest name that
+ *  holds the band whole is 11 letters, so 12 is where a word starts needing
+ *  break points. The band does not grow with the setting, so what fits it is
+ *  that measured 11 letters divided by the scale — on Medium only seven fit,
+ *  and an eight-letter "Fredrika" needs the hyphens a twelve-letter word
+ *  needed before; on Large five fit, and a six-letter "Bertil" does. The
+ *  floor of 4 keeps the shortest words whole even at the ladder's top: a
+ *  hyphen inside "Elsa" would be worse than the overflow it avoids.
  *
  *  `lead` is how many of those letters something else has already taken —
  *  today, the cake glyph a birthday is printed with

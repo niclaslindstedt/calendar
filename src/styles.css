@@ -262,10 +262,11 @@ body {
    instead of clipping. The size lives here rather than in a `text-[7.5px]`
    utility so the two can't fight over which wins.
 
-   The third factor is the reader's own call (Settings → Calendar → Text
-   size): the measurement is what the caption ships at, not a ceiling. Past
-   1 the band stops holding the longest names whole, which is why the month
-   cell reseeds its hyphens from the same scale (`minHyphenatedLetters`).
+   The third factor is the reader's own call (Settings → Calendar → View):
+   the measurement is the bottom of that ladder rather than a ceiling, and
+   the calendar ships a step above it. Past 1 the band stops holding the
+   longest names whole, which is why the month cell reseeds its hyphens from
+   the same scale (`minHyphenatedLetters`).
 
    The fourth is the room the screen has (`--cal-room` above). The 7.5 px is
    what a *47 px* cell can set; a cell four times that wide holds the same
