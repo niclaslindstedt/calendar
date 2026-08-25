@@ -5,6 +5,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  DESK_HEIGHT,
+  DESK_ROOM,
+  DESK_WIDTH,
   MEASURED_HEIGHT,
   MEASURED_WIDTH,
   ROOM_MAX,
@@ -13,10 +16,21 @@ import {
   roomVars,
   scopeRoom,
 } from "../src/app/roomScale.ts";
+import { DEFAULT_TEXT_SCALE } from "../src/app/textSize.ts";
 import { STYLE_SCOPES } from "../src/app/viewStyle.ts";
 
 /** The screen the measurements were taken on. */
 const PHONE = [MEASURED_WIDTH, MEASURED_HEIGHT] as const;
+
+/** The other screen the curve is anchored on. */
+const DESK = [DESK_WIDTH, DESK_HEIGHT] as const;
+
+/** The desk screens between them and past them — the three the report this
+ *  curve exists for named, which under the √area curve were one number. */
+const LAPTOP = [1512, 880] as const;
+const SCREEN_1080P = [1920, 1080] as const;
+const SCREEN_1440P = [2560, 1440] as const;
+const SCREEN_4K = [3840, 2160] as const;
 
 describe("the room factor", () => {
   it("is exactly 1 on the phone the app was measured on", () => {
@@ -38,9 +52,43 @@ describe("the room factor", () => {
   it("grows the almanac on a desk monitor", () => {
     // The report this exists for: a 1440p screen printed the ladder's largest
     // step at 9.4 px because 7.5 px is what a 47 px month cell can set.
-    expect(roomScale(2560, 1440)).toBe(ROOM_MAX);
+    expect(roomScale(...SCREEN_1440P)).toBeGreaterThan(1.4);
     // …and a laptop is not a phone either.
-    expect(roomScale(1440, 900)).toBeGreaterThan(1.5);
+    expect(roomScale(...LAPTOP)).toBeGreaterThan(1.2);
+  });
+
+  it("is exactly the measured factor on the desk screen it was measured on", () => {
+    // The curve's second anchor. The phone's end is forced — 7.5 px is what a
+    // 47 px cell can set — and this end is chosen, so it is the one that has
+    // to be pinned to the number a reader actually picked.
+    expect(roomScale(...DESK)).toBe(DESK_ROOM);
+  });
+
+  it("prints a desk month cell at twice the phone's measurements", () => {
+    // What the anchor was chosen to mean, and the thing that regressed when
+    // the reader's ladder shifted up a rung underneath it: the *default* step
+    // and the desk's room together are 2, not the 3 that shipped.
+    expect(DEFAULT_TEXT_SCALE * roomScale(...DESK)).toBeCloseTo(2, 1);
+  });
+
+  it("gives a laptop, a 1440p and a 4K each their own answer", () => {
+    // The √area curve put all three on ROOM_MAX, so a laptop and a 5K printed
+    // the same size and the cap was doing the sizing rather than backstopping
+    // it. A screen with more area is set bigger, all the way up.
+    const rooms = [LAPTOP, SCREEN_1080P, SCREEN_1440P, SCREEN_4K].map(
+      ([w, h]) => roomScale(w, h),
+    );
+    for (let i = 1; i < rooms.length; i += 1) {
+      expect(rooms[i]).toBeGreaterThan(rooms[i - 1] as number);
+    }
+  });
+
+  it("keeps the cap a backstop rather than a working value", () => {
+    // No screen anybody reads a calendar on may sit on the ceiling: a value
+    // that is clamped is a value the curve is no longer answering.
+    for (const [w, h] of [LAPTOP, SCREEN_1080P, SCREEN_1440P, SCREEN_4K]) {
+      expect(roomScale(w, h)).toBeLessThan(ROOM_MAX);
+    }
   });
 
   it("never grows past its cap", () => {
@@ -48,6 +96,7 @@ describe("the room factor", () => {
       [2560, 1440],
       [3840, 2160],
       [5120, 2880],
+      [8192, 4608],
       [1600, 2560],
     ] as const) {
       expect(roomScale(w, h)).toBeLessThanOrEqual(ROOM_MAX);
@@ -70,12 +119,22 @@ describe("the room factor", () => {
     // when its month cell is four times as wide.
     const laptop = roomScale(1440, 900);
     expect(laptop).toBeGreaterThan(900 / MEASURED_HEIGHT);
-    expect(laptop).toBeLessThan(Math.sqrt(1440 / MEASURED_WIDTH) * 1.1);
-    // Double the area, set at √2.
-    expect(roomScale(MEASURED_WIDTH * 2, MEASURED_HEIGHT)).toBeCloseTo(
-      Math.SQRT2,
-      2,
+    expect(laptop).toBeLessThan(1440 / MEASURED_WIDTH);
+    // Two screens of the same area are set the same, however that area is
+    // shaped — the whole of what "answers on the area" means.
+    expect(roomScale(MEASURED_WIDTH * 4, MEASURED_HEIGHT)).toBe(
+      roomScale(MEASURED_WIDTH * 2, MEASURED_HEIGHT * 2),
     );
+  });
+
+  it("grows far slower than the screen's area does", () => {
+    // The √area curve's mistake, and the one this curve is shaped against: it
+    // scaled the phone's caption as though 7.5 px were a size somebody chose,
+    // when it is the floor a 47 px cell forced. Five times the area is a
+    // third bigger, not 2.2 times bigger.
+    const fiveFold = roomScale(MEASURED_WIDTH * 5, MEASURED_HEIGHT);
+    expect(fiveFold).toBeLessThan(Math.sqrt(5));
+    expect(fiveFold).toBeGreaterThan(1);
   });
 
   it("rounds, so a scrolling URL bar does not restate every font size", () => {

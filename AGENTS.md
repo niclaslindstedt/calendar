@@ -293,9 +293,15 @@ The app owns the domain and the stores ("store stays in the app"):
   on it — it is sized by `entryFont.ts` against the room a view leaves it.
 - `src/app/roomScale.ts` — the **second** factor in every printed size, beside
   the reader's: how much more room the screen has than the 393 × 852 phone
-  every length in this repo was measured on, as the square root of the area
-  ratio (wrapped text is area-bound; a rotated phone has the same area and so
-  prints at the same size), floored at 1 and capped at 2. Published per scope
+  every length in this repo was measured on. A function of the screen's
+  **area** (wrapped text is area-bound; a rotated phone has the same area and
+  so prints at the same size), floored at 1 and capped at 2 — but _how fast_
+  it grows with that area is measured rather than reasoned out, from a second
+  anchor: a 16" MacBook Pro, where a reader picked 1.33 off the ladder's three
+  steps. `ROOM_EXPONENT` is derived from the two anchors, so **move the anchor,
+  not the exponent**. The √area curve this replaced treated the phone's 7.5 px
+  caption as a size somebody chose rather than the floor a 47 px cell forced,
+  and put every desk screen from a laptop to a 5K on the cap. Published per scope
   like everything in `viewStyle.ts` — the month grid spans the window and the
   strip views stop at `max-w-3xl` — and reaching CSS as `--cal-room`, which
   `src/styles.css` multiplies into every size and into the two strip margins
@@ -533,14 +539,18 @@ from the diff.
   the cell's computed font before changing it. Today: 7.5 px on the 45.8 px
   line a band gets at 393 px, widest name "Bartolomeus" at 42.1 px. The reader
   can scale that default (Settings → Calendar → View), which is one sanctioned
-  way past it: the measurement is what the cell _ships_ at, so it stays the
-  ladder's middle stop and the default. **The other is the screen**
-  (`roomScale.ts`): 7.5 px is what a _47 px_ cell can set, and a desk monitor's
-  cell is 356 px, so the constant is a ratio and the room factor is the rest of
-  it. Both multiply the measurement; neither replaces it. If you are about to
-  argue that some size "is too small", check which of the two is missing before
-  reaching for the constant — the last time this came up, the answer was that a
-  1440p monitor was being handed a phone's measurements unchanged.
+  way past it: the measurement is what the cell _can_ set, so it is the
+  ladder's bottom stop, with the default a rung above it. **The other is the
+  screen** (`roomScale.ts`): 7.5 px is what a _47 px_ cell can set, and a desk
+  monitor's cell is 356 px, so the constant is a ratio and the room factor is
+  the rest of it. Both multiply the measurement; neither replaces it. If a size
+  is wrong at one end of the range and right at the other, it is almost always
+  one of those two and almost never the constant — and **the two multiply, so
+  changing one silently rescales every screen the other answers for.** That is
+  exactly how this has gone wrong twice: first a 1440p monitor handed a phone's
+  measurements unchanged, then a ladder shifted up a rung under a room factor
+  calibrated when the default was 1, which left a MacBook Pro printing at three
+  times the measurement. **Re-check both ends whenever you touch either.**
 - **A soft hyphen is an opportunity, and a greedy line breaker takes the last
   one that fits.** So `hyphenate` only seeds them into words that cannot fit a
   caption line whole (`MIN_HYPHENATED_LETTERS`, also measured): a name carrying
@@ -617,11 +627,12 @@ optimised when the two pull against each other.
 
 That said, "not broken" is not the same as "unreadable", and desktop has been
 both. Anything that touches type has to be looked at on a desk-sized viewport
-too — 2560 × 1440 and 1440 × 900, at the ladder's Small and Large as well as
-its default — because the room factor (`roomScale.ts`) is a different number
-there and it multiplies everything the reader's setting does. A change that
-looks fine at 393 px can be a margin taking three quarters of a strip row at
-1440p.
+too — 1728 × 1000 (the room factor's own desk anchor), 2560 × 1440 and
+1440 × 900, at the ladder's Small and Large as well as its default — because
+the room factor (`roomScale.ts`) is a different number at each of them and it
+multiplies everything the reader's setting does. A change that looks fine at
+393 px can be a margin taking three quarters of a strip row at 1440p, or a
+month cell set half again too big on a laptop.
 
 ## Test conventions
 

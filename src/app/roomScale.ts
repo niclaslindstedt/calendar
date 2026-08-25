@@ -12,22 +12,23 @@
 //
 // What it is not is the whole answer. Those numbers were shipped as absolute
 // lengths, so a 2560 × 1440 desktop drew a 356 px-wide month cell and printed
-// its name days at the same 7.5 px a 47 px cell gets — the largest step on
-// the ladder came out at 9.4 px on a 1440p monitor, which is not type anybody
-// reads from a desk. Mobile looked right because mobile is what was measured.
+// its name days at the same 7.5 px a 47 px cell gets — which is not type
+// anybody reads from a desk. Mobile looked right because mobile is what was
+// measured.
 //
 // So the measurement gets a second factor beside the reader's: the **room**
-// the screen actually has, as a multiple of the screen the measurements were
-// taken on. It is published per scope like everything else in `viewStyle.ts`
-// — the month grid spans the window and the strip views are capped at
-// `max-w-3xl`, so the two do not have the same amount of room — and it
-// reaches CSS as `--cal-room`, which `src/styles.css` multiplies into every
-// size the same way it multiplies `--cal-size-*`.
+// the screen actually has. It is published per scope like everything else in
+// `viewStyle.ts` — the month grid spans the window and the strip views are
+// capped at `max-w-3xl`, so the two do not have the same amount of room — and
+// it reaches CSS as `--cal-room`, which `src/styles.css` multiplies into
+// every size the same way it multiplies `--cal-size-*`.
 //
-// The factor is the square root of the **area** ratio, which is the ordinary
-// way type scales: double a page's area and you set it at √2, because a page
-// holds a fixed number of *lines of a given length* rather than a fixed number
-// of characters. Neither dimension answers on its own —
+// ## Two measured screens, one curve
+//
+// The factor is a function of the screen's **area**, which is the ordinary
+// way type scales: a page holds a fixed number of *lines of a given length*
+// rather than a fixed number of characters, so neither dimension answers on
+// its own —
 //
 //   - width alone would grow a landscape phone's type by half again on a
 //     screen where the six week rows have to share 393 px of height;
@@ -38,13 +39,43 @@
 //     cell gained hands the height back.
 //
 // — and the two failures are the same failure, which is that a cell is an
-// area. Floored at 1 (a screen smaller than the measured one keeps the
+// area. One property worth stating because it is the test that catches this
+// getting re-derived from one dimension: a **rotated phone has the same
+// area**, so it prints at exactly the size it prints at in portrait.
+//
+// *How fast* it grows with that area is the part that has been wrong twice,
+// in both directions, and it is not something to reason out from first
+// principles — it is measured, like every other length here, by looking at
+// the two screens this app is actually read on:
+//
+//   - the **phone** ({@link MEASURED_WIDTH} × {@link MEASURED_HEIGHT}), where
+//     the factor is 1 by construction: the shipped sizes *are* the phone's
+//     sizes;
+//   - the **desk** ({@link DESK_WIDTH} × {@link DESK_HEIGHT}, a 16" MacBook
+//     Pro), where {@link DESK_ROOM} is what a reader sitting at one picked by
+//     looking at the ladder's three steps side by side.
+//
+// {@link ROOM_EXPONENT} is then not a taste call either — it is whatever
+// exponent carries the curve through both anchors, derived rather than
+// written down, so moving an anchor moves the curve instead of leaving a
+// stale constant beside it.
+//
+// The first attempt at this used the square root of the area ratio, which is
+// the number the "page of lines" argument hands you and which is right *near
+// the phone* — but it treats the phone's 7.5 px caption as a size somebody
+// chose, when it is a size the 47 px cell **forced**. Lifting a forced floor
+// is not the same as scaling a page: past the point where the cell stops
+// being the constraint, the only thing still growing is the reader's distance
+// from the screen, and that grows far slower than the screen's area does.
+// √area put every desk screen from a laptop to a 5K on the ceiling — an
+// 11 × area 1440p monitor and a 5 × area laptop both printing at
+// {@link ROOM_MAX} — which is both too big at the laptop and, worse, not a
+// curve at all up there. Through two anchors it is a curve again: a laptop,
+// a 1440p monitor and a 4K each get their own answer.
+//
+// Floored at 1 (a screen smaller than the measured one keeps the
 // measurements; shrinking them is what the reader's Small step is for) and
 // capped at {@link ROOM_MAX}.
-//
-// One property worth stating because it is the test that catches this getting
-// re-derived from one dimension: a **rotated phone has the same area**, so it
-// prints at exactly the size it prints at in portrait.
 
 import { STYLE_SCOPES, type StyleScope } from "./viewStyle.ts";
 
@@ -55,15 +86,53 @@ export const MEASURED_WIDTH = 393;
 /** …and its height, which is what the six-row month grid was fitted to. */
 export const MEASURED_HEIGHT = 852;
 
+/** The **desk** anchor: the width of a 16" MacBook Pro's browser window at
+ *  the resolution macOS ships it scaled to. */
+export const DESK_WIDTH = 1728;
+
+/** …and a maximised window's height on one, chrome taken off. */
+export const DESK_HEIGHT = 1000;
+
+/** What the almanac is set at on that screen, as a multiple of the phone's
+ *  measurements — the second of the curve's two anchors, and the one that is
+ *  a *reader's* answer rather than a cell's.
+ *
+ *  The phone anchor is forced: 7.5 px is what a 47 px month cell can set, so
+ *  there was nothing to choose. A desk cell is five times as wide and forces
+ *  nothing at all, so this end of the curve was picked the way the repo picks
+ *  every other length — by looking. At 1.33 the ladder's **default** step
+ *  prints a desk month cell at twice the phone's measurements (the two
+ *  factors multiply, and the default is 1.5), which is the size a reader at a
+ *  MacBook Pro chose off the three steps side by side; the step above and the
+ *  step below then land either side of it rather than around something
+ *  already too big.
+ *
+ *  Change this and {@link ROOM_EXPONENT} follows, because the exponent is
+ *  derived from it — that is the point of writing the anchor down instead of
+ *  the exponent. */
+export const DESK_ROOM = 1.33;
+
 /** The most the room factor grows the measurements by.
  *
  *  Past twice the measured size the almanac stops being a calendar page and
  *  starts being a poster: a month cell's caption would be competing with its
  *  date, and a reader who genuinely wants that has the ladder's Large step on
  *  top of this (the two multiply, so the ceiling on the month cell's captions
- *  is three times the measurement). A 1440p screen is eleven times the area
- *  of the measured phone and reaches this cap; nothing bigger goes further. */
+ *  is three times the measurement).
+ *
+ *  It is a backstop rather than a working value, and the difference matters:
+ *  under the √area curve this replaced, *every* desk screen sat on it, so a
+ *  laptop and a 5K printed the same size and the cap was doing the sizing.
+ *  Through the two anchors nothing short of a 6K display reaches it. */
 export const ROOM_MAX = 2;
+
+/** How fast the factor grows with the screen's area — the exponent that
+ *  carries the curve through both anchors, and so a derived number rather
+ *  than one anybody chose. (About 0.17: a screen with five times the phone's
+ *  area is set a third bigger, not 2.2 times bigger as √area had it.) */
+export const ROOM_EXPONENT =
+  Math.log(DESK_ROOM) /
+  Math.log((DESK_WIDTH * DESK_HEIGHT) / (MEASURED_WIDTH * MEASURED_HEIGHT));
 
 /** The width each scope's row actually gets, whatever the window is.
  *
@@ -79,15 +148,15 @@ export const SCOPE_MAX_WIDTH: Record<StyleScope, number> = {
 
 /** The room factor for a screen `width` × `height`, before a scope's own cap.
  *
- *  The square root of the area ratio, held to `[1, ROOM_MAX]`. Rounded to two
- *  decimals so the value published to CSS is stable across the sub-pixel
- *  viewport jitter a mobile URL bar causes — a factor that changed on every
- *  scroll would restate every font size in the grid. */
+ *  The area ratio raised to {@link ROOM_EXPONENT}, held to `[1, ROOM_MAX]`.
+ *  Rounded to two decimals so the value published to CSS is stable across the
+ *  sub-pixel viewport jitter a mobile URL bar causes — a factor that changed
+ *  on every scroll would restate every font size in the grid. */
 export function roomScale(width: number, height: number): number {
   const w = Number.isFinite(width) && width > 0 ? width : MEASURED_WIDTH;
   const h = Number.isFinite(height) && height > 0 ? height : MEASURED_HEIGHT;
   const area = (w * h) / (MEASURED_WIDTH * MEASURED_HEIGHT);
-  return round2(Math.max(1, Math.min(ROOM_MAX, Math.sqrt(area))));
+  return round2(Math.max(1, Math.min(ROOM_MAX, area ** ROOM_EXPONENT)));
 }
 
 /** The room factor one scope is printed at: {@link roomScale} on the width
@@ -115,7 +184,7 @@ export function roomVars(
 }
 
 /** Publish the room factors on `<html>`. Cheap enough for every resize: two
- *  square roots and two DOM writes. */
+ *  powers and two DOM writes. */
 export function applyRoomVars(): void {
   if (typeof document === "undefined" || typeof window === "undefined") return;
   const root = document.documentElement;
