@@ -102,6 +102,36 @@ export const LIST_DATE_BASE = "1.25rem";
  *  (`SwipeDeck`), which is why it stays a CSS length rather than a number. */
 export const LIST_HOME_TUCK = `calc(-1 * ${WEEK_RULE_WIDTH})`;
 
+/** The two lines of name days a fixed row is measured to hold, at the size
+ *  they were measured at: `stripRow.tsx`'s `Names` sets them from a 10 px
+ *  base, `leading-tight` is 1.25, and two of those lines are 25 px. */
+const LIST_NAME_LINES = "1.5625rem";
+
+/** What the reader's name-day step adds to a fixed row's height.
+ *
+ *  A fixed row's height is a measurement — a weekday line, the gap under
+ *  it and two lines of names — and the names are the one part of it the
+ *  reader sizes. The row carries the room factor for exactly that reason
+ *  already (a screen with more room prints those lines larger); the ladder in
+ *  `textSize.ts` is the other multiplier of the same two lines, and the
+ *  calendar now ships a rung above the measured size, so a row that ignored
+ *  it clipped the second line of names through the middle of its letters on
+ *  every ordinary Finnish day.
+ *
+ *  Nothing at the measured size, so a reader on Small gets the row that was
+ *  measured. Published on the scroller rather than per row — one height for
+ *  the whole month, or a scroll of ragged lines — and only where the month
+ *  prints names at all: a pack without a name-day table has no second line to
+ *  make room for. */
+const LIST_ROW_NAMES = `calc(${LIST_NAME_LINES} * (var(--cal-size-nameday, 1) - 1))`;
+
+// A fixed row's height is `calc((3.375rem + var(--cal-row-names, 0rem)) *
+// var(--cal-room, 1))` — the measurement, plus what the reader's name-day step
+// adds to it ({@link LIST_ROW_NAMES}, `0rem` where no names are printed), on
+// the screen it is drawn on (`roomScale.ts`). It is spelled out at the row
+// rather than named here because Tailwind reads class names out of the source
+// text: a class assembled from a constant is a class it never generates.
+
 type Props = {
   year: number;
   month: number;
@@ -247,7 +277,15 @@ export const DayListView = memo(function DayListView({
       // for the row the deck opens the month on and for anything the browser
       // scrolls into view itself; a row's editor, opened with the keyboard,
       // used to land under the month.
-      style={{ scrollPaddingTop: HEADING_CLEARANCE }}
+      // …and the height a fixed row is held at, where this month prints
+      // names ({@link LIST_ROW_NAMES}): once here rather than per row, so the
+      // month scrolls as one set of lines rather than as a ragged column.
+      style={
+        {
+          scrollPaddingTop: HEADING_CLEARANCE,
+          ...(has.nameDays ? { "--cal-row-names": LIST_ROW_NAMES } : {}),
+        } as CSSProperties
+      }
       className={`${SCOPE_CLASS.strip} mx-auto h-full w-full max-w-3xl overflow-y-auto overscroll-contain px-3 sm:px-6`}
     >
       {/* The slim artwork band (smaller than the month view's). */}
@@ -509,16 +547,17 @@ const DayRow = memo(function DayRow({
       // away. It was 3.25 rem while that padding was 4 px at both ends, and it
       // grows by exactly the two pixels the top end gained.
       //
-      // It is multiplied by the room factor for exactly that reason: those
-      // are 14 px lines on the phone the row was measured on, and a screen
-      // with more room prints them larger (`src/app/roomScale.ts`), so a row
-      // held at the phone's height would clip the same second name again.
+      // Both things that print those lines larger are multiplied into it, for
+      // that one reason: the room the screen has (`src/app/roomScale.ts`) and
+      // the reader's own name-day step ({@link LIST_ROW_NAMES}). A row held at
+      // the phone's measured height would clip the same second name again on
+      // either.
       className={`cal-day cal-strip-row relative ${STRIP_ROW_FRAME} ${STRIP_ROW_PAD} cursor-text border-line focus-visible:outline-2 ${STRIP_ROW_EDGE} ${
         closes ? "" : "border-b"
       } ${
         fixed
-          ? "h-[calc(3.375rem*var(--cal-room,1))] overflow-hidden"
-          : "min-h-[calc(3.375rem*var(--cal-room,1))]"
+          ? "h-[calc((3.375rem+var(--cal-row-names,0rem))*var(--cal-room,1))] overflow-hidden"
+          : "min-h-[calc((3.375rem+var(--cal-row-names,0rem))*var(--cal-room,1))]"
       } ${opens ? "cal-strip-break" : ""} ${
         dayKey === today ? "bg-surface-2" : ""
       }`}

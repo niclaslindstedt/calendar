@@ -576,3 +576,41 @@ describe("the month grid's week gutter", () => {
     expect(monthGridColumns(false)).not.toContain("1.25rem");
   });
 });
+
+describe("the day list's fixed row", () => {
+  const source = readFileSync(
+    fileURLToPath(new URL("../src/app/DayListView.tsx", import.meta.url)),
+    "utf8",
+  );
+
+  // The row is a measurement — a weekday line, the gap under it and two lines
+  // of names — and the names are the half of it the reader sizes. Held flat
+  // against the size ladder, a row on the step the calendar now ships at cut
+  // the second line of names through the middle of its letters on every
+  // ordinary Finnish day.
+  it("carries both factors that print the names in it larger", () => {
+    expect(source).toContain(
+      "h-[calc((3.375rem+var(--cal-row-names,0rem))*var(--cal-room,1))]",
+    );
+    expect(source).toContain(
+      "min-h-[calc((3.375rem+var(--cal-row-names,0rem))*var(--cal-room,1))]",
+    );
+    expect(source).toContain("var(--cal-size-nameday, 1) - 1");
+  });
+
+  it("adds nothing at the measured size", () => {
+    // The step the measurement sits on is the ladder's Small (scale 1), and
+    // the term is a multiple of `scale - 1` — so a reader on Small gets the
+    // row that was measured, to the pixel.
+    expect(source).toContain('const LIST_NAME_LINES = "1.5625rem"');
+    expect(source).toContain(
+      "calc(${LIST_NAME_LINES} * (var(--cal-size-nameday, 1) - 1))",
+    );
+  });
+
+  it("makes room for the names only where the month prints them", () => {
+    // No dead height in a pack with no name-day table, the same rule the
+    // month grid's week gutter follows.
+    expect(source).toContain('has.nameDays ? { "--cal-row-names"');
+  });
+});

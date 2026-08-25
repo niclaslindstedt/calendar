@@ -350,11 +350,19 @@ restyles the calendar rather than the program around it.
 
 The **day number**, **holiday name**, **name days** and **week number** are
 the almanac's own printing, and their three sizes — **Small**, **Medium**,
-**Large** — are steps around the size each was measured at. **Medium** is that
-measurement (the middle button, and what a fresh install uses), with **Small**
-a little under it and **Large** half again bigger — far enough apart that
-pressing a button is a change you can see rather than one you have to go
-looking for.
+**Large** — stand on the size each was measured at. **Small** is that
+measurement: what a 47 px month cell can set a name day in, which is the
+smallest the almanac is worth printing at rather than the middle of what
+anybody wants to read. **Medium** is half again that, and it is the middle
+button and what a fresh install uses. **Large** is twice the measurement —
+more than a phone's month cell can hold whole, and meant for a tablet or a
+desk screen. The steps are far enough apart that pressing a button is a change
+you can see rather than one you have to go looking for.
+
+If you have set a size before, you keep the size you set: the calendar
+remembers how big you asked for rather than which button you pressed, so the
+almanac looks exactly as it did and the button under it now reads one name
+smaller.
 
 **Your text** — what you write on a day — has a fourth button, because it is
 sized against the room the view actually leaves it rather than against a fixed
@@ -384,18 +392,20 @@ that. A phone in your hand is unchanged, in either orientation — a rotation
 trades height for width and gains no room.
 
 Nothing about this is a setting. If the result is still not big enough on your
-screen, **Large** is the button, and it now means half again rather than a
-quarter.
+screen, **Large** is the button, and it means twice the measured size — which
+a desk monitor multiplies again, so the two together reach four times what a
+phone was measured at.
 
 A month cell is only 47 px wide on a phone, so the caption sizes there are
 measured rather than chosen: a face wider than the default gives the difference back
-automatically, and the longest name day still holds a full line instead of
-being clipped. On **Large** the longest names start breaking across two lines
-— the calendar re-picks its hyphenation points for the size you chose, so a
-long name breaks at a syllable rather than being clipped. The strip views have
-the opposite freedom: their lane widens with the name-day step, so bigger
-captions keep the same number of lines and the note beside them gives up the
-width instead.
+automatically, and on **Small** the longest name day holds a full line instead
+of being clipped. Above that the longest names break across two lines — the
+calendar re-picks its hyphenation points for the size you chose, so a long
+name breaks at a syllable rather than being clipped, and on **Large** a phone's
+cell hyphenates most of them. The strip views have the opposite freedom: their
+lane widens with the name-day step, so bigger captions keep the same number of
+lines and the note beside them gives up the width instead, and the day list's
+rows grow with them so the second line of names is never cut off.
 
 ### Passed days
 

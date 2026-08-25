@@ -27,7 +27,8 @@
 //
 // The sizes are *scales* of a measured default rather than px values, for the
 // reason `textSize.ts` gives: the shipped size of a piece is a measurement,
-// so a setting moves a multiplier and 1 is the middle step. Your own text is
+// so a setting moves a multiplier and 1 — the measurement — is the ladder's
+// bottom step, with the default a rung above it. Your own text is
 // the exception in both directions — it is sized against the room a view
 // leaves it (`entryFont.ts`), so its ladder is shrink-to-fit plus three fixed
 // modes rather than scales.
