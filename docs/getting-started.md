@@ -383,18 +383,23 @@ running under them.
 #### On a bigger screen
 
 Those measurements were taken on a phone held upright, which is where this
-calendar is mostly read — and until now they were what every screen got, so a
-desk monitor drew a month cell seven times as wide and still printed its name
-days at phone size. The calendar now sets itself to the screen it is on: the
-type grows with the room a window actually has, up to twice the measured size
-on a large monitor, and the reader's own Small / Medium / Large sits on top of
-that. A phone in your hand is unchanged, in either orientation — a rotation
-trades height for width and gains no room.
+calendar is mostly read — and they used to be what every screen got, so a desk
+monitor drew a month cell seven times as wide and still printed its name days
+at phone size. The calendar sets itself to the screen it is on: the type grows
+with the room a window actually has, and the reader's own Small / Medium /
+Large sits on top of that. A phone in your hand is unchanged, in either
+orientation — a rotation trades height for width and gains no room.
 
-Nothing about this is a setting. If the result is still not big enough on your
+How much it grows is measured on a laptop rather than worked out from the
+screen's size, because a bigger screen is not read from proportionally further
+away: a 16" MacBook Pro prints the almanac at twice the phone's measurements,
+a 1440p monitor a little above that, and a 4K a little above that again. Each
+size of screen gets its own answer, which is why a laptop is no longer set as
+large as a wall-sized display.
+
+Nothing about this is a setting. If the result is not big enough on your
 screen, **Large** is the button, and it means twice the measured size — which
-a desk monitor multiplies again, so the two together reach four times what a
-phone was measured at.
+a desk screen multiplies again on top.
 
 A month cell is only 47 px wide on a phone, so the caption sizes there are
 measured rather than chosen: a face wider than the default gives the difference back
