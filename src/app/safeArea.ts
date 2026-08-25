@@ -60,8 +60,18 @@ export const HEADER_PAD = 12;
  *  24 rather than the 16 it shipped with: the band it sits on is the home
  *  indicator's, the swipe bar is drawn inside that band with its own air
  *  around it, and 16 px of clear space read as the last row's descenders
- *  resting on the bar rather than as a margin under the calendar. */
-export const GUTTER_MARGIN = 24;
+ *  resting on the bar rather than as a margin under the calendar.
+ *
+ *  40 rather than that 24, because 24 was measured against the *band* and not
+ *  against the eye. The month grid ends in a rule drawn edge to edge, and a
+ *  rule is read against the space under it: with the home indicator's own air
+ *  taking the top of the margin, the calendar's bottom line sat close enough
+ *  to the swipe bar on an installed iPhone to read as the end of the screen
+ *  rather than as the end of the calendar. This is the one measurement in the
+ *  app that is about a *closing* line rather than about clearance, so it is
+ *  spent generously; the six week rows share the rest of the screen either
+ *  way. */
+export const GUTTER_MARGIN = 40;
 
 /** The band an iPhone's home indicator occupies.
  *
