@@ -9,6 +9,7 @@
 // ends.
 
 import { hyphenate as hyphenateText, type LocalePack } from "./locale/index.ts";
+import { namesThatFit } from "./nameDayFit.ts";
 
 type Props = {
   names: readonly string[];
@@ -29,6 +30,11 @@ type Props = {
    *  so marking it is the whole of showing it. Empty, and normally absent,
    *  for a reader with no contacts in their calendar. */
   celebrated?: ReadonlySet<string>;
+  /** The most names this surface can set, for the surfaces that have a box —
+   *  see `nameDayFit.ts`. What is cut is marked with an ellipsis, so the run
+   *  reads as a run that was cut rather than as the day's whole list. Left
+   *  unset by `DayZoom`, which has no box and prints them all. */
+  limit?: number;
 };
 
 export function NameDayNames({
@@ -38,10 +44,12 @@ export function NameDayNames({
   hyphenated,
   minWordLength,
   celebrated,
+  limit = 0,
 }: Props) {
+  const { shown, hidden } = namesThatFit(names, limit);
   return (
     <>
-      {names.map((name, i) => (
+      {shown.map((name, i) => (
         <span key={name}>
           {i > 0 && ", "}
           <span
@@ -72,6 +80,9 @@ export function NameDayNames({
           </span>
         </span>
       ))}
+      {/* Outside the tappable spans, like the separators: the ellipsis is not
+          a name and must not be a way into the search. */}
+      {hidden > 0 && "\u2026"}
     </>
   );
 }

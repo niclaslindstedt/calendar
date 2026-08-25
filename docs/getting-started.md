@@ -170,9 +170,14 @@ the calendar's look preview live behind the dialog and are kept with **Save**
 — **Cancel** (or Escape) drops them, and **Reset to defaults** restores the
 stock look without touching your storage connections or developer switches.
 
-- **General** — UI language (English / Svenska), the country calendar
-  (United Kingdom / Sverige — sets start of week, week numbers, red days,
-  name days), the week-number and name-day toggles, and developer mode. A
+- **General** — UI language (English, Deutsch, Français, Nederlands, Norsk,
+  Suomi, Svenska) and the country calendar (Deutschland, France, Nederland,
+  Norge, Suomi, Sverige, United Kingdom — sets start of week, week numbers,
+  red days, name days). Both are dropdowns that lead with a flag; they are
+  **separate settings**, so a Finn abroad can read the app in English over the
+  Finnish calendar. Then the week-number and name-day toggles, and developer
+  mode. The name-day toggle only appears for a country that has a name-day
+  table. A
   fresh install picks the country calendar from your device's language
   settings; changing it here pins your choice. **Vacation days a year**
   (default 25) is the allowance the vacation planner spends, and **Open the

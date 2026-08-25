@@ -87,8 +87,16 @@ export const en = {
     languageChoose: "Interface language",
     languageHint:
       "The language of the app's own text. The calendar's own names follow the country calendar.",
+    // Every language is named in itself — a reader looking for their own
+    // language finds the word they would use for it, not the word this UI's
+    // current language uses. So these read the same in every catalog.
     languageEnglish: "English",
     languageSwedish: "Svenska",
+    languageGerman: "Deutsch",
+    languageFrench: "Français",
+    languageDutch: "Nederlands",
+    languageFinnish: "Suomi",
+    languageNorwegian: "Norsk",
     country: "Country calendar",
     countryChoose: "Country",
     countryHint:

@@ -106,5 +106,7 @@ year the calendar was already showing.
   name is its own tap target. The separators sit **outside** the tappable
   spans so the run still reads and breaks as one piece of text.
 
-A pack without a name-day tradition (`nameDays: null`, e.g. `en-GB`) has no
+A pack without a name-day table (`nameDays: null` — `en-GB`, `nl-NL`,
+`de-DE`, `fr-FR`; see [locale packs](locales.md#the-name-day-tables) for why
+each) has no
 names to tap, so the search is simply never reachable there.

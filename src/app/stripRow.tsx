@@ -50,6 +50,7 @@ import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { useT } from "./i18n/index.ts";
 import { weekdayName, type Holiday, type LocalePack } from "./locale/index.ts";
 import { NameDayNames } from "./NameDayNames.tsx";
+import { MAX_PRINTED_NAMES } from "./nameDayFit.ts";
 import {
   celebratedNames,
   type DayCelebrations,
@@ -513,6 +514,7 @@ function Names({ day: d }: { day: StripDay }) {
           pack={d.pack}
           onOpen={d.onOpenNames}
           celebrated={celebratedNames(d.celebrations)}
+          limit={MAX_PRINTED_NAMES}
         />
       )}
     </span>

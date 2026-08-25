@@ -77,6 +77,11 @@ export const sv: Catalog = {
       "Språket i appens egen text. Kalenderns namn följer landskalendern.",
     languageEnglish: "English",
     languageSwedish: "Svenska",
+    languageGerman: "Deutsch",
+    languageFrench: "Français",
+    languageDutch: "Nederlands",
+    languageFinnish: "Suomi",
+    languageNorwegian: "Norsk",
     country: "Landskalender",
     countryChoose: "Land",
     countryHint:

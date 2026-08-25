@@ -3,7 +3,12 @@
 // the existing ones (copy `en-gb.ts` as the template) and add it to `LOCALES`
 // below — nothing else in the app changes.
 
+import { deDE } from "./de-de.ts";
 import { enGB } from "./en-gb.ts";
+import { fiFI } from "./fi-fi.ts";
+import { frFR } from "./fr-fr.ts";
+import { nbNO } from "./nb-no.ts";
+import { nlNL } from "./nl-nl.ts";
 import { svSE } from "./sv-se.ts";
 import type { LocalePack } from "./types.ts";
 
@@ -38,8 +43,18 @@ export {
   weekdayOrder,
 } from "./types.ts";
 
-/** Every available country pack, in picker display order. */
-export const LOCALES: readonly LocalePack[] = [enGB, svSE];
+/** Every available country pack, in picker display order — alphabetical by
+ *  the pack's own label, which is the order a reader scanning the list
+ *  expects. Adding one is a line here and a file beside this one. */
+export const LOCALES: readonly LocalePack[] = [
+  deDE,
+  frFR,
+  nlNL,
+  nbNO,
+  fiFI,
+  svSE,
+  enGB,
+];
 
 /** The pack used when the device's own languages match nothing. */
 export const FALLBACK_LOCALE_ID = "en-GB";

@@ -13,19 +13,26 @@ import {
   Field,
   LabeledInput,
   Section,
-  SegmentedControl,
   SelectPicker,
   ShieldIcon,
   ToggleRow,
 } from "@niclaslindstedt/oss-framework/components";
 
-import { setLanguage, useLang, useT } from "../i18n/index.ts";
+import { LANGUAGES, setLanguage, useLang, useT } from "../i18n/index.ts";
+import type { Lang } from "../i18n/index.ts";
 import { LOCALES, getLocale } from "../locale/index.ts";
 import {
   clampVacationDays,
   effectiveToggles,
   type LookSettings,
 } from "../useAppSettings.ts";
+
+/** A picker hands back a plain string; only the ids in `LANGUAGES` can come
+ *  out of it, and an unknown one falls back rather than being asserted into
+ *  the type. */
+function asLang(value: string): Lang {
+  return LANGUAGES.find((l) => l.id === value)?.id ?? "en";
+}
 
 type UpdateLook = <K extends keyof LookSettings>(
   key: K,
@@ -63,41 +70,36 @@ export function GeneralSection({
 
   return (
     <>
-      {/* Both languages side by side under their flags, the way the sibling
-          apps present it: two choices are a pair of buttons, not a dropdown
-          that hides one of them behind a tap. */}
+      {/* A dropdown rather than the pair of buttons this used to be: seven
+          languages do not fit a 393 px row without wrapping the top of the
+          settings dialog onto a second line. It reads like the country picker
+          below it, which is the other list that grows every time a country is
+          added. */}
       <Section title={t("settings.language")}>
         <Field label={t("settings.languageChoose")}>
-          <SegmentedControl
+          <SelectPicker
             value={lang}
-            onChange={(next) => setLanguage(next)}
+            onChange={(next) => setLanguage(asLang(next))}
             ariaLabel={t("settings.language")}
-            options={[
-              {
-                value: "en",
-                label: (
-                  <>
-                    <Flag emoji="🇬🇧" /> {t("settings.languageEnglish")}
-                  </>
-                ),
-              },
-              {
-                value: "sv",
-                label: (
-                  <>
-                    <Flag emoji="🇸🇪" /> {t("settings.languageSwedish")}
-                  </>
-                ),
-              },
-            ]}
+            options={LANGUAGES.map((l) => ({
+              value: l.id,
+              label: (
+                <>
+                  <Flag emoji={l.flag} /> {t(l.key)}
+                </>
+              ),
+              // The trigger and the typeahead both want plain text; the label
+              // above is markup, so spell the searchable form out.
+              typeaheadLabel: t(l.key),
+            }))}
           />
         </Field>
         <p className="text-muted text-xs">{t("settings.languageHint")}</p>
       </Section>
 
-      {/* The country list stays a dropdown — it grows with every pack — but
-          each entry leads with its flag, so the picker reads at a glance and
-          matches the language buttons above. */}
+      {/* The country list is a dropdown for the same reason — it grows with
+          every pack — and each entry leads with its flag, so the picker reads
+          at a glance and matches the language one above. */}
       <Section title={t("settings.country")}>
         <Field label={t("settings.countryChoose")}>
           <SelectPicker
