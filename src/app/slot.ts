@@ -76,7 +76,7 @@ export function slotSuffix(
   return "";
 }
 
-const APP_NAME = "Calendar — a wall calendar that doesn't nag";
+const APP_NAME = "Calendar";
 
 /** Installed-app titles per slot (OSS_SPEC §11.4.8). The three slots share
  *  one origin and one icon set; without a slot in the name, three installs
