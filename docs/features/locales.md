@@ -108,9 +108,9 @@ contacts tab off:
 ## Holidays and red days
 
 Holidays are **computed per year from rules**, never listed per year. The
-shared computus helpers live in `src/app/locale/computus.ts` (Easter via the
-Meeus/Jones/Butcher algorithm, "nth weekday of month", "the Saturday
-between…"); each pack expresses its national rules with them:
+shared observance arithmetic is the framework's `calendar/rules` (Easter via
+the Meeus/Jones/Butcher computus, "the nth weekday of a month", "the first
+Saturday on or after…"); each pack expresses its national rules with those:
 
 - **Sverige** — the thirteen official _röda dagar_ (fixed days like
   Nyårsdagen / Första maj / Nationaldagen / Juldagen; the Easter chain

@@ -262,10 +262,12 @@ The app owns the domain and the stores ("store stays in the app"):
   a long press on any day opens (the framework's `useLongPress`), and the one
   surface with no box to measure a note against: it is where a note the cell
   had to clamp to an ellipsis is read and written in full, so it is also the
-  one place a note can outgrow its own cell. `entryFont.ts` owns the pre-layout sizing curve and
-  the three fixed steps; `entryFit.ts` measures that guess against the box the
-  view actually left (shrink to fit, clamp an overrun to an ellipsis, refuse
-  the keystroke that would overflow a full day). A view says which it is with
+  one place a note can outgrow its own cell. The sizing is the framework's
+  `fit` module — a pre-layout guess from the note's length, then a measured
+  pass against the box the view actually left (shrink to fit, clamp an overrun
+  to an ellipsis, refuse the keystroke that would overflow a full day) —
+  over the four **bands** `entryFont.ts` keeps, which are this app's
+  measurements and stay here. A view says which it is with
   `DayEntry`'s `bounded` prop — set where the surface clips (month cells, week
   rows, a fixed-height day-list row), clear where the row grows with its
   text.
@@ -290,7 +292,7 @@ The app owns the domain and the stores ("store stays in the app"):
 - `src/app/textSize.ts` — the ladder those sizes sit on: three steps around
   the measured default, as a scale rather than a px value (the shipped size of
   a piece is a measurement — see "What to check" below). Your own text is not
-  on it — it is sized by `entryFont.ts` against the room a view leaves it.
+  on it — it is sized by `fit` against the band `entryFont.ts` gives its view.
 - `src/app/roomScale.ts` — the **second** factor in every printed size, beside
   the reader's: how much more room the screen has than the 393 × 852 phone
   every length in this repo was measured on. A function of the screen's
@@ -308,8 +310,8 @@ The app owns the domain and the stores ("store stays in the app"):
   whose widths hold that type. **A new printed size carries it**, or that one
   piece stays at phone size while everything around it grows;
   `tests/layout_test.ts` holds the stylesheet to that. The one place it is
-  needed as a number is the entry band (`scaleEntryFont`), because
-  `entryFit.ts` measures a note against px rather than against a length.
+  needed as a number is the entry band (`scaleBand`), because
+  `fit` measures a note against px rather than against a length.
 - `src/app/stripLayout.ts` — which margin each piece of a strip row is printed
   in, and at which end: a `lane` on the left and a `rail` on the right, each
   with a top and a bottom, which is what lets the settings designer be the
@@ -337,6 +339,33 @@ Before building any UI primitive, gesture, or generic mechanic, **check
 whether `@niclaslindstedt/oss-framework` already ships it**. Its `.d.ts`
 files under `node_modules/@niclaslindstedt/oss-framework/dist/**` list every
 export. Only build app-local UI when the framework genuinely has no fit.
+
+Several things this app used to own are now there, and are worth knowing about
+by name because a reader of old commits will still find them here:
+
+| Was                                   | Now                                                                             |
+| ------------------------------------- | ------------------------------------------------------------------------------- |
+| `SwipeDeck.tsx`                       | `SwipeDeck` + `DECK_*` (`/components`)                                          |
+| `entryFit.ts`, half of `entryFont.ts` | the `fit` module — `resolveFontPx`, `scaleBand`, `fitTextSize`, `clipTextToBox` |
+| `entryDom.ts`, `entryKeys.ts`         | `plainTextEditable` helpers (`/components`)                                     |
+| `locale/computus.ts`                  | `calendar/rules` — `easterSunday`, `nthWeekdayOfMonth`, …                       |
+| `shellScroll.ts`                      | `useShellScrollPin`, `blurActiveField`                                          |
+| `themeColor.ts`                       | `useThemeColorMeta` (`/theme`)                                                  |
+| the generic half of `viewportInfo.ts` | `readSafeAreaInsets`, `resolveCssLength`, `displayModeOf` (`/pwa`)              |
+
+**`TopBarButton.tsx` is deliberately still ours.** The framework's
+`IconButton` is the same 36 px box with better ARIA, but it wears the neutral
+`border-line` look and a `--radius-md` corner; this app's top menu is set in
+the masthead's accent on `--radius`. Folding the two together is a change to
+how the app looks, not a refactor — it waits for the framework to grow a tone
+seam.
+
+**The webfont loaders are opt-in.** Since framework 3.0.0 the `@fontsource/*`
+imports live behind their own entry, so `src/main.tsx` imports
+`@niclaslindstedt/oss-framework/theme/fontsource` for its side effect. Drop
+that line and the font picker still offers Inter, Source Serif and
+OpenDyslexic — and picking one silently paints the fallback stack, with
+nothing failing anywhere.
 
 ### Keep the framework current
 

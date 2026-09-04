@@ -14,15 +14,21 @@ import {
   toDayKey,
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
+import { SwipeDeck } from "@niclaslindstedt/oss-framework/components";
 import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
 import {
   NamespacesModal as CalendarsModal,
   applyFaviconHref,
   namespaceFaviconHref as calendarFaviconHref,
 } from "@niclaslindstedt/oss-framework/namespaces";
-import { UpdateToast, usePwaUpdate } from "@niclaslindstedt/oss-framework/pwa";
+import {
+  UpdateToast,
+  usePwaUpdate,
+  useShellScrollPin,
+} from "@niclaslindstedt/oss-framework/pwa";
 import {
   useApplyTheme,
+  useThemeColorMeta,
   type ThemeAppearance,
 } from "@niclaslindstedt/oss-framework/theme";
 
@@ -37,7 +43,6 @@ import {
   SettingsModal,
   type SettingsDraft,
 } from "./app/settings/SettingsModal.tsx";
-import { SwipeDeck } from "./app/SwipeDeck.tsx";
 import { TopBar } from "./app/TopBar.tsx";
 import { WeekPlannerView } from "./app/WeekPlannerView.tsx";
 import { WeekSearch } from "./app/WeekSearch.tsx";
@@ -64,8 +69,6 @@ import { useBackup } from "./app/useBackup.ts";
 import { useReset } from "./app/useReset.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
 import { useCalendars } from "./app/useCalendars.ts";
-import { pinShell } from "./app/shellScroll.ts";
-import { syncThemeColor, watchSystemThemeColor } from "./app/themeColor.ts";
 import {
   DEFAULT_LOOK,
   clampVacationDays,
@@ -174,16 +177,14 @@ export function App() {
   // covers that), but Android's task switcher and Chrome's toolbar read this
   // meta — and with a dozen presets plus "follow the device" a static value in
   // the HTML shell is wrong for most of them.
-  useEffect(() => {
-    syncThemeColor();
-  }, [liveAppearance]);
-  // …and when the OS preference flips under the "system" theme, which moves
-  // the background without moving any state of ours.
-  useEffect(() => watchSystemThemeColor(), []);
+  // …and again when the OS preference flips under the "system" theme, which
+  // moves the background without moving any state of ours — both halves are
+  // the framework's `useThemeColorMeta`.
+  useThemeColorMeta(liveAppearance);
 
   // Put the shell back if iOS's keyboard handling leaves it riding up under
-  // the status bar (see `shellScroll.ts`).
-  useEffect(() => pinShell(), []);
+  // the status bar (the framework's `useShellScrollPin`).
+  useShellScrollPin();
 
   // The in-app log records only in developer mode; the capture toggle
   // additionally mirrors it to localStorage.

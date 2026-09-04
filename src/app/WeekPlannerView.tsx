@@ -27,14 +27,12 @@ import {
   buildWeekStrip,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
+import { DECK_SCROLLER } from "@niclaslindstedt/oss-framework/components";
+import { scaleBand } from "@niclaslindstedt/oss-framework/fit";
 import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
-import {
-  WEEK_ROW_FONT,
-  scaleEntryFont,
-  type EntryTextSize,
-} from "./entryFont.ts";
+import { WEEK_ROW_FONT, type EntryTextSize } from "./entryFont.ts";
 import {
   holidayFor,
   isRedDay,
@@ -57,7 +55,6 @@ import {
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
-import { DECK_SCROLLER } from "./SwipeDeck.tsx";
 import {
   celebrationsOn,
   NO_CELEBRATIONS,
@@ -204,9 +201,9 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   // The note's band, on the screen this is actually being drawn on: the same
   // rows on a desk monitor are taller and their notes are set larger
   // (`roomScale.ts`), and the band is a px number rather than a CSS length
-  // because `entryFit.ts` measures the note against it.
+  // because `fit` measures the note against it.
   const room = useRoom("strip");
-  const entryFont = useMemo(() => scaleEntryFont(WEEK_ROW_FONT, room), [room]);
+  const entryFont = useMemo(() => scaleBand(WEEK_ROW_FONT, room), [room]);
 
   const lane = marginReserved(layout, "lane", has) || showDayOfYear;
   const rail = marginReserved(layout, "rail", has);

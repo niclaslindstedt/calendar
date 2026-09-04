@@ -17,7 +17,10 @@
 // férié on a Tuesday or a Thursday is a four-day weekend for one booked day,
 // which is exactly the arithmetic the vacation planner does.
 
-import { addToDate, easterSunday } from "./computus.ts";
+import {
+  addToMonthDay,
+  easterSunday,
+} from "@niclaslindstedt/oss-framework/calendar";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
 import type { Holiday, LocalePack } from "./types.ts";
@@ -29,7 +32,7 @@ import type { Holiday, LocalePack } from "./types.ts";
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string, red = true): Holiday => ({
-    ...addToDate(year, easter.month, easter.day, offset),
+    ...addToMonthDay(year, easter.month, easter.day, offset),
     name,
     red,
     off: red,

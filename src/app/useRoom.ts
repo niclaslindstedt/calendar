@@ -5,7 +5,7 @@
 // (`roomScale.ts` publishes it, `src/styles.css` multiplies it in), so almost
 // nothing needs this. The exception is the day's own note: its size is a px
 // number JS picks before layout (`entryFont.ts`) and then measures against the
-// box the view actually left (`entryFit.ts`), so the band has to be a number
+// box the view actually left (the framework's `fit` module), so the band has to be a number
 // here rather than a length there.
 
 import { useEffect, useState } from "react";

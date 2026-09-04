@@ -4,7 +4,15 @@ import { render } from "preact";
 // The default UI family (JetBrains Mono) is imported statically so it ships
 // in the main bundle and precaches for offline first paint. The other font
 // families load on demand when selected (the theme engine calls
-// `loadFontFamily`).
+// `loadFontFamily`) — but only once their loaders are registered, which is
+// what this side-effect import does. The framework keeps the `@fontsource/*`
+// specifiers behind their own entry so an app that ships none of them can
+// still import a `Button` without its bundler resolving font packages it does
+// not have; the price is that an app that *does* want them has to say so, once,
+// here. Drop this line and the picker still offers Inter, Source Serif and
+// OpenDyslexic — and picking one silently paints the fallback stack.
+import "@niclaslindstedt/oss-framework/theme/fontsource";
+
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "@fontsource/jetbrains-mono/latin-ext-400.css";
 import "@fontsource/jetbrains-mono/latin-700.css";

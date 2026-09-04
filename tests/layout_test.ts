@@ -471,7 +471,7 @@ describe("the strip row's two arrangements", () => {
   });
 
   it("measures the note against the body in both", () => {
-    // `entryFit.ts` reads the slot's height off the note's box, so a box that
+    // the framework's `fit` module reads the slot's height off the note's box, so a box that
     // shrink-wrapped its text would report the height the text is already
     // using and never shrink it.
     expect(ruleBodyOf(".cal-strip-note")).toContain("height: 100%");

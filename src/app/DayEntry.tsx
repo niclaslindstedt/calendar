@@ -16,10 +16,10 @@
 // keystroke while there was still half a row of blank room under the date. An
 // editable div is ordinary flowing content, so the writing surface and the
 // reading surface are now one shape — and the measurement below rules on the
-// text you can actually see. `entryDom.ts` is what that costs: an editable box
+// text you can actually see. the framework's `plainTextEditable` helpers are what that costs: an editable box
 // is read through the DOM rather than through `value`.
 //
-// Two rules follow from the slot being finite (`entryFit.ts` measures it):
+// Two rules follow from the slot being finite (the framework's `fit` module measures it):
 //
 //   - what you write shrinks as it grows, down to the view's floor, and once
 //     the floor no longer fits, the next keystroke is refused — the day is
@@ -29,7 +29,7 @@
 //     flows around its margins — so a long note stops at the holiday and
 //     name-day captions instead of running under them.
 //
-// Enter is a line break here, not a save — `entryKeys.ts` has the whole rule.
+// Enter is a line break here, not a save — the framework's `editorKeyAction` has the whole rule.
 // It costs a line of the day's room, so it is refused by the same measurement
 // that refuses any other keystroke once the cell is full.
 
@@ -37,20 +37,20 @@ import { useLayoutEffect, useRef, useState } from "react";
 
 import {
   PLAIN_TEXT_EDITING,
-  insertNoteText,
-  noteCaret,
-  readNote,
-  seatCaret,
-  writeNote,
-} from "./entryDom.ts";
+  editorKeyAction,
+  insertPlainText,
+  plainTextCaret,
+  readPlainText,
+  seatCaretAt,
+  writePlainText,
+} from "@niclaslindstedt/oss-framework/components";
 import {
-  clipEntryText,
-  entryLineLimit,
-  entryOverflowsWidth,
-  entrySlotHeight,
-  fitEntryText,
-} from "./entryFit.ts";
-import { entryEditorAction } from "./entryKeys.ts";
+  clipTextToBox,
+  fitTextSize,
+  textLineLimit,
+  textOverflowsWidth,
+  textSlotHeight,
+} from "@niclaslindstedt/oss-framework/fit";
 import {
   resolveEntryFontPx,
   type EntryFontOptions,
@@ -118,12 +118,12 @@ function breakingFit(
   startPx: number,
   floorPx: number,
 ) {
-  if (!flow) return fitEntryText(el, available, startPx, floorPx);
+  if (!flow) return fitTextSize(el, available, startPx, floorPx);
   el.classList.remove("cal-entry-break");
-  const fit = fitEntryText(el, available, startPx, floorPx);
-  if (!entryOverflowsWidth(el)) return fit;
+  const fit = fitTextSize(el, available, startPx, floorPx);
+  if (!textOverflowsWidth(el)) return fit;
   el.classList.add("cal-entry-break");
-  return fitEntryText(el, available, startPx, floorPx);
+  return fitTextSize(el, available, startPx, floorPx);
 }
 
 export function DayEntry({
@@ -151,7 +151,7 @@ export function DayEntry({
   // What both boxes carry — they are one box in two states, so the class list
   // is one too: the entry's typography, and, where the note flows around a
   // margin, the rule that a word which does not fit the shortened line moves
-  // down whole instead of being split into it (`entryFit.ts`).
+  // down whole instead of being split into it (`fit`'s measured pass).
   const face = `cal-entry cal-font-entry ${flow ? "cal-entry-flow" : ""}`;
   // The pre-layout guess React renders with. `dynamic` then measures from the
   // band's ceiling down to its floor, so the note ends up at the largest size
@@ -186,7 +186,7 @@ export function DayEntry({
     }
     let lastAvailable = -1;
     const measure = () => {
-      const available = entrySlotHeight(el);
+      const available = textSlotHeight(el);
       if (available === lastAvailable) return;
       lastAvailable = available;
       whole();
@@ -198,12 +198,12 @@ export function DayEntry({
         // Lines that make room for the row's margins cannot be clamped by a
         // `-webkit-box`, whose line boxes ignore floats; the text ends itself
         // instead.
-        clipEntryText(el, available, text);
+        clipTextToBox(el, available, text);
         return;
       }
       el.style.setProperty(
         "-webkit-line-clamp",
-        String(entryLineLimit(available, fit.px)),
+        String(textLineLimit(available, fit.px)),
       );
       el.classList.add("cal-entry-clamp");
     };
@@ -229,9 +229,9 @@ export function DayEntry({
     pendingRef.current = null;
     const el = editorRef.current;
     if (el) {
-      writeNote(el, text);
+      writePlainText(el, text);
       el.focus();
-      seatCaret(el, text.length);
+      seatCaretAt(el, text.length);
     }
     // The stored text is only the seed — mid-edit remote updates must not
     // yank the caret.
@@ -249,7 +249,7 @@ export function DayEntry({
 
     let fits = true;
     if (bounded) {
-      fits = breakingFit(el, flow, entrySlotHeight(el), startPx, floorPx).fits;
+      fits = breakingFit(el, flow, textSlotHeight(el), startPx, floorPx).fits;
     } else {
       // An unbounded box grows with its text on its own — it is flowing
       // content, not a rectangle to be resized. It still has to rule on the
@@ -257,7 +257,7 @@ export function DayEntry({
       el.style.fontSize = `${guessPx}px`;
       if (flow) {
         el.classList.remove("cal-entry-break");
-        if (entryOverflowsWidth(el)) el.classList.add("cal-entry-break");
+        if (textOverflowsWidth(el)) el.classList.add("cal-entry-break");
       }
     }
 
@@ -278,9 +278,9 @@ export function DayEntry({
       0,
       pending.caret - (pending.value.length - accepted.length),
     );
-    writeNote(el, accepted);
+    writePlainText(el, accepted);
     setDraft(accepted);
-    seatCaret(el, caret);
+    seatCaretAt(el, caret);
     // As above: entering edit mode mounts the box without necessarily changing
     // the draft.
   }, [draft, editing, bounded, flow, guessPx, startPx, floorPx, onCommit]);
@@ -293,7 +293,7 @@ export function DayEntry({
         // are a `<div>` in the same place, so without it the renderer keeps
         // the element and only diffs its children — and the editor's content
         // is not the renderer's to diff. It was written in by hand
-        // (`entryDom.ts`), so the renderer, seeing a box it believes to be
+        // (the box is read through the DOM), so the renderer, seeing a box it believes to be
         // empty, appended the text beside what was already there and the note
         // read as itself twice over until the day was drawn again.
         key="read"
@@ -318,7 +318,7 @@ export function DayEntry({
       ref={editorRef}
       // Editable, and nothing more: `plaintext-only` where the engine has it,
       // so a paste arrives as text and the editing commands a rich-text box
-      // answers to are simply not there (`entryDom.ts`). The content is put in
+      // answers to are simply not there (an editable box has no `value`). The content is put in
       // by hand rather than rendered, because a renderer restating the text
       // under a caret is what moves the caret.
       contentEditable={PLAIN_TEXT_EDITING ? "plaintext-only" : true}
@@ -329,7 +329,10 @@ export function DayEntry({
       style={{ fontSize: `${guessPx}px` }}
       onInput={(e) => {
         const el = e.currentTarget;
-        pendingRef.current = { value: readNote(el), caret: noteCaret(el) };
+        pendingRef.current = {
+          value: readPlainText(el),
+          caret: plainTextCaret(el),
+        };
         setDraft(pendingRef.current.value);
       }}
       onBlur={commit}
@@ -338,17 +341,17 @@ export function DayEntry({
         // paste there would otherwise bring its formatting into the day.
         if (PLAIN_TEXT_EDITING) return;
         e.preventDefault();
-        insertNoteText(
+        insertPlainText(
           e.currentTarget,
           e.clipboardData?.getData("text/plain") ?? "",
         );
       }}
       onKeyDown={(e) => {
         // Enter writes a line break — a note is prose, not a form field — so
-        // only Escape and a modified Enter put the pen down (`entryKeys.ts`).
+        // only Escape and a modified Enter put the pen down.
         // A refused newline is the same refusal any other keystroke gets: the
         // day is full at the smallest size it has.
-        if (entryEditorAction(e) !== "close") return;
+        if (editorKeyAction(e) !== "close") return;
         e.preventDefault();
         // The closing key must not reach the cell behind the editor: closing
         // re-renders before this event finishes bubbling, so the cell's own

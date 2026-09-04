@@ -32,12 +32,17 @@ import { memo, useMemo, type CSSProperties } from "react";
 
 import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { toDayKey } from "@niclaslindstedt/oss-framework/calendar";
+import {
+  DECK_END,
+  DECK_HOME,
+  DECK_SCROLLER,
+} from "@niclaslindstedt/oss-framework/components";
+import { scaleBand } from "@niclaslindstedt/oss-framework/fit";
 import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
 import {
   LIST_ROW_FONT,
-  scaleEntryFont,
   type EntryFontOptions,
   type EntryTextSize,
 } from "./entryFont.ts";
@@ -66,7 +71,6 @@ import {
 } from "./stripRow.tsx";
 import { useRoom } from "./useRoom.ts";
 import { SCOPE_CLASS } from "./viewStyle.ts";
-import { DECK_END, DECK_HOME, DECK_SCROLLER } from "./SwipeDeck.tsx";
 import type { ListRowMode } from "./useAppSettings.ts";
 import { celebrationsOn, type PeopleIndex } from "./people/celebrations.ts";
 import type { CalendarDoc } from "./types.ts";
@@ -247,9 +251,9 @@ export const DayListView = memo(function DayListView({
   // The note's band, on the screen this is actually being drawn on. The rows
   // are the same rows a phone prints, set larger where the screen has the room
   // for it (`roomScale.ts`); the band is a px number rather than a CSS length
-  // because `entryFit.ts` measures the note against it.
+  // because `fit` measures the note against it.
   const room = useRoom("strip");
-  const entryFont = useMemo(() => scaleEntryFont(LIST_ROW_FONT, room), [room]);
+  const entryFont = useMemo(() => scaleBand(LIST_ROW_FONT, room), [room]);
 
   // Where this month opens. The deck reads the mark off the DOM when it puts
   // the pane back, so this is a flag on one row — or, for the bottom, on the

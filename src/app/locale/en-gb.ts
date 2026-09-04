@@ -8,12 +8,12 @@
 // fields, and register the export in `./index.ts`.
 
 import {
-  addToDate,
+  addToMonthDay,
   easterSunday,
   lastWeekdayOfMonth,
   nthWeekdayOfMonth,
-  weekdayOf,
-} from "./computus.ts";
+  weekdayOfMonthDay,
+} from "@niclaslindstedt/oss-framework/calendar";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
 import type { Holiday, LocalePack } from "./types.ts";
@@ -28,10 +28,10 @@ function holidays(year: number): readonly Holiday[] {
   const list: Holiday[] = [];
 
   const newYear = { month: 1, day: 1 };
-  const nyWeekday = weekdayOf(year, 1, 1);
+  const nyWeekday = weekdayOfMonthDay(year, 1, 1);
   if (nyWeekday === 6 || nyWeekday === 0) {
     list.push({
-      ...addToDate(year, 1, 1, nyWeekday === 6 ? 2 : 1),
+      ...addToMonthDay(year, 1, 1, nyWeekday === 6 ? 2 : 1),
       name: "New Year's Day (substitute)",
       red: false,
       off: true,
@@ -42,13 +42,13 @@ function holidays(year: number): readonly Holiday[] {
 
   list.push(
     {
-      ...addToDate(year, easter.month, easter.day, -2),
+      ...addToMonthDay(year, easter.month, easter.day, -2),
       name: "Good Friday",
       red: false,
       off: true,
     },
     {
-      ...addToDate(year, easter.month, easter.day, 1),
+      ...addToMonthDay(year, easter.month, easter.day, 1),
       name: "Easter Monday",
       red: false,
       off: true,
@@ -75,7 +75,7 @@ function holidays(year: number): readonly Holiday[] {
 
   // Christmas Day + Boxing Day, with weekend substitutes: whichever of the
   // two lands on a weekend rolls onto the next free weekday(s).
-  const xmasWeekday = weekdayOf(year, 12, 25);
+  const xmasWeekday = weekdayOfMonthDay(year, 12, 25);
   if (xmasWeekday === 5) {
     // Fri 25 + Sat 26 → Boxing Day substitute Monday 28.
     list.push(

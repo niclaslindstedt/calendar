@@ -14,7 +14,11 @@
 // opposite end of the same scale: the biggest day on the Dutch calendar and
 // not a feestdag at all, so it is named and neither.
 
-import { addToDate, easterSunday, weekdayOf } from "./computus.ts";
+import {
+  addToMonthDay,
+  easterSunday,
+  weekdayOfMonthDay,
+} from "@niclaslindstedt/oss-framework/calendar";
 import { eveHolidays, type Eve } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
@@ -23,7 +27,7 @@ import type { Holiday, LocalePack } from "./types.ts";
 /** Koningsdag is 27 April, moved back to the 26th when the 27th is a Sunday —
  *  the King's birthday is not celebrated on a Sunday. */
 function koningsdag(year: number): { month: number; day: number } {
-  return weekdayOf(year, 4, 27) === 0
+  return weekdayOfMonthDay(year, 4, 27) === 0
     ? { month: 4, day: 26 }
     : { month: 4, day: 27 };
 }
@@ -51,7 +55,7 @@ const EVES: readonly Eve[] = [
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string, off = true): Holiday => ({
-    ...addToDate(year, easter.month, easter.day, offset),
+    ...addToMonthDay(year, easter.month, easter.day, offset),
     name,
     red: true,
     off,
