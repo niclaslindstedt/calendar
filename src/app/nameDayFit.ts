@@ -12,7 +12,7 @@
 //
 // So the table stays whole and the *view* decides how much of it it can set.
 // This is the same division the entry text already makes — `entryFont.ts`
-// guesses, `entryFit.ts` measures the box the view actually left — and it
+// guesses, `fit` measures the box the view actually left — and it
 // has the same escape hatch: what a bounded surface had to cut, `DayZoom.tsx`
 // prints in full, because a day held up close is the one surface with no box
 // to measure against.

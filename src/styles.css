@@ -421,7 +421,7 @@ body {
    straight edge at each end all the way down the strip.
 
    `align-items: stretch` (the default) is load-bearing rather than incidental:
-   the note is *measured* against its box (`entryFit.ts` reads the slot's
+   the note is *measured* against its box (the framework's `fit` module reads the slot's
    height off it), so a note that shrink-wrapped its own text would report the
    height the text is already using and never shrink. */
 .cal-strip-body-column {
@@ -446,7 +446,7 @@ body {
 /* The writing surface. Flowing, a width rather than a column: it is the full
    row, and what the margins take out of it they take a line at a time.
 
-   `height: 100%` is what the note is *measured* against — `entryFit.ts` reads
+   `height: 100%` is what the note is *measured* against — `textSlotHeight` reads
    the slot's height off this box to decide how far to shrink the text and
    where to end it — so it has to be the room the body has rather than the room
    the text is using. Flowing, it must not gain an `overflow` or a `display`
@@ -707,7 +707,7 @@ body {
     align-items: center;
   }
   /* The body is the row's full height even though the row centres what it
-     holds: the note is *measured* against this box (`entryFit.ts` reads the
+     holds: the note is *measured* against this box (`textSlotHeight` reads the
      slot's height off it), and a box that shrink-wrapped its own text would
      report the height the text is already using and never shrink it. Centring
      is for the band beside it. */
@@ -831,7 +831,7 @@ body {
 
 /* A day cell's entry text: preserve the user's line breaks, and break a word
    only when it cannot fit a line of its own — the text is measured down to a
-   size that fits (`entryFit.ts`), so a word that still doesn't fit the width
+   size that fits (the framework's `fit` module), so a word that still doesn't fit the width
    is genuinely too long, while everything else moves to the next line whole
    rather than being split as "Semeste" / "r".
 
@@ -853,7 +853,7 @@ body {
    nothing fits it at all.
 
    The word that fits no line at all is the exception, and it is measured
-   rather than guessed (`entryOverflowsWidth`): a note holding one goes back
+   rather than guessed (`textOverflowsWidth`): a note holding one goes back
    to breaking words for as long as it holds it, which is what keeps a long
    word from hanging out of the cell. */
 .cal-entry-flow {
@@ -865,14 +865,14 @@ body {
 
 /* A note that has run out of room in a *cell*: clamped to the lines the cell
    has left over after the day number and the captions, ending in an ellipsis
-   rather than sliding under them. The line count is measured (`entryFit.ts`)
+   rather than sliding under them. The line count is measured (the framework's `fit` module)
    and set inline — only the box it needs lives here.
 
    Only a cell. `-webkit-box` line boxes ignore floats (the month cell's
    caption band says the same thing from the other side), so a strip row's
    note — whose whole layout is lines making room for the row's margins —
    cannot be clamped this way. It ends its last line in an ellipsis of its
-   own instead: `clipEntryText` measures how much of the text fits and prints
+   own instead: `clipTextToBox` measures how much of the text fits and prints
    that much. */
 .cal-entry-clamp {
   display: -webkit-box;

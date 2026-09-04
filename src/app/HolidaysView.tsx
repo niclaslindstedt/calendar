@@ -14,14 +14,15 @@ import type { DayKey } from "@niclaslindstedt/oss-framework/calendar";
 import { parseDayKey } from "@niclaslindstedt/oss-framework/calendar";
 import {
   ArrowLeftIcon,
+  DECK_SCROLLER,
   SegmentedControl,
+  SwipeDeck,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
 import { monthName, weekdayName, type LocalePack } from "./locale/index.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
-import { DECK_SCROLLER, SwipeDeck } from "./SwipeDeck.tsx";
 import {
   holidaysInYear,
   planVacation,

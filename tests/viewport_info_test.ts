@@ -1,89 +1,27 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
+// The framework's `pwa/viewport` owns the inset probe, the CSS-length resolver
+// and the display-mode naming, and tests them there. What is left to this app
+// — and tested here — is the pair of chrome lengths only the calendar has
+// (`--cal-bottom-gutter` and `.cal-topbar`'s lead) and the size line the
+// Developer tab prints.
 import { describe, expect, it } from "vitest";
 
-import {
-  displayModeOf,
-  formatInsets,
-  formatSize,
-  pxOf,
-  readViewportInfo,
-} from "../src/app/viewportInfo.ts";
-
-describe("pxOf", () => {
-  it("reads a computed pixel length", () => {
-    expect(pxOf("34px")).toBe(34);
-    expect(pxOf("0px")).toBe(0);
-    expect(pxOf("59.5px")).toBe(59.5);
-  });
-
-  it("is zero when the engine resolved nothing", () => {
-    expect(pxOf("")).toBe(0);
-    expect(pxOf("auto")).toBe(0);
-  });
-});
-
-describe("formatInsets", () => {
-  it("prints top / right / bottom / left, the CSS order", () => {
-    expect(formatInsets({ top: 59, right: 0, bottom: 34, left: 0 })).toBe(
-      "59 / 0 / 34 / 0",
-    );
-  });
-
-  it("rounds — the fractional part of an inset is never the story", () => {
-    expect(formatInsets({ top: 47.33, right: 0, bottom: 20.5, left: 0 })).toBe(
-      "47 / 0 / 21 / 0",
-    );
-  });
-
-  it("shows the all-zero case a letterboxed viewport reports", () => {
-    expect(formatInsets({ top: 0, right: 0, bottom: 0, left: 0 })).toBe(
-      "0 / 0 / 0 / 0",
-    );
-  });
-});
+import { formatSize, readViewportInfo } from "../src/app/viewportInfo.ts";
 
 describe("formatSize", () => {
-  it("prints the portrait phone budget", () => {
+  it("prints the viewport as width × height", () => {
     expect(formatSize(393, 852)).toBe("393 × 852");
   });
 
-  it("rounds a fractional viewport", () => {
+  it("rounds — a fractional viewport is never the story", () => {
     expect(formatSize(392.5, 851.2)).toBe("393 × 851");
   });
 });
 
-describe("displayModeOf", () => {
-  it("names the installed app", () => {
-    expect(displayModeOf((q) => q === "(display-mode: standalone)")).toBe(
-      "standalone",
-    );
-  });
-
-  it("names a browser tab", () => {
-    expect(displayModeOf((q) => q === "(display-mode: browser)")).toBe(
-      "browser",
-    );
-  });
-
-  it("prefers the most app-like mode a device claims", () => {
-    // iOS matches `standalone` and `minimal-ui` at once; the layout follows
-    // the first, so that is what the readout has to say.
-    expect(
-      displayModeOf((q) =>
-        ["(display-mode: standalone)", "(display-mode: minimal-ui)"].includes(
-          q,
-        ),
-      ),
-    ).toBe("standalone");
-  });
-
-  it("says so rather than guessing when nothing matches", () => {
-    expect(displayModeOf(() => false)).toBe("unknown");
-  });
-});
-
 describe("readViewportInfo", () => {
-  it("is a no-op without a document — the tests run in node", () => {
+  it("is null where there is no document to measure", () => {
+    // The tests run in node: nothing to probe, and nothing that should throw
+    // trying. The Developer tab renders nothing on a null.
     expect(readViewportInfo()).toBeNull();
   });
 });

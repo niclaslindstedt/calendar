@@ -5,7 +5,7 @@
 //
 // The problem it solves is the one every printed calendar has: a month cell is
 // 47 px wide on a phone, so a note longer than a few words is set at 8 px and
-// then clamped to an ellipsis (`entryFit.ts`). The cell is right to do that —
+// then clamped to an ellipsis (the framework's `fit` module). The cell is right to do that —
 // it is a square on a grid of thirty — but the text is still yours, and there
 // was no way to read the rest of it, let alone write it comfortably. So the
 // zoom is the same day printed as a *page*: the date and the almanac's

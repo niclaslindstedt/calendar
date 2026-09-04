@@ -198,7 +198,7 @@ export function applyRoomVars(): void {
 /** The room factor a scope is being printed at right now, for the one thing
  *  that cannot read it off a CSS variable: the entry bands in
  *  `entryFont.ts`, which are px numbers JS measures a note against
- *  (`entryFit.ts`) rather than lengths the stylesheet resolves. */
+ *  (the framework's `fit` module) rather than lengths the stylesheet resolves. */
 export function currentRoom(scope: StyleScope): number {
   if (typeof window === "undefined") return 1;
   return scopeRoom(scope, window.innerWidth, window.innerHeight);

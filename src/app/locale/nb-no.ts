@@ -12,7 +12,10 @@
 // with no entry — 1 January, 29 February and 25 December — are the three the
 // Norwegian calendar itself leaves nameless.
 
-import { addToDate, easterSunday } from "./computus.ts";
+import {
+  addToMonthDay,
+  easterSunday,
+} from "@niclaslindstedt/oss-framework/calendar";
 import { eveHolidays, type Eve } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
@@ -407,7 +410,7 @@ const EVES: readonly Eve[] = [
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string): Holiday => ({
-    ...addToDate(year, easter.month, easter.day, offset),
+    ...addToMonthDay(year, easter.month, easter.day, offset),
     name,
     red: true,
     off: true,

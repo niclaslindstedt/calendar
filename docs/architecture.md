@@ -34,13 +34,10 @@ src/
     ├── useCalendars.ts   the calendar registry + active pointer — separate
     │                     calendars, one document each (features/calendars.md)
     ├── useAppSettings.ts    persisted app settings (country, view, dev mode…)
-    ├── entryFont.ts      entry sizing: the shrink-to-fit curve and the three
-    │                     fixed steps (pure, tested)
-    ├── entryFit.ts       the same sizing measured against the real box: shrink
-    │                     to fit, end an overlong note in an ellipsis, refuse a
-    │                     full day
-    ├── entryDom.ts       the note as the browser holds it while you write in
-    │                     it — the editable box's text and caret
+    ├── entryFont.ts      the four measured bands a note is sized in, one per
+    │                     surface, and this app's word for the shrink-to-fit
+    │                     mode; the curve and the measured fit are the
+    │                     framework's `fit` module
     ├── pastDays.ts       which days are past and what the "crossed off" mark
     │                     is made of (pure, tested); PastMark.tsx draws it
     ├── listHome.ts       where the day list opens a month — today's week on
@@ -53,10 +50,10 @@ src/
     │                     people write one, `12/8` meaning both (pure, tested);
     │                     WeekSearch.tsx is the screen a tapped week number
     │                     opens
-    ├── SwipeDeck.tsx     the pager both directions are built from: up and down
-    │                     turns the period, left and right turns the view, and
-    │                     the calendar stacks one of each
-    ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx
+    ├── MonthGridView.tsx / WeekPlannerView.tsx / DayListView.tsx — the three
+    │                     views, each a pane of the framework's `SwipeDeck`:
+    │                     up and down turns the period, left and right turns
+    │                     the view, and the calendar stacks one of each
     ├── monthCell.tsx     the month cell's arrangement: the corners its pieces
     │                     are parked in, and the note flowing around the day
     │                     number where the cell is wide enough for it
@@ -70,7 +67,8 @@ src/
     │                     read and written in full
     ├── TopBar.tsx        the only chrome — no sidebar
     ├── CalendarMenu.tsx  the top-left switcher (button + dropdown)
-    ├── TopBarButton.tsx  the shared 36 px icon button
+    ├── TopBarButton.tsx  the shared 36 px icon button, in the masthead's
+    │                     accent rather than the framework IconButton's neutral
     ├── settings/         the tabbed settings dialog: SettingsModal.tsx (shell
     │                     + draft/Save), tabs.tsx (header + rail), one file
     │                     per tab section

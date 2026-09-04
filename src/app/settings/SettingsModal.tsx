@@ -32,11 +32,11 @@ import {
   ScrollTextIcon,
   SlidersIcon,
 } from "@niclaslindstedt/oss-framework/components";
+import { blurActiveField } from "@niclaslindstedt/oss-framework/hooks";
 import type { ThemeAppearance } from "@niclaslindstedt/oss-framework/theme";
 import type { PwaUpdateCheckResult } from "@niclaslindstedt/oss-framework/pwa";
 
 import { useT, type TFunction } from "../i18n/index.ts";
-import { blurActiveField } from "../shellScroll.ts";
 import type { SaveState } from "../useCalendarStore.ts";
 import type { LocalePack } from "../locale/index.ts";
 import type { PeopleStore } from "../people/usePeople.ts";

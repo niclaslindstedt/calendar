@@ -19,7 +19,11 @@
 // means picking a diocese's list and saying which; until then this pack is
 // like `en-gb.ts` and carries none.
 
-import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import {
+  addToMonthDay,
+  easterSunday,
+  weekdayOnOrAfter,
+} from "@niclaslindstedt/oss-framework/calendar";
 import { eveHolidays, type Eve } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
@@ -56,7 +60,7 @@ const EVES: readonly Eve[] = [
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string, red = true): Holiday => ({
-    ...addToDate(year, easter.month, easter.day, offset),
+    ...addToMonthDay(year, easter.month, easter.day, offset),
     name,
     red,
     off: red,

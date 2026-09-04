@@ -13,12 +13,12 @@ import {
   buildMonthGrid,
   parseDayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
+import { scaleBand } from "@niclaslindstedt/oss-framework/fit";
 import { useLongPress } from "@niclaslindstedt/oss-framework/hooks";
 
 import { DayEntry } from "./DayEntry.tsx";
 import {
   MONTH_CELL_FONT,
-  scaleEntryFont,
   type EntryFontOptions,
   type EntryTextSize,
 } from "./entryFont.ts";
@@ -134,10 +134,7 @@ export const MonthGridView = memo(function MonthGridView({
   // window drag hands the memoized cells a new object a handful of times
   // rather than once per pixel.
   const room = useRoom("month");
-  const entryFont = useMemo(
-    () => scaleEntryFont(MONTH_CELL_FONT, room),
-    [room],
-  );
+  const entryFont = useMemo(() => scaleBand(MONTH_CELL_FONT, room), [room]);
 
   const weeks = useMemo(
     () =>

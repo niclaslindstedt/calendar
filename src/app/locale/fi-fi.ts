@@ -19,7 +19,11 @@
 // three days with no entry — 1 January, 29 February and 25 December — are
 // the three the Finnish almanac itself leaves nameless.
 
-import { addToDate, easterSunday, weekdayOnOrAfter } from "./computus.ts";
+import {
+  addToMonthDay,
+  easterSunday,
+  weekdayOnOrAfter,
+} from "@niclaslindstedt/oss-framework/calendar";
 import { eveHolidays, type Eve } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
@@ -526,7 +530,7 @@ function pyhainpaiva(year: number): { month: number; day: number } {
 function dayBefore(of: (year: number) => { month: number; day: number }) {
   return (year: number) => {
     const day = of(year);
-    return addToDate(year, day.month, day.day, -1);
+    return addToMonthDay(year, day.month, day.day, -1);
   };
 }
 
@@ -567,7 +571,7 @@ const EVES: readonly Eve[] = [
 function holidays(year: number): readonly Holiday[] {
   const easter = easterSunday(year);
   const chain = (offset: number, name: string): Holiday => ({
-    ...addToDate(year, easter.month, easter.day, offset),
+    ...addToMonthDay(year, easter.month, easter.day, offset),
     name,
     red: true,
     off: true,

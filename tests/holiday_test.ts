@@ -1,34 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 import { describe, expect, it } from "vitest";
 
-import {
-  easterSunday,
-  lastWeekdayOfMonth,
-  nthWeekdayOfMonth,
-  weekdayOnOrAfter,
-} from "../src/app/locale/computus.ts";
 import { getLocale, holidayFor, isRedDay } from "../src/app/locale/index.ts";
 
 const sv = getLocale("sv-SE");
 const en = getLocale("en-GB");
 
-describe("computus", () => {
-  it("computes Easter Sunday across years", () => {
-    expect(easterSunday(2024)).toEqual({ month: 3, day: 31 });
-    expect(easterSunday(2025)).toEqual({ month: 4, day: 20 });
-    expect(easterSunday(2026)).toEqual({ month: 4, day: 5 });
-    expect(easterSunday(2027)).toEqual({ month: 3, day: 28 });
-    expect(easterSunday(2038)).toEqual({ month: 4, day: 25 }); // latest possible
-  });
-
-  it("weekday rules", () => {
-    // First Monday of May 2026 is the 4th; last Monday of August the 31st.
-    expect(nthWeekdayOfMonth(2026, 5, 1, 1)).toEqual({ month: 5, day: 4 });
-    expect(lastWeekdayOfMonth(2026, 8, 1)).toEqual({ month: 8, day: 31 });
-    // Saturday on or after 20 June 2026 is the 20th itself.
-    expect(weekdayOnOrAfter(2026, 6, 20, 6)).toEqual({ month: 6, day: 20 });
-  });
-});
+// The observance arithmetic itself (Easter, "the first Monday of May") is the
+// framework's and is tested there; what these suites pin is that each pack
+// *applies* it to the right days.
 
 describe("Swedish red days (rule engine, not year tables)", () => {
   it("computes the fixed red days", () => {
