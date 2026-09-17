@@ -102,10 +102,18 @@ October's grid lands on October's weeks, not on this one's. The ends are ends:
 there is nothing to the left of the month grid or the right of the day list,
 and a drag that way gives a little and springs back.
 
-The month heading has no arrows: the two directions are spoken for, and a pair
-of chevrons pointing sideways over a calendar that turns vertically would point
-at nothing. The holidays screen is the exception — it is a screen of its own,
-its years page left and right, and it keeps its **‹ ›**.
+**On a desktop there is no swipe**, so the month heading grows a pair of
+arrows there instead: **⌃** for the period before and **⌄** for the one after,
+flanking the title in every view. They point up and down because that is the
+way the calendar actually turns — left and right is the view switch, and a
+sideways pair over a month would name the wrong axis. A press turns the page
+exactly as a swipe does, animation and all. They appear only where the reader
+has a mouse rather than a finger; on a phone or a tablet the gesture is the
+whole answer and the heading stays a masthead. In the day list they ride the
+pinned heading, so a month is still one press away ninety rows down.
+
+The holidays screen is its own case — its years page left and right, so it
+keeps its **‹ ›**, on every device.
 
 To jump back to the current day, **press the view switcher** — any of its three
 buttons. Pressing the view you are already in (Month while in Month, Week while

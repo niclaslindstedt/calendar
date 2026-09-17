@@ -188,6 +188,12 @@ type Props = {
   /** A long press holds the day up close (`DayZoom`) — a fixed row clips its
    *  note exactly as a month cell does. */
   onZoomDay: (day: DayKey) => void;
+  /** Paging the period — the month here, handed over only where there is no
+   *  swipe to turn it with (`App.tsx` withholds the pair on a touch screen).
+   *  They ride the pinned heading, so they stay reachable down the whole
+   *  ninety-row scroll. */
+  onPrevious?: () => void;
+  onNext?: () => void;
 };
 
 function daysInMonth(year: number, month: number): number {
@@ -222,6 +228,8 @@ export const DayListView = memo(function DayListView({
   onOpenNames,
   onOpenWeeks,
   onZoomDay,
+  onPrevious,
+  onNext,
 }: Props) {
   const image = monthImageUrl(year, month, "small");
   const count = daysInMonth(year, month);
@@ -331,6 +339,12 @@ export const DayListView = memo(function DayListView({
         className={`bg-page-bg sticky top-0 z-10 ${
           headerInk ? "" : "border-b border-line"
         }`}
+        // Up and down, because that is the way a month turns here. The pair
+        // rides the pinned heading, which is the point: a reader ninety rows
+        // down does not have to scroll back to the masthead to turn the page.
+        axis="y"
+        onPrevious={onPrevious}
+        onNext={onNext}
       />
 
       <div>

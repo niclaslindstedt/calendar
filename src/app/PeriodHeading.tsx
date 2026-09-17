@@ -7,21 +7,33 @@
 // because that is what a printed month title looks like, and the size came
 // down to what the longest month name can hold (see {@link HEADING_TITLE}).
 //
-// The three calendar views hand it no navigation at all, so it draws no
-// chevrons for them: their periods turn up and down (`SwipeDeck`), and a
-// chevron is a direction — the two that would be right there point at the top
-// and the bottom of the screen, which reads as "scroll". A caller that really
-// does page sideways passes the pair and gets ‹ › back: the holidays screen's
-// years do. The row keeps its height either way ({@link HEADING_HEIGHT}),
-// because the day list pins this over its scroll and measures the clearance
-// from it.
+// A chevron is a direction, so the pair a caller gets points along the axis
+// that caller's periods actually travel on (`axis`). The holidays screen's
+// years page sideways and get ‹ ›; the three calendar views turn up and down
+// (`SwipeDeck`) and get ⌃ ⌄ — left and right in those views is the *view*
+// switch, so a ‹ › pair there would teach the reader the wrong axis and
+// disagree with the gesture on a laptop that has both.
+//
+// The pair is drawn only where there is no gesture to draw it for: the three
+// views hand it over on a fine pointer and withhold it on a touch screen
+// (`App.tsx`), where the swipe is the whole answer and two buttons over every
+// month would be furniture nobody presses. The row keeps its height either
+// way ({@link HEADING_HEIGHT}), because the day list pins this over its
+// scroll and measures the clearance from it.
 
 import {
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ChevronUpIcon,
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT } from "./i18n/index.ts";
+
+/** The axis a caller's periods travel on — the same two letters `SwipeDeck`
+ *  takes, because it is the same axis: the arrows page the deck the heading
+ *  sits in. */
+export type HeadingAxis = "x" | "y";
 
 type Props = {
   /** The period's name — the month, or "Week 34". */
@@ -46,10 +58,13 @@ type Props = {
    *  the day list unconditionally, because its heading carries the list's own
    *  hairline where it is not banded (see `DayListView`). */
   flush?: boolean;
-  /** Paging, for a caller whose periods really do turn left and right. Hand
-   *  over both and the heading flanks its title with the two chevrons; leave
-   *  them out — as all three calendar views do — and it is a masthead and
-   *  nothing else. */
+  /** Which way the period travels, and so which pair of chevrons the arrows
+   *  are drawn with: `x` is ‹ ›, `y` is ⌃ ⌄. Only read when the pair below is
+   *  handed over. */
+  axis?: HeadingAxis;
+  /** Paging. Hand over both and the heading flanks its title with the two
+   *  chevrons; leave them out — as every view does on a touch screen, where
+   *  the swipe is the answer — and it is a masthead and nothing else. */
   onPrevious?: () => void;
   onNext?: () => void;
 };
@@ -96,10 +111,12 @@ const ARROW_BASE =
  *  `tests/layout_test.ts` reads those classes back out of this file so the
  *  three can never drift.
  *
- *  …and set back on the row as its `min-height`, because on the page where
- *  the reader turns the calendar vertically there are no arrows and the band
- *  is then only as tall as its title: 2rem of line box inside the same 2rem of
- *  padding, which is 4rem rather than this. The row used to guard that with a
+ *  …and set back on the row as its `min-height`, because on a touch screen —
+ *  where the calendar is turned with a swipe and the arrows are withheld —
+ *  the band is only as tall as its title: 2rem of line box inside the same
+ *  2rem of padding, which is 4rem rather than this. The day list scrolls by
+ *  one number whether or not the reader has a mouse, so that number has to be
+ *  the taller of the two. The row used to guard that with a
  *  minimum of the arrow's own height — and it never once bound, because every
  *  box in this app is `border-box`, so a 2.25rem minimum was compared against
  *  the whole 4rem band rather than against the 2rem of content the arrows
@@ -160,6 +177,7 @@ export function PeriodHeading({
   accent = null,
   bleed = false,
   flush = false,
+  axis = "x",
   onPrevious,
   onNext,
 }: Props) {
@@ -180,9 +198,13 @@ export function PeriodHeading({
   const banded = accent !== null;
   const bled = banded && bleed;
   const arrow = `${ARROW_BASE} ${banded ? ARROW_ON_BAND : ARROW_INK}`;
+  // Previous keeps the reader's usual place — the leading end of the row —
+  // whichever way it points; only the glyph changes with the axis.
+  const PreviousIcon = axis === "y" ? ChevronUpIcon : ChevronLeftIcon;
+  const NextIcon = axis === "y" ? ChevronDownIcon : ChevronRightIcon;
   return (
     <div
-      className={`flex shrink-0 items-center gap-1 py-4 ${
+      className={`flex shrink-0 items-center justify-center gap-1 py-4 ${
         banded ? "text-white" : ""
       } ${bled ? "-mx-3 px-5 sm:mx-0 sm:px-2" : banded ? "px-2" : ""} ${className}`}
       // The background is inline so it wins over whatever the caller's
@@ -205,11 +227,19 @@ export function PeriodHeading({
           onClick={onPrevious}
           className={arrow}
         >
-          <ChevronLeftIcon className="h-5 w-5" />
+          <PreviousIcon className="h-5 w-5" />
         </button>
       )}
 
-      <h2 className={`min-w-0 flex-1 text-center ${HEADING_TITLE}`}>
+      {/* `max-w-3xl` is the strip views' own column, and it is the arrows it
+          is here for rather than the title: the month grid's band spans the
+          whole window, so a title that took all of it pushed the two chevrons
+          into opposite corners of a 1728 px desk screen — a masthead with its
+          controls a thousand pixels apart. Capped, the pair flanks the title
+          at the width the other two views set it in, so the arrows are in the
+          same place whichever view the reader turns. The row centres what is
+          left, which is what a title alone did anyway. */}
+      <h2 className={`min-w-0 max-w-3xl flex-1 text-center ${HEADING_TITLE}`}>
         {title}
         {meta && (
           <span
@@ -227,7 +257,7 @@ export function PeriodHeading({
           onClick={onNext}
           className={arrow}
         >
-          <ChevronRightIcon className="h-5 w-5" />
+          <NextIcon className="h-5 w-5" />
         </button>
       )}
     </div>
