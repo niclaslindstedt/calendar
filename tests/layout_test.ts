@@ -250,9 +250,9 @@ describe("the pinned heading's height", () => {
   });
 
   it("is what the row is held to when the arrows are not drawn", () => {
-    // …and on the page where the reader turns the calendar vertically they
-    // are not drawn at all, which leaves the band as tall as its title: 2rem
-    // of line box in the same 2rem of padding. The row has to carry the
+    // …and on a touch screen they are not drawn at all — the swipe is how the
+    // calendar is turned there — which leaves the band as tall as its title:
+    // 2rem of line box in the same 2rem of padding. The row has to carry the
     // arrows' height itself, as a minimum written in the same terms as the
     // constant. A Tailwind `min-h-*` cannot do it: that is a *border-box*
     // minimum, so the arrows' own 2.25rem was compared against the whole 4rem
@@ -281,6 +281,57 @@ describe("the pinned heading's height", () => {
     // lands a gap short of where an unscrolled one sits.
     expect(HEADING_CLEARANCE).toBe(HEADING_HEIGHT);
     expect(HEADING_CLEARANCE).not.toContain(HEADING_GAP);
+  });
+
+  it("points its arrows along the axis the caller's periods travel", () => {
+    // A chevron is a direction, and the two axes here are spoken for: up and
+    // down turns the period, left and right switches the view. So the three
+    // calendar views ask for the vertical pair — a ‹ › pair over a month
+    // would name the *view* switch and disagree with the gesture on a laptop
+    // that has both. The holidays screen's years really do page sideways and
+    // take the default.
+    expect(source).toContain("ChevronUpIcon");
+    expect(source).toContain("ChevronDownIcon");
+    for (const view of [
+      "MonthGridView.tsx",
+      "WeekPlannerView.tsx",
+      "DayListView.tsx",
+    ]) {
+      const file = readFileSync(
+        new URL(`../src/app/${view}`, import.meta.url),
+        "utf8",
+      );
+      expect(file, view).toContain('axis="y"');
+    }
+    const holidays = readFileSync(
+      new URL("../src/app/HolidaysView.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(holidays).not.toContain("axis=");
+  });
+
+  it("only hands the calendar views their arrows on a fine pointer", () => {
+    // The pair stands in for a gesture the reader has not got. A touch screen
+    // has the gesture, so two buttons over every month there would be
+    // furniture nobody presses — and the parked periods either side of the
+    // one on screen would put three identically-labelled pairs in the tab
+    // order for the one pair anybody can see.
+    const app = readFileSync(
+      new URL("../src/App.tsx", import.meta.url),
+      "utf8",
+    );
+    expect(app).toContain("useDesktopPointer");
+    expect(app).toContain("interactive && rel === 0 && deskPointer");
+  });
+
+  it("caps the title so the arrows flank it rather than the window", () => {
+    // The month grid's band spans the whole window. Left to fill it, the
+    // title pushed the two chevrons into opposite corners of a desk screen —
+    // a masthead with its controls a thousand pixels apart. Capped at the
+    // strip views' own column, the pair lands in the same place whichever
+    // view the reader is turning.
+    expect(source).toContain("max-w-3xl");
+    expect(source).toContain("justify-center");
   });
 
   it("is flush in the day list, so its first row seats on the band", () => {

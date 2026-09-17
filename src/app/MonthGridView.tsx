@@ -97,6 +97,12 @@ type Props = {
   /** A long press holds the day up close (`DayZoom`) — the way to read, and
    *  write, a note the 47 px column had to shrink. */
   onZoomDay: (day: DayKey) => void;
+  /** Paging the period — the month here, handed over only where there is no
+   *  swipe to turn it with (`App.tsx` withholds the pair on a touch screen).
+   *  The heading draws the arrows when it has both; leave either out and it is
+   *  a masthead and nothing else. */
+  onPrevious?: () => void;
+  onNext?: () => void;
 };
 
 /** Memoized: the deck keeps three months mounted, so an unrelated state change
@@ -125,6 +131,8 @@ export const MonthGridView = memo(function MonthGridView({
   onOpenNames,
   onOpenWeeks,
   onZoomDay,
+  onPrevious,
+  onNext,
 }: Props) {
   const t = useT();
   // Memoized so the cells below — which are memoized in turn — are handed the
@@ -180,6 +188,10 @@ export const MonthGridView = memo(function MonthGridView({
           meta={String(year)}
           accent={headerInk}
           bleed
+          // Up and down, because that is the way a month turns here.
+          axis="y"
+          onPrevious={onPrevious}
+          onNext={onNext}
         />
 
         {/* Weekday headers. The rule under them is the row's, not each

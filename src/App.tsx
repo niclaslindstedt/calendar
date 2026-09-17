@@ -14,8 +14,14 @@ import {
   toDayKey,
   type DayKey,
 } from "@niclaslindstedt/oss-framework/calendar";
-import { SwipeDeck } from "@niclaslindstedt/oss-framework/components";
-import { useLocalStorageState } from "@niclaslindstedt/oss-framework/hooks";
+import {
+  SwipeDeck,
+  type DeckNav,
+} from "@niclaslindstedt/oss-framework/components";
+import {
+  useDesktopPointer,
+  useLocalStorageState,
+} from "@niclaslindstedt/oss-framework/hooks";
 import {
   NamespacesModal as CalendarsModal,
   applyFaviconHref,
@@ -484,6 +490,12 @@ export function App() {
   const weekRows = weekRowsOf(live);
   const weekFormat = weekFormatFor(live);
   const weekDateSize = weekDateSizeFor(live);
+  // Whether the reader has a mouse rather than a finger. The two gestures
+  // below are the only way to turn the calendar, and a desktop browser has
+  // neither — so on a fine pointer the period's heading grows the pair of
+  // chevrons a swipe stands in for everywhere else (`renderPane`). The view
+  // axis needs no such pair: the top bar's switcher is already a press.
+  const deskPointer = useDesktopPointer();
   // The calendar is a deck inside a deck (`SwipeDeck`): the period turns up
   // and down and the view turns left and right. Both are dropped while the
   // holidays screen is open — it brings a deck of its own, for its years.
@@ -536,11 +548,17 @@ export function App() {
    *  `interactive` is false for every pane the deck is holding off screen —
    *  the periods either side, and the whole of the neighbouring views — so a
    *  tap that lands on a parked pane mid-swipe can never open an editor in a
-   *  month, or a view, you are not looking at. */
+   *  month, or a view, you are not looking at.
+   *
+   *  `nav` is the period deck's own animated stepping, which the view hands to
+   *  its heading as the two arrows: a press turns the page exactly as a swipe
+   *  does, track and all. Only on a fine pointer, and only on the pane you are
+   *  looking at — see `arrows` below. */
   const renderPane = (
     view: ViewMode,
     rel: -1 | 0 | 1,
     interactive: boolean,
+    nav: DeckNav,
   ) => {
     const at = shiftAnchor(view, rel);
     const on = parseDayKey(at) ?? parts;
@@ -550,6 +568,15 @@ export function App() {
     const onOpenNames = interactive ? openNames : NOOP;
     const onOpenWeeks = interactive ? openWeeks : NOOP;
     const onZoomDay = interactive ? openZoom : NOOP;
+    // The heading's two chevrons, or nothing at all. Nothing on a touch
+    // screen, where the swipe is how the calendar is turned and a pair of
+    // buttons over every month would be furniture nobody presses — and
+    // nothing on the two periods parked either side of the one on screen,
+    // which would put three identically-labelled pairs in the tab order for
+    // the one pair the reader can actually see.
+    const arrows = interactive && rel === 0 && deskPointer;
+    const onPrevious = arrows ? nav.previous : undefined;
+    const onNext = arrows ? nav.next : undefined;
     if (view === "list") {
       return (
         <DayListView
@@ -577,6 +604,8 @@ export function App() {
           onOpenNames={onOpenNames}
           onOpenWeeks={onOpenWeeks}
           onZoomDay={onZoomDay}
+          onPrevious={onPrevious}
+          onNext={onNext}
         />
       );
     }
@@ -605,6 +634,8 @@ export function App() {
         onOpenNames={onOpenNames}
         onOpenWeeks={onOpenWeeks}
         onZoomDay={onZoomDay}
+        onPrevious={onPrevious}
+        onNext={onNext}
       />
     ) : (
       <MonthGridView
@@ -629,6 +660,8 @@ export function App() {
         onOpenNames={onOpenNames}
         onOpenWeeks={onOpenWeeks}
         onZoomDay={onZoomDay}
+        onPrevious={onPrevious}
+        onNext={onNext}
       />
     );
   };
@@ -729,11 +762,11 @@ export function App() {
                   scrolls={viewScrolls(pane)}
                   onPrevious={showing ? () => step(-1) : NOOP}
                   onNext={showing ? () => step(1) : NOOP}
-                  renderItem={(at) =>
+                  renderItem={(at, nav) =>
                     showing
-                      ? renderPane(pane, at, true)
+                      ? renderPane(pane, at, true, nav)
                       : at === 0
-                        ? renderPane(pane, 0, false)
+                        ? renderPane(pane, 0, false, nav)
                         : null
                   }
                 />

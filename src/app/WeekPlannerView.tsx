@@ -116,6 +116,12 @@ type Props = {
   onOpenWeeks: (day: DayKey) => void;
   /** A long press holds the day up close (`DayZoom`). */
   onZoomDay: (day: DayKey) => void;
+  /** Paging the period — the week here, handed over only where there is no
+   *  swipe to turn it with (`App.tsx` withholds the pair on a touch screen).
+   *  The heading draws the arrows when it has both; leave either out and it is
+   *  a masthead and nothing else. */
+  onPrevious?: () => void;
+  onNext?: () => void;
 };
 
 /** Memoized for the same reason as the other two views: the deck keeps three
@@ -144,6 +150,8 @@ export const WeekPlannerView = memo(function WeekPlannerView({
   onOpenNames,
   onOpenWeeks,
   onZoomDay,
+  onPrevious,
+  onNext,
 }: Props) {
   // Press and hold to zoom (`DayZoom`). One hook for the seven rows rather
   // than one per row, because the rows here are a `map` in this component
@@ -225,6 +233,10 @@ export const WeekPlannerView = memo(function WeekPlannerView({
       // scroller, so the heading pins itself the way the day list's does —
       // otherwise scrolling to Sunday loses which week you are in.
       className={grows ? "bg-page-bg sticky top-0 z-10" : ""}
+      // Up and down, because that is the way a week turns here.
+      axis="y"
+      onPrevious={onPrevious}
+      onNext={onNext}
     />
   );
 
