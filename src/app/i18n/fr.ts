@@ -216,8 +216,6 @@ export const fr: Catalog = {
     dropbox: "Dropbox",
     dropboxHint:
       "Un dossier par calendrier dans le dossier d'application Dropbox.",
-    gdrive: "Google Drive",
-    gdriveHint: "Un fichier dans un dossier Drive que l'application crée.",
     connect: "Connecter",
     disconnect: "Déconnecter",
     active: "Actif",

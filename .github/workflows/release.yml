@@ -158,9 +158,7 @@ jobs:
         env:
           VITE_BASE: /
           VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY }}
-          VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
           VITE_DROPBOX_APP_FOLDER: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
-          VITE_GDRIVE_APP_FOLDER: ${{ vars.VITE_GDRIVE_APP_FOLDER }}
 
       - name: Commit + tag
         env:

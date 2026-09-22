@@ -128,7 +128,7 @@ WebView (localStorage)
 App.tsx  → widgets.ts → snapshot.ts   — derives a small, windowed snapshot
    │
    ▼  modules/widget-bridge
-iOS: UserDefaults(suiteName: group.se.niclaslindstedt.calendar)
+iOS: UserDefaults(suiteName: group.se.agilator.calendar)
 Android: SharedPreferences("calendar_widget")
    │
    ▼

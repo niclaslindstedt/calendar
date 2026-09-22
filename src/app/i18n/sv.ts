@@ -213,8 +213,6 @@ export const sv: Catalog = {
     folderReconnect: "Återanslut mapp…",
     dropbox: "Dropbox",
     dropboxHint: "En mapp per kalender i din Dropbox-appmapp.",
-    gdrive: "Google Drive",
-    gdriveHint: "En fil i en Drive-mapp som appen skapar.",
     connect: "Anslut",
     disconnect: "Koppla från",
     active: "Aktiv",

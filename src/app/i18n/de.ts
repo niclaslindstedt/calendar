@@ -214,8 +214,6 @@ export const de: Catalog = {
     folderReconnect: "Ordner neu verbinden…",
     dropbox: "Dropbox",
     dropboxHint: "Ein Ordner je Kalender in Ihrem Dropbox-App-Ordner.",
-    gdrive: "Google Drive",
-    gdriveHint: "Eine Datei in einem Drive-Ordner, den die App anlegt.",
     connect: "Verbinden",
     disconnect: "Trennen",
     active: "Aktiv",

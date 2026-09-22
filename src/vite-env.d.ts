@@ -29,14 +29,8 @@ interface ImportMetaEnv {
   // Dropbox app key (PKCE public client). Unset hides the Dropbox storage
   // backend in Settings → Storage. See `src/app/storage/backends.ts`.
   readonly VITE_DROPBOX_APP_KEY?: string;
-  // Google OAuth client id (GIS token client). Unset hides the Google Drive
-  // storage backend. See `src/app/storage/backends.ts`.
-  readonly VITE_GOOGLE_CLIENT_ID?: string;
   // Dropbox app-folder name; informational (the folder is fixed by the
   // Dropbox app config, and the API's root *is* that folder). Shown in
-  // Settings → Storage so the user can find it. Defaults to "nird-calendar".
+  // Settings → Storage so the user can find it. Defaults to "calendar".
   readonly VITE_DROPBOX_APP_FOLDER?: string;
-  // Google Drive folder name the app creates in My Drive. Defaults to
-  // "Calendar".
-  readonly VITE_GDRIVE_APP_FOLDER?: string;
 }

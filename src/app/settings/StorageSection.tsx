@@ -23,8 +23,6 @@ import {
   isDropboxAvailable,
   isDropboxConnected,
   isFolderAvailable,
-  isGdriveAvailable,
-  isGdriveConnected,
 } from "../storage/backends.ts";
 import type { SaveState } from "../useCalendarStore.ts";
 import type { BackupActions, ImportResult } from "../useBackup.ts";
@@ -36,7 +34,6 @@ export type StorageActions = {
   setActive: (id: BackendId) => void;
   connectFolder: () => void;
   connectDropbox: () => void;
-  connectGdrive: () => void;
   disconnect: (id: BackendId) => void;
   folderConnected: boolean;
 };
@@ -161,11 +158,6 @@ export function StorageSection({
               detail: dropboxLocation(calendarSlug),
             },
           )}
-          {backendRow("gdrive", t("storage.gdrive"), t("storage.gdriveHint"), {
-            available: isGdriveAvailable(),
-            connected: isGdriveConnected(),
-            onConnect: storage.connectGdrive,
-          })}
           {devMode &&
             backendRow("demo", t("storage.demo"), t("storage.demoHint"), {
               available: true,

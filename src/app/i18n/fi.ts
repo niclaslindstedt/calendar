@@ -213,8 +213,6 @@ export const fi: Catalog = {
     folderReconnect: "Yhdistä kansio uudelleen…",
     dropbox: "Dropbox",
     dropboxHint: "Yksi kansio kalenteria kohti Dropbox-sovelluskansiossasi.",
-    gdrive: "Google Drive",
-    gdriveHint: "Tiedosto Drive-kansiossa, jonka sovellus luo.",
     connect: "Yhdistä",
     disconnect: "Katkaise yhteys",
     active: "Käytössä",

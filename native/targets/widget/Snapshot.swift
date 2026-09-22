@@ -12,7 +12,7 @@ import Foundation
 import SwiftUI
 
 /// The App Group the app publishes into. See native/modules/widget-bridge.
-let APP_GROUP = "group.se.niclaslindstedt.calendar"
+let APP_GROUP = "group.se.agilator.calendar"
 
 /// The key the snapshot JSON sits under.
 let SNAPSHOT_KEY = "snapshot"

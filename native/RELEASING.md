@@ -49,7 +49,7 @@ For submission, fill in the placeholders in `eas.json` →
 
 ### 4. iOS capabilities
 
-The app declares one App Group, `group.se.niclaslindstedt.calendar`, shared
+The app declares one App Group, `group.se.agilator.calendar`, shared
 with the widget extension. Enable **App Groups** on both App IDs in the Apple
 Developer portal (the app and `…calendar.calendarwidget`) before the first
 store build — an entitlement the App ID does not carry fails code signing.

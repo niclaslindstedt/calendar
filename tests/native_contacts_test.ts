@@ -170,6 +170,5 @@ describe("what never leaves the page", () => {
     ) as string[];
     expect(secrets).toContain("calendar:dropbox:access");
     expect(secrets).toContain("calendar:dropbox:refresh");
-    expect(secrets).toContain("calendar:gdrive:token");
   });
 });

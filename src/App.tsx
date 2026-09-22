@@ -63,10 +63,8 @@ import {
   completeOauthOnBoot,
   connectDropbox,
   connectFolder,
-  connectGdrive,
   disconnectDropbox,
   disconnectFolder,
-  disconnectGdrive,
   loadFolderConnected,
   writeActiveBackendId,
   type BackendId,
@@ -890,11 +888,8 @@ export function App() {
               }
             }),
           connectDropbox: () => void connectDropbox(),
-          connectGdrive: () =>
-            void connectGdrive().then(() => setActiveBackend("gdrive")),
           disconnect: (id) => {
             if (id === "dropbox") disconnectDropbox();
-            if (id === "gdrive") disconnectGdrive();
             if (id === "folder") {
               void disconnectFolder();
               setFolderConnected(false);

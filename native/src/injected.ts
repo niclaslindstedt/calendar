@@ -31,7 +31,7 @@ const REPORT_DEBOUNCE_MS = 600;
 
 /** The `localStorage` prefixes worth carrying out of the page. Everything the
  *  snapshot reads is under one of them; the OAuth tokens under
- *  `calendar:dropbox:*` / `calendar:gdrive:*` and the contacts opt-in list are
+ *  `calendar:dropbox:*` and the contacts opt-in list are
  *  excluded by name below, so neither a credential nor a contact ever crosses
  *  the bridge. */
 const KEY_PREFIXES = ["calendar:", "oss:cache:"];
@@ -47,7 +47,6 @@ const KEY_PREFIXES = ["calendar:", "oss:cache:"];
 const SECRET_KEYS = [
   "calendar:dropbox:access",
   "calendar:dropbox:refresh",
-  "calendar:gdrive:token",
   "calendar:contacts:selected",
 ];
 

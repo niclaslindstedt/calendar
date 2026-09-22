@@ -44,10 +44,9 @@ Every calendar is a separate document in the **same** backend
 | This browser | `calendar:document`     | `calendar:document:<slug>` |
 | Local folder | `calendar.json`         | `calendar.<slug>.json`     |
 | Dropbox      | `default/calendar.json` | `<slug>/calendar.json`     |
-| Google Drive | `calendar.json`         | `calendar.<slug>.json`     |
 
 Dropbox is the one backend where a calendar is a **folder** rather than a file
-name: `Apps/nird-calendar/<slug>/calendar.json`, one folder per calendar at
+name: `Apps/calendar/<slug>/calendar.json`, one folder per calendar at
 the app folder's root, the default calendar included. Settings → Storage
 prints the path of the calendar you're in.
 

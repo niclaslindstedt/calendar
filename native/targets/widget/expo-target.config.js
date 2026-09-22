@@ -7,15 +7,16 @@
 //
 // The App Group is the whole reason the extension can show anything: it is the
 // container the app writes the snapshot into (see
-// `../../modules/widget-bridge`). It must match the main app's entitlement in
-// `../../app.config.js` byte for byte.
+// `../../modules/widget-bridge`). It has to match the main app's entitlement
+// byte for byte, so both come from `../../identifiers.js` rather than being
+// typed twice.
+const { APP_GROUP } = require("../../identifiers.js");
+
 module.exports = {
   type: "widget",
   name: "calendarwidget",
   entitlements: {
-    "com.apple.security.application-groups": [
-      "group.se.niclaslindstedt.calendar",
-    ],
+    "com.apple.security.application-groups": [APP_GROUP],
   },
   // Matches the app's deployment target. The widgets use no API newer than
   // iOS 16's `containerBackground`, which is applied conditionally.

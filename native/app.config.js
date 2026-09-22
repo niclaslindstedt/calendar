@@ -7,13 +7,10 @@
 
 const { version } = require("../package.json");
 
-// Reverse-DNS app id, derived from the author domain and identical on both
-// stores so the app is one product across platforms.
-const BUNDLE_ID = "se.niclaslindstedt.calendar";
-
-// The container the app and the widgets share. Pinned in four places that must
-// agree — see plugins/with-widgets.js for the list.
-const APP_GROUP = `group.${BUNDLE_ID}`;
+// The listing's name and identifier, and everything derived from them. They
+// are build variables rather than literals — see ./identifiers.js for why, and
+// for the guard that fails a production build without them.
+const { DISPLAY_NAME, BUNDLE_ID, APP_GROUP } = require("./identifiers.js");
 
 // The app's light "paper" default (src/app/themeColor.ts's own fallback). Only
 // paints the splash and the chrome before the page reports its live theme.
@@ -28,7 +25,7 @@ const MARK_INK = "#1b2027";
 // here or pass it in the environment (which is what CI does), because
 // `eas init` cannot write into a dynamic config. Left unset, the project is
 // simply unlinked and `eas build` will ask — it is not a build failure.
-const EAS_PROJECT_ID = process.env.EAS_PROJECT_ID ?? "";
+const { EAS_PROJECT_ID } = require("./identifiers.js");
 
 // What the system prompt says when the calendar asks for contacts. Both
 // stores read this string as the app's declared purpose, and a reviewer
@@ -43,8 +40,10 @@ const CONTACTS_PERMISSION =
 
 module.exports = () => ({
   expo: {
-    name: "Calendar",
-    slug: "nird-calendar",
+    name: DISPLAY_NAME,
+    // The project's own name, not the listing's. EAS resolves the project by
+    // slug, so this changes only when the Expo project is renamed with it.
+    slug: "calendar",
     version,
     // The calendar is a wall calendar: the month grid is laid out to fill one
     // portrait screen exactly (six week rows, no scrollbar). Landscape is not
@@ -54,7 +53,7 @@ module.exports = () => ({
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     icon: "./assets/icon.png",
-    scheme: "nird-calendar",
+    scheme: "calendar",
     backgroundColor: BRAND_BG,
     assetBundlePatterns: ["**/*"],
 
@@ -132,6 +131,10 @@ module.exports = () => ({
     ],
 
     extra: {
+      // The shared container, for the JS half of the widget bridge. Derived
+      // once in ./identifiers.js and read back through `expoConfig.extra`,
+      // so no consumer builds the string itself.
+      appGroup: APP_GROUP,
       // NO remote URL here, deliberately. The app serves the copy of the
       // calendar bundled inside it (assets/webroot.zip) from a loopback
       // server — that is what makes it work offline, and what makes it an app

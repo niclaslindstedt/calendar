@@ -19,6 +19,7 @@
 // `expo start`, a platform where autolinking did not pick it up — gets `null`
 // and the app runs with no widgets rather than crashing at import.
 
+import Constants from "expo-constants";
 import { requireOptionalNativeModule } from "expo";
 
 /**
@@ -26,11 +27,16 @@ import { requireOptionalNativeModule } from "expo";
  *
  * Changing this after release orphans every installed widget's data — the
  * extension keeps reading a container the app has stopped writing, and prints
- * a stale calendar forever. It is pinned in four places that must agree:
- * here, `app.config.js` (the main app's entitlement), `plugins/with-widgets.js`
- * and `targets/widget/expo-target.config.js` (the extension's).
+ * a stale calendar forever.
+ *
+ * Read from the resolved app config rather than written down again: JS can
+ * reach `identifiers.js` through `expoConfig.extra`, which the Swift and the
+ * Kotlin cannot, so this is one fewer place that can disagree. The fallback is
+ * the committed group, and exists for a test renderer with no config loaded.
  */
-export const APP_GROUP = "group.se.niclaslindstedt.calendar";
+export const APP_GROUP: string =
+  (Constants.expoConfig?.extra?.appGroup as string | undefined) ??
+  "group.se.agilator.calendar";
 
 /** The key the snapshot JSON is stored under inside that container. Mirrored
  *  in `ios/WidgetBridgeModule.swift` and the Kotlin provider. */

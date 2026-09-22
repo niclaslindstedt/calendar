@@ -51,7 +51,12 @@ import {
 
 /** What marks a file as one of ours. Spelled out rather than sniffed for, so
  *  picking the wrong JSON off a phone says so instead of merging nonsense. */
-export const BACKUP_KIND = "nird-calendar-backup";
+export const BACKUP_KIND = "calendar-backup";
+
+/** What files exported before the rename say. Accepted on the way in forever:
+ *  a backup is a file on someone's disk, and the day it stops importing is the
+ *  day the rename ate their data. Never written. */
+const LEGACY_BACKUP_KINDS = ["nird-calendar-backup"] as const;
 
 /** The backup format's own version — bumped only if the *envelope* changes.
  *  A calendar document inside it carries its own `version` and goes through
@@ -144,7 +149,10 @@ export function parseBackup(
     return { ok: false, reason: "not-a-backup" };
   }
   const blob = raw as Partial<BackupFile>;
-  if (blob.kind !== BACKUP_KIND) return { ok: false, reason: "not-a-backup" };
+  const known: readonly string[] = [BACKUP_KIND, ...LEGACY_BACKUP_KINDS];
+  if (typeof blob.kind !== "string" || !known.includes(blob.kind)) {
+    return { ok: false, reason: "not-a-backup" };
+  }
   if (typeof blob.version === "number" && blob.version > BACKUP_VERSION) {
     return { ok: false, reason: "too-new" };
   }

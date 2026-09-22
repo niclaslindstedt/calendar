@@ -30,15 +30,20 @@ const {
   withStringsXml,
 } = require("expo/config-plugins");
 
-// Pinned in four places that must agree — here, ../app.config.js,
-// ../modules/widget-bridge/{index.ts,ios/WidgetBridgeModule.swift} and
-// ../targets/widget/expo-target.config.js. Changing it after release orphans
-// every installed widget's data.
-const APP_GROUP = "group.se.niclaslindstedt.calendar";
-
-// The package the widgets' Kotlin lives in. Mirrored in the Kotlin files'
-// `package` declaration and in the bridge module's update broadcast.
-const ANDROID_PKG = "se.niclaslindstedt.calendar.widget";
+// Both derived in ../identifiers.js, which is the only place the bundle id
+// enters this repository. Changing the group after release orphans every
+// installed widget's data.
+//
+// Swift cannot read a build variable, so the two `.swift` files that address
+// the container still spell it out — and `assertSwiftAgrees` below fails the
+// prebuild when they disagree with this. A mismatched App Group is the worst
+// failure this feature has: it compiles, it signs, it installs, and the widget
+// is simply empty forever.
+const {
+  APP_GROUP,
+  ANDROID_WIDGET_PKG: ANDROID_PKG,
+  BUNDLE_ID,
+} = require("../identifiers.js");
 
 // The four widgets, as the launcher's picker sees them. Each is one receiver
 // pointing at its own `<appwidget-provider>` metadata; the classes differ only
@@ -88,7 +93,55 @@ function copyFile(from, to) {
   fs.copyFileSync(from, to);
 }
 
+/**
+ * Copy a Kotlin source, pointing its `R` import at THIS build's application id.
+ *
+ * The generated resources live in the app's own package, which is the bundle
+ * id — a build variable now, so the import cannot be a literal in a file that
+ * is committed. The committed line names the development id; this rewrites it
+ * on the way in, and adds it when a file uses `R` without importing it at all.
+ */
+function copyKotlin(from, to, applicationId) {
+  let source = fs.readFileSync(from, "utf8");
+  const wanted = `import ${applicationId}.R`;
+  if (/^import [\w.]+\.R$/m.test(source)) {
+    source = source.replace(/^import [\w.]+\.R$/m, wanted);
+  } else if (/\bR\.[a-z]/.test(source)) {
+    source = source.replace(/^(package .+)$/m, `$1\n\n${wanted}`);
+  }
+  fs.mkdirSync(path.dirname(to), { recursive: true });
+  fs.writeFileSync(to, source);
+}
+
+/**
+ * Fail the prebuild if a Swift file addresses a different container than the
+ * one the entitlements grant. Reads the literal rather than rewriting it: a
+ * generated constant would be one more thing to get wrong, and the check is
+ * the part that has value.
+ */
+function assertSwiftAgrees(projectRoot) {
+  const sources = [
+    path.join(projectRoot, "targets", "widget", "Snapshot.swift"),
+    path.join(
+      projectRoot, "modules", "widget-bridge", "ios", "WidgetBridgeModule.swift",
+    ),
+  ];
+  for (const file of sources) {
+    if (!fs.existsSync(file)) continue;
+    const found = fs.readFileSync(file, "utf8").match(/"(group\.[^"]+)"/);
+    if (found && found[1] !== APP_GROUP) {
+      throw new Error(
+        `${path.basename(file)} addresses ${found[1]}, but this build's App ` +
+          `Group is ${APP_GROUP}. A widget reading the wrong container builds ` +
+          `clean and shows nothing — fix the literal, or the APP_BUNDLE_ID.`,
+      );
+    }
+  }
+}
+
 module.exports = function withWidgets(config) {
+  assertSwiftAgrees(__dirname.replace(/\/plugins$/, ""));
+
   // --- iOS ------------------------------------------------------------------
   // The main app joins the App Group so it can write the container the widget
   // extension reads. The extension declares the same group for itself, in its
@@ -116,7 +169,11 @@ module.exports = function withWidgets(config) {
 
       for (const file of fs.readdirSync(src)) {
         if (file.endsWith(".kt")) {
-          copyFile(path.join(src, file), path.join(javaDir, file));
+          copyKotlin(
+            path.join(src, file),
+            path.join(javaDir, file),
+            c.android?.package ?? BUNDLE_ID,
+          );
         }
       }
 

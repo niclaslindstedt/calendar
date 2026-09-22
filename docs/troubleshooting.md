@@ -12,18 +12,14 @@ theme engine lazy-loads the optional font families from real packages.
 
 ## Storage
 
-**Dropbox / Google Drive don't appear in Settings → Storage** — the backends
-are hidden unless `VITE_DROPBOX_APP_KEY` / `VITE_GOOGLE_CLIENT_ID` were set
-at build time. See [configuration.md](configuration.md).
+**Dropbox doesn't appear in Settings → Storage** — the backend is hidden
+unless `VITE_DROPBOX_APP_KEY` was set at build time. See [configuration.md](configuration.md).
 
 **"Local folder" is missing** — the File System Access API is
 Chromium-only (Chrome, Edge, Brave, Arc). Firefox and Safari can't offer it.
 
 **The folder backend asks for permission again** — the OS re-prompts after a
 browser restart; reconnecting from Settings → Storage re-grants it.
-
-**Google Drive disconnects after closing the browser** — GIS popup tokens
-are short-lived and session-scoped by design; reconnect from Settings.
 
 ## The calendar
 

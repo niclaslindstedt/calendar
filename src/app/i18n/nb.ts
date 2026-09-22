@@ -214,8 +214,6 @@ export const nb: Catalog = {
     folderReconnect: "Koble til mappen på nytt…",
     dropbox: "Dropbox",
     dropboxHint: "Én mappe per kalender i Dropbox-appmappen din.",
-    gdrive: "Google Drive",
-    gdriveHint: "En fil i en Drive-mappe appen oppretter.",
     connect: "Koble til",
     disconnect: "Koble fra",
     active: "Aktiv",

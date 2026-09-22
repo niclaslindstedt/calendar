@@ -12,7 +12,7 @@
 // APPWIDGET_UPDATE broadcast follows it — the same one the launcher sends on
 // a provider's own schedule.
 
-package se.niclaslindstedt.calendar.widgetbridge
+package expo.modules.widgetbridge
 
 import android.appwidget.AppWidgetManager
 import android.content.Context

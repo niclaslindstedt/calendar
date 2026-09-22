@@ -17,7 +17,7 @@ import WidgetKit
 /// The App Group both sides address. Kept in step with `../index.ts`,
 /// `app.config.js`, `plugins/with-widgets.js` and the target's entitlements —
 /// changing it after release orphans every installed widget.
-private let APP_GROUP = "group.se.niclaslindstedt.calendar"
+private let APP_GROUP = "group.se.agilator.calendar"
 
 /// The key the snapshot JSON sits under inside that group.
 private let SNAPSHOT_KEY = "snapshot"

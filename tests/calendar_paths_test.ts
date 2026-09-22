@@ -72,8 +72,8 @@ describe("Dropbox calendar folders", () => {
   // the app folder reads as the list of calendars the switcher shows.
   it("gives every calendar a folder of its own, the document inside it", () => {
     expect(dropboxRootPath("work")).toBe("/work");
-    expect(dropboxDisplayPath("nird-calendar", "work")).toBe(
-      "Apps/nird-calendar/work/calendar.json",
+    expect(dropboxDisplayPath("calendar", "work")).toBe(
+      "Apps/calendar/work/calendar.json",
     );
   });
 
@@ -83,8 +83,8 @@ describe("Dropbox calendar folders", () => {
     expect(dropboxRootPath(DEFAULT_CALENDAR_SLUG)).toBe(
       `/${DEFAULT_CALENDAR_SLUG}`,
     );
-    expect(dropboxDisplayPath("nird-calendar", DEFAULT_CALENDAR_SLUG)).toBe(
-      `Apps/nird-calendar/${DEFAULT_CALENDAR_SLUG}/${DROPBOX_DOCUMENT_FILE}`,
+    expect(dropboxDisplayPath("calendar", DEFAULT_CALENDAR_SLUG)).toBe(
+      `Apps/calendar/${DEFAULT_CALENDAR_SLUG}/${DROPBOX_DOCUMENT_FILE}`,
     );
   });
 

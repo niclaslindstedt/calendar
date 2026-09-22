@@ -56,8 +56,8 @@ optionally synced to a storage backend you control.
   almanac's own run on their name day — folded the same way the search is, so
   a Nicklas is celebrated on Niklas's day. Opt in one contact at a time;
   nothing about a contact is stored or sent anywhere.
-- **Storage your way**: browser storage, a local folder, Dropbox (a folder per
-  calendar in the app folder), or Google Drive.
+- **Storage your way**: browser storage, a local folder, or Dropbox (a folder
+  per calendar in the app folder).
 - **Separate calendars in one app**: keep home and work apart — each calendar
   with its own notes, all in the same backend.
 - **Take it with you**: export your settings and every calendar to one file,
@@ -141,9 +141,7 @@ All configuration is optional build-time environment (`.env`, see
 | Variable                  | Purpose                                                      |
 | ------------------------- | ------------------------------------------------------------ |
 | `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key; unset hides the Dropbox backend        |
-| `VITE_GOOGLE_CLIENT_ID`   | Google OAuth client id; unset hides the Google Drive backend |
-| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `nird-calendar`)            |
-| `VITE_GDRIVE_APP_FOLDER`  | Drive folder name (default `Calendar`)                       |
+| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `calendar`)                 |
 | `VITE_BASE`               | Deploy base path (set by CI; default `/`)                    |
 
 See [`docs/configuration.md`](docs/configuration.md).
@@ -182,8 +180,8 @@ seeding a storage backend by hand or inspecting the format.
 
 - **`npm install` fails with 401 on `@niclaslindstedt/oss-framework`** — your
   `~/.npmrc` lacks a `read:packages` token for `npm.pkg.github.com`.
-- **The Dropbox / Google Drive backends don't appear in Settings → Storage** —
-  the corresponding `VITE_*` env var wasn't set at build time.
+- **The Dropbox backend doesn't appear in Settings → Storage** —
+  `VITE_DROPBOX_APP_KEY` wasn't set at build time.
 - **"Local folder" backend is missing** — it needs the File System Access API
   (Chromium browsers only).
 

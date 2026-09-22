@@ -23,7 +23,7 @@
 // Copied into the generated Android project by `plugins/with-widgets.js`;
 // `android/` is prebuild output, so this directory is the source of truth.
 
-package se.niclaslindstedt.calendar.widget
+package se.agilator.calendar.widget
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
@@ -38,7 +38,7 @@ import org.json.JSONObject
 // `R` belongs to the APP's package: this file is copied into the app module
 // by the config plugin, so its own package is a sub-package and the generated
 // resource class has to be imported by name.
-import se.niclaslindstedt.calendar.R
+import dev.local.calendar.R
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date

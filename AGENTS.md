@@ -188,8 +188,8 @@ adoption seam as the sibling `contacts` app; see the framework's
 `demo/ADOPTION.md`).
 
 The framework owns the UI kit and generic mechanics: components, modals, the
-theme engine, storage adapters (localStorage / local folder / Dropbox /
-Google Drive), the i18n runtime, logging, calendar date math
+theme engine, storage adapters (localStorage / local folder / Dropbox), the
+i18n runtime, logging, calendar date math
 (`buildMonthGrid`, `isoWeek`, `DayKey`), and the PWA update state machine.
 
 ### The renderer is Preact

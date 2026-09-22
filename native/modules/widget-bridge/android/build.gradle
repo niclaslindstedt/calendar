@@ -6,7 +6,7 @@
 
 apply plugin: 'com.android.library'
 
-group = 'se.niclaslindstedt.calendar.widgetbridge'
+group = 'expo.modules.widgetbridge'
 version = '1.0.0'
 
 def expoModulesCorePlugin = new File(
@@ -19,7 +19,7 @@ useCoreDependencies()
 useDefaultAndroidSdkVersions()
 
 android {
-  namespace "se.niclaslindstedt.calendar.widgetbridge"
+  namespace "expo.modules.widgetbridge"
   defaultConfig {
     versionCode 1
     versionName "1.0.0"

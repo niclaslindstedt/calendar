@@ -214,8 +214,6 @@ export const nl: Catalog = {
     folderReconnect: "Map opnieuw verbinden…",
     dropbox: "Dropbox",
     dropboxHint: "Eén map per kalender in uw Dropbox-appmap.",
-    gdrive: "Google Drive",
-    gdriveHint: "Een bestand in een Drive-map die de app aanmaakt.",
     connect: "Verbinden",
     disconnect: "Verbinding verbreken",
     active: "Actief",

@@ -7,8 +7,8 @@
 // The calendar is local-first with no backend of our own, no account and no
 // analytics: by default everything stays on the device. Three things are
 // worth spelling out, and this page exists for them — the opt-in sync
-// backends (a picked local folder, the reader's own Dropbox, their own Google
-// Drive), the installed app's Home Screen widgets, and the app-store build's
+// backends (a picked local folder, the reader's own Dropbox), the installed
+// app's Home Screen widgets, and the app-store build's
 // access to the device's contacts, which the app stores never leave. The
 // contacts section is also what the App Store and Play Store privacy
 // questionnaires are answered against, so keep it true to the code.
@@ -78,7 +78,7 @@ export function PrivacyPage() {
           <p>
             You may <span className="text-fg-bright">optionally</span> turn on
             sync to a storage location <em>you</em> control — a local folder on
-            your computer, your own Dropbox, or your own Google Drive — so the
+            your computer, or your own Dropbox — so the
             same calendar appears on more than one device. Even then your notes
             go only to that location in your own account; the project authors
             never receive them in any configuration. See{" "}
@@ -198,8 +198,8 @@ export function PrivacyPage() {
               The app makes no network request on account of this feature, at
               any point. Contacts are not uploaded to us — we run no server to
               upload them to — and they are deliberately kept out of the sync
-              backends as well: a calendar synced to Dropbox, Google Drive, or a
-              local folder carries your notes and no contact data. They are also
+              backends as well: a calendar synced to Dropbox or to a local
+              folder carries your notes and no contact data. They are also
               kept out of the Home Screen widgets (see{" "}
               <a className="text-link hover:underline" href="#installed-app">
                 The installed app
@@ -275,8 +275,8 @@ export function PrivacyPage() {
             or advertising networks are ever loaded.
           </p>
           <p>
-            If you opt in to Dropbox or Google Drive sync, the app additionally
-            talks directly from your device to that provider&apos;s own API, to
+            If you opt in to Dropbox sync, the app additionally talks
+            directly from your device to Dropbox&apos;s own API, to
             sign you in and to read and write your notes. Those requests go to
             the provider, not to us.
           </p>
@@ -294,15 +294,6 @@ export function PrivacyPage() {
               a folder you pick on your own computer. Your calendar is written
               there as an ordinary file. Nothing is sent over the network; the
               data never leaves your machine.
-            </li>
-            <li>
-              <span className="text-fg-bright">Google Drive.</span> The app
-              requests only the{" "}
-              <code className="text-fg-bright">drive.file</code> scope, which
-              lets it see and manage <em>only the files it itself creates</em>.
-              It cannot see, read, or touch any other file in your Drive.
-              Sign-in uses Google&apos;s OAuth flow, and the access token Google
-              returns is held only on this device.
             </li>
             <li>
               <span className="text-fg-bright">Dropbox.</span> The app uses an

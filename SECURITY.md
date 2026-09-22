@@ -25,7 +25,7 @@ reporter and credit them in the release notes (unless they request otherwise).
 ## Scope
 
 In scope: any vulnerability in the published release of calendar — in
-particular the OAuth token handling for the cloud storage backends (Dropbox,
-Google Drive) and anything that could leak a user's calendar entries.
+particular the OAuth token handling for the Dropbox storage backend and
+anything that could leak a user's calendar entries.
 Out of scope: vulnerabilities in third-party dependencies (please report those
 upstream).

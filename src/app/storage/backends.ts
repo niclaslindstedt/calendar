@@ -24,7 +24,6 @@ import {
   completeDropboxAuth,
   createDropboxAdapter,
   createFolderAdapter,
-  createGdriveAdapter,
   deleteDropboxPath,
   deleteLocalDocument,
   hasPendingDropboxAuth,
@@ -33,7 +32,6 @@ import {
   localCacheKey,
   saveDirectoryHandle,
   startDropboxAuth,
-  startGdriveAuth,
   withLocalCache,
   type StorageAdapter,
 } from "@niclaslindstedt/oss-framework/storage";
@@ -56,14 +54,9 @@ export type { BackendId } from "./demoAdapter.ts";
 const ACTIVE_KEY = "calendar:backend";
 const DROPBOX_ACCESS_KEY = "calendar:dropbox:access";
 const DROPBOX_REFRESH_KEY = "calendar:dropbox:refresh";
-const GDRIVE_TOKEN_KEY = "calendar:gdrive:token";
 
 const DROPBOX_APP_KEY = import.meta.env.VITE_DROPBOX_APP_KEY as
   string | undefined;
-const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID as
-  string | undefined;
-const GDRIVE_APP_FOLDER =
-  (import.meta.env.VITE_GDRIVE_APP_FOLDER as string | undefined) || "Calendar";
 
 // Dropbox fixes the app folder's name in the app's own configuration — an
 // "App folder"-scoped app lives under `Apps/<name>/` and the API's root *is*
@@ -72,7 +65,7 @@ const GDRIVE_APP_FOLDER =
 // point a deployment at its own Dropbox app and the displayed location follows.
 const DROPBOX_APP_FOLDER =
   (import.meta.env.VITE_DROPBOX_APP_FOLDER as string | undefined)?.trim() ||
-  "nird-calendar";
+  "calendar";
 
 const storageLog = (scope: string) => logStore.createLogger(scope);
 
@@ -80,15 +73,43 @@ const storageLog = (scope: string) => logStore.createLogger(scope);
 
 export function readActiveBackendId(): BackendId {
   const stored = localStorage.getItem(ACTIVE_KEY);
-  if (
-    stored === "browser" ||
-    stored === "folder" ||
-    stored === "dropbox" ||
-    stored === "gdrive"
-  ) {
+  if (stored === "browser" || stored === "folder" || stored === "dropbox") {
     return stored;
   }
+  // Google Drive was removed as a backend. A device that had it selected is
+  // moved to browser storage, carrying the last synced document across from
+  // the cache the Drive backend kept — otherwise the calendar would open
+  // empty, which reads as data loss even though the file is still in the
+  // reader's own Drive folder.
+  if (stored === "gdrive") {
+    adoptRetiredGdriveDocument();
+    localStorage.setItem(ACTIVE_KEY, "browser");
+  }
   return "browser";
+}
+
+/**
+ * Promote the retired Drive backend's cached document into browser storage,
+ * unless something is already stored there. Best-effort by design: the cache
+ * is a mirror, not the record, and failing to find one is the ordinary case
+ * for a reader who never used Drive.
+ */
+function adoptRetiredGdriveDocument(): void {
+  try {
+    const key = documentKey(DEFAULT_CALENDAR_SLUG);
+    if (localStorage.getItem(key)) return;
+    const cached = localStorage.getItem(
+      localCacheKey("gdrive", cacheScope(DEFAULT_CALENDAR_SLUG)),
+    );
+    if (!cached) return;
+    const snapshot = JSON.parse(cached) as { text?: unknown };
+    if (typeof snapshot.text === "string" && snapshot.text) {
+      localStorage.setItem(key, snapshot.text);
+    }
+  } catch {
+    // Unparseable cache, or storage unavailable. The reader's document is
+    // still in their Drive folder either way.
+  }
 }
 
 export function writeActiveBackendId(id: BackendId): void {
@@ -103,10 +124,6 @@ export function isDropboxAvailable(): boolean {
   return Boolean(DROPBOX_APP_KEY);
 }
 
-export function isGdriveAvailable(): boolean {
-  return Boolean(GOOGLE_CLIENT_ID);
-}
-
 export function isFolderAvailable(): boolean {
   return isFolderBackendAvailable();
 }
@@ -117,17 +134,9 @@ export function isDropboxConnected(): boolean {
   return Boolean(localStorage.getItem(DROPBOX_ACCESS_KEY));
 }
 
-export function isGdriveConnected(): boolean {
-  return Boolean(sessionStorage.getItem(GDRIVE_TOKEN_KEY));
-}
-
 export function disconnectDropbox(): void {
   localStorage.removeItem(DROPBOX_ACCESS_KEY);
   localStorage.removeItem(DROPBOX_REFRESH_KEY);
-}
-
-export function disconnectGdrive(): void {
-  sessionStorage.removeItem(GDRIVE_TOKEN_KEY);
 }
 
 export async function disconnectFolder(): Promise<void> {
@@ -151,15 +160,6 @@ export async function loadFolderConnected(): Promise<boolean> {
 export function connectDropbox(): Promise<void> {
   if (!DROPBOX_APP_KEY) return Promise.reject(new Error("no app key"));
   return startDropboxAuth(DROPBOX_APP_KEY, storageLog("dropbox"));
-}
-
-/** Open the Google consent popup; resolves once a token is stored. GIS popup
- *  tokens are short-lived and session-scoped, so a browser restart asks
- *  again. */
-export async function connectGdrive(): Promise<void> {
-  if (!GOOGLE_CLIENT_ID) throw new Error("no client id");
-  const token = await startGdriveAuth(GOOGLE_CLIENT_ID, storageLog("gdrive"));
-  sessionStorage.setItem(GDRIVE_TOKEN_KEY, token);
 }
 
 /** Show the directory picker and persist the handle. Must run in a user
@@ -276,21 +276,6 @@ export async function buildAdapter(
       });
     }
 
-    case "gdrive": {
-      const token = sessionStorage.getItem(GDRIVE_TOKEN_KEY);
-      if (!token) return null;
-      const adapter = createGdriveAdapter(token, {
-        appFolderName: GDRIVE_APP_FOLDER,
-        fileName,
-        logger: storageLog("gdrive"),
-      });
-      return withLocalCache(adapter, {
-        storage: localStorage,
-        key: localCacheKey("gdrive", cacheScope(slug)),
-        logger: storageLog("gdrive"),
-      });
-    }
-
     case "demo":
       // Built by the caller (`useCalendarStore`) so each enable is fresh.
       return null;
@@ -317,6 +302,9 @@ export async function discardCalendarData(
   if (slug === DEFAULT_CALENDAR_SLUG) return;
 
   deleteLocalDocument(documentKey(slug));
+  // "gdrive" stays in this sweep although the backend is gone: a device that
+  // used it still has its mirror, and deleting a calendar should take that
+  // with it.
   for (const backend of ["dropbox", "gdrive"] as const) {
     try {
       localStorage.removeItem(localCacheKey(backend, cacheScope(slug)));
