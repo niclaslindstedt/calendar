@@ -78,10 +78,10 @@ export function PrivacyPage() {
           <p>
             You may <span className="text-fg-bright">optionally</span> turn on
             sync to a storage location <em>you</em> control — a local folder on
-            your computer, or your own Dropbox — so the
-            same calendar appears on more than one device. Even then your notes
-            go only to that location in your own account; the project authors
-            never receive them in any configuration. See{" "}
+            your computer, or your own Dropbox — so the same calendar appears on
+            more than one device. Even then your notes go only to that location
+            in your own account; the project authors never receive them in any
+            configuration. See{" "}
             <a className="text-link hover:underline" href="#cloud-sync">
               Optional sync
             </a>{" "}
@@ -199,8 +199,8 @@ export function PrivacyPage() {
               any point. Contacts are not uploaded to us — we run no server to
               upload them to — and they are deliberately kept out of the sync
               backends as well: a calendar synced to Dropbox or to a local
-              folder carries your notes and no contact data. They are also
-              kept out of the Home Screen widgets (see{" "}
+              folder carries your notes and no contact data. They are also kept
+              out of the Home Screen widgets (see{" "}
               <a className="text-link hover:underline" href="#installed-app">
                 The installed app
               </a>
@@ -275,10 +275,10 @@ export function PrivacyPage() {
             or advertising networks are ever loaded.
           </p>
           <p>
-            If you opt in to Dropbox sync, the app additionally talks
-            directly from your device to Dropbox&apos;s own API, to
-            sign you in and to read and write your notes. Those requests go to
-            the provider, not to us.
+            If you opt in to Dropbox sync, the app additionally talks directly
+            from your device to Dropbox&apos;s own API, to sign you in and to
+            read and write your notes. Those requests go to the provider, not to
+            us.
           </p>
         </Section>
 

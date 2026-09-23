@@ -7,7 +7,7 @@ runs with none of them set.
 | Variable                  | Effect                                                                                                                                              |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key. Unset **hides** the Dropbox backend in Settings → Storage.                                                                    |
-| `VITE_DROPBOX_APP_FOLDER` | The Dropbox app-folder name (fixed by your Dropbox app config; shown in Settings → Storage). Default `calendar`.                               |
+| `VITE_DROPBOX_APP_FOLDER` | The Dropbox app-folder name (fixed by your Dropbox app config; shown in Settings → Storage). Default `calendar`.                                    |
 | `VITE_BASE`               | Deploy base path — one per deployment slot (`/`, `/preview/`, `/branch/`), set by the Pages workflow. Default `/`. See [deployment](deployment.md). |
 | `VITE_SOURCE_REF`         | The branch parked in the `/branch/` slot, shown in its build label. Set by the Pages workflow; unset everywhere else.                               |
 

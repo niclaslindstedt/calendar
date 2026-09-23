@@ -138,11 +138,11 @@ and persists in your browser. The cogwheel (top right) opens Settings.
 All configuration is optional build-time environment (`.env`, see
 [`.env.example`](.env.example)):
 
-| Variable                  | Purpose                                                      |
-| ------------------------- | ------------------------------------------------------------ |
-| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key; unset hides the Dropbox backend        |
-| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `calendar`)                 |
-| `VITE_BASE`               | Deploy base path (set by CI; default `/`)                    |
+| Variable                  | Purpose                                               |
+| ------------------------- | ----------------------------------------------------- |
+| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key; unset hides the Dropbox backend |
+| `VITE_DROPBOX_APP_FOLDER` | Dropbox app-folder name (default `calendar`)          |
+| `VITE_BASE`               | Deploy base path (set by CI; default `/`)             |
 
 See [`docs/configuration.md`](docs/configuration.md).
 
