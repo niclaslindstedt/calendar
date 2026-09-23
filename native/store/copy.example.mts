@@ -68,7 +68,7 @@ data is collected; how to turn on the contacts feature and what it reads; and
 the privacy page, which the listing also points at:
 https://apps.agilator.se/calendar/privacy/`;
 
-// NO MAC OR STEAM COPY HERE. `listing.mts` says this game ships on the App
+// NO MAC OR STEAM COPY HERE. `listing.mts` says this app ships on the App
 // Store alone, so there is no second page to write. When a desktop storefront
 // is turned on, its fields join this file beside the phone's — the shape is in
 // the sibling repo that already ships on all three.
