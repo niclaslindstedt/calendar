@@ -64,7 +64,12 @@ const copy: typeof skeleton = existsSync(localCopy)
   ? ((await import(pathToFileURL(localCopy).href)) as typeof skeleton)
   : skeleton;
 
-const EN = copy.APPLE_INFO["en-US"];
+// Non-null because a listing with no en-US locale is not a listing — and
+// under `noUncheckedIndexedAccess` the index says "possibly undefined", which
+// would otherwise spread `?.` through every case below for a state the next
+// line rules out.
+const EN = copy.APPLE_INFO["en-US"]!;
+if (!EN) throw new Error("copy.APPLE_INFO has no en-US locale");
 const NOTES = copy.APPLE_REVIEW_NOTES;
 const CONTACT = RULES.apple.contact;
 
@@ -181,7 +186,12 @@ describe("the review notes are true of the build", () => {
   });
 
   it("does not promise a feature by naming a bundle id the app does not use", () => {
-    const config = read("native", "identifiers.js");
+    // The development fallback lives in the name-guard module where a repo has
+    // one, and in the app config where it does not — the generator reads the
+    // same chain, so the test does too.
+    const config = existsSync(join(root, "native", "identifiers.js"))
+      ? read("native", "identifiers.js")
+      : read("native", "app.config.js");
     // The listing's identifier is a deployment's coordinate, so it arrives as
     // APP_BUNDLE_ID rather than being committed. What IS committed is the
     // development fallback, and it must be one that can never reach a store:
