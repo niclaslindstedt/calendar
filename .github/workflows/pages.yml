@@ -64,14 +64,15 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # The build-time env every slot's build shares. These are public client
-    # identifiers (both OAuth flows are PKCE, no secret), but they are injected
+    # The build-time env every slot's build shares, from repository secrets
+    # like every setting here. These are public client identifiers (both
+    # OAuth flows are PKCE, no client secret), but they are injected
     # at build time so a fork plugs in its own apps — and an unset one HIDES
     # that storage backend, so they must be mapped here or the deployed build
     # silently loses Dropbox / Drive.
     env:
-      VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY }}
-      VITE_DROPBOX_APP_FOLDER: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
+      VITE_DROPBOX_APP_KEY: ${{ secrets.VITE_DROPBOX_APP_KEY }}
+      VITE_DROPBOX_APP_FOLDER: ${{ secrets.VITE_DROPBOX_APP_FOLDER }}
       NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - uses: actions/checkout@v6

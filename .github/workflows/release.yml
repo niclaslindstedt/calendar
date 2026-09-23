@@ -182,8 +182,8 @@ jobs:
         run: npm run build
         env:
           VITE_BASE: /
-          VITE_DROPBOX_APP_KEY: ${{ vars.VITE_DROPBOX_APP_KEY }}
-          VITE_DROPBOX_APP_FOLDER: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
+          VITE_DROPBOX_APP_KEY: ${{ secrets.VITE_DROPBOX_APP_KEY }}
+          VITE_DROPBOX_APP_FOLDER: ${{ secrets.VITE_DROPBOX_APP_FOLDER }}
 
       - name: Commit + tag
         env:
@@ -276,8 +276,8 @@ jobs:
           # Without the key the packaged app has no Dropbox app to sign in
           # to. The desktop signs in through the shell's loopback listener, so
           # that Dropbox app must also allow http://127.0.0.1:53682/ … :53684/.
-          dropbox-app-key: ${{ vars.VITE_DROPBOX_APP_KEY }}
-          dropbox-app-folder: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
+          dropbox-app-key: ${{ secrets.VITE_DROPBOX_APP_KEY }}
+          dropbox-app-folder: ${{ secrets.VITE_DROPBOX_APP_FOLDER }}
           # macOS SIGNING — optional, but the build is never left unsigned.
           #
           # Apple Silicon refuses to execute unsigned arm64 code and reports it
