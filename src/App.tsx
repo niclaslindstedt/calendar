@@ -312,7 +312,7 @@ export function App() {
   const pwa = usePwaUpdate({
     base: import.meta.env.BASE_URL,
     cacheId: cacheIdForBase(import.meta.env.BASE_URL),
-    enabled: !import.meta.env.DEV,
+    enabled: !import.meta.env.DEV && !__SHELL_BUILD__,
   });
 
   const setActiveBackend = (id: BackendId) => {
