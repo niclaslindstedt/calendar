@@ -95,7 +95,7 @@ import {
   styleVars,
   stylesSignature,
 } from "./app/viewStyle.ts";
-import { status } from "./output.ts";
+import { error, status } from "./output.ts";
 
 // What an untouched install reads like — the yardstick an import measures a
 // file's settings against. A device still sitting on both of these has made no
@@ -887,7 +887,23 @@ export function App() {
                 setActiveBackend("folder");
               }
             }),
-          connectDropbox: () => void connectDropbox(),
+          connectDropbox: () =>
+            void connectDropbox().then(
+              (connectedInPlace) => {
+                // The desktop sign-in finishes here; the web one navigates
+                // away and finishes in the boot effect above.
+                if (connectedInPlace) {
+                  setActiveBackend("dropbox");
+                  status("Connected dropbox");
+                }
+              },
+              (err: unknown) =>
+                error(
+                  `Could not connect Dropbox: ${
+                    err instanceof Error ? err.message : String(err)
+                  }`,
+                ),
+            ),
           disconnect: (id) => {
             if (id === "dropbox") disconnectDropbox();
             if (id === "folder") {

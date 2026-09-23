@@ -2,7 +2,7 @@
   "name": "calendar",
   "version": "0.1.0",
   "private": true,
-  "description": "A wall-calendar PWA built on @niclaslindstedt/oss-framework \u2014 monthly view with week numbers and name days (UK & Sweden), week planner, day list, per-day notes, and storage backends (browser, local folder, Dropbox).",
+  "description": "A wall-calendar PWA built on @niclaslindstedt/oss-framework — monthly view with week numbers and name days (UK & Sweden), week planner, day list, per-day notes, and storage backends (browser, local folder, Dropbox).",
   "license": "PolyForm-Noncommercial-1.0.0",
   "author": "Niclas Lindstedt <niclas@agilator.se>",
   "type": "module",
@@ -35,7 +35,7 @@
     "@fontsource/jetbrains-mono": "^5.3.0",
     "@fontsource/opendyslexic": "^5.3.0",
     "@fontsource/source-serif-4": "^5.3.0",
-    "@niclaslindstedt/oss-framework": "^3.3.3",
+    "@niclaslindstedt/oss-framework": "^3.5.0",
     "preact": "^10.29.8",
     "workbox-window": "^7.0.0"
   },

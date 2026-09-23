@@ -22,17 +22,20 @@ import {
   BrowserLocalStorageAdapter,
   clearDirectoryHandle,
   completeDropboxAuth,
+  connectDropboxLoopback,
   createDropboxAdapter,
   createFolderAdapter,
   deleteDropboxPath,
   deleteLocalDocument,
   hasPendingDropboxAuth,
+  isDesktopShellOrigin,
   isFolderBackendAvailable,
   loadDirectoryHandle,
   localCacheKey,
   saveDirectoryHandle,
   startDropboxAuth,
   withLocalCache,
+  type DropboxAuthResult,
   type StorageAdapter,
 } from "@niclaslindstedt/oss-framework/storage";
 
@@ -155,11 +158,34 @@ export async function loadFolderConnected(): Promise<boolean> {
 
 // --- connect flows ----------------------------------------------------------
 
-/** Kick off the Dropbox consent redirect. The page navigates away; the code
- *  comes back as `?code=` and is consumed by `completeOauthOnBoot`. */
-export function connectDropbox(): Promise<void> {
-  if (!DROPBOX_APP_KEY) return Promise.reject(new Error("no app key"));
-  return startDropboxAuth(DROPBOX_APP_KEY, storageLog("dropbox"));
+/** Persist a finished sign-in's tokens — the one ending both connect flows
+ *  share (the boot-time redirect's and the desktop's). */
+function storeDropboxTokens(result: DropboxAuthResult): void {
+  localStorage.setItem(DROPBOX_ACCESS_KEY, result.accessToken);
+  if (result.refreshToken) {
+    localStorage.setItem(DROPBOX_REFRESH_KEY, result.refreshToken);
+  }
+}
+
+/** Connect Dropbox. Resolves `true` when it connected IN PLACE — the desktop
+ *  app, where the redirect has nowhere to land, so the sign-in runs in the
+ *  user's browser and the shell's loopback listener hands the result back.
+ *  Resolves `false` after starting the web redirect: the page navigates away
+ *  and `completeOauthOnBoot` picks the `?code=` up on return. */
+export async function connectDropbox(): Promise<boolean> {
+  if (!DROPBOX_APP_KEY) throw new Error("no app key");
+  if (isDesktopShellOrigin()) {
+    storeDropboxTokens(
+      await connectDropboxLoopback(
+        DROPBOX_APP_KEY,
+        undefined,
+        storageLog("dropbox"),
+      ),
+    );
+    return true;
+  }
+  await startDropboxAuth(DROPBOX_APP_KEY, storageLog("dropbox"));
+  return false;
 }
 
 /** Show the directory picker and persist the handle. Must run in a user
@@ -198,10 +224,7 @@ export async function completeOauthOnBoot(): Promise<BackendId | null> {
     undefined,
     storageLog("dropbox"),
   );
-  localStorage.setItem(DROPBOX_ACCESS_KEY, result.accessToken);
-  if (result.refreshToken) {
-    localStorage.setItem(DROPBOX_REFRESH_KEY, result.refreshToken);
-  }
+  storeDropboxTokens(result);
   // Clean the code out of the address bar so a reload doesn't re-exchange it.
   const url = new URL(window.location.href);
   url.searchParams.delete("code");
