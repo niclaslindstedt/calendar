@@ -149,6 +149,31 @@ jobs:
           install it from there for offline use. No download needed.
           NOTES
 
+      # The macOS paragraph is not decoration: without notarization Gatekeeper
+      # refuses the first launch, and a user with no answer to that prompt has
+      # no app. So the notes say which of the two this release is, decided by
+      # whether the Apple secrets are actually configured — the same
+      # condition the `desktop` job's signing and notarization turn on.
+      - name: macOS release-notes paragraph
+        env:
+          NOTARIZED: ${{ secrets.MAC_CSC_LINK != '' && secrets.APPLE_ID != '' && secrets.APPLE_APP_SPECIFIC_PASSWORD != '' && secrets.APPLE_TEAM_ID != '' }}
+        run: |
+          if [ "$NOTARIZED" = "true" ]; then
+            cat >> .release-notes.md <<'NOTES'
+
+          **macOS:** the desktop app is signed and notarized by Apple — it
+          opens like any other app.
+          NOTES
+          else
+            cat >> .release-notes.md <<'NOTES'
+
+          **macOS:** the desktop app is not notarized, so the first launch is
+          refused. Open **System Settings → Privacy & Security**, scroll to the
+          message about the app and choose **Open Anyway**. macOS remembers
+          after that.
+          NOTES
+          fi
+
       # Sanity build: the app is deployed by pages.yml, not published to a
       # package registry, so the release artifact is the GitHub Release plus
       # what Pages serves. Mirrors the deploy env so this build is
@@ -237,14 +262,6 @@ jobs:
       packages: read
     env:
       TAG: ${{ needs.release.outputs.tag }}
-      # macOS SIGNING — optional, but the build is never left unsigned.
-      #
-      # Apple Silicon refuses to execute unsigned arm64 code and reports it to
-      # the user as "the app is damaged", so an unsigned arm64 download is not
-      # a download at all. Tauri therefore signs AD HOC when this is empty: the
-      # app runs natively and the user answers one Gatekeeper prompt. Set the
-      # secret and the same job signs for real.
-      APPLE_SIGNING_IDENTITY: ${{ secrets.MAC_SIGN_IDENTITY }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -261,6 +278,22 @@ jobs:
           # that Dropbox app must also allow http://127.0.0.1:53682/ … :53684/.
           dropbox-app-key: ${{ vars.VITE_DROPBOX_APP_KEY }}
           dropbox-app-folder: ${{ vars.VITE_DROPBOX_APP_FOLDER }}
+          # macOS SIGNING — optional, but the build is never left unsigned.
+          #
+          # Apple Silicon refuses to execute unsigned arm64 code and reports it
+          # to the user as "the app is damaged", so an unsigned arm64 download
+          # is not a download at all. package.mjs therefore signs AD HOC when
+          # no certificate is configured: the app runs natively and the user
+          # answers one Gatekeeper prompt. Set MAC_CSC_LINK and
+          # MAC_CSC_KEY_PASSWORD and the same job signs with the Developer ID;
+          # add APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and APPLE_TEAM_ID and it
+          # notarizes too. See .github/actions/apple-signing.
+          mac-certificate: ${{ secrets.MAC_CSC_LINK }}
+          mac-certificate-password: ${{ secrets.MAC_CSC_KEY_PASSWORD }}
+          mac-sign-identity: ${{ secrets.MAC_SIGN_IDENTITY }}
+          apple-id: ${{ secrets.APPLE_ID }}
+          apple-app-specific-password: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          apple-team-id: ${{ secrets.APPLE_TEAM_ID }}
 
       # Whatever this platform's bundler produced, BY EXTENSION — a step that
       # listed filenames would silently upload nothing the day a target changed
