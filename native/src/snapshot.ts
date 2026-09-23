@@ -245,7 +245,7 @@ export function activeCalendar(storage: Record<string, string>): {
  *
  * Which key holds them depends on the backend the reader picked. The browser
  * backend writes the document JSON straight into `localStorage`; Dropbox and
- * Drive keep the authoritative copy in the cloud and mirror it into the
+ * iCloud Drive keep the authoritative copy elsewhere and mirror it into the
  * framework's offline cache, which wraps the same JSON in `{ "text": … }`.
  * Reading the mirror rather than the backend is what lets the widget stay
  * honest offline — and what keeps this module free of any network.

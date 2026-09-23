@@ -5,16 +5,19 @@
 // WebView at it, keeps the native chrome in step with the page's theme, sends
 // off-origin links to the system browser, forwards the page's storage to the
 // widget publisher, and answers the page when it asks the device for its
-// contacts. There is no native UI at all beyond a spinner and a failure
-// screen — everything a reader sees is the web app, unchanged.
+// contacts or asks to read or write the app's iCloud Drive container. There is
+// no native UI at all beyond a spinner and a failure screen — everything a
+// reader sees is the web app, unchanged.
 //
-// The wrapper adds exactly two things the browser cannot do, and it has to add
+// The wrapper adds three things the browser cannot do, and it has to add
 // something: App Store guideline 4.2 rejects a build that is only a viewer for
-// a website. Those two are the Home Screen WIDGETS and reading the device's
-// CONTACTS, so the calendar can mark the reader's people's birthdays and name
-// days. Both are read from the OUTSIDE — the page is served unchanged and
-// looks for a capability rather than for this wrapper — and neither
-// reimplements any of the calendar's domain. See `native/README.md`.
+// a website. Those three are the Home Screen WIDGETS, reading the device's
+// CONTACTS (so the calendar can mark the reader's people's birthdays and name
+// days), and iCLOUD DRIVE as a storage backend (the notes following the reader
+// between their own devices with no account to create). All three are offered
+// from the OUTSIDE — the page is served unchanged and looks for a capability
+// rather than for this wrapper — and none reimplements any of the calendar's
+// domain. See `native/README.md`.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -59,6 +62,13 @@ import {
   listContacts,
   requestContacts,
 } from "./src/contacts";
+import {
+  ICLOUD_SCRIPT,
+  isICloudRequest,
+  resolveScript as resolveICloudScript,
+  type ICloudMethod,
+} from "./src/icloudBridge";
+import { answerICloud } from "./src/icloud";
 import { dayKey } from "./src/snapshot";
 import { forgetPublished, publishReport, reloadWidgets } from "./src/widgets";
 
@@ -156,6 +166,19 @@ export default function App() {
     [],
   );
 
+  // One inbound file operation. Kept off the render path — a coordinated read
+  // waits for iCloud to fetch the bytes — and deliberately NOT cached: what
+  // comes back goes straight into the page, which is where the document lives.
+  // The wrapper holds no copy of anybody's notes on this path; the widgets get
+  // theirs from the page's own storage report, whichever backend is active.
+  const answerICloudRequest = useCallback(
+    async (id: string, method: ICloudMethod, args: readonly string[]) => {
+      const result = await answerICloud(method, args);
+      webViewRef.current?.injectJavaScript(resolveICloudScript(id, result));
+    },
+    [],
+  );
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let parsed: unknown;
@@ -167,6 +190,10 @@ export default function App() {
 
       if (isContactsRequest(parsed)) {
         void answerContacts(parsed.id, parsed.method);
+        return;
+      }
+      if (isICloudRequest(parsed)) {
+        void answerICloudRequest(parsed.id, parsed.method, parsed.args);
         return;
       }
       if (!isReport(parsed)) return;
@@ -186,7 +213,7 @@ export default function App() {
         now,
       );
     },
-    [answerContacts],
+    [answerContacts, answerICloudRequest],
   );
 
   // Coming back to the foreground after midnight: the notes are unchanged, so
@@ -224,7 +251,7 @@ export default function App() {
 
   const origin = server.status === "ready" ? server.origin : null;
 
-  // Keep the WebView on the embedded app. Anything else — a Dropbox or Drive
+  // Keep the WebView on the embedded app. Anything else — a Dropbox
   // OAuth page, a link inside a note — belongs in the system browser, both
   // because OAuth inside an embedded WebView is blocked by the providers and
   // because App Review expects external links to open externally.
@@ -287,11 +314,11 @@ export default function App() {
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
             injectedJavaScriptBeforeContentLoaded={BEFORE_LOAD_SCRIPT}
-            // Two scripts, one prop: the storage reporter the widgets need,
-            // and the contacts provider the calendar looks for. Both run once
-            // the page has loaded, and both are guarded against a second
-            // injection (a reload re-runs this).
-            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CONTACTS_SCRIPT}`}
+            // Three scripts, one prop: the storage reporter the widgets need,
+            // and the contacts and iCloud providers the calendar looks for.
+            // All run once the page has loaded, and all are guarded against a
+            // second injection (a reload re-runs this).
+            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CONTACTS_SCRIPT}\n${ICLOUD_SCRIPT}`}
             onMessage={onMessage}
             onLoadEnd={hideSplash}
             onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}

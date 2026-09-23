@@ -228,6 +228,11 @@ export const en = {
     folderReconnect: "Reconnect folder…",
     dropbox: "Dropbox",
     dropboxHint: "One folder per calendar in your Dropbox app folder.",
+    icloud: "iCloud Drive",
+    icloudHint:
+      "Your own iCloud Drive: your calendars follow you between your Apple devices, with no account to create. Open them in the Files app.",
+    icloudSignedOut:
+      "This device isn't signed in to iCloud, or iCloud Drive is off. Turn it on in the system settings, then connect again.",
     connect: "Connect",
     disconnect: "Disconnect",
     active: "Active",

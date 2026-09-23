@@ -15,9 +15,10 @@
 // again on its own builders. The names are identical in every app in the
 // fleet, so a secret is pasted rather than translated.
 //
-// Everything derived from the bundle id is derived HERE and imported: the App
-// Group, the Android widget package. Deriving them in each consumer is how a
-// widget ends up addressing a container the app never writes.
+// Everything a native container is addressed by is spelled HERE and imported:
+// the App Group, the iCloud container, the Android widget package. Spelling
+// them in each consumer is how a widget ends up addressing a container the app
+// never writes.
 
 /** The project's own name. Not the listing name — see APP_DISPLAY_NAME. */
 const PROJECT_NAME = "Calendar";
@@ -45,6 +46,22 @@ const APP_GROUP = "group.se.agilator.calendar";
 /** The package the widgets' Kotlin lives in. A class name, not a coordinate. */
 const ANDROID_WIDGET_PKG = "se.agilator.calendar.widget";
 
+// THE iCLOUD CONTAINER IS NOT THE BUNDLE ID either, for the same reason as the
+// App Group. It names a container, registered once in the developer portal and
+// addressed by the app and its native module; the listing it ships under is
+// not its business. Deriving it would mean a plain checkout addressing
+// `iCloud.dev.local.calendar` while the module's Swift — which cannot read a
+// build variable — said something else, and a document store pointed at the
+// wrong container syncs nothing while reporting success.
+//
+// So it is committed, identical in every build, and read from here by both the
+// entitlements (`app.config.js`) and the Files-app declaration
+// (`plugins/with-icloud.js`). The Swift and the module's TypeScript
+// (`modules/icloud-store/`) spell it as the same literal, and
+// `tests/native_icloud_test.ts` fails when any of them disagrees.
+/** The iCloud Drive container the calendars sync through. */
+const ICLOUD_CONTAINER = "iCloud.se.agilator.calendar";
+
 // A `production` build is one headed for a store, so the fallbacks above are
 // not good enough: fail here rather than uploading a binary under the dev
 // bundle id or the project name. EAS sets EAS_BUILD_PROFILE on its builders.
@@ -68,4 +85,5 @@ module.exports = {
   EAS_PROJECT_ID,
   APP_GROUP,
   ANDROID_WIDGET_PKG,
+  ICLOUD_CONTAINER,
 };

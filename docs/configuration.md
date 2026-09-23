@@ -28,6 +28,11 @@ Settings → Storage prints when it tells the user where their calendar sits.
 Inside it, each calendar gets a folder of its own — see
 [storage](storage.md).
 
+**iCloud Drive** needs none of this: it has no client id and no environment
+variable. The web build never talks to iCloud; the row appears only where a
+host offers an iCloud provider — the App Store app — and its container is
+registered with Apple, not configured here (see `native/RELEASING.md`).
+
 ## Runtime settings
 
 Everything the user changes at runtime (country, language, view, theme,

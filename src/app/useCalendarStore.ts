@@ -59,11 +59,19 @@ type Session = {
 /** The store. `requestedBackend` is the settings choice, `calendarSlug` the
  *  active calendar's slug; `demoMode` swaps in a fresh in-memory demo
  *  adapter while true (the real backend and document are untouched — and the
- *  demo has no calendars of its own, so the slug is ignored). */
+ *  demo has no calendars of its own, so the slug is ignored).
+ *
+ *  `icloudReady` is whether a host's iCloud container is usable right now
+ *  (`useICloudBackend`). The host installs itself from outside the bundle and
+ *  can land after the first load, and the reader can sign in to iCloud while
+ *  the app is open, so a change to it has to re-open the document when iCloud
+ *  is the backend asked for — otherwise the store would stay on the browser
+ *  fallback it took before the host arrived. */
 export function useCalendarStore(
   requestedBackend: BackendId,
   demoMode: boolean,
   calendarSlug: string = DEFAULT_CALENDAR_SLUG,
+  icloudReady: boolean = false,
 ): CalendarStore {
   const [doc, setDoc] = useState<CalendarDoc>(emptyDoc);
   const [saveState, setSaveState] = useState<SaveState>({ kind: "loading" });
@@ -117,8 +125,13 @@ export function useCalendarStore(
     if (due) void push(due.session, due.doc);
   }, [push]);
 
+  // Only a change that matters to the backend in use re-opens the document:
+  // iCloud coming and going is nothing to a calendar kept in Dropbox.
+  const icloudGate = requestedBackend === "icloud" && icloudReady;
+
   // (Re)build the adapter and load the document whenever the backend choice,
-  // the calendar, or demo mode changes.
+  // the calendar, or demo mode changes — or the iCloud container becomes
+  // reachable (or stops being) while it is the backend asked for.
   useEffect(() => {
     let current = true;
     flush();
@@ -180,7 +193,7 @@ export function useCalendarStore(
       current = false;
       flush();
     };
-  }, [requestedBackend, demoMode, calendarSlug, flush]);
+  }, [requestedBackend, demoMode, calendarSlug, icloudGate, flush]);
 
   const setEntry = useCallback(
     (day: DayKey, text: string) => {

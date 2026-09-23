@@ -216,6 +216,11 @@ export const fr: Catalog = {
     dropbox: "Dropbox",
     dropboxHint:
       "Un dossier par calendrier dans le dossier d'application Dropbox.",
+    icloud: "iCloud Drive",
+    icloudHint:
+      "Votre propre iCloud Drive : vos calendriers vous suivent d'un appareil Apple à l'autre, sans compte à créer. Ouvrez-les dans l'app Fichiers.",
+    icloudSignedOut:
+      "Cet appareil n'est pas connecté à iCloud, ou iCloud Drive est désactivé. Activez-le dans les réglages du système, puis reconnectez-vous.",
     connect: "Connecter",
     disconnect: "Déconnecter",
     active: "Actif",

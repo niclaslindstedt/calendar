@@ -33,6 +33,7 @@ document from the new backend.
 | **This browser** | `localStorage` on the device                 | The default; zero setup.                         |
 | **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only. |
 | **Dropbox**      | `<calendar>/calendar.json` in the app folder | PKCE OAuth; requires `VITE_DROPBOX_APP_KEY`.     |
+| **iCloud Drive** | `calendar.json` in the app's iCloud folder   | App Store app only — see below.                  |
 | **Demo data**    | In memory only                               | Developer mode; a static sample calendar.        |
 
 None of these carries anything about your **contacts**. If you turn on
@@ -44,7 +45,7 @@ names and birthdays themselves are never written down at all.
 
 The file names above are the **default** calendar's. Every other calendar is
 a sibling document beside it — `calendar:document:<slug>` in the browser,
-`calendar.<slug>.json` in a local folder or on Drive — reached through the
+`calendar.<slug>.json` in a local folder or in iCloud Drive — reached through the
 same connection. Switching calendar saves any pending edit first, then loads
 the other document; switching backends carries every calendar over the moment
 each one is next opened and saved.
@@ -73,11 +74,31 @@ Deleting a calendar deletes its Dropbox folder outright; on the other
 backends its document is emptied instead, because a storage adapter can write
 but not delete.
 
-The cloud backends are wrapped in an offline mirror: the last-loaded copy is
+Dropbox and iCloud Drive are wrapped in an offline mirror: the last-loaded copy is
 cached on the device, so the calendar opens (read-only fresh, editable once
 reloaded) without a network; saves retry when you're back online. Each
 calendar gets its own mirror, so one calendar's cache can never be served for
 another's document.
+
+### iCloud Drive
+
+Offered only where a host offers it — the App Store app on iPhone and iPad. The
+web app never asks whether it is running natively; it asks whether an iCloud
+**provider** is present on `window` (`src/app/storage/icloudHost.ts`), and a
+browser has none, so the row is simply not there.
+
+It is the local folder backend with a different transport underneath: a folder
+the device syncs rather than one a browser was handed a grant to. Each calendar
+is a file in the app's own **Calendar** folder in iCloud Drive, named as it
+would be in a picked folder, so you can open them in the Files app on any of
+your devices. There is no sign-in and no token. A device that is not signed in
+to iCloud (or has iCloud Drive off) shows the row with a note and a **Connect**
+that re-checks; until then the calendar is kept in the browser's own storage.
+
+The container is on the device's own disk, so the offline mirror above is not
+there for the network: it is what the Home Screen widgets read the notes from
+(`native/src/snapshot.ts`), and it lets the calendar paint at once rather than
+waiting on the bridge.
 
 ## Conflicts
 
@@ -115,7 +136,7 @@ they aren't sharing a cloud backend.
 It carries the look settings, the theme, and **every** calendar with its
 notes — read from whichever backend is active, not just the one on screen.
 What it deliberately does not carry is the _connection_: the chosen backend,
-the Dropbox / Drive tokens and the picked folder are this device's own account
+the Dropbox tokens and the picked folder are this device's own account
 state, and a file that held them would either be a secret or a lie on the
 machine it was opened on. So an imported calendar lands in whatever backend
 that device is already using.
@@ -175,7 +196,7 @@ Two safeguards, and no more:
 
 There is no undo — export a backup first if you might want the notes back.
 The emptied documents are written straight through the active backend, one
-per calendar, so the reset reaches Dropbox or Drive the same way an ordinary
+per calendar, so the reset reaches Dropbox or iCloud Drive the same way an ordinary
 edit does; a calendar whose write fails is named rather than silently skipped.
 Like the backup pair above it, a reset applies immediately — the dialog's
 **Cancel** does not put the notes back.

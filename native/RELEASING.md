@@ -54,6 +54,13 @@ with the widget extension. Enable **App Groups** on both App IDs in the Apple
 Developer portal (the app and `…calendar.calendarwidget`) before the first
 store build — an entitlement the App ID does not carry fails code signing.
 
+It also declares one iCloud container, `iCloud.se.agilator.calendar`, for the
+iCloud Drive storage backend. Register it under **Identifiers → iCloud
+Containers**, then enable **iCloud** (with **iCloud Documents** and that
+container) on the app's App ID — not the widget's; the extension never touches
+it. Like the App Group, it is committed rather than derived from the bundle
+id, so it is the same whichever listing the build ships under.
+
 ## Cutting a build
 
 Dispatch **Actions → native → Run workflow** and pick:

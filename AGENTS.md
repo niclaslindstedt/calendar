@@ -213,7 +213,8 @@ adoption seam as the sibling `contacts` app; see the framework's
 `demo/ADOPTION.md`).
 
 The framework owns the UI kit and generic mechanics: components, modals, the
-theme engine, storage adapters (localStorage / local folder / Dropbox), the
+theme engine, storage adapters (localStorage / local folder / Dropbox — and
+the file-store adapter the app's own iCloud Drive backend is built on), the
 i18n runtime, logging, calendar date math
 (`buildMonthGrid`, `isoWeek`, `DayKey`), and the PWA update state machine.
 
@@ -406,30 +407,35 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does five things:
+**Thin is a constraint, not an aspiration.** The wrapper does six things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
 2. points a `WebView` at that origin and otherwise gets out of the way;
-3. injects two scripts into the page — `src/injected.ts`, which reports the
+3. injects three scripts into the page — `src/injected.ts`, which reports the
    resolved theme and the `calendar:` / `oss:cache:` slice of `localStorage`
-   and unregisters the service worker, and `src/contactsBridge.ts`, which
-   offers the page a way to ask the device for its contacts;
+   and unregisters the service worker; `src/contactsBridge.ts`, which offers
+   the page a way to ask the device for its contacts; and
+   `src/icloudBridge.ts`, which offers it a file store in the app's iCloud
+   Drive container;
 4. turns that report into a widget snapshot and publishes it
    (`src/snapshot.ts` → `src/widgets.ts` → `modules/widget-bridge`);
-5. answers those contacts requests (`src/contacts.ts`, via `expo-contacts`).
+5. answers those contacts requests (`src/contacts.ts`, via `expo-contacts`);
+6. answers those iCloud requests (`src/icloud.ts` → `modules/icloud-store`,
+   Apple only).
 
-### The two native-only features, and why there have to be two
+### The native-only features, and why there have to be some
 
-**Widgets and contacts are the only features the wrapper adds.** Everything
-else a reader sees is the web app, unchanged.
+**Widgets, contacts and iCloud Drive are the only features the wrapper
+adds.** Everything else a reader sees is the web app, unchanged.
 
 They are also the reason the wrapper is shippable at all. **App Store
 guideline 4.2 (minimum functionality) rejects a build that is only a viewer
 for a website**, so this app has to do things the browser cannot, and be seen
 to: it serves the calendar from inside the download (no network at all), it
-puts the month on the Home Screen, and it reads the address book so the
-calendar can mark the reader's people's birthdays and name days. A change that
+puts the month on the Home Screen, it reads the address book so the calendar
+can mark the reader's people's birthdays and name days, and it syncs the
+notes through the reader's own iCloud Drive. A change that
 removes a native-only feature does not just lose the feature — it weakens the
 4.2 case for the whole listing. A change that _adds_ one is not forbidden, but
 it has to clear both rules below and it has to be worth its own row here.
@@ -444,7 +450,9 @@ it has to clear both rules below and it has to be worth its own row here.
   provider is present on `window`; it never asks what it is running inside. A
   browser offers none, so the feature and its Settings tab are simply absent
   there, and a second host offering the same three methods would light it up
-  with no change to `src/`. If a change seems to need the web app to know it
+  with no change to `src/`. iCloud Drive is the second:
+  `src/app/storage/icloudHost.ts` asks whether an iCloud provider is present,
+  and the Storage tab's row, like the Contacts tab, is absent without one. If a change seems to need the web app to know it
   is native, the change is wrong; if it needs a capability the host can offer,
   name the capability.
 
@@ -479,6 +487,17 @@ it has to clear both rules below and it has to be worth its own row here.
   appears, on a device where the reader can see nothing wrong.
   `tests/native_contacts_test.ts` pins all three against the app's own
   constants.
+- **The iCloud bridge is the same shape of contract**: the property
+  (`window.__calendarICloud`), the event (`calendar:icloud-host`) and the five
+  method names, between `native/src/icloudBridge.ts` and
+  `src/app/storage/icloudHost.ts`. `tests/native_icloud_test.ts` pins them,
+  and keeps expo out of `icloudBridge.ts` / `icloudWire.ts` the same way.
+- **The iCloud container is committed, never derived from the bundle id**:
+  `iCloud.se.agilator.calendar` in `identifiers.js` (which the entitlements
+  and `plugins/with-icloud.js`'s `NSUbiquitousContainers` read) and as a
+  literal in `modules/icloud-store/index.ts` and its Swift twin.
+  `tests/native_icloud_test.ts` compares them. Changing it after release
+  strands every synced calendar in the old container.
 - **Nothing the root `tsc` can reach may import `expo-contacts`** (or any
   other `native/`-only dependency). The root config type-checks `tests/`, and
   `tests/native_contacts_test.ts` imports `native/src/contactsBridge.ts` — but
@@ -722,6 +741,7 @@ month cell set half again too big on a laptop.
 | the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                                |
 | the desktop shell                                                        | `tauri/README.md`, `docs/features/desktop-app.md`, `tauri/shell/tests/`                                                                                  |
 | contacts (the host seam, the matching, the Settings tab)                 | `docs/features/contacts.md`, `src/app/PrivacyPage.tsx`, `tests/celebrations_test.ts`, `tests/contact_selection_test.ts`, `tests/native_contacts_test.ts` |
+| the iCloud Drive backend (the host seam, the bridge, the container)      | `docs/storage.md`, `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `src/app/PrivacyPage.tsx`, `tests/native_icloud_test.ts`    |
 | what the app reads, stores or sends                                      | `src/app/PrivacyPage.tsx` — it is what the app stores' privacy questionnaires are answered against, so it is code, not marketing                         |
 | the web app's localStorage keys                                          | `native/src/snapshot.ts` **and** `tests/native_snapshot_test.ts` — the widgets read those keys from outside                                              |
 | a locale pack's week (`weekStartsOn` / `restWeekdays`), or adding a pack | `WEEK_RULES` in `native/src/snapshot.ts` — the week widgets lay a week out with it, and `tests/native_snapshot_test.ts` fails until the mirror matches   |

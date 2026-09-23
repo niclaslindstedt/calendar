@@ -10,7 +10,12 @@ const { version } = require("../package.json");
 // The listing's name and identifier, and everything derived from them. They
 // are build variables rather than literals — see ./identifiers.js for why, and
 // for the guard that fails a production build without them.
-const { DISPLAY_NAME, BUNDLE_ID, APP_GROUP } = require("./identifiers.js");
+const {
+  DISPLAY_NAME,
+  BUNDLE_ID,
+  APP_GROUP,
+  ICLOUD_CONTAINER,
+} = require("./identifiers.js");
 
 // The app's light "paper" default (src/app/themeColor.ts's own fallback). Only
 // paints the splash and the chrome before the page reports its live theme.
@@ -63,6 +68,16 @@ module.exports = () => ({
       entitlements: {
         // What lets the app write the container the widget extension reads.
         "com.apple.security.application-groups": [APP_GROUP],
+        // What lets the app read and write its iCloud Drive container. The
+        // three keys travel together: the service, the container the app may
+        // address, and the one it treats as its own. The container is the
+        // committed one (./identifiers.js), never one built from the bundle
+        // id — see there.
+        "com.apple.developer.icloud-services": ["CloudDocuments"],
+        "com.apple.developer.icloud-container-identifiers": [ICLOUD_CONTAINER],
+        "com.apple.developer.ubiquity-container-identifiers": [
+          ICLOUD_CONTAINER,
+        ],
       },
       infoPlist: {
         // The bundled build is served over plain HTTP on the loopback
@@ -128,6 +143,10 @@ module.exports = () => ({
       "./plugins/with-widgets",
       // Generates the WidgetKit extension target from ./targets/widget.
       ["@bacons/apple-targets", { appleTeamId: "$(TeamIdentifierPrefix)" }],
+      // Declares the iCloud Drive container as a document-scope folder, so the
+      // synced calendars show up under "Calendar" in the Files app rather
+      // than living invisibly inside the container.
+      "./plugins/with-icloud",
     ],
 
     extra: {

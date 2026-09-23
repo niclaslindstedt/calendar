@@ -7,9 +7,11 @@
 //     handle, the active backend id),
 //   - building the active `StorageAdapter` the document store saves through.
 //
-// The framework owns the actual protocol code (PKCE flows, Dropbox/Drive
-// REST, the folder file store) — this file just wires it to localStorage keys
-// and the app's env.
+// The framework owns the actual protocol code (PKCE flows, Dropbox REST, the
+// folder file store) — this file just wires it to localStorage keys and the
+// app's env. iCloud Drive is the one backend the framework does not ship: it
+// is a file store over whatever host offers the capability
+// (`icloudHost.ts` / `icloudStore.ts`), and it is wired here like the rest.
 //
 // Everything here is per-*calendar*: a backend is a place, and each calendar
 // is a separate document in that place. The connection state (a token, a
@@ -42,6 +44,8 @@ import {
 import { logStore } from "../log.ts";
 import { emptyDoc, serializeDoc } from "../types.ts";
 import type { BackendId } from "./demoAdapter.ts";
+import { getICloudHost, probeICloudStatus } from "./icloudHost.ts";
+import { ICLOUD_FOLDER_NAME, createICloudAdapter } from "./icloudStore.ts";
 import {
   DEFAULT_CALENDAR_SLUG,
   DROPBOX_DOCUMENT_FILE,
@@ -76,7 +80,12 @@ const storageLog = (scope: string) => logStore.createLogger(scope);
 
 export function readActiveBackendId(): BackendId {
   const stored = localStorage.getItem(ACTIVE_KEY);
-  if (stored === "browser" || stored === "folder" || stored === "dropbox") {
+  if (
+    stored === "browser" ||
+    stored === "folder" ||
+    stored === "dropbox" ||
+    stored === "icloud"
+  ) {
     return stored;
   }
   // Google Drive was removed as a backend. A device that had it selected is
@@ -243,6 +252,14 @@ export function dropboxLocation(slug: string): string {
   return dropboxDisplayPath(DROPBOX_APP_FOLDER, slug);
 }
 
+/** Where a calendar's notes sit in iCloud Drive, spelled the way the Files app
+ *  shows it. The container's folder name is set by the wrapper
+ *  (`ICLOUD_FOLDER_NAME`); each calendar is a file in it, named as in a
+ *  picked folder. */
+export function icloudLocation(slug: string): string {
+  return `iCloud Drive/${ICLOUD_FOLDER_NAME}/${documentFileName(slug)}`;
+}
+
 // --- adapter construction ---------------------------------------------------
 
 /** Build the adapter for a backend id and calendar slug, or null when the
@@ -268,6 +285,25 @@ export async function buildAdapter(
       return createFolderAdapter(handle, {
         fileName,
         logger: storageLog("folder"),
+      });
+    }
+
+    case "icloud": {
+      // Only where a host offers the container AND it is reachable right now:
+      // a device signed out of iCloud gets null, and the caller falls back to
+      // "browser" until the reader turns iCloud Drive back on.
+      const host = getICloudHost();
+      if ((await probeICloudStatus(host)) !== "ready" || !host) return null;
+      // Mirrored like Dropbox, though the container is on the device's own
+      // disk and needs no offline cover: the mirror is where the Home Screen
+      // widgets read the notes from (`native/src/snapshot.ts` reads
+      // `oss:cache:<backend>:<scope>` for any backend but the browser's), and
+      // it gives the calendar a synchronous first paint instead of a flash of
+      // an empty month while the bridge answers.
+      return withLocalCache(createICloudAdapter(host, fileName), {
+        storage: localStorage,
+        key: localCacheKey("icloud", cacheScope(slug)),
+        logger: storageLog("icloud"),
       });
     }
 
@@ -328,7 +364,7 @@ export async function discardCalendarData(
   // "gdrive" stays in this sweep although the backend is gone: a device that
   // used it still has its mirror, and deleting a calendar should take that
   // with it.
-  for (const backend of ["dropbox", "gdrive"] as const) {
+  for (const backend of ["dropbox", "icloud", "gdrive"] as const) {
     try {
       localStorage.removeItem(localCacheKey(backend, cacheScope(slug)));
     } catch {

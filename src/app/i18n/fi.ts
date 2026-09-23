@@ -213,6 +213,11 @@ export const fi: Catalog = {
     folderReconnect: "Yhdistä kansio uudelleen…",
     dropbox: "Dropbox",
     dropboxHint: "Yksi kansio kalenteria kohti Dropbox-sovelluskansiossasi.",
+    icloud: "iCloud Drive",
+    icloudHint:
+      "Oma iCloud Drivesi: kalenterisi kulkevat mukanasi Apple-laitteidesi välillä ilman tiliä. Avaa ne Tiedostot-apissa.",
+    icloudSignedOut:
+      "Tätä laitetta ei ole kirjattu iCloudiin, tai iCloud Drive on pois päältä. Ota se käyttöön järjestelmäasetuksista ja yhdistä sitten uudelleen.",
     connect: "Yhdistä",
     disconnect: "Katkaise yhteys",
     active: "Käytössä",

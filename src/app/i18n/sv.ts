@@ -213,6 +213,11 @@ export const sv: Catalog = {
     folderReconnect: "Återanslut mapp…",
     dropbox: "Dropbox",
     dropboxHint: "En mapp per kalender i din Dropbox-appmapp.",
+    icloud: "iCloud Drive",
+    icloudHint:
+      "Ditt eget iCloud Drive: dina kalendrar följer med mellan dina Apple-enheter, utan något konto att skapa. Öppna dem i Filer.",
+    icloudSignedOut:
+      "Den här enheten är inte inloggad på iCloud, eller så är iCloud Drive avstängt. Slå på det i systeminställningarna och anslut sedan igen.",
     connect: "Anslut",
     disconnect: "Koppla från",
     active: "Aktiv",

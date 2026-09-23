@@ -7,8 +7,9 @@
 // The calendar is local-first with no backend of our own, no account and no
 // analytics: by default everything stays on the device. Three things are
 // worth spelling out, and this page exists for them — the opt-in sync
-// backends (a picked local folder, the reader's own Dropbox), the installed
-// app's Home Screen widgets, and the app-store build's
+// backends (a picked local folder, the reader's own Dropbox, and in the App
+// Store app the reader's own iCloud Drive), the installed app's Home Screen
+// widgets, and the app-store build's
 // access to the device's contacts, which the app stores never leave. The
 // contacts section is also what the App Store and Play Store privacy
 // questionnaires are answered against, so keep it true to the code.
@@ -78,10 +79,10 @@ export function PrivacyPage() {
           <p>
             You may <span className="text-fg-bright">optionally</span> turn on
             sync to a storage location <em>you</em> control — a local folder on
-            your computer, or your own Dropbox — so the same calendar appears on
-            more than one device. Even then your notes go only to that location
-            in your own account; the project authors never receive them in any
-            configuration. See{" "}
+            your computer, your own Dropbox, or, in the App Store app, your own
+            iCloud Drive — so the same calendar appears on more than one device.
+            Even then your notes go only to that location in your own account;
+            the project authors never receive them in any configuration. See{" "}
             <a className="text-link hover:underline" href="#cloud-sync">
               Optional sync
             </a>{" "}
@@ -198,9 +199,9 @@ export function PrivacyPage() {
               The app makes no network request on account of this feature, at
               any point. Contacts are not uploaded to us — we run no server to
               upload them to — and they are deliberately kept out of the sync
-              backends as well: a calendar synced to Dropbox or to a local
-              folder carries your notes and no contact data. They are also kept
-              out of the Home Screen widgets (see{" "}
+              backends as well: a calendar synced to Dropbox, iCloud Drive or a
+              local folder carries your notes and no contact data. They are also
+              kept out of the Home Screen widgets (see{" "}
               <a className="text-link hover:underline" href="#installed-app">
                 The installed app
               </a>
@@ -238,9 +239,21 @@ export function PrivacyPage() {
             The App Store and Google Play builds are a thin native shell around
             the same web app, carrying a copy of it inside the download and
             serving it locally, so the app works with no network at all. It adds
-            one feature of its own —{" "}
-            <span className="text-fg-bright">Home Screen widgets</span> — and
-            reads the calendar for them from the page, on the device.
+            features of its own:{" "}
+            <span className="text-fg-bright">Home Screen widgets</span>, which
+            read the calendar from the page, on the device; reading your
+            contacts (see{" "}
+            <a className="text-link hover:underline" href="#contacts">
+              Contacts
+            </a>
+            ); and, on iPhone and iPad,{" "}
+            <span className="text-fg-bright">iCloud Drive</span> as a place to
+            sync your notes (see{" "}
+            <a className="text-link hover:underline" href="#cloud-sync">
+              Optional sync
+            </a>
+            ). The website offers neither contacts nor iCloud Drive: a browser
+            gives it no way to reach them.
           </p>
           <p>
             The widget shows the date and, if you wrote one, that day&apos;s
@@ -278,7 +291,8 @@ export function PrivacyPage() {
             If you opt in to Dropbox sync, the app additionally talks directly
             from your device to Dropbox&apos;s own API, to sign you in and to
             read and write your notes. Those requests go to the provider, not to
-            us.
+            us. iCloud Drive needs no request from the app at all: it writes to
+            a folder on the device, and the system syncs it.
           </p>
         </Section>
 
@@ -302,6 +316,17 @@ export function PrivacyPage() {
               Dropbox&apos;s OAuth flow (PKCE), and the resulting token is held
               only on this device.
             </li>
+            <li>
+              <span className="text-fg-bright">iCloud Drive.</span> In the App
+              Store app only, and only when you choose it: your calendars are
+              written to the app&apos;s own <em>Calendar</em> folder in your
+              iCloud Drive, which you can open in the Files app, and Apple syncs
+              them between your devices signed in to the same Apple Account.
+              Your notes are then also subject to Apple&apos;s privacy policy.
+              There is no sign-in and no token; switching back to another
+              backend stops the syncing, and the files stay in your iCloud Drive
+              until you delete them.
+            </li>
           </ul>
           <p>
             In every case what the app reads or writes is{" "}
@@ -311,9 +336,10 @@ export function PrivacyPage() {
             , it stays in your account with your provider, and the project
             authors never receive it or hold any token for it. Revoke the
             app&apos;s access at any time from your provider&apos;s security
-            settings and it simply stops syncing. When a cloud backend is active
-            the app also keeps an offline mirror of the synced bytes on the
-            device, so you can read and write while disconnected.
+            settings and it simply stops syncing. When Dropbox or iCloud Drive
+            is active the app also keeps a mirror of the synced calendar on the
+            device, so you can read and write while disconnected and the Home
+            Screen widgets can print it.
           </p>
         </Section>
 

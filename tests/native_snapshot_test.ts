@@ -12,6 +12,8 @@
 // imported from `src/app/storage/`: the point is to fail when the app moves a
 // key, which importing the app's own constant would hide.
 
+import { readFileSync } from "node:fs";
+
 import { describe, expect, it } from "vitest";
 
 import { LOCALES } from "../src/app/locale/index.ts";
@@ -113,6 +115,28 @@ describe("readEntries", () => {
       "work",
     );
     expect(entries).toEqual({ "2026-03-16": "Standup" });
+  });
+
+  it("reads iCloud Drive through the same mirror", () => {
+    // The iCloud container is on the device, but the widgets cannot reach it:
+    // `backends.ts` mirrors the iCloud adapter for exactly this read. Drop the
+    // mirror there and the widgets go blank on every iPhone synced to iCloud.
+    const entries = readEntries(
+      {
+        "calendar:document": doc({ "2026-03-15": "stale browser copy" }),
+        "oss:cache:icloud:calendar": JSON.stringify({
+          text: doc({ "2026-03-17": "Fika" }),
+        }),
+      },
+      "icloud",
+      "default",
+    );
+    expect(entries).toEqual({ "2026-03-17": "Fika" });
+    const backends = readFileSync(
+      new URL("../src/app/storage/backends.ts", import.meta.url),
+      "utf8",
+    );
+    expect(backends).toContain('localCacheKey("icloud", cacheScope(slug))');
   });
 
   it("drops blank and non-string notes", () => {

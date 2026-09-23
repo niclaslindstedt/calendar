@@ -20,10 +20,12 @@ import { useT } from "../i18n/index.ts";
 import type { BackendId } from "../storage/backends.ts";
 import {
   dropboxLocation,
+  icloudLocation,
   isDropboxAvailable,
   isDropboxConnected,
   isFolderAvailable,
 } from "../storage/backends.ts";
+import type { ICloudStatus } from "../storage/icloudHost.ts";
 import type { SaveState } from "../useCalendarStore.ts";
 import type { BackupActions, ImportResult } from "../useBackup.ts";
 import type { ResetActions } from "../useReset.ts";
@@ -36,6 +38,11 @@ export type StorageActions = {
   connectDropbox: () => void;
   disconnect: (id: BackendId) => void;
   folderConnected: boolean;
+  /** Whether a host offers iCloud Drive, and whether it is usable now.
+   *  `unavailable` — every browser — hides the row. */
+  icloudStatus: ICloudStatus;
+  /** Re-ask whether the container is reachable, and switch to it if so. */
+  connectICloud: () => void;
 };
 
 export function StorageSection({
@@ -91,6 +98,12 @@ export function StorageSection({
       /** A second, quieter line under the hint — where the document actually
        *  sits, for a backend whose location the user can't otherwise see. */
       detail?: string;
+      /** A line saying why a backend that is offered can't be used yet. */
+      warning?: string;
+      /** Whether Disconnect is offered while connected. Defaults to true;
+       *  iCloud has no credential to forget, so it only offers to stop using
+       *  it while it is the active backend. */
+      disconnectable?: boolean;
     },
   ) => {
     if (!opts.available) return null;
@@ -105,6 +118,9 @@ export function StorageSection({
               {opts.detail}
             </div>
           )}
+          {opts.warning && (
+            <div className="text-danger mt-0.5 text-xs">{opts.warning}</div>
+          )}
         </div>
         {active ? (
           <Badge tone="accent">{t("storage.active")}</Badge>
@@ -118,11 +134,14 @@ export function StorageSection({
             {opts.connectLabel ?? t("storage.connect")}
           </Button>
         )}
-        {opts.connected && id !== "browser" && id !== "demo" && (
-          <Button variant="ghost" onClick={() => storage.disconnect(id)}>
-            {t("storage.disconnect")}
-          </Button>
-        )}
+        {opts.connected &&
+          (opts.disconnectable ?? true) &&
+          id !== "browser" &&
+          id !== "demo" && (
+            <Button variant="ghost" onClick={() => storage.disconnect(id)}>
+              {t("storage.disconnect")}
+            </Button>
+          )}
       </div>
     );
   };
@@ -141,6 +160,19 @@ export function StorageSection({
             t("storage.browserHint"),
             { available: true, connected: true },
           )}
+          {backendRow("icloud", t("storage.icloud"), t("storage.icloudHint"), {
+            // Only where a host offers the container — the App Store app. A
+            // browser has none, so the row is simply not there.
+            available: storage.icloudStatus !== "unavailable",
+            connected: storage.icloudStatus === "ready",
+            onConnect: storage.connectICloud,
+            detail: icloudLocation(calendarSlug),
+            warning:
+              storage.icloudStatus === "signed-out"
+                ? t("storage.icloudSignedOut")
+                : undefined,
+            disconnectable: effectiveBackend === "icloud",
+          })}
           {backendRow("folder", t("storage.folder"), t("storage.folderHint"), {
             available: isFolderAvailable(),
             connected: storage.folderConnected,

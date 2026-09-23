@@ -1,9 +1,10 @@
 # The native wrapper
 
 A **thin** Expo / React Native shell around the calendar web app, so it can
-ship to the App Store and Google Play — and so it can do the two things a PWA
-cannot: put **Home Screen widgets** on a phone, and read the device's
-**contacts** so the calendar can mark the reader's people.
+ship to the App Store and Google Play — and so it can do the three things a
+PWA cannot: put **Home Screen widgets** on a phone, read the device's
+**contacts** so the calendar can mark the reader's people, and sync the notes
+through the reader's own **iCloud Drive**.
 
 Thin is the design, not an aspiration. The wrapper:
 
@@ -15,20 +16,23 @@ Thin is the design, not an aspiration. The wrapper:
 - copies the page's notes into a shared container so the **widgets** can print
   them (`src/injected.ts` → `src/snapshot.ts` → `modules/widget-bridge`);
 - answers the page when it asks for **contacts** (`src/contactsBridge.ts` →
-  `src/contacts.ts`), handing over names and birthdays and nothing else.
+  `src/contacts.ts`), handing over names and birthdays and nothing else;
+- answers the page when it asks to read or write a file in the app's
+  **iCloud** container (`src/icloudBridge.ts` → `src/icloud.ts` →
+  `modules/icloud-store`).
 
 That is the entire list, and it is deliberately not empty: **App Store
 guideline 4.2 rejects a build that is only a viewer for a website**, so the
-wrapper has to do things the browser cannot. Widgets and contacts are those
-things. Adding a third is allowed; adding one that makes `src/` aware of this
-wrapper is not.
+wrapper has to do things the browser cannot. Widgets, contacts and iCloud are
+those things. Adding a fourth is allowed; adding one that makes `src/` aware
+of this wrapper is not.
 
 **Nothing in the repo's `src/` knows this exists.** The widgets read the
-shipped app from the outside. Contacts, which the web app has to _render_,
-work the other way round without breaking that rule: the app looks for a
-contacts **capability** on `window` and this installs one, so a browser
-(which has none) simply does not show the feature. The app never asks what it
-is running inside.
+shipped app from the outside. Contacts and iCloud, which the web app has to
+_drive_, work the other way round without breaking that rule: the app looks
+for a contacts or an iCloud **capability** on `window` and this installs one,
+so a browser (which has none) simply does not show the feature. The app never
+asks what it is running inside.
 
 The wrapper also decides nothing about the calendar. It reads names and
 birthdays; which day a name is celebrated on, how a spelling folds, and what a
@@ -46,6 +50,11 @@ ships.
 | `src/snapshot.ts`         | **Pure.** Raw `localStorage` → the widget snapshot. Tested from the root suite.                          |
 | `src/contactsBridge.ts`   | **Pure.** The injected contacts provider, and the request/response plumbing. Tested from the root suite. |
 | `src/contacts.ts`         | Reads names and birthdays through `expo-contacts`. Two fields, read-only, no storage.                    |
+| `src/icloudBridge.ts`     | **Pure.** The injected iCloud provider, and the request/response plumbing. Tested from the root suite.   |
+| `src/icloudWire.ts`       | **Import-free.** The shapes that cross the iCloud bridge — see the note in the file.                     |
+| `src/icloud.ts`           | Runs one iCloud request against the native module. Degrades to "unavailable" when it is absent.          |
+| `modules/icloud-store/`   | A local Expo module: list / read / write / remove inside the app's iCloud container. **Apple only.**     |
+| `plugins/with-icloud.js`  | Declares the container as a document scope (`NSUbiquitousContainers`), so it shows up in the Files app.  |
 | `src/widgets.ts`          | Publishes a snapshot through the native bridge; degrades to "no widgets" when it is absent.              |
 | `modules/widget-bridge/`  | A local Expo module: writes the snapshot into the shared container and reloads the widget timelines.     |
 | `targets/widget/`         | The iOS WidgetKit extension (SwiftUI), generated into Xcode by `@bacons/apple-targets`.                  |
@@ -146,6 +155,56 @@ that week it began six days ago.
 (and its Swift twin), and `targets/widget/expo-target.config.js`. Changing it
 after release orphans every installed widget's data.
 
+## The iCloud backend
+
+The web app already syncs to a picked local folder. iCloud Drive is that
+backend with a different transport underneath: a folder the device syncs,
+rather than one the browser was handed a grant to.
+
+```
+Settings → Storage → iCloud Drive
+   │  src/app/storage/backends.ts — a file-store adapter over the host
+   ▼
+window.__calendarICloud        — installed by src/icloudBridge.ts
+   │  postMessage (request)  /  injectJavaScript (answer)
+   ▼
+App.tsx → src/icloud.ts → modules/icloud-store
+   │
+   ▼
+iCloud.se.agilator.calendar/Documents/
+   calendar.json, calendar.<slug>.json, …
+```
+
+Everything is filed under the container's `Documents` folder, which
+`plugins/with-icloud.js` publishes as a document scope — so every calendar
+shows up under **Calendar** in the Files app, named exactly as it would be in a
+picked local folder.
+
+**The container id is committed, never derived from the bundle id**, and is
+spelled in two kinds of place that must agree: `identifiers.js` (read by the
+entitlements in `app.config.js` and by `plugins/with-icloud.js`), and
+`modules/icloud-store/index.ts` with its Swift twin, which cannot read a build
+variable. The root suite's `tests/native_icloud_test.ts` compares them.
+Changing it after release strands every synced copy in the old container.
+
+It is **not** the App Group. The widgets read their snapshot from the page's
+own storage, whichever backend is active; nothing on the iCloud path touches
+`group.se.agilator.calendar`.
+
+### What crosses, and what doesn't
+
+The bridge carries paths and file contents as text, and nothing else — a
+calendar is one JSON document with nothing binary beside it. Nothing is
+cached on the native side and nothing is logged.
+
+### Android
+
+There is no iCloud on Android, and the module says so rather than pretending:
+`modules/icloud-store` declares only the `apple` platform, so
+`requireOptionalNativeModule` returns `null` there and the backend is reported
+unavailable — which means the web app never lists it. The Android build keeps
+the same local folder, Dropbox and on-device backends the website has.
+
 ## Things that will bite you
 
 - **The port in `src/local-server.ts` is fixed on purpose.** A web origin is
@@ -159,6 +218,9 @@ after release orphans every installed widget's data.
   stable across app updates, so a worker registered by an older build would
   keep answering from its precache after a store update had already unpacked
   the new one.
+- **`url(forUbiquityContainerIdentifier:)` blocks.** It hits the disk and the
+  iCloud account, so it never runs on the main thread — every entry point in
+  the Swift module is an `AsyncFunction`, and the resolved URL is cached.
 
 ## Releasing
 

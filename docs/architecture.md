@@ -26,7 +26,9 @@ src/
     │                     worked) — see features/locales.md
     ├── i18n/             UI-string catalogs (framework createI18n)
     ├── storage/          backend registry + OAuth flows + demo adapter;
-    │                     paths.ts names each calendar's document (pure, tested)
+    │                     paths.ts names each calendar's document (pure, tested);
+    │                     icloudHost.ts / icloudStore.ts: the iCloud Drive
+    │                     backend, over a capability a host may offer
     ├── types.ts          CalendarDoc: { version, entries: { "YYYY-MM-DD": text } }
     ├── migrations.ts     version chain (framework createMigrator)
     ├── useCalendarStore.ts  load/save the active calendar's document through

@@ -57,7 +57,8 @@ optionally synced to a storage backend you control.
   a Nicklas is celebrated on Niklas's day. Opt in one contact at a time;
   nothing about a contact is stored or sent anywhere.
 - **Storage your way**: browser storage, a local folder, or Dropbox (a folder
-  per calendar in the app folder).
+  per calendar in the app folder) — and, in the App Store app, your own iCloud
+  Drive, with no account to create.
 - **Separate calendars in one app**: keep home and work apart — each calendar
   with its own notes, all in the same backend.
 - **Take it with you**: export your settings and every calendar to one file,

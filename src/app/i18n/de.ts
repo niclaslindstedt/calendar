@@ -214,6 +214,11 @@ export const de: Catalog = {
     folderReconnect: "Ordner neu verbinden…",
     dropbox: "Dropbox",
     dropboxHint: "Ein Ordner je Kalender in Ihrem Dropbox-App-Ordner.",
+    icloud: "iCloud Drive",
+    icloudHint:
+      "Ihr eigenes iCloud Drive: Ihre Kalender begleiten Sie zwischen Ihren Apple-Geräten, ohne ein Konto anlegen zu müssen. Öffnen Sie sie in der Dateien-App.",
+    icloudSignedOut:
+      "Dieses Gerät ist nicht bei iCloud angemeldet, oder iCloud Drive ist ausgeschaltet. Schalten Sie es in den Systemeinstellungen ein und verbinden Sie dann erneut.",
     connect: "Verbinden",
     disconnect: "Trennen",
     active: "Aktiv",

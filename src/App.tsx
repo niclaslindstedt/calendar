@@ -70,6 +70,7 @@ import {
   type BackendId,
 } from "./app/storage/backends.ts";
 import { useBackup } from "./app/useBackup.ts";
+import { useICloudBackend } from "./app/useICloudBackend.ts";
 import { useReset } from "./app/useReset.ts";
 import { useCalendarStore } from "./app/useCalendarStore.ts";
 import { useCalendars } from "./app/useCalendars.ts";
@@ -254,10 +255,15 @@ export function App() {
   // document store keys off the active slug, so switching swaps the notes
   // under the same month.
   const calendars = useCalendars(settings.backend);
+  // iCloud Drive, where a host offers it (`storage/icloudHost.ts`) — on the
+  // website there is none, `status` stays "unavailable", and the Storage tab
+  // never shows the row.
+  const icloud = useICloudBackend();
   const store = useCalendarStore(
     settings.backend,
     settings.demoData,
     calendars.activeSlug,
+    icloud.status === "ready",
   );
   // Import / export, over the same backend the store is saving through: a
   // backup is a copy of what is actually stored, not of what was asked for.
@@ -880,6 +886,18 @@ export function App() {
         storage={{
           setActive: setActiveBackend,
           folderConnected,
+          icloudStatus: icloud.status,
+          // Nothing to authorise: the container belongs to the app and the
+          // device is signed in to iCloud or it is not. So connecting is
+          // re-asking — the reader may have just turned iCloud Drive on — and
+          // switching once the answer is yes.
+          connectICloud: () =>
+            void icloud.refresh().then((answer) => {
+              if (answer === "ready") {
+                setActiveBackend("icloud");
+                status("Connected icloud");
+              }
+            }),
           connectFolder: () =>
             void connectFolder().then((ok) => {
               if (ok) {

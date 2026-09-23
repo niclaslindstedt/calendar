@@ -5,11 +5,12 @@ The calendar is a PWA first: open
 from the browser, and you have the whole app offline with nothing downloaded
 from a store.
 
-The native app exists for the two things that route cannot give you: **widgets
-on the Home Screen**, and reading your **contacts** so the calendar can mark
-[your people's birthdays and name days](contacts.md). Everything else is the
-same app — the same three views, the same notes, the same storage backends —
-running inside a wrapper thin enough that it adds nothing else.
+The native app exists for the things that route cannot give you: **widgets on
+the Home Screen**, reading your **contacts** so the calendar can mark
+[your people's birthdays and name days](contacts.md), and, on iPhone and iPad,
+syncing through your own **iCloud Drive**. Everything else is the same app —
+the same three views, the same notes, the same storage backends — running
+inside a wrapper thin enough that it adds nothing else.
 
 ## What the app is
 
@@ -20,11 +21,33 @@ loopback address on your phone. So:
 - it updates when you update the app from the store, and not before;
 - its notes live in exactly the same place the browser's would — the app's own
   storage on the device — and the storage backend you pick in
-  **Settings → Storage** works the same way, Dropbox and Drive included.
+  **Settings → Storage** works the same way, Dropbox included.
 
 Links that leave the app (a Dropbox sign-in, a URL you wrote in a note) open in
 your normal browser rather than inside the app, which is both what the stores
 expect and what the sign-in pages require.
+
+## iCloud Drive
+
+On iPhone and iPad, **Settings → Storage** has one more row than the website:
+**iCloud Drive**. There's no account to create and no sign-in — your device is
+already signed in to iCloud, so connecting is one tap, and your calendars
+follow you between your own Apple devices. Nobody else holds the files.
+
+What lands there is an ordinary folder. Each calendar is a file in the app's
+own **Calendar** folder in iCloud Drive (`calendar.json`, and
+`calendar.<slug>.json` beside it for every other calendar), so you can open it
+in the Files app and see exactly what is synced — or copy it somewhere else as
+a backup.
+
+If the device isn't signed in to iCloud, or iCloud Drive is switched off, the
+row says so and **Connect** checks again once you've turned it on; until then
+your notes stay in the app's own storage on the device. The widgets work the
+same with iCloud Drive as with any other backend: the app keeps a copy of the
+calendar on the device, and that copy is what they print.
+
+There is no iCloud on Android, so the Android app doesn't offer it, and neither
+does the website — a browser has no way to write to your iCloud Drive.
 
 ## Contacts
 

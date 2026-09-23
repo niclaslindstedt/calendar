@@ -20,10 +20,12 @@ import {
 import { DOC_VERSION, serializeDoc, type CalendarDoc } from "../types.ts";
 
 /** The app-level backend id union: the framework's backends this app offers,
- *  plus our demo. Google Drive is excluded deliberately — the framework still
- *  ships the adapter, and this app no longer connects to it, so saying so in
- *  the type is what keeps `buildAdapter`'s switch exhaustive. */
-export type BackendId = Exclude<StorageBackendId, "gdrive"> | "demo";
+ *  plus the two the app adds itself — iCloud Drive, where a host offers it
+ *  (`icloudHost.ts`), and our demo. Google Drive is excluded deliberately —
+ *  the framework still ships the adapter, and this app no longer connects to
+ *  it, so saying so in the type is what keeps `buildAdapter`'s switch
+ *  exhaustive. */
+export type BackendId = Exclude<StorageBackendId, "gdrive"> | "icloud" | "demo";
 
 // Static sample notes, placed relative to a month anchor so the demo always
 // has content on the screen the user lands on. Day numbers are 1-based days
