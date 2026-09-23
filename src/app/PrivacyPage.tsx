@@ -31,7 +31,7 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 // Last meaningful change to the policy text below. Bump it whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
 // only line a reader has to look at to see how fresh the policy is.
-const LAST_UPDATED = "2026-08-24";
+const LAST_UPDATED = "2026-09-23";
 
 export function PrivacyPage() {
   // The page mounts on its own, outside the app shell, so it has to paint its
@@ -344,7 +344,10 @@ export function PrivacyPage() {
             >
               GitHub&apos;s privacy statement
             </a>
-            . The project authors run no additional logging service.
+            . The app from the App Store or Google Play carries its own copy of
+            the site and serves it on the device, so opening it sends no such
+            request. The project authors do not run an additional logging
+            service.
           </p>
         </Section>
 
@@ -362,6 +365,16 @@ export function PrivacyPage() {
             page reflects the most recent edit. Should a future version change
             what data is stored or sent, or add another place it can be sent,
             this policy will be updated to describe it before that change ships.
+          </p>
+          <p>
+            The store listings link to{" "}
+            <a
+              href="https://apps.agilator.se/calendar/privacy/"
+              className="text-link hover:underline"
+            >
+              apps.agilator.se/calendar/privacy
+            </a>
+            , which describes the same app and is kept in step with this page.
           </p>
         </Section>
 
