@@ -16,7 +16,10 @@ runs with none of them set.
 **Dropbox**: create an app at <https://www.dropbox.com/developers/apps> with
 scoped access and an **App folder** named `calendar`, add your deploy
 origin(s) to the redirect URIs (the app derives its redirect URI from
-`origin + pathname`, without a trailing slash), and put the app key in
+`origin + pathname`, without a trailing slash) — plus `http://127.0.0.1:53682/`,
+`:53683/` and `:53684/` for the desktop app, and `se.agilator.calendar://oauth`
+(the bundle id as the scheme) for the phone app, see
+[native/README.md](../native/README.md#signing-in-to-dropbox) — and put the app key in
 `VITE_DROPBOX_APP_KEY`. Grant it `files.metadata.read`,
 `files.content.read` and `files.content.write` — the app never leaves its own
 folder.

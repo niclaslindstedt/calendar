@@ -4,10 +4,11 @@
 // This is a deliberately thin wrapper. It starts a loopback server, points a
 // WebView at it, keeps the native chrome in step with the page's theme, sends
 // off-origin links to the system browser, forwards the page's storage to the
-// widget publisher, and answers the page when it asks the device for its
-// contacts or asks to read or write the app's iCloud Drive container. There is
-// no native UI at all beyond a spinner and a failure screen — everything a
-// reader sees is the web app, unchanged.
+// widget publisher, answers the page when it asks the device for its contacts
+// or asks to read or write the app's iCloud Drive container, and opens a
+// provider's sign-in in an authentication session when the page asks for one.
+// There is no native UI at all beyond a spinner and a failure screen —
+// everything a reader sees is the web app, unchanged.
 //
 // The wrapper adds three things the browser cannot do, and it has to add
 // something: App Store guideline 4.2 rejects a build that is only a viewer for
@@ -69,6 +70,12 @@ import {
   type ICloudMethod,
 } from "./src/icloudBridge";
 import { answerICloud } from "./src/icloud";
+import {
+  authSessionResolveScript,
+  authSessionScript,
+  isAuthSessionRequest,
+} from "./src/authSessionBridge";
+import { answerAuthSession, authRedirectUri } from "./src/authSession";
 import { dayKey } from "./src/snapshot";
 import { forgetPublished, publishReport, reloadWidgets } from "./src/widgets";
 
@@ -76,6 +83,15 @@ import { forgetPublished, publishReport, reloadWidgets } from "./src/widgets";
 // scope so the auto-hide never wins the race; a rejection only means the
 // splash was already gone, which is harmless.
 void SplashScreen.preventAutoHideAsync().catch(() => {});
+
+// The redirect URI a sign-in comes back on (`<scheme>://oauth`, the scheme
+// being the bundle id), and the provider the page finds it through. Null in a
+// build with no URL scheme, which offers no provider and leaves the page on
+// its redirect flow.
+const AUTH_REDIRECT_URI = authRedirectUri();
+const AUTH_SESSION_SCRIPT = AUTH_REDIRECT_URI
+  ? authSessionScript(AUTH_REDIRECT_URI)
+  : "";
 
 // Ceiling on how long the splash may stay up. The happy path hides it on first
 // paint; this only fires when a load hangs, so a broken start falls through to
@@ -179,6 +195,15 @@ export default function App() {
     [],
   );
 
+  // One sign-in. The sheet is modal and the page waits on it; what comes back
+  // is the provider's redirect URL, handed straight to the page, which holds
+  // the PKCE verifier and makes the token exchange itself.
+  const signIn = useCallback(async (id: string, url: string) => {
+    if (!AUTH_REDIRECT_URI) return;
+    const result = await answerAuthSession(url, AUTH_REDIRECT_URI);
+    webViewRef.current?.injectJavaScript(authSessionResolveScript(id, result));
+  }, []);
+
   const onMessage = useCallback(
     (event: WebViewMessageEvent) => {
       let parsed: unknown;
@@ -194,6 +219,10 @@ export default function App() {
       }
       if (isICloudRequest(parsed)) {
         void answerICloudRequest(parsed.id, parsed.method, parsed.args);
+        return;
+      }
+      if (isAuthSessionRequest(parsed)) {
+        void signIn(parsed.id, parsed.url);
         return;
       }
       if (!isReport(parsed)) return;
@@ -213,7 +242,7 @@ export default function App() {
         now,
       );
     },
-    [answerContacts, answerICloudRequest],
+    [answerContacts, answerICloudRequest, signIn],
   );
 
   // Coming back to the foreground after midnight: the notes are unchanged, so
@@ -251,10 +280,13 @@ export default function App() {
 
   const origin = server.status === "ready" ? server.origin : null;
 
-  // Keep the WebView on the embedded app. Anything else — a Dropbox
-  // OAuth page, a link inside a note — belongs in the system browser, both
-  // because OAuth inside an embedded WebView is blocked by the providers and
-  // because App Review expects external links to open externally.
+  // Keep the WebView on the embedded app. Anything else — a link inside a
+  // note, the privacy policy's own links — belongs in the system browser,
+  // because App Review expects external links to open externally. A
+  // provider's sign-in page is not navigated to at all: the page asks for an
+  // authentication session instead (see `src/authSessionBridge.ts`), since a
+  // consent page in Safari redirects back to Safari, not to the app. This
+  // stays the fallback for a page that finds no session provider.
   const onShouldStartLoadWithRequest = useCallback(
     (request: WebViewNavigation) => {
       if (!origin) return false;
@@ -314,11 +346,12 @@ export default function App() {
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
             injectedJavaScriptBeforeContentLoaded={BEFORE_LOAD_SCRIPT}
-            // Three scripts, one prop: the storage reporter the widgets need,
-            // and the contacts and iCloud providers the calendar looks for.
-            // All run once the page has loaded, and all are guarded against a
+            // Four scripts, one prop: the storage reporter the widgets need,
+            // the contacts and iCloud providers the calendar looks for, and
+            // the auth-session provider its Dropbox sign-in looks for. All
+            // run once the page has loaded, and all are guarded against a
             // second injection (a reload re-runs this).
-            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CONTACTS_SCRIPT}\n${ICLOUD_SCRIPT}`}
+            injectedJavaScript={`${AFTER_LOAD_SCRIPT}\n${CONTACTS_SCRIPT}\n${ICLOUD_SCRIPT}\n${AUTH_SESSION_SCRIPT}`}
             onMessage={onMessage}
             onLoadEnd={hideSplash}
             onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}

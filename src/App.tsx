@@ -907,12 +907,14 @@ export function App() {
             }),
           connectDropbox: () =>
             void connectDropbox().then(
-              (connectedInPlace) => {
-                // The desktop sign-in finishes here; the web one navigates
-                // away and finishes in the boot effect above.
-                if (connectedInPlace) {
+              (outcome) => {
+                // The phone and desktop sign-ins finish here; the web one
+                // navigates away and finishes in the boot effect above.
+                if (outcome === "connected") {
                   setActiveBackend("dropbox");
                   status("Connected dropbox");
+                } else if (outcome === "cancelled") {
+                  status("Dropbox sign-in cancelled");
                 }
               },
               (err: unknown) =>

@@ -24,12 +24,15 @@ import {
   BrowserLocalStorageAdapter,
   clearDirectoryHandle,
   completeDropboxAuth,
+  connectDropboxAuthSession,
   connectDropboxLoopback,
   createDropboxAdapter,
   createFolderAdapter,
   deleteDropboxPath,
   deleteLocalDocument,
+  getAuthSessionHost,
   hasPendingDropboxAuth,
+  isAuthCancelled,
   isDesktopShellOrigin,
   isFolderBackendAvailable,
   loadDirectoryHandle,
@@ -167,8 +170,8 @@ export async function loadFolderConnected(): Promise<boolean> {
 
 // --- connect flows ----------------------------------------------------------
 
-/** Persist a finished sign-in's tokens — the one ending both connect flows
- *  share (the boot-time redirect's and the desktop's). */
+/** Persist a finished sign-in's tokens — the one ending every connect flow
+ *  shares (the boot-time redirect's, the desktop's and the phone's). */
 function storeDropboxTokens(result: DropboxAuthResult): void {
   localStorage.setItem(DROPBOX_ACCESS_KEY, result.accessToken);
   if (result.refreshToken) {
@@ -176,13 +179,40 @@ function storeDropboxTokens(result: DropboxAuthResult): void {
   }
 }
 
-/** Connect Dropbox. Resolves `true` when it connected IN PLACE — the desktop
- *  app, where the redirect has nowhere to land, so the sign-in runs in the
- *  user's browser and the shell's loopback listener hands the result back.
- *  Resolves `false` after starting the web redirect: the page navigates away
- *  and `completeOauthOnBoot` picks the `?code=` up on return. */
-export async function connectDropbox(): Promise<boolean> {
+/** How a Dropbox connect ended: connected in place, left for the web
+ *  redirect, or closed by the reader before it finished. */
+export type DropboxConnect = "connected" | "redirecting" | "cancelled";
+
+/** Connect Dropbox. Two hosts cannot take the redirect back, and both finish
+ *  the sign-in in one promise, connecting IN PLACE (`"connected"`):
+ *    - a host that OFFERS an authentication session (the phone app): the
+ *      consent page opens in a sheet over the app and the sheet hands the
+ *      redirect back — asked for as a capability, not a platform. Closing the
+ *      sheet is `"cancelled"`, not an error;
+ *    - the desktop app, whose origin is a private scheme: the sign-in runs in
+ *      the user's browser and the shell's loopback listener hands the result
+ *      back.
+ *  Everywhere else it starts the web redirect (`"redirecting"`): the page
+ *  navigates away and `completeOauthOnBoot` picks the `?code=` up on return. */
+export async function connectDropbox(): Promise<DropboxConnect> {
   if (!DROPBOX_APP_KEY) throw new Error("no app key");
+  const authSession = getAuthSessionHost();
+  if (authSession) {
+    try {
+      storeDropboxTokens(
+        await connectDropboxAuthSession(
+          DROPBOX_APP_KEY,
+          authSession,
+          undefined,
+          storageLog("dropbox"),
+        ),
+      );
+    } catch (err) {
+      if (isAuthCancelled(err)) return "cancelled";
+      throw err;
+    }
+    return "connected";
+  }
   if (isDesktopShellOrigin()) {
     storeDropboxTokens(
       await connectDropboxLoopback(
@@ -191,10 +221,10 @@ export async function connectDropbox(): Promise<boolean> {
         storageLog("dropbox"),
       ),
     );
-    return true;
+    return "connected";
   }
   await startDropboxAuth(DROPBOX_APP_KEY, storageLog("dropbox"));
-  return false;
+  return "redirecting";
 }
 
 /** Show the directory picker and persist the handle. Must run in a user

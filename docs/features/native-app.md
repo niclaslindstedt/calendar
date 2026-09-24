@@ -23,9 +23,10 @@ loopback address on your phone. So:
   storage on the device — and the storage backend you pick in
   **Settings → Storage** works the same way, Dropbox included.
 
-Links that leave the app (a Dropbox sign-in, a URL you wrote in a note) open in
-your normal browser rather than inside the app, which is both what the stores
-expect and what the sign-in pages require.
+Connecting **Dropbox** opens Dropbox's sign-in in a sheet over the app;
+approving closes it and connects, and closing it leaves nothing connected.
+Other links that leave the app (a URL you wrote in a note) open in your normal
+browser rather than inside the app, which is what the stores expect.
 
 ## iCloud Drive
 
