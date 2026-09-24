@@ -68,7 +68,7 @@ const SKIP_PATTERNS = [
   /^native\/tsconfig\.json$/,
   /^native\/scripts\//,
   /^native\/\.env\.example$/,
-  /^native\/\.easignore$/,
+  /^\.easignore$/,
   /^native\/\.gitignore$/,
 ];
 
