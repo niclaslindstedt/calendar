@@ -10,9 +10,11 @@ Thin is the design, not an aspiration. The wrapper:
 
 - packs the built web app into `assets/webroot.zip`, unpacks it on first
   launch and serves it from a **loopback HTTP server** (`src/local-server.ts`);
-- points a `WebView` at that origin, and gets out of the way — the status bar
-  and safe-area bands follow the page's own theme, off-origin links go to the
-  system browser, and Android's back button drives the WebView's history;
+- points a `WebView` at that origin, and gets out of the way — on iOS the
+  WebView runs edge to edge and the page pads itself with
+  `env(safe-area-inset-*)`, as the installed PWA does; on Android the status
+  bar and safe-area bands follow the page's own theme; off-origin links go to
+  the system browser, and Android's back button drives the WebView's history;
 - copies the page's notes into a shared container so the **widgets** can print
   them (`src/injected.ts` → `src/snapshot.ts` → `modules/widget-bridge`);
 - answers the page when it asks for **contacts** (`src/contactsBridge.ts` →
