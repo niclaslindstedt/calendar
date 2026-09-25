@@ -119,13 +119,28 @@ body {
 }
 
 /* The top menu's vertical rhythm. The pad under the buttons is a constant; the
-   space above them is the inset plus that same pad, which is what a browser
-   tab wants — 0 in portrait, so the bar simply gets its `py-3`, and a notched
-   phone in landscape still clears the notch. The installed app overrides it
-   below. */
+   space above them is the *larger* of that pad and the status-bar inset.
+
+   Where the inset is 0 — a browser tab, in either orientation — the bar
+   simply gets its `py-3`. Where it is not, the page runs under the status
+   bar, and the band already leaves room below the notch: that is the
+   installed PWA, and the App Store build, whose WebView runs edge to edge
+   with no `display-mode: standalone` to scope an answer by. Stacking the pad
+   on the band there is the extra air over the buttons the installed block
+   below was written to remove, so the comparison has to hold without the
+   scope.
+
+   It is made without `max()` (see the rules above): the inset is the
+   padding, and the pad's shortfall under it is a transparent top border.
+   A `calc()` that comes out negative clamps to `0` in a border width, so the
+   border is the pad where the inset is 0 and nothing at all under a status
+   bar — and the bar's own background paints under a border, so the lead
+   reads as bar either way. */
 .cal-topbar {
   --cal-header-pad: 0.75rem;
-  padding-top: calc(var(--cal-header-pad) + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+  border-top: calc(var(--cal-header-pad) - env(safe-area-inset-top, 0px)) solid
+    transparent;
   padding-bottom: var(--cal-header-pad);
 }
 

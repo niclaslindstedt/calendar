@@ -64,8 +64,14 @@ export function readViewportInfo(): ViewportInfo | null {
   // used `padding-top` is the only answer that cannot be argued with. `0px`
   // where the bar is not mounted, which the Developer tab never is.
   const bar = document.querySelector(".cal-topbar");
+  // The lead is the padding plus the transparent top border that tops it up
+  // to the pad where the inset is smaller (see `.cal-topbar`).
+  const barStyle = bar ? getComputedStyle(bar) : null;
   const topbarLead = `${Math.round(
-    bar ? parseFloat(getComputedStyle(bar).paddingTop) || 0 : 0,
+    barStyle
+      ? (parseFloat(barStyle.paddingTop) || 0) +
+          (parseFloat(barStyle.borderTopWidth) || 0)
+      : 0,
   )}px`;
 
   return {

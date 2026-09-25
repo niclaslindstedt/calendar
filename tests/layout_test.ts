@@ -203,12 +203,21 @@ describe("the top menu's vertical rhythm", () => {
     expect(declaration("--cal-header-pad")).toBe(`${HEADER_PAD / 16}rem`);
   });
 
-  it("stacks the pad on the inset in a browser tab", () => {
-    // 0 in portrait, so the bar simply gets its `py-3`; a notched phone in
-    // landscape still clears the notch.
-    const tab = declarations("padding-top")[0];
-    expect(tab).toContain("var(--cal-header-pad)");
-    expect(tab).toContain("env(safe-area-inset-top, 0px)");
+  it("takes the larger of the pad and the inset, with no max()", () => {
+    // The inset is the padding; the pad's shortfall under it is a transparent
+    // border, which clamps to 0 under a status bar. So a browser tab (inset 0)
+    // gets its `py-3`, and anything that runs under the status bar — the
+    // installed PWA, and the App Store build's edge-to-edge WebView, which no
+    // `display-mode` query can pick out — gets the band as the whole lead
+    // rather than the pad stacked on it.
+    expect(declarations("padding-top")[0]).toBe(
+      "env(safe-area-inset-top, 0px)",
+    );
+    const topUp = declarations("border-top")[0];
+    expect(topUp).toContain(
+      "calc(var(--cal-header-pad) - env(safe-area-inset-top, 0px))",
+    );
+    expect(topUp).toContain("transparent");
   });
 
   it("routes neither measurement through a value JavaScript writes", () => {
