@@ -51,23 +51,39 @@ if (window.location.pathname.replace(/\/$/, "").endsWith("/privacy")) {
     render(<PrivacyPage />, root);
   });
 } else {
-  void Promise.all([
-    import("./App.tsx"),
-    import("./app/i18n/index.ts"),
-    import("./app/roomScale.ts"),
-  ]).then(([{ App }, { LanguageRoot }, { applyRoomVars }]) => {
-    // The room factor, before the first render rather than in an effect after
-    // it: every printed size is multiplied by it, so resolving it afterwards
-    // would paint one frame of the phone's measurements and then restate
-    // every font size on the page. (The safe areas need no such call — they
-    // are the stylesheet's own arithmetic now; see `src/app/safeArea.ts`.)
-    applyRoomVars();
+  // The store demo (`VITE_SEED=demo`, `make demo`) swaps `localStorage` for an
+  // in-memory copy holding the demo calendars BEFORE the app's first module
+  // loads — several read storage at import time — so no render ever reads,
+  // or saves over, the device's own notes (`src/app/dev/demo.ts`). If the
+  // swap cannot be made, nothing mounts. Any other build folds this to a
+  // resolved promise and ships neither module.
+  const boot =
+    import.meta.env.VITE_SEED === "demo"
+      ? import("./app/dev/demo.ts").then(({ bootDemo }) => {
+          if (!bootDemo()) throw new Error("demo: could not swap storage");
+        })
+      : Promise.resolve();
+  void boot
+    .then(() =>
+      Promise.all([
+        import("./App.tsx"),
+        import("./app/i18n/index.ts"),
+        import("./app/roomScale.ts"),
+      ]),
+    )
+    .then(([{ App }, { LanguageRoot }, { applyRoomVars }]) => {
+      // The room factor, before the first render rather than in an effect after
+      // it: every printed size is multiplied by it, so resolving it afterwards
+      // would paint one frame of the phone's measurements and then restate
+      // every font size on the page. (The safe areas need no such call — they
+      // are the stylesheet's own arithmetic now; see `src/app/safeArea.ts`.)
+      applyRoomVars();
 
-    render(
-      <LanguageRoot>
-        <App />
-      </LanguageRoot>,
-      root,
-    );
-  });
+      render(
+        <LanguageRoot>
+          <App />
+        </LanguageRoot>,
+        root,
+      );
+    });
 }

@@ -25,6 +25,8 @@ src/
     │                     nl-NL, sv-SE) + eves.ts (which holiday eves are
     │                     worked) — see features/locales.md
     ├── i18n/             UI-string catalogs (framework createI18n)
+    ├── dev/              the store demo (VITE_SEED=demo): demo calendars,
+    │                     booted in memory before the app mounts
     ├── storage/          backend registry + OAuth flows + demo adapter;
     │                     paths.ts names each calendar's document (pure, tested);
     │                     icloudHost.ts / icloudStore.ts: the iCloud Drive

@@ -34,7 +34,7 @@ document from the new backend.
 | **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only. |
 | **Dropbox**      | `<calendar>/calendar.json` in the app folder | PKCE OAuth; requires `VITE_DROPBOX_APP_KEY`.     |
 | **iCloud Drive** | `calendar.json` in the app's iCloud folder   | App Store app only — see below.                  |
-| **Demo data**    | In memory only                               | Developer mode; a static sample calendar.        |
+| **Demo data**    | In memory only                               | Developer mode; the demo's Personal calendar.    |
 
 None of these carries anything about your **contacts**. If you turn on
 [contacts](features/contacts.md) in the App Store / Play app, the identifiers
@@ -207,6 +207,20 @@ export are.
 ## Demo data
 
 Settings → Developer → **Demo data** swaps storage for an in-memory
-`StorageAdapter` (`src/app/storage/demoAdapter.ts`) seeded with static sample
-entries around the current month. Nothing touches disk; flipping it off (or
-reloading) returns to the real backend with your document untouched.
+`StorageAdapter` (`src/app/storage/demoAdapter.ts`) holding the demo's
+Personal calendar (`src/app/dev/demoData.ts`): one person's year — an on-call
+rotation, a conference talk, climbing on Thursdays, a half marathon — every
+note placed relative to the current week, so it never ages. Nothing touches
+disk; flipping it off (or reloading) returns to the real backend with your
+document untouched.
+
+`make demo` (any build with `VITE_SEED=demo`) boots straight into the demo
+instead — both calendars, Personal and Work — and is what the App Store
+screenshots are taken of. Before the app's first module loads,
+`src/app/dev/demo.ts` puts an in-memory `Storage` in `window.localStorage`'s
+place, holding the demo documents under the browser backend's own keys, so
+the whole app runs its real code over them and nothing is read from or
+written to the device's notes, calendars, backend or tokens; only its look
+(settings, theme, language) is carried over. Connecting a storage backend is
+refused while it runs. The flag folds to `false` in every other build, so the
+module never ships.

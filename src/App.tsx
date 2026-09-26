@@ -112,6 +112,16 @@ const BACKUP_DEFAULTS = {
  *  a fresh `() => {}` would defeat the memoization the views rely on. */
 const NOOP = () => {};
 
+/** The store demo (`VITE_SEED=demo`, `src/app/dev/demo.ts`): storage is an
+ *  in-memory copy, and connecting a real backend is refused — the first save
+ *  would copy the demo into the reader's own folder or cloud. Folds to
+ *  `false` in every shipped build. */
+const DEMO = import.meta.env.VITE_SEED === "demo";
+
+function refuseInDemo() {
+  status("The demo keeps its calendars in memory — storage stays off");
+}
+
 /** The three views, in the order a sideways swipe walks them.
  *
  *  Left to right is the order they are listed in the top bar, and the order
@@ -303,6 +313,9 @@ export function App() {
   // Finish an inbound Dropbox OAuth redirect, then activate the backend.
   const [folderConnected, setFolderConnected] = useState(false);
   useEffect(() => {
+    // The demo reads nothing of the device's storage, and has no sign-in to
+    // finish (`DEMO`).
+    if (DEMO) return;
     void loadFolderConnected().then(setFolderConnected);
     void completeOauthOnBoot().then((connected) => {
       if (connected) {
@@ -322,6 +335,10 @@ export function App() {
   });
 
   const setActiveBackend = (id: BackendId) => {
+    if (DEMO && id !== "browser") {
+      refuseInDemo();
+      return;
+    }
     if (id === "demo") {
       update("demoData", true);
       return;
@@ -892,38 +909,44 @@ export function App() {
           // re-asking — the reader may have just turned iCloud Drive on — and
           // switching once the answer is yes.
           connectICloud: () =>
-            void icloud.refresh().then((answer) => {
-              if (answer === "ready") {
-                setActiveBackend("icloud");
-                status("Connected icloud");
-              }
-            }),
+            DEMO
+              ? refuseInDemo()
+              : void icloud.refresh().then((answer) => {
+                  if (answer === "ready") {
+                    setActiveBackend("icloud");
+                    status("Connected icloud");
+                  }
+                }),
           connectFolder: () =>
-            void connectFolder().then((ok) => {
-              if (ok) {
-                setFolderConnected(true);
-                setActiveBackend("folder");
-              }
-            }),
+            DEMO
+              ? refuseInDemo()
+              : void connectFolder().then((ok) => {
+                  if (ok) {
+                    setFolderConnected(true);
+                    setActiveBackend("folder");
+                  }
+                }),
           connectDropbox: () =>
-            void connectDropbox().then(
-              (outcome) => {
-                // The phone and desktop sign-ins finish here; the web one
-                // navigates away and finishes in the boot effect above.
-                if (outcome === "connected") {
-                  setActiveBackend("dropbox");
-                  status("Connected dropbox");
-                } else if (outcome === "cancelled") {
-                  status("Dropbox sign-in cancelled");
-                }
-              },
-              (err: unknown) =>
-                error(
-                  `Could not connect Dropbox: ${
-                    err instanceof Error ? err.message : String(err)
-                  }`,
+            DEMO
+              ? refuseInDemo()
+              : void connectDropbox().then(
+                  (outcome) => {
+                    // The phone and desktop sign-ins finish here; the web one
+                    // navigates away and finishes in the boot effect above.
+                    if (outcome === "connected") {
+                      setActiveBackend("dropbox");
+                      status("Connected dropbox");
+                    } else if (outcome === "cancelled") {
+                      status("Dropbox sign-in cancelled");
+                    }
+                  },
+                  (err: unknown) =>
+                    error(
+                      `Could not connect Dropbox: ${
+                        err instanceof Error ? err.message : String(err)
+                      }`,
+                    ),
                 ),
-            ),
           disconnect: (id) => {
             if (id === "dropbox") disconnectDropbox();
             if (id === "folder") {
