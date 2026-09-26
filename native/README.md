@@ -12,8 +12,11 @@ Thin is the design, not an aspiration. The wrapper:
   launch and serves it from a **loopback HTTP server** (`src/local-server.ts`);
 - points a `WebView` at that origin, and gets out of the way — on iOS the
   WebView runs edge to edge and the page pads itself with
-  `env(safe-area-inset-*)`, as the installed PWA does; on Android the status
-  bar and safe-area bands follow the page's own theme; off-origin links go to
+  `env(safe-area-inset-*)`, as the installed PWA does; on Android the
+  safe-area bands follow the page's own theme; on both, the status bar's clock
+  and battery are light over a dark page background and dark over a light one,
+  decided from the colour the page reports (`src/statusBar.ts`), never from
+  the phone's light/dark setting; off-origin links go to
   the system browser, and Android's back button drives the WebView's history;
 - copies the page's notes into a shared container so the **widgets** can print
   them (`src/injected.ts` → `src/snapshot.ts` → `modules/widget-bridge`);
@@ -52,6 +55,7 @@ ships.
 | `App.tsx`                  | The whole app: a WebView, a spinner, and a failure screen.                                                                         |
 | `src/local-server.ts`      | Unpacks `assets/webroot.zip` and serves it on a **fixed** loopback port.                                                           |
 | `src/injected.ts`          | The one script injected into the page: reports theme + storage, kills the service worker.                                          |
+| `src/statusBar.ts`         | **Import-free.** Light or dark status-bar icons from the page's reported background. Tested from the root suite.                   |
 | `src/snapshot.ts`          | **Pure.** Raw `localStorage` → the widget snapshot. Tested from the root suite.                                                    |
 | `src/contactsBridge.ts`    | **Pure.** The injected contacts provider, and the request/response plumbing. Tested from the root suite.                           |
 | `src/contacts.ts`          | Reads names and birthdays through `expo-contacts`. Two fields, read-only, no storage.                                              |

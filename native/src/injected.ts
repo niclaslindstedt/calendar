@@ -93,7 +93,8 @@ export const BEFORE_LOAD_SCRIPT = `(function () {${SW_TEARDOWN}})(); true;`;
  * The script injected once the page has loaded.
  *
  * Reports immediately, then on every settled `localStorage` write, on a
- * `storage` event, and whenever the page becomes visible again (the app came
+ * `storage` event, on a theme change (an `<html>` attribute, or the system
+ * appearance the "system" preset follows), and whenever the page becomes visible again (the app came
  * back to the foreground, and the day may well have changed while it was
  * away). `setItem` / `removeItem` / `clear` are patched rather than polled:
  * the store writes through `localStorage`, so a patched write is the exact
@@ -169,6 +170,24 @@ export const AFTER_LOAD_SCRIPT = `(function () {
   } catch (e) {}
 
   window.addEventListener("storage", schedule);
+
+  // The theme engine repaints by setting attributes on <html>; observing it
+  // hears a preset change even when no storage write goes with it. The
+  // "system" preset follows prefers-color-scheme through a CSS media query,
+  // which touches no attribute, so a flip of the phone's appearance is
+  // caught separately. The shell styles the status bar from the reported
+  // background (statusBar.ts).
+  try {
+    new MutationObserver(schedule).observe(document.documentElement, {
+      attributes: true
+    });
+  } catch (e) {}
+  try {
+    var scheme = window.matchMedia("(prefers-color-scheme: dark)");
+    if (scheme.addEventListener) scheme.addEventListener("change", schedule);
+    else if (scheme.addListener) scheme.addListener(schedule);
+  } catch (e) {}
+
   document.addEventListener("visibilitychange", function () {
     if (!document.hidden) schedule();
   });
