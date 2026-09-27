@@ -107,7 +107,7 @@ export const en = {
     nameDaysHint: "Show the day's names on the calendar.",
     eves: "Holiday eves",
     evesHint:
-      "By law an eve is an ordinary working day, and in practice most collective agreements hand some of them back. These start from what the agreements usually say — change any your workplace treats differently. A day off here is one the vacation planner stops asking you to book.",
+      "By law an eve is an ordinary working day, and in practice most collective agreements hand some of them back. These start from what the agreements usually say — change any your workplace treats differently. A day off here is one the vacation planner stops asking you to take.",
     eveOff: "Day off",
     eveHalf: "Half day",
     eveWork: "Working",
@@ -411,16 +411,16 @@ export const en = {
     daysOff: "{n} days off",
     oneDayOff: "1 day off",
     /** The planner's summary line. */
-    summary: "{spent} days booked buys {off} days off",
+    summary: "{spent} days taken buys {off} days off",
     longest: "Longest break {n} days",
     unspent: "{n} days left to spend as you like",
     allowance: "Allowance {n} days",
     noBudget: "Set your vacation days in Settings to plan the year.",
     nothingToPlan: "This year's holidays already fall on your days off.",
     /** Heading above the days to request in one break. */
-    book: "Book",
-    bookOne: "Book 1 day",
-    bookMany: "Book {n} days",
+    book: "Take",
+    bookOne: "Take 1 day",
+    bookMany: "Take {n} days",
   },
   names: {
     /** Title of the name-day search. */

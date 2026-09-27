@@ -155,7 +155,7 @@ open **Manage calendars…** and create, rename, restyle or delete one. See
 
 Tap a **holiday's name** in any view to open the holidays screen for that
 year: the year's public holidays, and a planner that works out which days to
-book to get the most time off — the Friday after a Thursday holiday, the days
+take to get the most time off — the Friday after a Thursday holiday, the days
 that bridge Easter into a ten-day break. Set your allowance in
 Settings → General → Vacation, where **Open the vacation planner** takes you
 straight there (saving the dialog on the way). See
@@ -244,13 +244,13 @@ workplace is ordinary you can leave the whole section alone.
 
 What it changes:
 
-- The [vacation planner](features/vacation-planner.md) stops offering to book
+- The [vacation planner](features/vacation-planner.md) stops offering to take
   a day you do not work, and starts offering one you do. Those are the
   cheapest days in the year to buy a long weekend with, so the difference is
   worth getting right.
 - The holidays list marks an eve you work **Arbetsdag / Workday**, or
   **Halvdag / Half day** where you have said so. A half day is still a
-  workday to the planner — you book a whole vacation day to take one.
+  workday to the planner — you take a whole vacation day to have one off.
 
 Picking the shipped answer again clears your override rather than pinning it,
 and **Back to the agreements** puts the whole section back at once. Changing

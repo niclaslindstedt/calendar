@@ -1,7 +1,7 @@
 # Holidays and the vacation planner
 
 A screen that answers two questions: when are this year's public holidays,
-and which days should you book to get the most time off for them.
+and which days should you take to get the most time off for them.
 
 ## Getting there
 
@@ -36,14 +36,14 @@ when the calendar prints them red. A day that is _named_ but is still one you
 work — a [holiday eve](locales.md#holiday-eves) your agreement does not hand
 back — is marked **Arbetsdag / Workday**, or **Halvdag / Half day** where it
 is one, because that is the difference between a day you are given and a day
-you have to book.
+you have to take.
 
 **Planner** turns those holidays into a plan for the year.
 
 ## What the planner computes
 
 Its unit is the **bridge**: a short run of workdays between two stretches of
-free time, where booking the run joins them up. A holiday on Thursday makes
+free time, where taking the run joins them up. A holiday on Thursday makes
 the Friday worth one vacation day for a four-day weekend; a holiday on
 Wednesday makes Thursday and Friday worth two days for a five-day break.
 
@@ -56,15 +56,15 @@ Rules the planner follows:
   reads the pack as your workplace sees it (Settings → Calendar → **Holiday
   eves**), so it never offers to spend an allowance day on a Julafton you do
   not work — and goes straight back to offering it if you say you do. A
-  **half day counts as a workday**: you still book a whole vacation day to
-  take one off. See [holiday eves](locales.md#holiday-eves).
+  **half day counts as a workday**: you still take a whole vacation day to
+  have one off. See [holiday eves](locales.md#holiday-eves).
 - **Every suggestion must involve a public holiday.** Without this rule the
   planner is technically correct and practically useless: any Friday of the
   year returns three days off for one, there are 52 of them, and they bury the
   dozen suggestions worth reading. Nobody needs to be told that a Friday off
   makes a long weekend.
 - **Nothing longer than a working week** is offered as a bridge. Past that a
-  "bridge" is just a holiday you booked.
+  "bridge" is just a vacation you took.
 - **Only strictly profitable days are spent.** Once a break has been stretched
   to where another day buys exactly one more day, the planner stops and hands
   the rest of the allowance back rather than padding the plan.
@@ -76,11 +76,11 @@ plan, you do not configure one.
 
 ## Reading the plan
 
-The headline is `N days booked buys M days off`, then the longest single break
+The headline is `N days taken buys M days off`, then the longest single break
 and any allowance left over. Below it, one row per **break** — not per
 suggestion.
 
-That distinction is the point. Booking the Friday after New Year, the Monday
+That distinction is the point. Taking the Friday after New Year, the Monday
 after that weekend, and the days after Epiphany is three separate suggestions
 but **one** eleven-day break, and listing them separately would read as three
 holidays. Every figure on the screen is measured off the chosen day set rather
