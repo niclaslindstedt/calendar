@@ -8,7 +8,7 @@
 [![ci](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml)
 [![release](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml)
 [![pages](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml)
-[![spec](https://img.shields.io/badge/OSS__SPEC-v2.9.0-blueviolet)](OSS_SPEC.md)
+[![spec](https://img.shields.io/badge/OSS__SPEC-v2.12.0-blueviolet)](OSS_SPEC.md)
 [![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
 
 **[calendar.niclaslindstedt.se](https://calendar.niclaslindstedt.se)** — open

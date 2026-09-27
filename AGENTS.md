@@ -774,8 +774,9 @@ deployment slot and deploys the merged tree to
 in sync — but `index.html`'s head (title, description, OG/Twitter) and
 `public/` (CNAME, robots.txt, og.png) must be kept truthful as features change.
 
-There is no SEO and no size budget, by owner decision: the site carries
-`noindex` on every page and is not meant to be found.
+The website is unlisted (OSS_SPEC §11.3.12): every page carries `noindex`.
+
+oss-spec:unlisted-website: the web build is a testing surface; users install the app from its store listing
 
 ## Maintenance skills
 
