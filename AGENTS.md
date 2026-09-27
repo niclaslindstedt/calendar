@@ -57,7 +57,12 @@ needs no GUI toolkit; `tauri/src-tauri/` holds every effect. One seam reaches
 back into this tree, `VITE_SHELL_BUILD`, set by the shell's site build, which
 switches off the service-worker half of `appPwa` and — through
 `__SHELL_BUILD__` — the in-app update prompt. A desktop build updates by being
-replaced. The package's name and identifier come from `APP_DISPLAY_NAME` and
+replaced. The phone wrapper's site build sets `VITE_NATIVE_BUILD=on`
+(`__NATIVE_BUILD__`), and either flag makes a build that is not the website: it
+carries no link back to the source (owner decision D17) — the privacy page
+names no issue tracker, commit history or web-edition address, and there are
+no Open Graph tags naming the web edition, no `CNAME` and no `og.png` — and both
+bundle scripts refuse a webroot that still contains `niclaslindstedt`. The package's name and identifier come from `APP_DISPLAY_NAME` and
 `APP_BUNDLE_ID` at packaging time (`tauri/scripts/package.mjs`), like the phone
 app's. See [`tauri/README.md`](tauri/README.md).
 

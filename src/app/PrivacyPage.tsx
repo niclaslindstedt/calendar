@@ -34,6 +34,14 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 // only line a reader has to look at to see how fresh the policy is.
 const LAST_UPDATED = "2026-09-27";
 
+// Whether this is the website's copy of the page. The phone and desktop apps
+// carry their own copy, and an app carries no link back to the source (owner
+// decision D17): no issue tracker, no commit history, not the web edition's
+// address. The flags are compile-time constants, so in an app build the
+// website's wording is folded out of the bundle rather than hidden; the app's
+// says the same thing without them.
+const WEBSITE = !__NATIVE_BUILD__ && !__SHELL_BUILD__;
+
 export function PrivacyPage() {
   // The page mounts on its own, outside the app shell, so it has to paint its
   // own theme — the shell is what normally runs the engine, and without this
@@ -68,8 +76,17 @@ export function PrivacyPage() {
         <Section title="Summary">
           <p>
             <span className="text-fg-bright">Calendar</span> is a local-first
-            wall calendar, served as a static site at{" "}
-            <span className="text-fg-bright">calendar.niclaslindstedt.se</span>{" "}
+            wall calendar, served as a static site{" "}
+            {WEBSITE ? (
+              <>
+                at{" "}
+                <span className="text-fg-bright">
+                  calendar.niclaslindstedt.se
+                </span>
+              </>
+            ) : (
+              "on the web"
+            )}{" "}
             and shipped to the App Store and Google Play as an app that carries
             that same page inside it. It runs entirely on your device. There is
             no backend of our own, no account, no cookies, and no analytics or
@@ -109,8 +126,17 @@ export function PrivacyPage() {
         <Section title="What the app stores">
           <p>
             On your device, inside the browser&apos;s{" "}
-            <code className="text-fg-bright">localStorage</code> for the origin{" "}
-            <span className="text-fg-bright">calendar.niclaslindstedt.se</span>{" "}
+            <code className="text-fg-bright">localStorage</code>{" "}
+            {WEBSITE ? (
+              <>
+                for the origin{" "}
+                <span className="text-fg-bright">
+                  calendar.niclaslindstedt.se
+                </span>
+              </>
+            ) : (
+              "for the website's origin"
+            )}{" "}
             — or, in the installed app, inside the app&apos;s own private
             storage — the calendar keeps:
           </p>
@@ -226,8 +252,15 @@ export function PrivacyPage() {
             </li>
           </ul>
           <p>
-            The website at{" "}
-            <span className="text-fg-bright">calendar.niclaslindstedt.se</span>{" "}
+            The website{" "}
+            {WEBSITE && (
+              <>
+                at{" "}
+                <span className="text-fg-bright">
+                  calendar.niclaslindstedt.se
+                </span>{" "}
+              </>
+            )}
             has no contacts feature: a browser offers the app no way to read
             them, and the app makes no attempt to obtain them by any other
             route. The <em>Contacts</em> tab is simply not shown there.
@@ -386,11 +419,12 @@ export function PrivacyPage() {
 
         <Section title="Changes to this policy">
           <p>
-            Material changes are tracked in the public commit history of the
-            source repository. The <em>Last updated</em> date at the top of this
-            page reflects the most recent edit. Should a future version change
-            what data is stored or sent, or add another place it can be sent,
-            this policy will be updated to describe it before that change ships.
+            {WEBSITE &&
+              "Material changes are tracked in the public commit history of the source repository. "}
+            The <em>Last updated</em> date at the top of this page reflects the
+            most recent edit. Should a future version change what data is stored
+            or sent, or add another place it can be sent, this policy will be
+            updated to describe it before that change ships.
           </p>
           <p>
             The store listings link to{" "}
@@ -405,16 +439,29 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="Contact">
-          <p>
-            For everything, open an issue at{" "}
-            <a
-              href="https://github.com/niclaslindstedt/calendar/issues"
-              className="text-link hover:underline"
-            >
-              github.com/niclaslindstedt/calendar
-            </a>
-            .
-          </p>
+          {WEBSITE ? (
+            <p>
+              For everything, open an issue at{" "}
+              <a
+                href="https://github.com/niclaslindstedt/calendar/issues"
+                className="text-link hover:underline"
+              >
+                github.com/niclaslindstedt/calendar
+              </a>
+              .
+            </p>
+          ) : (
+            <p>
+              For everything, see the support page at{" "}
+              <a
+                href="https://apps.agilator.se/calendar/support/"
+                className="text-link hover:underline"
+              >
+                apps.agilator.se/calendar/support
+              </a>
+              .
+            </p>
+          )}
         </Section>
       </article>
     </div>
