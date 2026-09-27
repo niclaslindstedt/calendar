@@ -937,7 +937,7 @@ export function App() {
                       setActiveBackend("dropbox");
                       status("Connected dropbox");
                     } else if (outcome === "cancelled") {
-                      status("Dropbox sign-in cancelled");
+                      status("Dropbox sign-in canceled");
                     }
                   },
                   (err: unknown) =>

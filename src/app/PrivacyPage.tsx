@@ -120,7 +120,7 @@ export function PrivacyPage() {
             </li>
             <li>
               Your <em>calendars</em> — the separate sets of notes you keep side
-              by side, with each one&apos;s name, icon, and colour. The list of
+              by side, with each one&apos;s name, icon, and color. The list of
               calendars is kept per device; the notes in them are what syncs.
             </li>
             <li>
@@ -353,8 +353,8 @@ export function PrivacyPage() {
 
         <Section title="Web analytics">
           <p>
-            None. The app loads no analytics or behavioural-tracking SDK, and
-            the project authors collect no usage statistics from it.
+            None. The app loads no analytics or behavioral-tracking SDK, and the
+            project authors collect no usage statistics from it.
           </p>
         </Section>
 
