@@ -32,7 +32,7 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 // Last meaningful change to the policy text below. Bump it whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
 // only line a reader has to look at to see how fresh the policy is.
-const LAST_UPDATED = "2026-09-23";
+const LAST_UPDATED = "2026-09-27";
 
 export function PrivacyPage() {
   // The page mounts on its own, outside the app shell, so it has to paint its
@@ -135,7 +135,7 @@ export function PrivacyPage() {
             </li>
             <li>
               If you turned on contacts in the installed app, only the{" "}
-              <em>identifiers</em> of the contacts you ticked — see{" "}
+              <em>identifiers</em> of the contacts you checked — see{" "}
               <a className="text-link hover:underline" href="#contacts">
                 Contacts
               </a>
@@ -176,8 +176,8 @@ export function PrivacyPage() {
                 Every contact is opt-in, individually.
               </span>{" "}
               Granting permission shows you the list and marks <em>nothing</em>.
-              A contact appears in your calendar only once you have ticked it
-              (or pressed <em>Select all</em>), and unticking it takes it back
+              A contact appears in your calendar only once you have checked it
+              (or pressed <em>Select all</em>), and unchecking it takes it back
               out.
             </li>
             <li>
@@ -187,7 +187,7 @@ export function PrivacyPage() {
               Names and birthdays are read from the system&apos;s contact store
               into memory each time the app starts, used to draw the calendar,
               and dropped when the app closes. What is written down is the list
-              of identifiers you ticked — the system&apos;s own opaque ids,
+              of identifiers you checked — the system&apos;s own opaque ids,
               which mean nothing outside your device&apos;s contact store — and
               nothing else. No name, no birthday, no phone number, no email
               address, and no photograph is ever written to storage.
@@ -221,8 +221,8 @@ export function PrivacyPage() {
               <span className="text-fg-bright">You can withdraw it.</span>{" "}
               <em>Deselect all</em> in <em>Settings → Contacts</em> empties the
               calendar of contacts immediately, and revoking contacts permission
-              in your device&apos;s own system settings stops the app reading
-              them at all.
+              in your device&apos;s own system settings stops the app from
+              reading them at all.
             </li>
           </ul>
           <p>

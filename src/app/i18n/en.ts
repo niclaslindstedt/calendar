@@ -116,7 +116,7 @@ export const en = {
     vacation: "Vacation",
     vacationDays: "Vacation days a year",
     vacationDaysHint:
-      "Your paid annual leave. The vacation planner spends it on the days that buy the most time off.",
+      "Your paid time off. The vacation planner spends it on the days that buy the most time off.",
     vacationOpenPlanner: "Open the vacation planner",
     vacationOpenPlannerHint:
       "Saves your settings and opens the planner for the year you are looking at. You can also get there by tapping a holiday's name in any view.",
@@ -396,7 +396,7 @@ export const en = {
     nameDayOn: "Name day {date} ({name})",
     nameDayNone: "No name day in this country's almanac",
     privacyNote:
-      "Only the contacts you tick are remembered, and only by the identifier your device gave them \u2014 never a name or a birthday. Read the privacy policy for the whole of it.",
+      "Only the contacts you check are remembered, and only by the identifier your device gave them \u2014 never a name or a birthday. Read the privacy policy for the whole of it.",
   },
   holidays: {
     /** Title of the holidays screen. */
