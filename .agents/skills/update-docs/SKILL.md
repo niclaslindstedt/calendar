@@ -10,7 +10,7 @@ skill is mandated because `docs/` is a drift-prone artifact).
 
 ## Tracking mechanism
 
-`.agent/skills/update-docs/.last-updated` contains the git commit hash from
+`.agents/skills/update-docs/.last-updated` contains the git commit hash from
 the last successful run. Empty means "never run" — fall back to the initial
 commit of the repository.
 

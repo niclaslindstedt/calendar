@@ -24,7 +24,7 @@ artifact is stale, call the corresponding `update-*` skill directly.
 ## Registry
 
 The registry is the single source of truth for which sync skills exist in this
-repo. Every `update-*` directory under `.agent/skills/` must appear here
+repo. Every `update-*` directory under `.agents/skills/` must appear here
 exactly once. Add rows whenever you create a new sync skill.
 
 | Skill           | Fixes                                  | Spec sections | Run order |

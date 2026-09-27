@@ -17,7 +17,7 @@ a matching edit.
 
 ## Tracking mechanism
 
-`.agent/skills/update-readme/.last-updated` contains the git commit hash from
+`.agents/skills/update-readme/.last-updated` contains the git commit hash from
 the last successful run. Empty means "never run" — fall back to the initial
 commit of the repository.
 
@@ -26,7 +26,7 @@ commit of the repository.
 1. Read the baseline:
 
    ```sh
-   baseline=$(cat .agent/skills/update-readme/.last-updated)
+   baseline=$(cat .agents/skills/update-readme/.last-updated)
    git log --oneline "${baseline:-$(git rev-list --max-parents=0 HEAD)}"..HEAD
    ```
 
