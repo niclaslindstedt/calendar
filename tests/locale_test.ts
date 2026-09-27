@@ -2,13 +2,22 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  addDays,
+  isoWeek,
+  toDayKey,
+} from "@niclaslindstedt/oss-framework/calendar";
+
+import {
   FALLBACK_LOCALE_ID,
   LOCALES,
+  dayMonth,
+  dayMonthYear,
   getLocale,
   matchLocaleId,
   isRedWeekday,
   monthName,
   nameDaysFor,
+  weekNumber,
   weekdayName,
   weekdayOrder,
 } from "../src/app/locale/index.ts";
@@ -20,6 +29,7 @@ const fr = getLocale("fr-FR");
 const nl = getLocale("nl-NL");
 const fi = getLocale("fi-FI");
 const nb = getLocale("nb-NO");
+const us = getLocale("en-US");
 
 /** The days of each month, February at its leap length — the shape a
  *  name-day table has to cover. */
@@ -100,11 +110,28 @@ describe("matching the device's locale", () => {
 
   it("matches a bare language tag", () => {
     expect(matchLocaleId(["sv"])).toBe("sv-SE");
+    // Two packs speak English; a bare `en` says nothing about which country,
+    // and it stays on the pack it always had.
     expect(matchLocaleId(["en"])).toBe("en-GB");
   });
 
+  it("gives an American device the American calendar", () => {
+    // What an iPhone set up in the US reports, and what the UK pack used to
+    // catch by language — Monday weeks and bank holidays for an American.
+    expect(matchLocaleId(["en-US"])).toBe("en-US");
+    expect(matchLocaleId(["en-US", "en"])).toBe("en-US");
+    // The region decides, whatever the language: a Spanish-speaking
+    // American lives by the federal holidays too.
+    expect(matchLocaleId(["es-US"])).toBe("en-US");
+    expect(matchLocaleId(["zh-Hant-US"])).toBe("en-US");
+    // An American abroad asks by region too, and gets that region's pack.
+    expect(matchLocaleId(["en-SE"])).toBe("sv-SE");
+  });
+
   it("falls back to the language pack for an unknown country", () => {
-    expect(matchLocaleId(["en-US"])).toBe("en-GB");
+    // English-speaking countries without a pack of their own keep the UK's.
+    expect(matchLocaleId(["en-AU"])).toBe("en-GB");
+    expect(matchLocaleId(["en-IE"])).toBe("en-GB");
     expect(matchLocaleId(["sv-DK"])).toBe("sv-SE");
     // German-speaking Austria and Switzerland have no pack of their own, so
     // they get the German calendar rather than the English one.
@@ -131,14 +158,19 @@ describe("matching the device's locale", () => {
 });
 
 describe("week conventions", () => {
-  it("every shipped country starts the week on Monday", () => {
-    // True of all seven, and worth asserting rather than assuming: the pack
-    // contract allows any weekday, and the day list's column count and the
-    // month grid's template both read this.
-    for (const pack of LOCALES) {
+  it("every European country starts the week on Monday", () => {
+    // Worth asserting rather than assuming: the day list's column count and
+    // the month grid's template both read this.
+    for (const pack of LOCALES.filter((p) => p !== us)) {
       expect([pack.id, pack.weekStartsOn]).toEqual([pack.id, 1]);
     }
     expect(weekdayOrder(sv)).toEqual([1, 2, 3, 4, 5, 6, 0]);
+  });
+
+  it("an American week starts on Sunday", () => {
+    expect(us.weekStartsOn).toBe(0);
+    expect(weekdayOrder(us)).toEqual([0, 1, 2, 3, 4, 5, 6]);
+    expect(weekdayName(us, weekdayOrder(us)[0], "short")).toBe("Sun");
   });
 
   it("week numbers ship on where the country schedules by them", () => {
@@ -149,7 +181,8 @@ describe("week conventions", () => {
     for (const pack of [sv, de, nl, fi, nb]) {
       expect([pack.id, pack.showWeekNumbersDefault]).toEqual([pack.id, true]);
     }
-    for (const pack of [en, fr]) {
+    // An American wall calendar does not print them either.
+    for (const pack of [en, fr, us]) {
       expect([pack.id, pack.showWeekNumbersDefault]).toEqual([pack.id, false]);
     }
   });
@@ -228,7 +261,7 @@ describe("packs without a name-day tradition to print", () => {
     // and France's fête du jour is a specific almanac this pack does not yet
     // carry. What matters downstream is that `nameDays` is null, which is
     // what turns the setting, the search and the contacts tab off.
-    for (const pack of [en, nl, de, fr]) {
+    for (const pack of [en, us, nl, de, fr]) {
       expect([pack.id, pack.nameDays]).toEqual([pack.id, null]);
       expect([pack.id, pack.showNameDaysDefault]).toEqual([pack.id, false]);
       expect(nameDaysFor(pack, 1, 13)).toEqual([]);
@@ -315,5 +348,91 @@ describe("Intl-derived names", () => {
     expect(weekdayName(sv, 1).toLowerCase()).toBe("måndag");
     expect(weekdayName(en, 0)).toBe("Sunday");
     expect(weekdayName(en, 6, "short")).toBe("Sat");
+  });
+});
+
+describe("week numbering", () => {
+  /** Every day from 1 January `from` to 31 December `to`. */
+  function* days(from: number, to: number): Generator<string> {
+    const end = toDayKey({ year: to, month: 12, day: 31 });
+    for (let at = toDayKey({ year: from, month: 1, day: 1 }); at <= end;) {
+      yield at;
+      at = addDays(at, 1);
+    }
+  }
+
+  it("is ISO-8601 in every European pack, day for day", () => {
+    for (const pack of LOCALES.filter((p) => p.weekNumbering === "iso")) {
+      for (const day of days(2019, 2033)) {
+        if (weekNumber(pack, day) !== isoWeek(day)) {
+          expect([pack.id, day, weekNumber(pack, day)]).toEqual([
+            pack.id,
+            day,
+            isoWeek(day),
+          ]);
+        }
+      }
+    }
+  });
+
+  it("numbers an American week from the one 1 January is in", () => {
+    expect(us.weekNumbering).toBe("us");
+    // 1 January 2026 is a Thursday: its Sunday-to-Saturday week is week 1
+    // even though four of its days are 2025's, and the Sunday after opens
+    // week 2 — which ISO would still call week 1.
+    expect(weekNumber(us, "2025-12-28")).toBe(1);
+    expect(weekNumber(us, "2026-01-01")).toBe(1);
+    expect(weekNumber(us, "2026-01-03")).toBe(1);
+    expect(weekNumber(us, "2026-01-04")).toBe(2);
+    expect(isoWeek("2026-01-04")).toBe(1);
+    // And the last days of December are already next year's week 1.
+    expect(weekNumber(us, "2026-12-31")).toBe(1);
+    expect(weekNumber(us, "2026-12-26")).toBe(52);
+    // 2022 opened on a Saturday, a one-day week 1, so it runs to 53.
+    expect(weekNumber(us, "2022-01-01")).toBe(1);
+    expect(weekNumber(us, "2022-01-02")).toBe(2);
+    expect(weekNumber(us, "2022-12-31")).toBe(53);
+    expect(weekNumber(us, "2023-01-01")).toBe(1);
+  });
+
+  it("gives every day of a Sunday-to-Saturday row the same number", () => {
+    for (const day of days(2024, 2030)) {
+      const weekday = new Date(`${day}T12:00:00Z`).getUTCDay();
+      if (weekday === 0) continue;
+      expect([day, weekNumber(us, day)]).toEqual([
+        day,
+        weekNumber(us, addDays(day, -weekday)),
+      ]);
+    }
+  });
+
+  it("never numbers an American week past 53", () => {
+    for (const day of days(2000, 2040)) {
+      const n = weekNumber(us, day);
+      expect(n >= 1 && n <= 53).toBe(true);
+    }
+  });
+});
+
+describe("how a country writes a date", () => {
+  it("puts the month first in the US and after the day everywhere else", () => {
+    expect(dayMonth(us, 25, 12)).toBe("Dec 25");
+    expect(dayMonth(en, 25, 12)).toBe("25 Dec");
+    expect(dayMonth(us, "20–28", 12)).toBe("Dec 20–28");
+    expect(dayMonth(us, 8, 8, "long")).toBe("August 8");
+  });
+
+  it("writes a whole date the country's way", () => {
+    expect(dayMonthYear(us, 8, 8, 2026)).toBe("August 8, 2026");
+    expect(dayMonthYear(en, 8, 8, 2026)).toBe("8 August 2026");
+  });
+
+  it("leaves every day-first pack exactly as it printed before", () => {
+    for (const pack of LOCALES.filter((p) => p !== us)) {
+      expect(dayMonth(pack, 8, 8)).toBe(`8 ${monthName(pack, 8, "short")}`);
+      expect(dayMonthYear(pack, 8, 8, 2026)).toBe(
+        `8 ${monthName(pack, 8)} 2026`,
+      );
+    }
   });
 });

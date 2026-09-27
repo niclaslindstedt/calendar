@@ -30,7 +30,7 @@ import {
 
 import { useT } from "./i18n/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
-import { monthName, type LocalePack } from "./locale/index.ts";
+import { dayMonth, type LocalePack } from "./locale/index.ts";
 import {
   allNames,
   searchNames,
@@ -287,7 +287,7 @@ function NameRow({
           {entry.name}
         </span>
         <span className="cal-serif text-muted shrink-0 text-sm">
-          {entry.day} {monthName(pack, entry.month)}
+          {dayMonth(pack, entry.day, entry.month, "long")}
         </span>
       </button>
     </li>

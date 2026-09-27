@@ -23,7 +23,7 @@ A frontend-only, local-first calendar PWA built on
 Three views, all month-scoped:
 
 - **Month grid** — the whole month on one screen, like a paper wall calendar:
-  weekday headers, ISO week numbers in the margin, Sundays in red, name days
+  weekday headers, week numbers in the margin, Sundays in red, name days
   small in each cell, your note text in the cell (it shrinks as it grows, so
   every word counts).
 - **Week planner** — one row per weekday for the current week, with room to
@@ -40,8 +40,9 @@ optionally synced to a storage backend you control.
 
 - **Local-first**: works offline, installable as a PWA.
 - **Internationalized properly**: country packs — Germany, France, the
-  Netherlands, Norway, Finland, Sweden and the UK today — adjust the start of
-  week, week numbers, name days, and the holidays. Each pack is one
+  Netherlands, Norway, Finland, Sweden, the UK and the United States today —
+  adjust the start of week, week numbers, name days, the holidays, and how a
+  date is written. Each pack is one
   self-contained file that's easy to copy for a new country, and the UI itself
   reads in seven languages.
 - **Knows which eves you actually work**: Julafton, Heiligabend, jouluaatto

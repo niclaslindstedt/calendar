@@ -234,9 +234,12 @@ The app owns the domain and the stores ("store stays in the app"):
 
 - `src/app/types.ts` — the `CalendarDoc` model: `entries` keyed by `DayKey`
   (`"YYYY-MM-DD"`), plain text per day.
-- `src/app/locale/` — the **country packs** (de-DE, en-GB, fi-FI, fr-FR,
-  nb-NO, nl-NL, sv-SE): start of week, week numbers, name days, holidays and
-  their eves, hyphenation and name-spelling rules. Each pack is one
+- `src/app/locale/` — the **country packs** (de-DE, en-GB, en-US, fi-FI,
+  fr-FR, nb-NO, nl-NL, sv-SE): start of week, week numbering, name days,
+  holidays and their eves, hyphenation and name-spelling rules. How a date is
+  written (day or month first) is read off `Intl` for the pack's tag
+  (`dayMonth`, `dayMonthYear`) — print a date through those, never as
+  `${day} ${month}`. Each pack is one
   self-contained file so a new country is a copy-paste + register. **Keep it
   that way** — no cross-imports between packs, no country conditionals
   outside this folder. A pack carries a name-day table only where the

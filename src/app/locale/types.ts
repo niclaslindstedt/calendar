@@ -17,7 +17,12 @@ import type {
 import type { Eve, EveStatus } from "./eves.ts";
 import type { HyphenationRules } from "./hyphenate.ts";
 import type { NameSpellingRules } from "./nameKey.ts";
-import { isoWeek } from "@niclaslindstedt/oss-framework/calendar";
+import {
+  daysBetween,
+  parseDayKey,
+  startOfWeek,
+  toDayKey,
+} from "@niclaslindstedt/oss-framework/calendar";
 
 /** `"MM-DD"` → the day's celebrated names, in display order. */
 export type NameDayTable = Readonly<Record<string, readonly string[]>>;
@@ -64,11 +69,10 @@ export type LocalePack = {
   readonly bcp47: string;
   /** First day of the week, `Date.getDay()` numbering (1 = Monday). */
   readonly weekStartsOn: WeekStart;
-  /** The country's week-numbering rule. Both current packs use ISO-8601
-   *  (the Swedish standard — week 1 holds the year's first Thursday); a
-   *  future pack with a different rule adds its variant here and in
-   *  `weekNumber` below. */
-  readonly weekNumbering: "iso";
+  /** The country's week-numbering rule — which week of January is week 1
+   *  (see {@link WEEK_NUMBERING}). The weeks themselves always open on
+   *  `weekStartsOn`, so a rule is only ever this one fact. */
+  readonly weekNumbering: WeekNumbering;
   /** Whether this country's wall calendars print week numbers by default. */
   readonly showWeekNumbersDefault: boolean;
   /** Whether this country has a name-day tradition to show. */
@@ -104,11 +108,50 @@ export type LocalePack = {
   readonly eves: readonly Eve[];
 };
 
-/** The week number of a day under the pack's numbering rule. */
+/** The week-numbering rules the packs use, each as the day of January its
+ *  week 1 always holds.
+ *
+ *  - `iso` — ISO-8601, the European standard: week 1 is the week holding the
+ *    year's first Thursday, which is the same thing as the week holding
+ *    4 January. The days of the year before it belong to the previous year's
+ *    last week.
+ *  - `us` — the American almanac's: week 1 is the week 1 January falls in,
+ *    whatever weekday that is, so a year's first week can be a single day.
+ *
+ *  That one number is the whole difference (CLDR's "minimal days in the first
+ *  week"); where a week opens is the pack's `weekStartsOn`. A country with
+ *  another rule adds a row here and nothing else. */
+export const WEEK_NUMBERING = {
+  iso: 4,
+  us: 1,
+} as const satisfies Record<string, number>;
+
+export type WeekNumbering = keyof typeof WEEK_NUMBERING;
+
+/** The day a pack's week 1 of `year` opens on — which can be in December. */
+export function firstWeekStart(pack: LocalePack, year: number): DayKey {
+  return startOfWeek(
+    toDayKey({ year, month: 1, day: WEEK_NUMBERING[pack.weekNumbering] }),
+    pack.weekStartsOn,
+  );
+}
+
+/** The week number of a day under the pack's numbering rule.
+ *
+ *  Every day of a week gets the same number — the week opens on the pack's
+ *  `weekStartsOn` and is numbered from the latest week 1 it is not before —
+ *  so a caller may ask with any day of the row it is printing. */
 export function weekNumber(pack: LocalePack, key: DayKey): number {
-  // Only ISO-8601 exists today; new rules switch on `pack.weekNumbering`.
-  void pack;
-  return isoWeek(key);
+  const start = startOfWeek(key, pack.weekStartsOn);
+  const year = parseDayKey(key)?.year ?? 1970;
+  // A week can belong to the next year (the last days of December under
+  // either rule) or to the previous one (the first days of January under
+  // ISO), so try the three candidates latest first.
+  for (const y of [year + 1, year, year - 1]) {
+    const first = firstWeekStart(pack, y);
+    if (start >= first) return daysBetween(first, start) / 7 + 1;
+  }
+  return 1;
 }
 
 // Per-pack, per-year holiday lookup tables, built lazily — the rules run
@@ -186,6 +229,62 @@ export function monthName(
     month: style,
     timeZone: "UTC",
   }).format(new Date(Date.UTC(2023, month - 1, 1, 12)));
+}
+
+// How a country orders a date is read off `Intl` for the pack's tag, once per
+// tag, so a pack carries no date pattern of its own and a country added later
+// writes its dates correctly by its tag alone. Only the ORDER and the join in
+// front of the year are taken from it; the month's word is still `monthName`,
+// which keeps every day-first pack printing exactly what it always has
+// (`Intl`'s own long date would put a full stop after a German or a Finnish
+// day, and decline the Finnish month).
+type DateShape = { monthFirst: boolean; yearJoin: string };
+const dateShapes = new Map<string, DateShape>();
+
+function dateShape(pack: LocalePack): DateShape {
+  let shape = dateShapes.get(pack.bcp47);
+  if (!shape) {
+    const parts = new Intl.DateTimeFormat(pack.bcp47, {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      timeZone: "UTC",
+    }).formatToParts(new Date(Date.UTC(2023, 7, 8, 12)));
+    const at = (type: string) => parts.findIndex((p) => p.type === type);
+    const year = at("year");
+    const before = year > 0 ? parts[year - 1] : undefined;
+    shape = {
+      monthFirst: at("month") < at("day"),
+      yearJoin: before?.type === "literal" ? before.value : " ",
+    };
+    dateShapes.set(pack.bcp47, shape);
+  }
+  return shape;
+}
+
+/** A day of a month the way the pack's country writes it: "25 Dec" in the UK,
+ *  "Dec 25" in the US. `days` may be a run or a list the caller has already
+ *  set ("20–28", "2, 5, 7") — the country decides where the month goes, not
+ *  what the days look like. */
+export function dayMonth(
+  pack: LocalePack,
+  days: number | string,
+  month: number,
+  style: "long" | "short" = "short",
+): string {
+  const name = monthName(pack, month, style);
+  return dateShape(pack).monthFirst ? `${name} ${days}` : `${days} ${name}`;
+}
+
+/** A whole date, spelled out with its year: "8 August 2026" in the UK,
+ *  "August 8, 2026" in the US. */
+export function dayMonthYear(
+  pack: LocalePack,
+  day: number,
+  month: number,
+  year: number,
+): string {
+  return `${dayMonth(pack, day, month, "long")}${dateShape(pack).yearJoin}${year}`;
 }
 
 /** The pack-language name of a weekday (`Date.getDay()` numbering). */

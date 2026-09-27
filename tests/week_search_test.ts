@@ -8,6 +8,7 @@ import { describe, expect, it } from "vitest";
 
 import { getLocale } from "../src/app/locale/index.ts";
 import {
+  dayLabel,
   monthsNamed,
   parseWeekQuery,
   searchWeeks,
@@ -18,6 +19,7 @@ import {
 
 const sv = getLocale("sv-SE");
 const gb = getLocale("en-GB");
+const us = getLocale("en-US");
 
 /** The year the readings below are made in, unless one carries its own. */
 const YEAR = 2026;
@@ -242,5 +244,38 @@ describe("the range beside a week", () => {
     expect(weekRangeLabel(gb, weekOf(gb, "2026-09-01"))).toBe(
       "31 Aug – 6 Sept",
     );
+  });
+});
+
+describe("an American year of weeks", () => {
+  it("runs Sunday to Saturday from the week 1 January is in", () => {
+    const rows = weeksInYear(us, 2026);
+    // 1 January 2026 is a Thursday; its week opens on Sunday 28 December.
+    expect(rows[0]).toEqual({
+      week: 1,
+      start: "2025-12-28",
+      end: "2026-01-03",
+    });
+    expect(rows[1].start).toBe("2026-01-04");
+    expect(rows.map((r) => r.week)).toEqual(rows.map((_, i) => i + 1));
+    // And stops where 2027's week 1 opens, on Sunday 27 December.
+    expect(rows[rows.length - 1].end).toBe("2026-12-26");
+    expect(rows).toHaveLength(52);
+    // 2022 opened on a Saturday: a one-day week 1, and 53 of them.
+    expect(weeksInYear(us, 2022)).toHaveLength(53);
+  });
+
+  it("finds a week by its number and by a date, the American way", () => {
+    expect(searchWeeks(us, YEAR, "w 2")[0].start).toBe("2026-01-04");
+    const hits = searchWeeks(us, YEAR, "aug 8");
+    expect(hits).toHaveLength(1);
+    expect(hits[0]).toMatchObject({ week: 32, start: "2026-08-02" });
+  });
+
+  it("writes the month first", () => {
+    expect(weekRangeLabel(us, weekOf(us, "2026-08-12"))).toBe("Aug 9–15");
+    expect(weekRangeLabel(us, weekOf(us, "2026-09-01"))).toBe("Aug 30 – Sep 5");
+    expect(dayLabel(us, "2026-08-08")).toBe("August 8, 2026");
+    expect(dayLabel(gb, "2026-08-08")).toBe("8 August 2026");
   });
 });

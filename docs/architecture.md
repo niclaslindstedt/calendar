@@ -21,9 +21,9 @@ src/
 ├── App.tsx               shell: top bar, active view, settings, update toast
 ├── output.ts             §19.4 central output module (semantic log helpers)
 └── app/
-    ├── locale/           country packs (de-DE, en-GB, fi-FI, fr-FR, nb-NO,
-    │                     nl-NL, sv-SE) + eves.ts (which holiday eves are
-    │                     worked) — see features/locales.md
+    ├── locale/           country packs (de-DE, en-GB, en-US, fi-FI, fr-FR,
+    │                     nb-NO, nl-NL, sv-SE) + eves.ts (which holiday eves
+    │                     are worked) — see features/locales.md
     ├── i18n/             UI-string catalogs (framework createI18n)
     ├── dev/              the store demo (VITE_SEED=demo): demo calendars,
     │                     booted in memory before the app mounts

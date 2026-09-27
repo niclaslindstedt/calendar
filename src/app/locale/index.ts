@@ -5,6 +5,7 @@
 
 import { deDE } from "./de-de.ts";
 import { enGB } from "./en-gb.ts";
+import { enUS } from "./en-us.ts";
 import { fiFI } from "./fi-fi.ts";
 import { frFR } from "./fr-fr.ts";
 import { nbNO } from "./nb-no.ts";
@@ -12,7 +13,12 @@ import { nlNL } from "./nl-nl.ts";
 import { svSE } from "./sv-se.ts";
 import type { LocalePack } from "./types.ts";
 
-export type { Holiday, LocalePack, NameDayTable } from "./types.ts";
+export type {
+  Holiday,
+  LocalePack,
+  NameDayTable,
+  WeekNumbering,
+} from "./types.ts";
 export type { Eve, EveChoices, EveStatus } from "./eves.ts";
 export type { HyphenationRules } from "./hyphenate.ts";
 export type { NameSpellingRules } from "./nameKey.ts";
@@ -33,6 +39,10 @@ export {
   SOFT_HYPHEN,
 } from "./hyphenate.ts";
 export {
+  WEEK_NUMBERING,
+  dayMonth,
+  dayMonthYear,
+  firstWeekStart,
   holidayFor,
   isRedDay,
   isRedWeekday,
@@ -54,9 +64,14 @@ export const LOCALES: readonly LocalePack[] = [
   fiFI,
   svSE,
   enGB,
+  enUS,
 ];
 
-/** The pack used when the device's own languages match nothing. */
+/** The pack used when the device's own languages match nothing.
+ *
+ *  It is also what a bare `en`, or an English-speaking country with no pack
+ *  of its own (`en-AU`, `en-IE`), lands on by language: `en-GB` is listed
+ *  before `en-US`, and the language match takes the first. */
 export const FALLBACK_LOCALE_ID = "en-GB";
 
 /** Resolve a persisted pack id, falling back to the default for unknown

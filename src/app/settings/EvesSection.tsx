@@ -27,7 +27,7 @@ import {
   eveStatus,
   getLocale,
   hasEveOverrides,
-  monthName,
+  dayMonth,
   type Eve,
   type EveStatus,
   type LocalePack,
@@ -53,7 +53,7 @@ const STATUS_LABELS: Record<EveStatus, MessageKey> = {
  *  because this is an example of where the day falls, not a date you act on. */
 function dateLabel(pack: LocalePack, eve: Eve, year: number): string {
   const at = eve.date(year);
-  return `${at.day} ${monthName(pack, at.month, "short")}`;
+  return dayMonth(pack, at.day, at.month);
 }
 
 export function EvesSection({

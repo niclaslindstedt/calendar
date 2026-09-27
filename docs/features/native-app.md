@@ -96,10 +96,11 @@ adding the other — the trade for that is that both work on every phone the app
 runs on, with no per-widget configuration screen to go and find.
 
 Which days count as work days comes from your **country pack**, not from a
-fixed Monday–Friday: both the UK and Sweden rest on Saturday and Sunday, and a
+fixed Monday–Friday: every pack today rests on Saturday and Sunday, and a
 country pack added later brings its own answer with it. The week also starts
 where your pack says it starts, not where the phone's language would put it —
-so a Swedish calendar on an American phone still begins its weeks on Monday.
+so a Swedish calendar on an American phone still begins its weeks on Monday,
+and the United States calendar begins them on Sunday.
 
 ## When a widget updates
 

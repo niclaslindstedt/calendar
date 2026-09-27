@@ -71,6 +71,18 @@ describe("the frames' premises", () => {
     expect(week.every((text) => text!.split("\n").length === 2)).toBe(true);
   });
 
+  it("and it still is in a calendar whose week starts on Sunday", () => {
+    // The US pack's week around a Saturday: the Sunday before this Monday,
+    // then Monday to Saturday — the week planner's frame in the US.
+    const week = Array.from(
+      { length: 7 },
+      (_, i) => entries[addDays(monday, i - 1)],
+    );
+    expect(week.every(Boolean)).toBe(true);
+    expect(week[1]).toMatch(/^On-call/);
+    expect(week.every((text) => text!.split("\n").length === 2)).toBe(true);
+  });
+
   it("the talk is next Thursday, and long enough to want its own page", () => {
     expect(entries[addDays(monday, 7 + 3)]).toBe(TALK_NOTE);
     expect(TALK_NOTE.split("\n").length).toBeGreaterThanOrEqual(4);

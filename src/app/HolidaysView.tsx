@@ -21,7 +21,7 @@ import {
 
 import { useT } from "./i18n/index.ts";
 import { LIST_BOTTOM_PAD } from "./layout.ts";
-import { monthName, weekdayName, type LocalePack } from "./locale/index.ts";
+import { dayMonth, weekdayName, type LocalePack } from "./locale/index.ts";
 import { PeriodHeading } from "./PeriodHeading.tsx";
 import {
   holidaysInYear,
@@ -42,12 +42,13 @@ type Props = {
   onYearChange: (year: number) => void;
 };
 
-/** "tor 1 jan" — the compact form the list and the plan both use. */
+/** "tor 1 jan" ("Thu Jan 1" in the US) — the compact form the list and the
+ *  plan both use. */
 function shortDay(pack: LocalePack, key: DayKey): string {
   const parts = parseDayKey(key);
   if (!parts) return key;
   const weekday = new Date(`${key}T12:00:00Z`).getUTCDay();
-  return `${weekdayName(pack, weekday, "short")} ${parts.day} ${monthName(pack, parts.month, "short")}`;
+  return `${weekdayName(pack, weekday, "short")} ${dayMonth(pack, parts.day, parts.month)}`;
 }
 
 /** "1–11 jan", collapsing the repeated month, or "28 dec – 3 jan" when the
@@ -57,14 +58,14 @@ function rangeLabel(pack: LocalePack, start: DayKey, end: DayKey): string {
   const a = parseDayKey(start);
   const b = parseDayKey(end);
   if (!a || !b) return `${start} – ${end}`;
-  const month = (m: number) => monthName(pack, m, "short");
   return a.month === b.month
-    ? `${a.day}–${b.day} ${month(a.month)}`
-    : `${a.day} ${month(a.month)} – ${b.day} ${month(b.month)}`;
+    ? dayMonth(pack, `${a.day}–${b.day}`, a.month)
+    : `${dayMonth(pack, a.day, a.month)} – ${dayMonth(pack, b.day, b.month)}`;
 }
 
 /** The days to book, as bare numbers where they share a month: "2, 5, 7, 8, 9
- *  jan". Repeating the month on every one of five dates is noise. */
+ *  jan" ("Jan 2, 5, 7, 8, 9"). Repeating the month on every one of five dates
+ *  is noise. */
 function bookLabel(pack: LocalePack, days: readonly DayKey[]): string {
   const parsed = days.map((d) => parseDayKey(d)).filter((p) => p !== null);
   if (parsed.length === 0) return "";
@@ -75,7 +76,7 @@ function bookLabel(pack: LocalePack, days: readonly DayKey[]): string {
     else groups.push({ month: p.month, days: [p.day] });
   }
   return groups
-    .map((g) => `${g.days.join(", ")} ${monthName(pack, g.month, "short")}`)
+    .map((g) => dayMonth(pack, g.days.join(", "), g.month))
     .join(" · ");
 }
 

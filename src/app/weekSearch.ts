@@ -31,7 +31,9 @@ import {
 
 import {
   LOCALES,
-  monthName,
+  dayMonth,
+  dayMonthYear,
+  firstWeekStart,
   weekNumber,
   type LocalePack,
 } from "./locale/index.ts";
@@ -83,10 +85,9 @@ const MIN_MONTH_LETTERS = 3;
 export function weekOf(pack: LocalePack, key: DayKey): WeekRow {
   const start = startOfWeek(key, pack.weekStartsOn);
   return {
-    // Asked of the week's middle rather than of its first day: ISO-8601 —
-    // both shipped packs' rule — defines a week by the Thursday in it, which
-    // is exactly `start + 3` for a Monday-start week and the nearest thing to
-    // it for a pack that opens its weeks on a Sunday.
+    // Any day of the week gives the same number (`weekNumber` numbers the
+    // week, not the day); the middle is asked because it is also the day the
+    // browsing list files the week under (`weekMonth`).
     week: weekNumber(pack, addDays(start, 3)),
     start,
     end: addDays(start, 6),
@@ -96,19 +97,14 @@ export function weekOf(pack: LocalePack, key: DayKey): WeekRow {
 /** Every week of a year, in order.
  *
  *  A year's weeks are the ones between its own week 1 and the next year's,
- *  and week 1 is found rather than assumed: the 4th of January is in it under
- *  ISO-8601 whatever weekday the year starts on. That is what makes the table
- *  52 rows in most years and 53 in the ones that need it, without either
- *  number appearing here. */
+ *  and week 1 is found rather than assumed, by the pack's numbering rule
+ *  (`firstWeekStart`): the week holding 4 January under ISO-8601, the one
+ *  holding 1 January in the US. That is what makes the table 52 rows in most
+ *  years and 53 in the ones that need it, without either number appearing
+ *  here. */
 export function weeksInYear(pack: LocalePack, year: number): WeekRow[] {
-  const first = startOfWeek(
-    toDayKey({ year, month: 1, day: 4 }),
-    pack.weekStartsOn,
-  );
-  const limit = startOfWeek(
-    toDayKey({ year: year + 1, month: 1, day: 4 }),
-    pack.weekStartsOn,
-  );
+  const first = firstWeekStart(pack, year);
+  const limit = firstWeekStart(pack, year + 1);
   const rows: WeekRow[] = [];
   for (let at = first; at < limit; at = addDays(at, 7)) {
     rows.push(weekOf(pack, at));
@@ -358,19 +354,19 @@ export function weekRangeLabel(pack: LocalePack, row: WeekRow): string {
   const a = parseDayKey(row.start);
   const b = parseDayKey(row.end);
   if (!a || !b) return `${row.start} – ${row.end}`;
-  const month = (m: number) => monthName(pack, m, "short");
   return a.month === b.month
-    ? `${a.day}–${b.day} ${month(a.month)}`
-    : `${a.day} ${month(a.month)} – ${b.day} ${month(b.month)}`;
+    ? dayMonth(pack, `${a.day}–${b.day}`, a.month)
+    : `${dayMonth(pack, a.day, a.month)} – ${dayMonth(pack, b.day, b.month)}`;
 }
 
-/** "8 August 2026" — the date a reading was made of, spelled out under the
- *  week it landed in. Long-form and with the year, because this is the line
- *  that has to make two readings of `12/8` tell themselves apart. */
+/** "8 August 2026" ("August 8, 2026" in the US) — the date a reading was
+ *  made of, spelled out under the week it landed in. Long-form and with the
+ *  year, because this is the line that has to make two readings of `12/8`
+ *  tell themselves apart. */
 export function dayLabel(pack: LocalePack, key: DayKey): string {
   const parts = parseDayKey(key);
   if (!parts) return key;
-  return `${parts.day} ${monthName(pack, parts.month)} ${parts.year}`;
+  return dayMonthYear(pack, parts.day, parts.month, parts.year);
 }
 
 /** The month a week is filed under in the browsing list: the one its middle

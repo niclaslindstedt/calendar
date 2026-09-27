@@ -17,6 +17,7 @@ import {
 
 const sv = getLocale("sv-SE");
 const gb = getLocale("en-GB");
+const us = getLocale("en-US");
 
 /** The block that books exactly these days, if the planner offers one. */
 function blockFor(
@@ -268,13 +269,62 @@ describe("planVacation", () => {
   });
 
   it("holds up across packs and years", () => {
-    for (const pack of [sv, gb]) {
+    for (const pack of [sv, gb, us]) {
       for (const year of [2026, 2027, 2028, 2029, 2030]) {
         const plan = planVacation(pack, year, 25);
         expect(plan.spent).toBeLessThanOrEqual(25);
         expect(plan.daysOff).toBeGreaterThan(plan.spent);
         expect(plan.longest).toBeGreaterThan(0);
       }
+    }
+  });
+});
+
+describe("an American year", () => {
+  it("takes the observed weekday off, not the weekend date", () => {
+    // The Fourth of July 2026 is a Saturday, observed on Friday the 3rd.
+    expect(isFreeDay(us, "2026-07-03")).toBe(true);
+    // 1 January 2028 is a Saturday, observed on Friday 31 December 2027.
+    expect(isFreeDay(us, "2027-12-31")).toBe(true);
+    // The Monday after a Saturday holiday is an ordinary workday.
+    expect(isFreeDay(us, "2026-07-06")).toBe(false);
+    // Christmas Eve is not a federal holiday.
+    expect(isFreeDay(us, "2026-12-24")).toBe(false);
+  });
+
+  it("lists the observed days beside the holidays they stand for", () => {
+    const july = holidaysInYear(us, 2026).filter((h) =>
+      h.key.startsWith("2026-07"),
+    );
+    expect(july.map((h) => [h.key, h.name, h.weekday])).toEqual([
+      ["2026-07-03", "Independence Day (observed)", 5],
+      ["2026-07-04", "Independence Day", 6],
+    ]);
+  });
+
+  it("bridges Thanksgiving to the weekend for one day", () => {
+    // Thursday 26 November 2026: book the Friday, get Thursday to Sunday.
+    const block = blockFor(bridgeBlocks(us, 2026), "2026-11-27");
+    expect(block).toMatchObject({
+      cost: 1,
+      start: "2026-11-26",
+      end: "2026-11-29",
+      length: 4,
+    });
+  });
+
+  it("plans a year on the federal holidays alone", () => {
+    const plan = planVacation(us, 2026, 10);
+    expect(plan.spent).toBeLessThanOrEqual(10);
+    expect(plan.daysOff / plan.spent).toBeGreaterThan(1.5);
+    const booked = plan.breaks.flatMap((b) => b.days);
+    expect(booked).toContain("2026-11-27");
+    // Every break hangs off a federal holiday or its observed day.
+    for (const b of plan.breaks) {
+      const inside = holidaysInYear(us, Number(b.start.slice(0, 4)))
+        .concat(holidaysInYear(us, Number(b.end.slice(0, 4))))
+        .filter((h) => h.off && h.key >= b.start && h.key <= b.end);
+      expect(inside.length).toBeGreaterThan(0);
     }
   });
 });

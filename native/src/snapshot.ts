@@ -172,6 +172,7 @@ export const FALLBACK_LOCALE = "en-GB";
 export const WEEK_RULES: Record<string, WidgetWeek> = {
   "de-DE": { startsOn: 1, restDays: [0, 6] },
   "en-GB": { startsOn: 1, restDays: [0, 6] },
+  "en-US": { startsOn: 0, restDays: [0, 6] },
   "fi-FI": { startsOn: 1, restDays: [0, 6] },
   "fr-FR": { startsOn: 1, restDays: [0, 6] },
   "nb-NO": { startsOn: 1, restDays: [0, 6] },
@@ -180,8 +181,8 @@ export const WEEK_RULES: Record<string, WidgetWeek> = {
 };
 
 /** The week shape a locale this build has never heard of falls back to: a
- *  Monday-start week with the weekend off, which is what every shipped pack
- *  says and what the app's own fallback pack would answer. */
+ *  Monday-start week with the weekend off, which is what the app's own
+ *  fallback pack (`en-GB`) answers. */
 export const FALLBACK_WEEK: WidgetWeek = { startsOn: 1, restDays: [0, 6] };
 
 /** The week rules for a locale id, falling back rather than throwing. */

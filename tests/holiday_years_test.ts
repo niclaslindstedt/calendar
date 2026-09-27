@@ -10,6 +10,11 @@
 //   https://www.gov.uk/bank-holidays (published through 2027; 2028–2030
 //   follow the same statutory pattern the engine implements).
 //
+// United States (federal holidays, observed days included):
+//   https://www.opm.gov/policy-data-oversight/pay-leave/federal-holidays/
+//   (OPM publishes each year's list with the observed weekday beside any
+//   holiday that falls on a weekend).
+//
 // The five packs added after those two are checked the same way but on the
 // dates that are *computed* rather than fixed — the ones a rule can get
 // wrong. A fixed date needs no five-year table to prove it: 3 October is
@@ -28,6 +33,7 @@ const fr = getLocale("fr-FR");
 const nl = getLocale("nl-NL");
 const fi = getLocale("fi-FI");
 const nb = getLocale("nb-NO");
+const us = getLocale("en-US");
 
 // [year, month, day, name] — the thirteen official Swedish red days for each
 // of the next five years, as published.
@@ -422,6 +428,170 @@ describe("Norwegian røde dager 2025–2030", () => {
     for (let year = 2025; year <= 2030; year++) {
       const red = nb.holidays(year).filter((h) => h.red);
       expect(red.length, String(year)).toBe(12);
+    }
+  });
+});
+
+// [month, day, name] — every day the US pack names in a year, in date order:
+// the eleven federal holidays and the weekday each weekend one is observed on.
+type Day = readonly [number, number, string];
+
+const US_FEDERAL: Record<number, readonly Day[]> = {
+  // No holiday lands on a weekend.
+  2025: [
+    [1, 1, "New Year's Day"],
+    [1, 20, "Martin Luther King Jr. Day"],
+    [2, 17, "Presidents' Day"],
+    [5, 26, "Memorial Day"],
+    [6, 19, "Juneteenth"],
+    [7, 4, "Independence Day"],
+    [9, 1, "Labor Day"],
+    [10, 13, "Columbus Day"],
+    [11, 11, "Veterans Day"],
+    [11, 27, "Thanksgiving"],
+    [12, 25, "Christmas Day"],
+  ],
+  // The Fourth is a Saturday, observed on Friday the 3rd.
+  2026: [
+    [1, 1, "New Year's Day"],
+    [1, 19, "Martin Luther King Jr. Day"],
+    [2, 16, "Presidents' Day"],
+    [5, 25, "Memorial Day"],
+    [6, 19, "Juneteenth"],
+    [7, 3, "Independence Day (observed)"],
+    [7, 4, "Independence Day"],
+    [9, 7, "Labor Day"],
+    [10, 12, "Columbus Day"],
+    [11, 11, "Veterans Day"],
+    [11, 26, "Thanksgiving"],
+    [12, 25, "Christmas Day"],
+  ],
+  // Four shifts: Juneteenth and Christmas on a Saturday (back to Friday),
+  // the Fourth on a Sunday (on to Monday), and 1 January 2028 on a Saturday,
+  // observed on Friday 31 December 2027.
+  2027: [
+    [1, 1, "New Year's Day"],
+    [1, 18, "Martin Luther King Jr. Day"],
+    [2, 15, "Presidents' Day"],
+    [5, 31, "Memorial Day"],
+    [6, 18, "Juneteenth (observed)"],
+    [6, 19, "Juneteenth"],
+    [7, 4, "Independence Day"],
+    [7, 5, "Independence Day (observed)"],
+    [9, 6, "Labor Day"],
+    [10, 11, "Columbus Day"],
+    [11, 11, "Veterans Day"],
+    [11, 25, "Thanksgiving"],
+    [12, 24, "Christmas Day (observed)"],
+    [12, 25, "Christmas Day"],
+    [12, 31, "New Year's Day (observed)"],
+  ],
+  // New Year's Day on a Saturday, already observed last year — so January
+  // has no weekday for it — and Veterans Day on a Saturday.
+  2028: [
+    [1, 1, "New Year's Day"],
+    [1, 17, "Martin Luther King Jr. Day"],
+    [2, 21, "Presidents' Day"],
+    [5, 29, "Memorial Day"],
+    [6, 19, "Juneteenth"],
+    [7, 4, "Independence Day"],
+    [9, 4, "Labor Day"],
+    [10, 9, "Columbus Day"],
+    [11, 10, "Veterans Day (observed)"],
+    [11, 11, "Veterans Day"],
+    [11, 23, "Thanksgiving"],
+    [12, 25, "Christmas Day"],
+  ],
+};
+
+describe("US federal holidays 2025–2028 (OPM)", () => {
+  it("names every federal holiday and observed day, and nothing else", () => {
+    for (const [year, days] of Object.entries(US_FEDERAL)) {
+      const got = us
+        .holidays(Number(year))
+        .map((h) => [h.month, h.day, h.name]);
+      expect([year, got]).toEqual([year, days]);
+    }
+  });
+
+  it("gives the observed weekday off and prints nothing red", () => {
+    for (let year = 2020; year <= 2035; year++) {
+      for (const h of us.holidays(year)) {
+        expect([year, h.name, h.red, h.off]).toEqual([
+          year,
+          h.name,
+          false,
+          true,
+        ]);
+        const weekday = new Date(
+          Date.UTC(year, h.month - 1, h.day),
+        ).getUTCDay();
+        if (h.name.endsWith("(observed)")) {
+          expect([year, h.name, weekday === 1 || weekday === 5]).toEqual([
+            year,
+            h.name,
+            true,
+          ]);
+        }
+      }
+    }
+  });
+
+  it("observes a weekend holiday on the nearest weekday, both ways", () => {
+    // 2021: Juneteenth's first year, on a Saturday; the Fourth on a Sunday;
+    // Christmas on a Saturday; and 1 January 2022 on a Saturday.
+    expect(holidayFor(us, 2021, 6, 18)?.name).toBe("Juneteenth (observed)");
+    expect(holidayFor(us, 2021, 7, 5)?.name).toBe(
+      "Independence Day (observed)",
+    );
+    expect(holidayFor(us, 2021, 12, 24)?.name).toBe("Christmas Day (observed)");
+    expect(holidayFor(us, 2021, 12, 31)?.name).toBe(
+      "New Year's Day (observed)",
+    );
+    expect(holidayFor(us, 2022, 1, 1)?.name).toBe("New Year's Day");
+    expect(holidayFor(us, 2022, 1, 3)).toBeNull();
+    // 2022: Juneteenth and Christmas on a Sunday, on to Monday.
+    expect(holidayFor(us, 2022, 6, 20)?.name).toBe("Juneteenth (observed)");
+    expect(holidayFor(us, 2022, 12, 26)?.name).toBe("Christmas Day (observed)");
+    // 2023: 1 January on a Sunday stays in January.
+    expect(holidayFor(us, 2023, 1, 2)?.name).toBe("New Year's Day (observed)");
+    expect(holidayFor(us, 2022, 12, 30)).toBeNull();
+  });
+
+  it("starts Juneteenth in 2021", () => {
+    expect(us.holidays(2020).some((h) => h.name.startsWith("Juneteenth"))).toBe(
+      false,
+    );
+    expect(holidayFor(us, 2021, 6, 19)?.name).toBe("Juneteenth");
+  });
+
+  it("puts the moving Mondays and Thanksgiving where they belong", () => {
+    for (let year = 2025; year <= 2040; year++) {
+      const days = us.holidays(year);
+      const on = (name: string) => {
+        const h = days.find((d) => d.name === name)!;
+        return {
+          day: h.day,
+          weekday: new Date(Date.UTC(year, h.month - 1, h.day)).getUTCDay(),
+        };
+      };
+      // nth weekday of the month ⇔ its date falls in the nth run of seven.
+      expect(on("Martin Luther King Jr. Day")).toMatchObject({ weekday: 1 });
+      expect(on("Martin Luther King Jr. Day").day).toBeGreaterThanOrEqual(15);
+      expect(on("Martin Luther King Jr. Day").day).toBeLessThanOrEqual(21);
+      expect(on("Presidents' Day")).toMatchObject({ weekday: 1 });
+      expect(on("Presidents' Day").day).toBeGreaterThanOrEqual(15);
+      expect(on("Presidents' Day").day).toBeLessThanOrEqual(21);
+      expect(on("Memorial Day")).toMatchObject({ weekday: 1 });
+      expect(on("Memorial Day").day).toBeGreaterThanOrEqual(25);
+      expect(on("Labor Day")).toMatchObject({ weekday: 1 });
+      expect(on("Labor Day").day).toBeLessThanOrEqual(7);
+      expect(on("Columbus Day")).toMatchObject({ weekday: 1 });
+      expect(on("Columbus Day").day).toBeGreaterThanOrEqual(8);
+      expect(on("Columbus Day").day).toBeLessThanOrEqual(14);
+      expect(on("Thanksgiving")).toMatchObject({ weekday: 4 });
+      expect(on("Thanksgiving").day).toBeGreaterThanOrEqual(22);
+      expect(on("Thanksgiving").day).toBeLessThanOrEqual(28);
     }
   });
 });

@@ -35,7 +35,7 @@ import {
 } from "@niclaslindstedt/oss-framework/components";
 
 import { useT, type TFunction } from "../i18n/index.ts";
-import { monthName, nameKey, type LocalePack } from "../locale/index.ts";
+import { dayMonth, nameKey, type LocalePack } from "../locale/index.ts";
 import { indexPeople } from "../people/celebrations.ts";
 import { givenNames, type Contact } from "../people/types.ts";
 import type { PeopleStore } from "../people/usePeople.ts";
@@ -57,7 +57,7 @@ function celebrationLabel(
     const { month, day } = contact.birthday;
     parts.push(
       t("contacts.birthdayOn", {
-        date: `${day} ${monthName(pack, month, "short")}`,
+        date: dayMonth(pack, day, month),
       }),
     );
   } else {
@@ -75,7 +75,7 @@ function celebrationLabel(
     const day = Number(nameDay.key.slice(3, 5));
     parts.push(
       t("contacts.nameDayOn", {
-        date: `${day} ${monthName(pack, month, "short")}`,
+        date: dayMonth(pack, day, month),
         // The ALMANAC's spelling, which may not be the contact's — a Nicklas
         // is celebrated on Niklas's day, and the row should say so rather
         // than leave them wondering why they matched.

@@ -4,10 +4,10 @@ A wall calendar looks different in different countries. Everything that
 differs is bundled into one **country pack** per country under
 `src/app/locale/`:
 
-- `weekStartsOn` — first day of the week (Monday in all seven current packs).
-- `weekNumbering` — the country's week-numbering rule. Every pack uses
-  ISO-8601 (week 1 holds the year's first Thursday); a future country with a
-  different rule adds its variant here.
+- `weekStartsOn` — first day of the week (Monday in the seven European packs,
+  Sunday in the United States).
+- `weekNumbering` — the country's week-numbering rule, `iso` or `us` (see
+  "Week numbers" below).
 - `showWeekNumbersDefault` — whether week numbers print by default. On where
   the country schedules by them (Sweden's _veckonummer_, Germany's
   _Kalenderwoche_, the Dutch _weeknummer_, Finland's _viikko_, Norway's
@@ -16,7 +16,7 @@ differs is bundled into one **country pack** per country under
   people don't want them.
 - `showNameDaysDefault` + `nameDays` — the name-day table (`"MM-DD"` → names),
   or `null` for countries without the tradition.
-- `redWeekdays` — which weekdays print red (Sundays in both).
+- `redWeekdays` — which weekdays print red (Sundays in every pack).
 - `holidays(year)` — a **rule engine**, not a year table: the pack computes
   its holidays for any year from rules (see below).
 - `eves` — the holiday **eves** the country names, and what most of its
@@ -25,7 +25,7 @@ differs is bundled into one **country pack** per country under
 - `nameSpelling` — how the language writes the same sound, so the name-day
   search finds a name spelled the searcher's way (see below).
 - `bcp47` — drives month/weekday names via `Intl`, so packs carry no month
-  name tables.
+  name tables — and the order a date is written in (below).
 
 The UI language is a **separate** setting: a Swede abroad can run the English
 UI over the Swedish calendar, or vice versa.
@@ -40,10 +40,15 @@ strongest match first:
 1. the **exact** pack id — `sv-SE` → `sv-SE`;
 2. the **country** — `en-SE` → `sv-SE`, because an English speaker living in
    Sweden still wants the Swedish wall calendar;
-3. the **language** — `en-US` → `en-GB`, `sv-DK` → `sv-SE`, `de-AT` and
+3. the **language** — `en-AU` → `en-GB`, `sv-DK` → `sv-SE`, `de-AT` and
    `de-CH` → `de-DE`.
 
-Rule 2 beating rule 3 is the interesting one now that there are seven packs:
+An American phone reports `en-US` and gets the United States pack by rule 1;
+`es-US` gets it by rule 2. A bare `en`, or an English-speaking country with no
+pack of its own, gets the UK's: two packs speak English, and `LOCALES` lists
+`en-GB` first.
+
+Rule 2 beating rule 3 is the interesting one now that there are eight packs:
 `sv-FI` resolves to **`fi-FI`**, not `sv-SE`. A Swedish-speaking Finn lives
 by Finland's red days and Finland's almanac; the language they read the app
 in is the other setting.
@@ -67,8 +72,41 @@ again.
 | `fi-FI` | Suomi          | Monday     | on           | Finnish nimipäivät   | 4    |
 | `sv-SE` | Sverige        | Monday     | on           | Swedish almanac list | 7    |
 | `en-GB` | United Kingdom | Monday     | off          | none                 | 0    |
+| `en-US` | United States  | Sunday     | off (US)     | none                 | 0    |
 
-All seven print Sundays red and take Saturday and Sunday as the weekend.
+All eight print Sundays red and take Saturday and Sunday as the weekend.
+
+## Week numbers
+
+A week always opens on the pack's `weekStartsOn`; the numbering rule only
+says which week of January is week 1, as the day of January it always holds
+(`WEEK_NUMBERING` in `src/app/locale/types.ts`, CLDR's "minimal days in the
+first week"):
+
+| Rule  | Week 1 holds | Used by                  | So…                                                                                               |
+| ----- | ------------ | ------------------------ | ------------------------------------------------------------------------------------------------- |
+| `iso` | 4 January    | the seven European packs | ISO-8601: the week with the year's first Thursday; early January can be last year's week 52 or 53 |
+| `us`  | 1 January    | United States            | the Sunday-to-Saturday week 1 January falls in, however few of its days are January's             |
+
+`weekNumber(pack, day)` gives every day of a printed row the same number, so a
+view may ask with whichever day it has; `firstWeekStart(pack, year)` is where
+the week table (`weekSearch.ts`) starts a year. Either rule gives a year 52
+or 53 weeks. An American wall calendar does not print week numbers, so the US pack
+ships them **off** — turned on in Settings, they are the American numbers, not
+ISO's (4 January 2026 is week 2 in the US and week 1 in ISO-8601). A country
+with another rule adds a row to `WEEK_NUMBERING`.
+
+## How a date is written
+
+The app writes a day and a month in the pack's country's order —
+`dayMonth(pack, …)` gives "25 Dec" in the UK and "Dec 25" in the US, and
+`dayMonthYear` "8 August 2026" and "August 8, 2026". The order and the join
+before the year are read off `Intl` for the pack's `bcp47`, so a pack carries
+no date pattern; the month's word is still `monthName`, which keeps the
+day-first packs printing what they always have. The holidays list, the
+vacation planner, the week table, the name search, the eves and the contacts
+tab all print through them. The app prints no clock times of its own (your
+notes are your own text), so there is no 12- or 24-hour choice to make.
 
 ### The name-day tables
 
@@ -122,6 +160,19 @@ Saturday on or after…"); each pack expresses its national rules with those:
   Easter Monday from the computus, the three movable Mondays, New Year /
   Christmas / Boxing Day **with weekend substitute rules**), named on the
   calendar; only Sundays print red.
+- **United States** — the eleven federal holidays (5 U.S.C. § 6103), as a
+  table in the pack: New Year's Day, Martin Luther King Jr. Day (3rd Monday of
+  January), Presidents' Day (3rd Monday of February — the statute's
+  "Washington's Birthday"), Memorial Day (last Monday of May), Juneteenth (19
+  June, from 2021), Independence Day, Labor Day (1st Monday of September),
+  Columbus Day (2nd Monday of October), Veterans Day (11 November),
+  Thanksgiving (4th Thursday of November) and Christmas Day. A fixed one on a
+  Saturday is **observed** the Friday before, on a Sunday the Monday after:
+  the date keeps its name and the weekday is named "… (observed)" and is the
+  day off, so the planner books around it. New Year's Day on a Saturday is
+  observed on **31 December of the year before** (1 January 2028 → Friday
+  31 December 2027), and has no weekday in January. Named in black, like the
+  UK's; only Sundays print red. The US names no eves.
 - **Deutschland** — the nine _bundeseinheitliche Feiertage_ as red days,
   plus Ostersonntag and Pfingstsonntag, which a calendar names even though
   they are Sundays anyway. The _Land_ holidays (Heilige Drei Könige,
@@ -224,9 +275,9 @@ The other packs' eves, same idea in their own countries:
 
 Påskafton and Pingstafton are deliberately absent: both always fall on a
 Saturday, so they are already in `restWeekdays` and a switch for them would
-do nothing. The UK and French packs declare `eves: []` — Christmas Eve is an
-ordinary working day there with no agreement handing it back, and the settings
-section disappears entirely.
+do nothing. The UK, US and French packs declare `eves: []` — Christmas Eve is
+an ordinary working day there with no agreement handing it back, and the
+settings section disappears entirely.
 
 `Holiday.eve` carries the resolved status, and `off` is `eve === "off"`. A
 **half day is a workday** to the [vacation planner](vacation-planner.md) —
@@ -320,10 +371,14 @@ one, which would make line breaking vary by device.
 
 Packs are deliberately self-contained — adding one is a copy-paste:
 
-1. Copy `src/app/locale/en-gb.ts` to `src/app/locale/<bcp47>.ts` (e.g.
-   `de-de.ts`).
+1. Copy the closest pack to `src/app/locale/<bcp47>.ts` — `en-us.ts` for a
+   country whose holidays are fixed dates and "nth weekday" rules with an
+   observed-day rule (its `FEDERAL` table is the only part that changes),
+   `en-gb.ts` or `de-de.ts` for one built on the Easter chain. Set `bcp47` to
+   the country's tag: the date order comes from it.
 2. Fill in the fields, including `flag` (the country's regional-indicator
-   emoji pair, shown beside the label in the picker). If the country has name
+   emoji pair, shown beside the label in the picker), `weekStartsOn`, and
+   `weekNumbering` (a new rule is a row in `WEEK_NUMBERING`). If the country has name
    days, add the table (see
    `sv-se.ts` for the shape). Note `restWeekdays` and each holiday's `off`
    flag — see "Ink vs. time off" above — the `eves` list (`[]` if the country

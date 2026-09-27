@@ -21,7 +21,10 @@ import { addDays, dayKeyOf } from "@niclaslindstedt/oss-framework/calendar";
 import { DEFAULT_CALENDAR_SLUG } from "../storage/paths.ts";
 import { DOC_VERSION, type CalendarDoc } from "../types.ts";
 
-/** Weekdays, Monday first — every pack the app ships starts its week on one. */
+/** Weekdays, Monday first. The notes are placed on Monday-to-Sunday weeks
+ *  whatever the country; a Sunday-start calendar (the US pack) shows this
+ *  week as the Sunday before it and Monday to Saturday, so that Sunday is
+ *  written to belong to the busy week too. */
 const MON = 0;
 const TUE = 1;
 const WED = 2;
@@ -75,7 +78,7 @@ const PERSONAL: readonly Placed[] = [
   [-1, WED, "Slides v1"],
   [-1, THU, "Climb: the 6c!"],
   [-1, SAT, "Feed the starter"],
-  [-1, SUN, "Bake bread 🍞"],
+  [-1, SUN, "Bake bread 🍞\nfor the week"],
   // This week: the busy one, and the week planner's frame — a headline and
   // a second line, which the planner's rows have room for.
   [0, MON, "On-call 📟\ntill Mon"],
