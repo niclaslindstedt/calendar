@@ -5,7 +5,7 @@ being celebrated when. The phone already knows — the birthdays are sitting in
 the address book — but the calendar and the address book never speak, so the
 dates get copied across by hand once a year and then quietly drift.
 
-This closes that gap: let the calendar read your contacts, tick the people you
+This closes that gap: let the calendar read your contacts, check the people you
 want, and their days are marked.
 
 **It is available in the App Store and Google Play app only.** A browser has
@@ -88,9 +88,9 @@ Settings → **Contacts**.
    clear. This is deliberate: "yes, you may look" and "yes, print all four
    hundred of them on my calendar" are different answers to different
    questions.
-3. **Tick who you want.** Each row says when that person is celebrated —
+3. **Check who you want.** Each row says when that person is celebrated —
    their birthday, and the name day their name folds to — so you can see what
-   ticking would get you before you tick it.
+   checking would get you before you check it.
 
 **Select all** and **Deselect all** do what they say, with one refinement:
 they act on the contacts **showing**. Search for "an", press Select all, and
@@ -111,7 +111,7 @@ after a refresh.
 Nothing is sent anywhere. There is no server to send it to, and the feature
 makes no network request of any kind.
 
-What is **stored** is the list of contacts you ticked, and stored as the
+What is **stored** is the list of contacts you checked, and stored as the
 identifiers your device gave them — opaque strings that mean nothing outside
 your own contact store. No name, no birthday, no number, no photo is ever
 written down.

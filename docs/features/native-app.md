@@ -58,9 +58,9 @@ repeating in this file, because they are what the wrapper does rather than
 what the calendar does:
 
 - the app asks for contacts permission from **Settings → Contacts** and
-  nowhere else, and granting it marks nobody until you tick somebody;
+  nowhere else, and granting it marks nobody until you check somebody;
 - only names and birthdays are ever read, they are held in memory, and only
-  the identifiers you ticked are stored;
+  the identifiers you checked are stored;
 - **the widgets never see any of it.** They print the date and your note, and
   the opt-in list is excluded by name from the bridge that feeds them, so
   nothing about a contact reaches the container they read from.
