@@ -73,7 +73,7 @@ const version = process.env.GITHUB_SHA
 //
 // The copied HTML loads the same hashed asset URLs — they are origin-absolute
 // under the slot's base — so nothing needs rewriting. It runs late
-// (`enforce: "post"`) so the PWA plugin's manifest-link and robots injection
+// (`enforce: "post"`) so the PWA plugin's manifest-link and icon injection
 // is already baked into the source it copies; the service worker serves this
 // path the app shell like any other navigation under the base, which is what
 // makes the page work offline too.
@@ -109,6 +109,10 @@ const shellBuild = process.env.VITE_SHELL_BUILD === "on";
 
 export default defineConfig({
   base,
+  build: {
+    // No size budgets, by owner decision — high enough that Vite never warns.
+    chunkSizeWarningLimit: 100_000,
+  },
   define: {
     __SHELL_BUILD__: JSON.stringify(shellBuild),
     __APP_VERSION__: JSON.stringify(appVersion),

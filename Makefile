@@ -1,4 +1,4 @@
-.PHONY: demo build test lint fmt fmt-check actionlint shellcheck release clean docs website website-preview website-dev install icons check-seo changelog bump native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata store-upload tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
+.PHONY: demo build test lint fmt fmt-check actionlint shellcheck release clean docs website website-preview website-dev install icons changelog bump native-install native-bundle native-typecheck native-prebuild store-preflight store-metadata store-upload tauri tauri-bundle tauri-clean tauri-fast tauri-fmt tauri-fmt-check tauri-install tauri-lint tauri-package tauri-package-debug tauri-test
 
 build:
 	npm run build
@@ -67,9 +67,6 @@ website-preview:
 
 website-dev:
 	npm run dev
-
-check-seo:
-	npm run build && npm run check:seo
 
 # The dev server on the demo calendars: one person's year, held in memory,
 # nothing read from or written to this browser's storage (src/app/dev/).

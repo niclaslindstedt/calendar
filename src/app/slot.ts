@@ -2,8 +2,8 @@
 // Deployment slots (OSS_SPEC §11.5). The app is served from three disjoint
 // path prefixes on one Pages domain: `/` (the highest released `v*` tag),
 // `/preview/` (current `main`), and `/branch/` (a manually parked feature
-// branch). Everything that must differ per slot — PWA identity, indexability,
-// the build label, which navigations the service worker may claim — is
+// branch). Everything that must differ per slot — PWA identity, the build
+// label, which navigations the service worker may claim — is
 // derived from the deploy base here, so there is exactly one definition and
 // the base path cannot drift from the identity it implies. Mirrors the
 // sibling notes app's slot handling.
@@ -31,20 +31,6 @@ export function slotForBase(base: string): DeploySlot {
   if (base === SLOT_BASE.preview) return "preview";
   if (base === SLOT_BASE.branch) return "branch";
   return "production";
-}
-
-/** Only production is indexed (OSS_SPEC §11.5.1) — the secondary slots must
- *  ship `noindex,nofollow` so a second copy of the app never lands in a
- *  search index and starts competing with the real one. */
-export function isIndexable(slot: DeploySlot): boolean {
-  return slot === "production";
-}
-
-/** The `robots` meta content for a slot. */
-export function robotsContent(slot: DeploySlot): string {
-  return isIndexable(slot)
-    ? "index,follow,max-image-preview:large"
-    : "noindex,nofollow";
 }
 
 /** Normalise a git ref into something that can sit in a build label: drop the

@@ -52,9 +52,6 @@ differ is derived from the slot's base path in `src/app/slot.ts`:
 - **Separate navigation scope** — the production worker is scoped at `/`,
   which spans `/preview/` and `/branch/` too; it explicitly declines their
   navigations so a preview install can never be handed the production shell.
-- **Indexability** — only production is indexable. The secondary slots ship
-  `noindex,nofollow` and are disallowed in `robots.txt`; every slot's
-  canonical URL points at production.
 - **Build identity** — the build label carries a slot suffix (`pre`,
   `br-<branch>`), visible with the slot and source branch under
   Settings → Developer → Build.
@@ -68,10 +65,16 @@ differ is derived from the slot's base path in `src/app/slot.ts`:
 
 `public/CNAME` holds `calendar.niclaslindstedt.se`. Vite copies it into every
 slot's build; the Pages workflow keeps exactly one copy, at the root of the
-merged artifact, and fails the deploy if it is missing. The canonical URL in
-`index.html`, the `<loc>` in `public/sitemap.xml`, the `Sitemap:` line in
-`public/robots.txt` and that CNAME must all name the same host —
-`scripts/check-seo.mjs` fails CI if they drift.
+merged artifact, and fails the deploy if it is missing.
+
+### Not meant to be found
+
+The website is not meant to turn up in search — people should find the App
+Store page and apps.agilator.se instead. Every page the build emits carries
+`<meta name="robots" content="noindex">` (from `index.html`, copied into
+`privacy/index.html`), and `public/robots.txt` allows crawling so a crawler
+can fetch a page and see it. There is no sitemap, structured data or SEO
+check, and no size budget, by owner decision.
 
 ## The app stores
 

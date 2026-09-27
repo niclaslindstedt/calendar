@@ -126,8 +126,6 @@ that one value in **`src/app/slot.ts`** — do not re-derive it elsewhere:
   other's precache;
 - the manifest `id` / `scope` / `start_url` and the installed app's name, so
   the three install as separate apps (§11.4.8);
-- the `robots` meta — only production is indexed, `/preview/` and `/branch/`
-  ship `noindex,nofollow` (and `public/robots.txt` disallows both paths);
 - the service worker's **navigation denylist**: the production worker is
   scoped at `/`, which spans the other slots too, so without the denylist a
   PWA installed from `/preview/` would silently be served the production
@@ -768,12 +766,11 @@ month cell set half again too big on a laptop.
 The app **is** the website (§11.2): `pages.yml` builds one `dist/` per
 deployment slot and deploys the merged tree to
 **calendar.niclaslindstedt.se**. There is no separate `website/` tree to keep
-in sync — but `index.html`'s SEO head (title, description, canonical,
-OG/Twitter/JSON-LD) and `public/` (CNAME, robots.txt, sitemap.xml, llms.txt,
-og.png) must be kept truthful as features change. The canonical URL, the
-sitemap `<loc>`, robots' `Sitemap:` line, and `public/CNAME` must all name the
-same host — `scripts/check-seo.mjs` fails the `seo` workflow if they drift
-apart, so change them together.
+in sync — but `index.html`'s head (title, description, OG/Twitter) and
+`public/` (CNAME, robots.txt, og.png) must be kept truthful as features change.
+
+There is no SEO and no size budget, by owner decision: the site carries
+`noindex` on every page and is not meant to be found.
 
 ## Maintenance skills
 

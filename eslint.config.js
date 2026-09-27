@@ -28,7 +28,7 @@ export default [
   },
   js.configs.recommended,
   {
-    // Node tooling scripts (icon generation, SEO checks). These run under
+    // Node tooling scripts (icon generation, store metadata). These run under
     // Node, so expose its globals rather than the browser's.
     files: ["scripts/**/*.mjs", "tauri/scripts/**/*.mjs"],
     languageOptions: {

@@ -1,17 +1,14 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The deployment-slot derivation (OSS_SPEC §11.5). Everything that keeps the
-// three slots from colliding on one origin — PWA identity, indexability, the
-// service worker's navigation scope — hangs off `slotForBase`, and the
-// failures it prevents (a `/preview/` install silently running production, a
-// second copy of the app in the search index) only show up on a real deployed
-// device. So they get pinned here instead.
+// three slots from colliding on one origin — PWA identity and the service
+// worker's navigation scope — hangs off `slotForBase`, and the failures it
+// prevents (a `/preview/` install silently running production, two installs
+// fighting over one home-screen tile) only show up on a real deployed device. So they get pinned here instead.
 import { describe, expect, it } from "vitest";
 
 import { cacheIdForBase } from "../src/app/pwa.ts";
 import {
-  isIndexable,
   navigationDenyPrefixes,
-  robotsContent,
   shortRef,
   slotForBase,
   slotSuffix,
@@ -31,20 +28,6 @@ describe("slotForBase", () => {
     // behave like the copy real users get rather than like staging.
     expect(slotForBase("/calendar/")).toBe("production");
     expect(slotForBase("./")).toBe("production");
-  });
-});
-
-describe("indexability", () => {
-  it("indexes production only", () => {
-    expect(isIndexable("production")).toBe(true);
-    expect(isIndexable("preview")).toBe(false);
-    expect(isIndexable("branch")).toBe(false);
-  });
-
-  it("emits noindex for the secondary slots", () => {
-    expect(robotsContent("production")).toContain("index,follow");
-    expect(robotsContent("preview")).toBe("noindex,nofollow");
-    expect(robotsContent("branch")).toBe("noindex,nofollow");
   });
 });
 

@@ -8,7 +8,6 @@
 [![ci](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml)
 [![release](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml)
 [![pages](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml)
-[![seo](https://github.com/niclaslindstedt/calendar/actions/workflows/seo.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/seo.yml)
 [![spec](https://img.shields.io/badge/OSS__SPEC-v2.9.0-blueviolet)](OSS_SPEC.md)
 [![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
 

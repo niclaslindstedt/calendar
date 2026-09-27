@@ -7,7 +7,6 @@ import type { HtmlTagDescriptor, Plugin, ResolvedConfig } from "vite";
 import { cacheIdForBase } from "./src/app/pwa.ts";
 import {
   navigationDenyPrefixes,
-  robotsContent,
   slotForBase,
   slotTitles,
   type DeploySlot,
@@ -50,16 +49,10 @@ type AppPwaOptions = {
   serviceWorker?: boolean;
 };
 
-// Public assets we never want in the precache: the SEO files are for
-// crawlers, not the app shell, and CNAME is a Pages directive that only ever
-// means anything at the root of the deployed artifact.
-const PUBLIC_SKIP = new Set([
-  "robots.txt",
-  "sitemap.xml",
-  "llms.txt",
-  "og.png",
-  "CNAME",
-]);
+// Public assets we never want in the precache: robots.txt and the share image
+// are for crawlers and link previews, not the app shell, and CNAME is a Pages
+// directive that only ever means anything at the root of the deployed artifact.
+const PUBLIC_SKIP = new Set(["robots.txt", "og.png", "CNAME"]);
 
 // Build the web app manifest for a given deploy base. Emitted per build
 // rather than shipped as a static `public/` file so `id`, `start_url`,
@@ -270,17 +263,6 @@ export function appPwa({
         {
           tag: "link",
           attrs: { rel: "manifest", href: `${base}manifest.webmanifest` },
-          injectTo: "head",
-        },
-        // Indexability is a per-slot property, so it is injected here rather
-        // than written into index.html: only production may be indexed, and
-        // `/preview/` + `/branch/` must never put a second copy of the app in
-        // front of a searcher (OSS_SPEC §11.5.1). The canonical URL in the
-        // shell stays pointed at production for every slot, which is what it
-        // means for production to be the copy that counts.
-        {
-          tag: "meta",
-          attrs: { name: "robots", content: robotsContent(slot) },
           injectTo: "head",
         },
         // The raster fallback first: engines that don't honour the SVG favicon
