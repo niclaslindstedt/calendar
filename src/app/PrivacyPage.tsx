@@ -75,8 +75,8 @@ export function PrivacyPage() {
 
         <Section title="Summary">
           <p>
-            <span className="text-fg-bright">Calendar</span> is a local-first
-            wall calendar, served as a static site{" "}
+            <span className="text-fg-bright">{__APP_NAME__}</span> is a
+            local-first wall calendar, served as a static site{" "}
             {WEBSITE ? (
               <>
                 at{" "}
