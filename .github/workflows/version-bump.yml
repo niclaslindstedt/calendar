@@ -1,0 +1,68 @@
+name: version-bump
+
+# §10.3 — manual-only entry point that computes the next semver and kicks
+# off the release pipeline. In this repo the release workflow (release.yml)
+# derives the version from the .changes/unreleased/ fragments and creates
+# the v* tag itself, so this workflow's job is to preview the derived bump
+# and chain into release with it — a thin, auditable front door rather than
+# a second tag-pushing code path. Its inputs are release.yml's, passed
+# through unchanged.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Bump kind. 'auto' derives it from the .changes/unreleased/ fragments."
+        required: true
+        default: "auto"
+        type: choice
+        options: [auto, patch, minor, major]
+      commit:
+        description: "Optional commit sha or ref to release from. Defaults to main HEAD."
+        required: false
+        type: string
+        default: ""
+
+# Default to no permissions; every job declares its own least-privilege
+# `permissions:` block (see OSS_SPEC §10.3).
+permissions: {}
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    # contents: read — checks out the fragments the preview reads.
+    # actions: write — dispatches release.yml.
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+      # Preview against the tree release.yml will cut from: the `commit`
+      # input when set, main HEAD otherwise.
+      - name: Check out target commit
+        if: inputs.commit != ''
+        env:
+          COMMIT: ${{ inputs.commit }}
+        run: git checkout --detach "$COMMIT"
+      - name: Preview derived bump
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          if [ "$BUMP" = "auto" ]; then
+            echo "Derived bump: $(node scripts/release/compute-bump.mjs)"
+          else
+            echo "Requested bump override: $BUMP"
+          fi
+      - name: Dispatch release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUMP: ${{ inputs.bump }}
+          COMMIT: ${{ inputs.commit }}
+        run: |
+          gh workflow run release.yml --repo "$GITHUB_REPOSITORY" --ref main -f bump="$BUMP" -f commit="$COMMIT"

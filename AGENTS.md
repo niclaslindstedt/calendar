@@ -147,11 +147,12 @@ that one value in **`src/app/slot.ts`** — do not re-derive it elsewhere:
 ### Cutting a release
 
 Releases are manual to _trigger_ but automatic to _size_: dispatch
-`.github/workflows/release.yml` (`workflow_dispatch` only) and leave `bump` on
-its `auto` default. There is deliberately **no separate version-bump
-workflow** — the bump is a function of the fragments, derived by
-`scripts/release/compute-bump.mjs`, taking the **highest** level any fragment
-implies:
+`.github/workflows/version-bump.yml` (`workflow_dispatch` only) and leave
+`bump` on its `auto` default. It previews the derived bump and dispatches
+`release.yml` with the same inputs, which does the rest; dispatching
+`release.yml` directly does the same without the preview. The bump is a
+function of the fragments, derived by `scripts/release/compute-bump.mjs`,
+taking the **highest** level any fragment implies:
 
 - `patch` — only `Fixed` / `Security` fragments.
 - `minor` — any `Added` / `Changed` / `Removed` / `Deprecated` fragment.

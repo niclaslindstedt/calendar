@@ -9,10 +9,11 @@ name: release
 # chains into pages.yml so the new tag is served at `/` immediately instead of
 # waiting for the next push to main.
 #
-# There is deliberately no separate version-bump workflow: the bump is not a
-# human judgement call here, it is a function of the fragments that every
-# user-visible PR already ships. `bump` defaults to `auto` — set it to an
-# explicit patch/minor/major only to override that derivation.
+# The bump is not a human judgement call here, it is a function of the
+# fragments that every user-visible PR already ships. `bump` defaults to
+# `auto` — set it to an explicit patch/minor/major only to override that
+# derivation. version-bump.yml (OSS_SPEC §10.3) is the front door: it previews
+# the derived bump and dispatches this workflow with the same inputs.
 #
 # `commit` is normally empty — the release is cut from main HEAD and the
 # release commit is fast-forwarded onto main. Set it to a sha or ref to cut a

@@ -94,8 +94,10 @@ store credentials, iOS capabilities — is in
 
 ## Cutting a release
 
-Dispatch `.github/workflows/release.yml` and leave `bump` on `auto`. There is
-no separate version-bump workflow: the workflow
+Dispatch `.github/workflows/version-bump.yml` and leave `bump` on `auto`. It
+previews the derived bump and dispatches `.github/workflows/release.yml` with
+the same inputs (dispatching `release.yml` directly skips only the preview).
+The release workflow
 
 1. derives the semver bump from the changeset fragments in
    `.changes/unreleased/` (`breaking: true` → major; `Added` / `Changed` /
