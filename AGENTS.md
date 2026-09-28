@@ -52,7 +52,7 @@ holding `sw.js`); it also sets `VITE_NATIVE_BUILD=on`
 (`__NATIVE_BUILD__`) and passes the listing's `APP_DISPLAY_NAME`, which only that
 build reads and the app then calls itself (`__APP_NAME__`, `src/app/appName.ts`);
 and either flag makes a build that is not the website: it
-carries no link back to the source (owner decision D17) — the privacy page
+carries no link back to the source (by owner decision) — the privacy page
 names no issue tracker, commit history or web-edition address, and there are
 no Open Graph tags naming the web edition, no `CNAME` and no `og.png` — and both
 bundle scripts refuse a webroot that still contains `niclaslindstedt`. The package's name and identifier come from `APP_DISPLAY_NAME` and

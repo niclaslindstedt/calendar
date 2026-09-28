@@ -9,7 +9,7 @@
 // exactly what a localhost origin wants — in the environment
 // `web-build-env.mjs` composes: `VITE_NATIVE_BUILD=on`, about the channel
 // rather than the medium (an app from a store carries no link back to the
-// source, owner decision D17, so it compiles the issue tracker out of the
+// source, by owner decision, so it compiles the issue tracker out of the
 // privacy page and leaves the web edition's address out of the page — see
 // `vite.config.ts`), `VITE_SHELL_BUILD=on`, about the medium (no service
 // worker and no update prompt: the app changes only when a new build ships),

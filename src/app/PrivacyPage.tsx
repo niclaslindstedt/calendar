@@ -35,8 +35,8 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 const LAST_UPDATED = "2026-09-27";
 
 // Whether this is the website's copy of the page. The phone and desktop apps
-// carry their own copy, and an app carries no link back to the source (owner
-// decision D17): no issue tracker, no commit history, not the web edition's
+// carry their own copy, and an app carries no link back to the source (by owner
+// decision): no issue tracker, no commit history, not the web edition's
 // address. The flags are compile-time constants, so in an app build the
 // website's wording is folded out of the bundle rather than hidden; the app's
 // says the same thing without them.
