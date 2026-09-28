@@ -4,18 +4,7 @@ This file is the canonical source of truth for AI coding agents working in this
 repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, and
 `.github/copilot-instructions.md` are symlinks to this file.
 
-## OSS Spec conformance
-
-This repository adheres to [`OSS_SPEC.md`](OSS_SPEC.md), a prescriptive
-specification for open source project layout, documentation, automation, and
-governance. A copy of the spec lives at the repository root so contributors and
-AI agents can consult it without leaving the repo.
-
-Run `oss-spec validate .` (or the standalone
-[`validate.sh`](https://github.com/niclaslindstedt/oss-spec/blob/main/scripts/validate.sh))
-to verify conformance. When in doubt about a layout, naming, or workflow
-decision, consult the relevant section of `OSS_SPEC.md` — it is the source of
-truth for the conventions this repo follows.
+Fleet guidelines: APP_GUIDELINES 1.0.1
 
 ## Build and test commands
 
