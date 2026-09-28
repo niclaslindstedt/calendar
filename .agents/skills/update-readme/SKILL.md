@@ -18,6 +18,21 @@ a matching edit.
 the last successful run. Empty means "never run" — fall back to the initial
 commit of the repository.
 
+## Mapping table
+
+| Changed path                                          | README section                      |
+| ----------------------------------------------------- | ----------------------------------- |
+| `src/app/*View.tsx`, the editor, `src/app/settings*`  | Usage, Quick start                  |
+| `src/app/storage/`                                    | What it is, Usage, Configuration    |
+| `src/app/locale/`                                     | What it is, Usage                   |
+| `.env.example`, `vite.config.ts`, `src/vite-env.d.ts` | Configuration                       |
+| `package.json` scripts, `Makefile`, `.nvmrc`          | Prerequisites, Install, Quick start |
+| `.github/workflows/pages.yml`, `src/app/slot.ts`      | Deployment                          |
+| `native/`                                             | Native app (iOS & Android)          |
+| `examples/`                                           | Examples                            |
+| `docs/` (a page added, moved or renamed)              | Documentation                       |
+| `docs/troubleshooting.md`                             | Troubleshooting                     |
+
 ## Discovery process
 
 1. Read the baseline:
@@ -39,3 +54,29 @@ commit of the repository.
 
 4. Write the current HEAD hash to `.last-updated` and commit both together
    (`docs(readme): …`).
+
+## Update checklist
+
+- [ ] Read the baseline from `.last-updated` and list the commits since
+- [ ] Walk the mapping table for every changed path
+- [ ] Update each affected section in place, keeping the section order
+- [ ] Check every link in the README still resolves (docs, examples, badges)
+- [ ] Run `make fmt-check`
+- [ ] Write the new baseline:
+
+      git rev-parse HEAD > .agents/skills/update-readme/.last-updated
+
+## Verification
+
+1. Every command in Install and Quick start runs as written on a fresh
+   checkout.
+2. Every setting, backend and locale the README names exists in the app, and
+   nothing the app ships is missing from Usage.
+3. `.last-updated` was rewritten.
+
+## Skill self-improvement
+
+1. **Grow the mapping table** with any changed path → section relationship
+   you had to discover by hand.
+2. **Keep the section list true** when a README section is added or renamed.
+3. **Commit the skill edit** alongside the README change.

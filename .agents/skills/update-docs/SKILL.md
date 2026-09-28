@@ -33,3 +33,27 @@ commit of the repository.
 3. Rewrite only what drifted; keep each doc scoped to its topic.
 4. Write the current HEAD hash to `.last-updated` and commit both together
    (`docs: …`).
+
+## Update checklist
+
+- [ ] Read the baseline from `.last-updated` and list the commits since
+- [ ] Walk the topic map and read every affected doc
+- [ ] Update each doc in place, scoped to its topic
+- [ ] Check the cross-links between docs, and from the README, still resolve
+- [ ] Run `make fmt-check` and `make test`
+- [ ] Write the new baseline:
+
+      git rev-parse HEAD > .agents/skills/update-docs/.last-updated
+
+## Verification
+
+1. Re-read every edited section against the current source: settings names,
+   backend labels, file names and env vars match the code.
+2. Every internal link resolves.
+3. `.last-updated` was rewritten.
+
+## Skill self-improvement
+
+1. **Grow the topic map** with any source → doc relationship you discovered.
+2. **Record recurring patterns** you had to invent.
+3. **Commit the skill edit** alongside the docs change.
