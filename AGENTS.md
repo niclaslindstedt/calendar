@@ -791,6 +791,7 @@ symlink.
 | `maintenance`   | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order. |
 | `update-docs`   | After any change to user-visible behavior, configuration keys, or the storage/locale surface.                              |
 | `update-readme` | After any change that alters user-visible behavior, commands, or install instructions.                                     |
+| `sync-oss-spec` | When `validate.sh` reports violations, or the spec copy at the root was bumped — last in a `maintenance` sweep.            |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the
 baseline commit hash). The `maintenance` skill owns a **Registry** table
