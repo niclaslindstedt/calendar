@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
 // The store demo (`VITE_SEED=demo`): the calendars it boots onto, held to the
 // app's own document format, to dates relative to the moment it opens, to
-// staying off the device, and to the premise of each store frame
-// (ops/store/calendar/STRATEGY.md is the brief).
+// staying off the device, and to the premise of each store frame — on every
+// day of a year, at every hour a frame might be shot.
 import { describe, expect, it } from "vitest";
 
 import { addDays, dayKeyOf } from "@niclaslindstedt/oss-framework/calendar";
@@ -56,6 +56,21 @@ describe("demo calendars", () => {
   });
 });
 
+// Every day of a year, early, mid-morning, noon, evening and just before
+// midnight — across both clock changes.
+const YEAR: Date[] = [];
+for (let d = 0; d < 366; d++) {
+  for (const [h, m] of [
+    [0, 5],
+    [9, 41],
+    [12, 0],
+    [18, 30],
+    [23, 55],
+  ] as const) {
+    YEAR.push(new Date(2026, 0, 1 + d, h, m));
+  }
+}
+
 describe("the frames' premises", () => {
   const entries = buildPersonalDoc(NOW).entries;
   const monday = mondayOf(NOW);
@@ -98,9 +113,21 @@ describe("the frames' premises", () => {
     }
   });
 
+  it("whatever the day and hour, the week, the talk and the month still hold", () => {
+    for (const now of YEAR) {
+      const notes = buildPersonalDoc(now).entries;
+      const at = now.toString();
+      const mon = mondayOf(now);
+      const week = Array.from({ length: 7 }, (_, i) => notes[addDays(mon, i)]);
+      expect(week.every(Boolean), at).toBe(true);
+      expect(week[0], at).toMatch(/^On-call/);
+      expect(notes[addDays(mon, -1)], at).toBeTruthy();
+      expect(notes[addDays(mon, 7 + 3)], at).toBe(TALK_NOTE);
+    }
+  });
+
   it("whatever day it is, the month on screen is busy but not a wall", () => {
-    for (let d = 0; d < 366; d++) {
-      const now = new Date(2026, 0, 1 + d, 12);
+    for (const now of YEAR) {
       const notes = buildPersonalDoc(now).entries;
       const first = new Date(now.getFullYear(), now.getMonth(), 1);
       const days = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
