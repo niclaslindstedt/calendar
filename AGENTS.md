@@ -46,7 +46,9 @@ needs no GUI toolkit; `tauri/src-tauri/` holds every effect. One seam reaches
 back into this tree, `VITE_SHELL_BUILD`, set by the shell's site build, which
 switches off the service-worker half of `appPwa` and — through
 `__SHELL_BUILD__` — the in-app update prompt. A desktop build updates by being
-replaced. The phone wrapper's site build sets `VITE_NATIVE_BUILD=on`
+replaced. The phone wrapper's site build is a shell build too
+(`VITE_SHELL_BUILD=on`, and `native/scripts/bundle-web.mjs` refuses a webroot
+holding `sw.js`); it also sets `VITE_NATIVE_BUILD=on`
 (`__NATIVE_BUILD__`) and passes the listing's `APP_DISPLAY_NAME`, which only that
 build reads and the app then calls itself (`__APP_NAME__`, `src/app/appName.ts`);
 and either flag makes a build that is not the website: it
