@@ -737,7 +737,9 @@ month cell set half again too big on a laptop.
   of `OSS_SPEC.md`; vitest picks up `tests/**/*_test.ts`.
 - Tests cover the pure domain modules (locale packs, entry text sizing,
   migrations, demo data, i18n catalog parity) and run in a node environment —
-  no DOM.
+  no DOM. A test that has to dispatch real events (the long press in
+  `long_press_test.ts`) opts into jsdom with a `// @vitest-environment jsdom`
+  first line and renders with Preact's `h`, so it stays a `.ts` file.
 
 ## Source file size
 
