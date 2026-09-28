@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// The deployment-slot derivation (OSS_SPEC §11.5). Everything that keeps the
+// The deployment-slot derivation. Everything that keeps the
 // three slots from colliding on one origin — PWA identity and the service
 // worker's navigation scope — hangs off `slotForBase`, and the failures it
 // prevents (a `/preview/` install silently running production, two installs

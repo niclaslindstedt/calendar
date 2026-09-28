@@ -19,7 +19,7 @@ Preact's own `render`. Do not add `react`/`react-dom` as dependencies.
 src/
 ├── main.tsx              boot: styles, LanguageRoot, <App/>
 ├── App.tsx               shell: top bar, active view, settings, update toast
-├── output.ts             §19.4 central output module (semantic log helpers)
+├── output.ts             the central output module  (semantic log helpers)
 └── app/
     ├── locale/           country packs (de-DE, en-GB, en-US, fi-FI, fr-FR,
     │                     nb-NO, nl-NL, sv-SE) + eves.ts (which holiday eves

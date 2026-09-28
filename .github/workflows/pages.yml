@@ -1,8 +1,8 @@
 name: pages
 
-# The app IS the project website (OSS_SPEC §11.2), and it is served from three
+# The app IS the project website, and it is served from three
 # disjoint slots on one Pages domain — calendar.niclaslindstedt.se, set by
-# `public/CNAME` (§11.5):
+# `public/CNAME`:
 #
 #   /          the highest released `v*` tag — what real users get
 #   /preview/  current main — for dogfooding the next release
@@ -182,7 +182,7 @@ jobs:
           VITE_BASE: /branch/
           # The /branch/ URL is stable and only what's parked in it changes, so
           # the source branch has to travel inside the build — it shows up in
-          # the Developer tab's build label (OSS_SPEC §11.5.4).
+          # the Developer tab's build label.
           VITE_SOURCE_REF: ${{ steps.dispatch.outputs.ref }}
       - name: Persist the /branch/ build to the orphan branch
         if: steps.dispatch.outputs.has_dispatch == 'true'

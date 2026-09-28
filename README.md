@@ -8,7 +8,6 @@
 [![ci](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/ci.yml)
 [![release](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/release.yml)
 [![pages](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml/badge.svg)](https://github.com/niclaslindstedt/calendar/actions/workflows/pages.yml)
-[![spec](https://img.shields.io/badge/OSS__SPEC-v2.12.0-blueviolet)](OSS_SPEC.md)
 [![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
 
 **[calendar.niclaslindstedt.se](https://calendar.niclaslindstedt.se)** — open
@@ -204,10 +203,7 @@ More in [`docs/troubleshooting.md`](docs/troubleshooting.md).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). This repo conforms to
-[`OSS_SPEC.md`](OSS_SPEC.md); run the
-[validate script](https://github.com/niclaslindstedt/oss-spec/blob/main/scripts/validate.sh)
-before opening a PR.
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

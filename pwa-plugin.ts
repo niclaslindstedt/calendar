@@ -29,7 +29,7 @@ type AppPwaOptions = {
   // The bundler base (`/` for production, `/preview/` and `/branch/` for the
   // secondary slots). Drives the SW scope, the emitted file URLs, and — via
   // `cacheIdForBase` — the precache name, so the slots never poison each
-  // other's precache (OSS_SPEC §11.4.8).
+  // other's precache.
   base: string;
   // Label shown in the "a new version is ready" toast. Embedding it in the SW
   // also guarantees the worker's bytes differ between deploys even when no
@@ -59,8 +59,7 @@ const PUBLIC_SKIP = new Set(["robots.txt", "og.png", "CNAME"]);
 // `scope`, and the icon `src`s stay base-correct — some engines resolve them
 // relative to the *origin*, not the manifest URL. The slot additionally names
 // the installed app, so an install from `/preview/` is visibly distinct from
-// the production one instead of fighting it for the same home-screen tile
-// (§11.4.8).
+// the production one instead of fighting it for the same home-screen tile.
 export function buildManifest(base: string, slot: DeploySlot): string {
   const titles = slotTitles(slot);
   const manifest = {
@@ -132,7 +131,7 @@ const INDEX = ${JSON.stringify(`${base}index.html`)};
 // production worker is scoped at \`/\`, which spans \`/preview/\` and
 // \`/branch/\` too — without this denylist it would answer their navigations
 // with the production shell, so a PWA installed from \`/preview/\` would
-// silently run production (OSS_SPEC §11.5). Empty for the non-root slots:
+// silently run production. Empty for the non-root slots:
 // their own BASE check already confines them.
 const DENY = ${JSON.stringify(deny)};
 const PRECACHE = ${JSON.stringify(precache)};

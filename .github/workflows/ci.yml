@@ -81,8 +81,8 @@ jobs:
           LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
         run: node scripts/release/check-changeset.mjs
 
-  # Lint workflow YAML with actionlint and shell scripts with shellcheck
-  # (OSS_SPEC §16.1). shellcheck is preinstalled on ubuntu-latest; actionlint
+  # Lint workflow YAML with actionlint and shell scripts with shellcheck.
+  # shellcheck is preinstalled on ubuntu-latest; actionlint
   # is fetched via its official installer.
   shell-lint:
     runs-on: ubuntu-latest

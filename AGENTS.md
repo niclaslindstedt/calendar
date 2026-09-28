@@ -113,7 +113,7 @@ The app is hosted on GitHub Pages under the custom domain
 **calendar.niclaslindstedt.se** (set by `public/CNAME`, which Vite copies into
 every build; the Pages workflow keeps a single CNAME at the root of the
 artifact). `.github/workflows/pages.yml` assembles up to three slots into one
-Pages artifact in a single run (OSS_SPEC §11.5):
+Pages artifact in a single run:
 
 - `/` — the highest released `v*` tag. Before the first release exists, `main`
   is served here instead and there is no `/preview/` slot.
@@ -132,7 +132,7 @@ that one value in **`src/app/slot.ts`** — do not re-derive it elsewhere:
 - the precache cache id (`cacheIdForBase`), so the slots never poison each
   other's precache;
 - the manifest `id` / `scope` / `start_url` and the installed app's name, so
-  the three install as separate apps (§11.4.8);
+  the three install as separate apps;
 - the service worker's **navigation denylist**: the production worker is
   scoped at `/`, which spans the other slots too, so without the denylist a
   PWA installed from `/preview/` would silently be served the production
@@ -359,7 +359,7 @@ The app owns the domain and the stores ("store stays in the app"):
 - `src/app/monthImage.ts` — the month-image seam. Returns `null` today;
   yearly image packs (2026, 2027, …) plug in here later, with a `large`
   (month view) and `small` (day list) variant per month.
-- `src/output.ts` — the §19.4 central output module (semantic log helpers
+- `src/output.ts` — the central output module (semantic log helpers
   over the in-app log store).
 - `pwa-plugin.ts` — emits the service worker + version/precache manifests the
   framework's `usePwaUpdate` consumes; shares the cache-id convention with
@@ -740,8 +740,9 @@ month cell set half again too big on a laptop.
 
 - **All tests live in separate files** in `tests/` — never inline in source
   files.
-- Test files are named with a `_test` suffix (e.g. `locale_test.ts`), per §20
-  of `OSS_SPEC.md`; vitest picks up `tests/**/*_test.ts`.
+- Test files are named with a `_test` suffix (e.g. `locale_test.ts`); vitest
+  picks up `tests/**/*_test.ts`. Run one with
+  `npx vitest run tests/locale_test.ts`.
 - Tests cover the pure domain modules (locale packs, entry text sizing,
   migrations, demo data, i18n catalog parity) and run in a node environment —
   no DOM. A test that needs a DOM (the long press in `long_press_test.ts`,
@@ -751,10 +752,10 @@ month cell set half again too big on a laptop.
 
 ## Source file size
 
-- Non-test source files must stay under **1000 physical lines** (§20.5 of
-  `OSS_SPEC.md`). Prefer splitting by concern over relaxing the cap.
-- A file may opt out with `oss-spec:allow-large-file: <reason>` in its first
-  20 lines; the reason must be real.
+- Non-test source files must stay under **1000 physical lines**. Prefer
+  splitting by concern over relaxing the cap.
+- A file may opt out with `guidelines:allow-large-file: <reason>` in its first
+  20 lines; the reason must be real, and the file is split when next touched.
 
 ## Documentation sync points
 
@@ -782,19 +783,20 @@ month cell set half again too big on a laptop.
 
 ## Website staleness
 
-The app **is** the website (§11.2): `pages.yml` builds one `dist/` per
+The app **is** the website: `pages.yml` builds one `dist/` per
 deployment slot and deploys the merged tree to
 **calendar.niclaslindstedt.se**. There is no separate `website/` tree to keep
 in sync — but `index.html`'s head (title, description, OG/Twitter) and
 `public/` (CNAME, robots.txt, og.png) must be kept truthful as features change.
 
-The website is unlisted (OSS_SPEC §11.3.12): every page carries `noindex`.
-
-oss-spec:unlisted-website: the web build is a testing surface; users install the app from its store listing
+The website is unlisted — a testing surface; people install the app from its
+store listing. Every page carries `noindex`, `robots.txt` allows crawling so
+the `noindex` is read, and there is no sitemap, `llms.txt`, JSON-LD or
+canonical link.
 
 ## Maintenance skills
 
-Per §21 of `OSS_SPEC.md`, this repo ships agent skills for keeping drift-prone
+This repo ships agent skills for keeping drift-prone
 artifacts in sync with their sources of truth. Skills live under
 `.agents/skills/<name>/` and are also accessible via the `.claude/skills`
 symlink.
@@ -804,7 +806,6 @@ symlink.
 | `maintenance`   | When several artifacts have likely drifted at once — umbrella skill that runs every `update-*` skill in the correct order. |
 | `update-docs`   | After any change to user-visible behavior, configuration keys, or the storage/locale surface.                              |
 | `update-readme` | After any change that alters user-visible behavior, commands, or install instructions.                                     |
-| `sync-oss-spec` | When `validate.sh` reports violations, or the spec copy at the root was bumped — last in a `maintenance` sweep.            |
 
 Each skill has a `SKILL.md` (the playbook) and a `.last-updated` file (the
 baseline commit hash). The `maintenance` skill owns a **Registry** table

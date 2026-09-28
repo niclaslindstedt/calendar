@@ -14,14 +14,14 @@ import { resolveAppName } from "./src/app/appName.ts";
 import { slotForBase, slotSuffix } from "./src/app/slot.ts";
 
 // The base path is injected by the pages workflow via VITE_BASE — one build
-// per deployment slot (`/`, `/preview/`, `/branch/` — OSS_SPEC §11.5), `/`
+// per deployment slot (`/`, `/preview/`, `/branch/`), `/`
 // for local dev and preview. The slot, and with it the PWA identity and the
 // build label, is derived from that one value so the two cannot drift.
 const base = process.env.VITE_BASE ?? "/";
 const slot = slotForBase(base);
 
 // For the `/branch/` slot the URL is stable and only the parked build changes,
-// so the source branch has to travel with the build itself (§11.5.4).
+// so the source branch has to travel with the build itself.
 const sourceRef = process.env.VITE_SOURCE_REF ?? "";
 
 // Build identity for the Developer tab's "Build" grid.
@@ -49,8 +49,7 @@ const appVersion = (
 
 // The build identifier: `<version>[.<run>][+<commit>][-<slot>]`. A local
 // production build collapses to just `<version>`; the slot suffix (`pre`,
-// `br-<branch>`) is what tells staging and branch builds apart at a glance
-// (§11.5.4).
+// `br-<branch>`) is what tells staging and branch builds apart at a glance.
 const suffix = slotSuffix(slot, sourceRef);
 const buildLabel =
   appVersion +

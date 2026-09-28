@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: PolyForm-Noncommercial-1.0.0
-// Deployment slots (OSS_SPEC §11.5). The app is served from three disjoint
+// Deployment slots. The app is served from three disjoint
 // path prefixes on one Pages domain: `/` (the highest released `v*` tag),
 // `/preview/` (current `main`), and `/branch/` (a manually parked feature
 // branch). Everything that must differ per slot — PWA identity, the build
@@ -46,7 +46,7 @@ export function shortRef(ref: string | undefined | null): string {
     .replace(/-+$/, "");
 }
 
-/** The slot suffix of the build label (OSS_SPEC §11.5.4): `pre` for staging,
+/** The slot suffix of the build label: `pre` for staging,
  *  `br[-<source-branch>]` for the branch slot, nothing for production. The
  *  branch slot's URL is stable and only the parked build changes, so the
  *  source branch has to travel inside the build itself. */
@@ -64,7 +64,7 @@ export function slotSuffix(
 
 const APP_NAME = "Calendar";
 
-/** Installed-app titles per slot (OSS_SPEC §11.4.8). The three slots share
+/** Installed-app titles per slot. The three slots share
  *  one origin and one icon set; without a slot in the name, three installs
  *  are indistinguishable on the home screen. */
 export function slotTitles(slot: DeploySlot): {

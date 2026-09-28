@@ -12,7 +12,7 @@ name: release
 # The bump is not a human judgement call here, it is a function of the
 # fragments that every user-visible PR already ships. `bump` defaults to
 # `auto` — set it to an explicit patch/minor/major only to override that
-# derivation. version-bump.yml (OSS_SPEC §10.3) is the front door: it previews
+# derivation. version-bump.yml is the front door: it previews
 # the derived bump and dispatches this workflow with the same inputs.
 #
 # `commit` is normally empty — the release is cut from main HEAD and the
@@ -44,7 +44,7 @@ on:
         default: ""
 
 # Default to no permissions; every job declares its own least-privilege
-# `permissions:` block (see OSS_SPEC §10.3).
+# `permissions:` block.
 permissions: {}
 
 jobs:

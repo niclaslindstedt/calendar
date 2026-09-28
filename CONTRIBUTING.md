@@ -74,7 +74,7 @@ what your fragments imply with `make bump` and
 
 ## Tests
 
-Tests live in `tests/` with a `_test` suffix (OSS_SPEC §20.2) and cover the
+Tests live in `tests/` with a `_test` suffix and cover the
 pure domain modules — the locale packs, the month/week builders, entry text
 sizing, migrations, and the demo-data backend. Run one file with
 `npx vitest run tests/locale_test.ts`. UI changes should keep the boot smoke

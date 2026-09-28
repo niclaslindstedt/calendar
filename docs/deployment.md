@@ -2,12 +2,12 @@
 
 Calendar is hosted on GitHub Pages at **<https://calendar.niclaslindstedt.se>**.
 There is no server: a deploy is a static build of the app, and the app _is_ the
-website (OSS_SPEC §11.2).
+website.
 
 ## The three slots
 
-One Pages domain carries three builds at once, on disjoint path prefixes
-(OSS_SPEC §11.5). All three are assembled by a single run of
+One Pages domain carries three builds at once, on disjoint path prefixes.
+All three are assembled by a single run of
 `.github/workflows/pages.yml` and deployed as one artifact.
 
 | Slot           | URL                                            | Built from                    | For                             | Indexed |

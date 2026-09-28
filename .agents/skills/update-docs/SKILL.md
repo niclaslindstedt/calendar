@@ -5,9 +5,6 @@ description: "Use when docs/ may be stale. Discovers commits since the last docs
 
 # Updating the docs
 
-**Governing spec sections:** §11.1 (`docs/` — required topics), §21.5 (this
-skill is mandated because `docs/` is a drift-prone artifact).
-
 ## Tracking mechanism
 
 `.agents/skills/update-docs/.last-updated` contains the git commit hash from
