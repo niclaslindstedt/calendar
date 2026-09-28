@@ -558,7 +558,7 @@ it has to clear both rules below and it has to be worth its own row here.
 
 Native builds run on **EAS** and are dispatch-only
 (`.github/workflows/native.yml`) — every run costs build credits. CI's `native`
-job only type-checks. See `native/README.md` and `native/RELEASING.md`.
+job type-checks it and runs `expo-doctor`. See `native/README.md` and `native/RELEASING.md`.
 
 ## Where new code goes
 

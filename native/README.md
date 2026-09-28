@@ -87,6 +87,8 @@ make native-typecheck
 make native-prebuild     # inspect what the config plugins generate
 ```
 
+CI's `native` job runs the typecheck and `npx expo-doctor` on every push.
+
 Then run it on a device or simulator (needs Xcode / Android Studio):
 
 ```sh
