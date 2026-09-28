@@ -27,7 +27,7 @@ import { buildAdapter, type BackendId } from "./backends.ts";
  *  host that offers to save files (the framework's `saveFile` asks for the
  *  `save-file` capability, never for a particular wrapper). A download from a
  *  `blob:` link goes nowhere inside a phone's web view, which is why this is
- *  not `downloadText`. Rejects when the host reports that it could not save,
+ *  not the framework's plain text download. Rejects when the host reports that it could not save,
  *  so the export can say so instead of appearing to work. */
 export function saveBackupFile(
   file: BackupFile,

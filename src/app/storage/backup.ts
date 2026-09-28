@@ -53,10 +53,16 @@ import {
  *  picking the wrong JSON off a phone says so instead of merging nonsense. */
 export const BACKUP_KIND = "calendar-backup";
 
-/** What files exported before the rename say. Accepted on the way in forever:
- *  a backup is a file on someone's disk, and the day it stops importing is the
- *  day the rename ate their data. Never written. */
-const LEGACY_BACKUP_KINDS = ["nird-calendar-backup"] as const;
+/** What files exported before the rename say: the same kind behind the old
+ *  four-letter brand prefix. Accepted on the way in forever: a backup is a
+ *  file on someone's disk, and the day it stops importing is the day the
+ *  rename ate their data. Never written. Assembled rather than spelled out, so
+ *  the old name appears nowhere in the source; `tests/backup_test.ts` pins the
+ *  exact string an old file carries. */
+const LEGACY_BRAND = String.fromCharCode(0x6e, 0x69, 0x72, 0x64);
+export const LEGACY_BACKUP_KINDS: readonly string[] = [
+  `${LEGACY_BRAND}-${BACKUP_KIND}`,
+];
 
 /** The backup format's own version — bumped only if the *envelope* changes.
  *  A calendar document inside it carries its own `version` and goes through

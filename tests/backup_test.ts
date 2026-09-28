@@ -11,6 +11,7 @@ import type { Namespace as Calendar } from "@niclaslindstedt/oss-framework/names
 import {
   BACKUP_KIND,
   BACKUP_VERSION,
+  LEGACY_BACKUP_KINDS,
   applyImport,
   backupFileName,
   buildBackup,
@@ -128,6 +129,21 @@ describe("reading a picked file", () => {
         APPEARANCE,
       ),
     ).toEqual({ ok: false, reason: "too-new" });
+  });
+
+  it("still reads a file exported before the rename", () => {
+    // The exact kind those files carry: the day it stops matching is the day
+    // an old backup stops importing.
+    expect(LEGACY_BACKUP_KINDS).toEqual(["nird-calendar-backup"]);
+    const parsed = parseBackup(
+      JSON.stringify({
+        kind: "nird-calendar-backup",
+        version: BACKUP_VERSION,
+        calendars: [{ slug: "work", name: "Work", entries: { d: "Hi" } }],
+      }),
+      APPEARANCE,
+    );
+    expect(parsed.ok).toBe(true);
   });
 
   it("holds a hand-edited file to values the app can draw", () => {

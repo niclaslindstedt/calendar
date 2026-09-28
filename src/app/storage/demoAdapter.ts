@@ -18,8 +18,8 @@ import { serializeDoc, type CalendarDoc } from "../types.ts";
 
 /** The app-level backend id union: the framework's backends this app offers,
  *  plus the two the app adds itself — iCloud Drive, where a host offers it
- *  (`icloudHost.ts`), and our demo. Google Drive and the self-hosted server
- *  are excluded deliberately — the framework ships both adapters, and this
+ *  (`icloudHost.ts`), and our demo. The framework's `gdrive` and `selfhosted`
+ *  adapters are excluded deliberately — the framework ships both, and this
  *  app connects to neither, so saying so in the type is what keeps
  *  `buildAdapter`'s switch exhaustive. */
 export type BackendId =

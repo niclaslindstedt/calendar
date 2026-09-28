@@ -91,11 +91,11 @@ export function readActiveBackendId(): BackendId {
   ) {
     return stored;
   }
-  // Google Drive was removed as a backend. A device that had it selected is
+  // The retired `gdrive` backend is gone. A device that had it selected is
   // moved to browser storage, carrying the last synced document across from
-  // the cache the Drive backend kept — otherwise the calendar would open
-  // empty, which reads as data loss even though the file is still in the
-  // reader's own Drive folder.
+  // the cache that backend kept — otherwise the calendar would open empty,
+  // which reads as data loss even though the file is still in the reader's
+  // own cloud folder.
   if (stored === "gdrive") {
     adoptRetiredGdriveDocument();
     localStorage.setItem(ACTIVE_KEY, "browser");
