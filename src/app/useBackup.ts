@@ -15,7 +15,6 @@
 
 import { useCallback, useState } from "react";
 
-import { downloadText, MIME_JSON } from "@niclaslindstedt/oss-framework/files";
 import type { ThemeAppearance } from "@niclaslindstedt/oss-framework/theme";
 
 import { error as logError, status } from "../output.ts";
@@ -30,11 +29,9 @@ import {
 import type { BackendId } from "./storage/backends.ts";
 import {
   applyImport,
-  backupFileName,
   buildBackup,
   parseBackup,
   planImport,
-  serializeBackup,
   type BackupFile,
   type BackupParseError,
   type DeviceState,
@@ -44,6 +41,7 @@ import {
 } from "./storage/backup.ts";
 import {
   readCalendarDocuments,
+  saveBackupFile,
   writeCalendarDocuments,
 } from "./storage/backupIo.ts";
 
@@ -68,8 +66,9 @@ export type BackupActions = {
   /** True while a read or a write is in flight (both are round-trips to a
    *  cloud backend in the worst case). */
   busy: boolean;
-  /** Gather everything and hand the file to the browser. Resolves with an
-   *  error message when the backup couldn't be assembled. */
+  /** Gather everything and hand the file over — a download, or the share
+   *  sheet where the host offers one. Resolves with an error message when the
+   *  backup couldn't be assembled or the host couldn't save it. */
   exportAll: () => Promise<string | null>;
   /** Read a picked file and work out what it would mean here. */
   readBackupFile: (file: File) => Promise<ImportIntake>;
@@ -140,12 +139,8 @@ export function useBackup(deps: {
         documents: device.documents,
         exportedAt,
       });
-      downloadText(
-        backupFileName(exportedAt),
-        serializeBackup(file),
-        MIME_JSON,
-      );
-      status(`Exported ${file.calendars.length} calendars`);
+      const outcome = await saveBackupFile(file, exportedAt);
+      status(`Exported ${file.calendars.length} calendars (${outcome})`);
       return null;
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);

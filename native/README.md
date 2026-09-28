@@ -27,7 +27,10 @@ Thin is the design, not an aspiration. The wrapper:
   `modules/icloud-store`);
 - opens a cloud provider's sign-in in an **authentication session** when the
   page asks for one (`src/authSessionBridge.ts` → `src/authSession.ts` →
-  `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox).
+  `expo-web-browser`) — see [Signing in to Dropbox](#signing-in-to-dropbox);
+- hands an **export** (the backup file) to the share sheet when the page saves
+  one (`src/saveFileBridge.ts` → `src/saveFile.ts` → `expo-sharing`) — see
+  [Exporting a file](#exporting-a-file).
 
 That is the entire list, and it is deliberately not empty: **App Store
 guideline 4.2 rejects a build that is only a viewer for a website**, so the
@@ -64,6 +67,8 @@ ships.
 | `src/icloud.ts`            | Runs one iCloud request against the native module. Degrades to "unavailable" when it is absent.                                    |
 | `src/authSessionBridge.ts` | **Pure.** The injected sign-in provider (`window.__ossAuthSession`) and its request/response plumbing. Tested from the root suite. |
 | `src/authSession.ts`       | Opens one sign-in in an authentication session (`expo-web-browser`) and hands back where it ended.                                 |
+| `src/saveFileBridge.ts`    | **Pure.** The framework's `save-file` contract: the descriptor injected before load, the request narrowing, the result script.     |
+| `src/saveFile.ts`          | Writes one export to the cache and opens the share sheet (`expo-file-system`, `expo-sharing`).                                     |
 | `src/scriptText.ts`        | **Import-free.** Splicing text safely into an injected script; shared by every bridge.                                             |
 | `modules/icloud-store/`    | A local Expo module: list / read / write / remove inside the app's iCloud container. **Apple only.**                               |
 | `plugins/with-icloud.js`   | Declares the container as a document scope (`NSUbiquitousContainers`), so it shows up in the Files app.                            |
@@ -275,6 +280,30 @@ default on iOS, the launch intent on Android), so there is no deep link to
 keep in step with it.
 
 Other off-origin links are unchanged: they still leave for the system browser.
+
+## Exporting a file
+
+Settings → Storage → **Export…** saves the backup through the framework's
+`saveFile`. In a browser that is a download from a `blob:` link, which goes
+nowhere inside the WebView. So the wrapper advertises the `save-file`
+capability before the page loads (`SAVE_FILE_DESCRIPTOR`, merged into
+`window.__ossShell`), and `saveFile` posts the file's bytes here instead:
+
+```
+Settings → Export…  →  saveFile({ text, filename, mimeType })   (oss-framework)
+  → postMessage { type: "oss-framework/save-file", id, filename, mimeType, base64 }
+App.tsx → src/saveFile.ts → cache/exports/<id>/<filename> → Sharing.shareAsync
+  → window event "oss-framework/save-file-result" { id, ok }
+```
+
+The contract — names, fields, the answer — is the framework's
+(`docs/native-shell.md` in oss-framework), and
+`tests/native_save_file_test.ts` pins this side to its constants. The page
+never learns it is inside this wrapper: it asks whether `save-file` is listed,
+and a browser lists nothing. Only the latest export stays on disk, in the
+cache directory, and nothing logs the bytes. `onShouldStartLoadWithRequest`
+refuses a `blob:` or `data:` URL rather than sending it to the system browser,
+which could not open it anyway.
 
 ## Things that will bite you
 

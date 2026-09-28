@@ -23,6 +23,10 @@ loopback address on your phone. So:
   storage on the device — and the storage backend you pick in
   **Settings → Storage** works the same way, Dropbox included.
 
+**Export** (Settings → Storage → Import and export) opens the share sheet
+with the backup file, where a browser would download it: save it to Files, or
+send it on.
+
 Connecting **Dropbox** opens Dropbox's sign-in in a sheet over the app;
 approving closes it and connects, and closing it leaves nothing connected.
 Other links that leave the app (a URL you wrote in a note) open in your normal

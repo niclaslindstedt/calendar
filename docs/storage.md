@@ -113,7 +113,10 @@ the app, and merges one back in. It is the way to move to another device, to
 keep a backup of your own, or to put a phone and a laptop back in step when
 they aren't sharing a cloud backend.
 
-**Export** writes one JSON file, `calendar-backup-YYYY-MM-DD.json`:
+**Export** writes one JSON file, `calendar-backup-YYYY-MM-DD.json`. A browser
+downloads it; the phone app opens the share sheet with it, to save to Files or
+send on (the framework's `saveFile`, which uses the share sheet only where the
+host advertises the `save-file` capability — see `native/README.md`):
 
 ```json
 {

@@ -5,8 +5,9 @@
 // WebView at it, keeps the native chrome in step with the page's theme, sends
 // off-origin links to the system browser, forwards the page's storage to the
 // widget publisher, answers the page when it asks the device for its contacts
-// or asks to read or write the app's iCloud Drive container, and opens a
-// provider's sign-in in an authentication session when the page asks for one.
+// or asks to read or write the app's iCloud Drive container, opens a
+// provider's sign-in in an authentication session when the page asks for one,
+// and hands an export to the share sheet when the page saves a file.
 // There is no native UI at all beyond a spinner and a failure screen —
 // everything a reader sees is the web app, unchanged.
 //
@@ -76,6 +77,8 @@ import {
   isAuthSessionRequest,
 } from "./src/authSessionBridge";
 import { answerAuthSession, authRedirectUri } from "./src/authSession";
+import { isSaveFileRequest, SAVE_FILE_DESCRIPTOR } from "./src/saveFileBridge";
+import { answerSaveFile } from "./src/saveFile";
 import { barStyleFor, type BarStyle } from "./src/statusBar";
 import { dayKey } from "./src/snapshot";
 import { forgetPublished, publishReport, reloadWidgets } from "./src/widgets";
@@ -244,6 +247,14 @@ export default function App() {
         void signIn(parsed.id, parsed.url);
         return;
       }
+      // An export (the backup file). The sheet stays open as long as the
+      // reader leaves it, and the page waits on the answer.
+      if (isSaveFileRequest(parsed)) {
+        void answerSaveFile(parsed, (script) =>
+          webViewRef.current?.injectJavaScript(script),
+        );
+        return;
+      }
       if (!isReport(parsed)) return;
 
       // The theme travels with every report; the native chrome follows it so
@@ -306,12 +317,16 @@ export default function App() {
   // provider's sign-in page is not navigated to at all: the page asks for an
   // authentication session instead (see `src/authSessionBridge.ts`), since a
   // consent page in Safari redirects back to Safari, not to the app. This
-  // stays the fallback for a page that finds no session provider.
+  // stays the fallback for a page that finds no session provider. A `blob:`
+  // or `data:` URL is never handed on: it exists only inside the WebView, so
+  // the system browser cannot open it, and an export reaches the share sheet
+  // through the save-file bridge instead of navigating anywhere.
   const onShouldStartLoadWithRequest = useCallback(
     (request: WebViewNavigation) => {
       if (!origin) return false;
       if (request.url.startsWith(origin)) return true;
       if (request.url.startsWith("about:")) return true;
+      if (/^(blob|data):/i.test(request.url)) return false;
       void Linking.openURL(request.url);
       return false;
     },
@@ -366,7 +381,10 @@ export default function App() {
             incognito={false}
             allowsBackForwardNavigationGestures
             setSupportMultipleWindows={false}
-            injectedJavaScriptBeforeContentLoaded={BEFORE_LOAD_SCRIPT}
+            // Before the page's own scripts: the service-worker teardown, and
+            // the shell descriptor that tells the framework's `saveFile` this
+            // wrapper opens the share sheet.
+            injectedJavaScriptBeforeContentLoaded={`${BEFORE_LOAD_SCRIPT}\n${SAVE_FILE_DESCRIPTOR}`}
             // Four scripts, one prop: the storage reporter the widgets need,
             // the contacts and iCloud providers the calendar looks for, and
             // the auth-session provider its Dropbox sign-in looks for. All

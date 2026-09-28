@@ -416,7 +416,7 @@ the App Store and Google Play. It is a **separate npm project** with its own
 root does not touch it, and neither does `make install`. Reach it with
 `--prefix native` (or the `make native-*` targets).
 
-**Thin is a constraint, not an aspiration.** The wrapper does six things:
+**Thin is a constraint, not an aspiration.** The wrapper does seven things:
 
 1. packs the built web app into `assets/webroot.zip` and serves it from a
    loopback HTTP server (`src/local-server.ts`);
@@ -431,7 +431,14 @@ root does not touch it, and neither does `make install`. Reach it with
    (`src/snapshot.ts` → `src/widgets.ts` → `modules/widget-bridge`);
 5. answers those contacts requests (`src/contacts.ts`, via `expo-contacts`);
 6. answers those iCloud requests (`src/icloud.ts` → `modules/icloud-store`,
-   Apple only).
+   Apple only);
+7. hands an export to the share sheet when the page saves a file — it
+   advertises the framework's `save-file` capability before the page loads
+   (`src/saveFileBridge.ts`) and answers in `src/saveFile.ts`. The contract is
+   oss-framework's (`docs/native-shell.md`), pinned by
+   `tests/native_save_file_test.ts`; exports in `src/` call the framework's
+   `saveFile`, never `downloadText` / `downloadBlob`, whose `blob:` download
+   goes nowhere in the WebView.
 
 ### The native-only features, and why there have to be some
 
@@ -737,9 +744,10 @@ month cell set half again too big on a laptop.
   of `OSS_SPEC.md`; vitest picks up `tests/**/*_test.ts`.
 - Tests cover the pure domain modules (locale packs, entry text sizing,
   migrations, demo data, i18n catalog parity) and run in a node environment —
-  no DOM. A test that has to dispatch real events (the long press in
-  `long_press_test.ts`) opts into jsdom with a `// @vitest-environment jsdom`
-  first line and renders with Preact's `h`, so it stays a `.ts` file.
+  no DOM. A test that needs a DOM (the long press in `long_press_test.ts`,
+  the export's download and share-sheet paths in `export_test.ts`) opts into
+  jsdom with a `// @vitest-environment jsdom` first line, and renders with
+  Preact's `h` where it renders at all, so it stays a `.ts` file.
 
 ## Source file size
 
@@ -764,6 +772,7 @@ month cell set half again too big on a laptop.
 | the release flow / fragments                                             | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                                                                    |
 | the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                                |
 | the phone's Dropbox sign-in (the auth-session bridge, the URL scheme)    | `native/README.md`, `native/RELEASING.md`, `docs/configuration.md`, `tests/native_auth_session_test.ts`                                                  |
+| an export (`saveFile`) or the save-file bridge                           | `docs/storage.md`, `native/README.md`, `tests/export_test.ts`, `tests/native_save_file_test.ts`                                                          |
 | the desktop shell                                                        | `tauri/README.md`, `docs/features/desktop-app.md`, `tauri/shell/tests/`                                                                                  |
 | contacts (the host seam, the matching, the Settings tab)                 | `docs/features/contacts.md`, `src/app/PrivacyPage.tsx`, `tests/celebrations_test.ts`, `tests/contact_selection_test.ts`, `tests/native_contacts_test.ts` |
 | the iCloud Drive backend (the host seam, the bridge, the container)      | `docs/storage.md`, `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `src/app/PrivacyPage.tsx`, `tests/native_icloud_test.ts`    |
