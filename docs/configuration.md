@@ -6,7 +6,7 @@ runs with none of them set.
 
 | Variable                  | Effect                                                                                                                                                                                                                                                                                                                         |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key. Unset **hides** the Dropbox backend in Settings → Storage.                                                                                                                                                                                                                                               |
+| `VITE_DROPBOX_APP_KEY`    | Dropbox PKCE app key. Unset **hides** the Dropbox backend in Settings → Storage. Ignored by the phone build (`VITE_NATIVE_BUILD=on`), which offers no Dropbox at all, by owner decision.                                                                                                                                       |
 | `VITE_DROPBOX_APP_FOLDER` | The Dropbox app-folder name (fixed by your Dropbox app config; shown in Settings → Storage). Default `calendar`.                                                                                                                                                                                                               |
 | `VITE_BASE`               | Deploy base path — one per deployment slot (`/`, `/preview/`, `/branch/`), set by the Pages workflow. Default `/`. See [deployment](deployment.md).                                                                                                                                                                            |
 | `VITE_SOURCE_REF`         | The branch parked in the `/branch/` slot, shown in its build label. Set by the Pages workflow; unset everywhere else.                                                                                                                                                                                                          |
@@ -19,10 +19,9 @@ runs with none of them set.
 scoped access and an **App folder** named `calendar`, add your deploy
 origin(s) to the redirect URIs (the app derives its redirect URI from
 `origin + pathname`, without a trailing slash) — plus `http://127.0.0.1:53682/`,
-`:53683/` and `:53684/` for the desktop app, and `se.agilator.calendar://oauth`
-(the bundle id as the scheme) for the phone app, see
-[native/README.md](../native/README.md#signing-in-to-dropbox) — and put the app key in
-`VITE_DROPBOX_APP_KEY`. Grant it `files.metadata.read`,
+`:53683/` and `:53684/` for the desktop app — and put the app key in
+`VITE_DROPBOX_APP_KEY`. The phone app needs no redirect URI: it offers no
+Dropbox (by owner decision), and its build job passes no key. Grant it `files.metadata.read`,
 `files.content.read` and `files.content.write` — the app never leaves its own
 folder.
 

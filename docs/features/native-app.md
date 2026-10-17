@@ -21,15 +21,15 @@ loopback address on your phone. So:
 - it updates when you update the app from the store, and not before;
 - its notes live in exactly the same place the browser's would — the app's own
   storage on the device — and the storage backend you pick in
-  **Settings → Storage** works the same way, Dropbox included.
+  **Settings → Storage** works the same way. The app has no Dropbox: it
+  keeps your calendars on the device, or on iPhone and iPad in your own
+  iCloud Drive.
 
 **Export** (Settings → Storage → Import and export) opens the share sheet
 with the backup file, where a browser would download it: save it to Files, or
 send it on.
 
-Connecting **Dropbox** opens Dropbox's sign-in in a sheet over the app;
-approving closes it and connects, and closing it leaves nothing connected.
-Other links that leave the app (a URL you wrote in a note) open in your normal
+Links that leave the app (a URL you wrote in a note) open in your normal
 browser rather than inside the app, which is what the stores expect.
 
 ## iCloud Drive

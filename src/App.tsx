@@ -60,6 +60,7 @@ import { logStore } from "./app/log.ts";
 import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
 import {
+  DROPBOX_OFFERED,
   completeOauthOnBoot,
   connectDropbox,
   connectFolder,
@@ -926,10 +927,13 @@ export function App() {
                     setActiveBackend("folder");
                   }
                 }),
+          // Never reached in a build without Dropbox (the phone app's), which
+          // has no row to call it from; the constant folds it out there.
           connectDropbox: () =>
             DEMO
               ? refuseInDemo()
-              : void connectDropbox().then(
+              : DROPBOX_OFFERED &&
+                void connectDropbox().then(
                   (outcome) => {
                     // The phone and desktop sign-ins finish here; the web one
                     // navigates away and finishes in the boot effect above.

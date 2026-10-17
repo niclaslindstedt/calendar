@@ -28,13 +28,13 @@ where it is stored differs.
 One backend is active at a time (Settings → Storage). Switching loads the
 document from the new backend.
 
-| Backend          | Where the data lives                         | Notes                                            |
-| ---------------- | -------------------------------------------- | ------------------------------------------------ |
-| **This browser** | `localStorage` on the device                 | The default; zero setup.                         |
-| **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only. |
-| **Dropbox**      | `<calendar>/calendar.json` in the app folder | PKCE OAuth; requires `VITE_DROPBOX_APP_KEY`.     |
-| **iCloud Drive** | `calendar.json` in the app's iCloud folder   | App Store app only — see below.                  |
-| **Demo data**    | In memory only                               | Developer mode; the demo's Personal calendar.    |
+| Backend          | Where the data lives                         | Notes                                                                                            |
+| ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **This browser** | `localStorage` on the device                 | The default; zero setup.                                                                         |
+| **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only.                                                 |
+| **Dropbox**      | `<calendar>/calendar.json` in the app folder | PKCE OAuth; requires `VITE_DROPBOX_APP_KEY`. Website and desktop app only — never the phone app. |
+| **iCloud Drive** | `calendar.json` in the app's iCloud folder   | App Store app only — see below.                                                                  |
+| **Demo data**    | In memory only                               | Developer mode; the demo's Personal calendar.                                                    |
 
 None of these carries anything about your **contacts**. If you turn on
 [contacts](features/contacts.md) in the App Store / Play app, the identifiers

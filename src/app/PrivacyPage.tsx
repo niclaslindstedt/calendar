@@ -7,8 +7,9 @@
 // The calendar is local-first with no backend of our own, no account and no
 // analytics: by default everything stays on the device. Three things are
 // worth spelling out, and this page exists for them — the opt-in sync
-// backends (a picked local folder, the reader's own Dropbox, and in the App
-// Store app the reader's own iCloud Drive), the installed app's Home Screen
+// backends (a picked local folder, the reader's own Dropbox — never in the
+// App Store app — and in the App Store app the reader's own iCloud Drive), the
+// installed app's Home Screen
 // widgets, and the app-store build's
 // access to the device's contacts, which the app stores never leave. The
 // contacts section is also what the App Store and Play Store privacy
@@ -32,7 +33,7 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 // Last meaningful change to the policy text below. Bump it whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
 // only line a reader has to look at to see how fresh the policy is.
-const LAST_UPDATED = "2026-09-27";
+const LAST_UPDATED = "2026-10-17";
 
 // Whether this is the website's copy of the page. The phone and desktop apps
 // carry their own copy, and an app carries no link back to the source (by owner
@@ -41,6 +42,12 @@ const LAST_UPDATED = "2026-09-27";
 // website's wording is folded out of the bundle rather than hidden; the app's
 // says the same thing without them.
 const WEBSITE = !__NATIVE_BUILD__ && !__SHELL_BUILD__;
+
+// Whether this is the phone app's copy. The phone app offers no Dropbox (by
+// owner decision; `storage/backends.ts`), so its copy of the policy does not
+// describe it — folded out the same way. The website's and the desktop app's
+// keep it.
+const PHONE = __NATIVE_BUILD__;
 
 export function PrivacyPage() {
   // The page mounts on its own, outside the app shell, so it has to paint its
@@ -95,11 +102,13 @@ export function PrivacyPage() {
           </p>
           <p>
             You may <span className="text-fg-bright">optionally</span> turn on
-            sync to a storage location <em>you</em> control — a local folder on
-            your computer, your own Dropbox, or, in the App Store app, your own
-            iCloud Drive — so the same calendar appears on more than one device.
-            Even then your notes go only to that location in your own account;
-            the project authors never receive them in any configuration. See{" "}
+            sync to a storage location <em>you</em> control —{" "}
+            {PHONE
+              ? "on iPhone and iPad, your own iCloud Drive"
+              : "a local folder on your computer, your own Dropbox, or, in the App Store app, your own iCloud Drive"}{" "}
+            — so the same calendar appears on more than one device. Even then
+            your notes go only to that location in your own account; the project
+            authors never receive them in any configuration. See{" "}
             <a className="text-link hover:underline" href="#cloud-sync">
               Optional sync
             </a>{" "}
@@ -155,9 +164,9 @@ export function PrivacyPage() {
               works, your vacation allowance, and the developer switches.
             </li>
             <li>
-              If you turned on an optional sync backend, the small amount of
-              configuration it needs to reconnect (which folder you picked, or
-              an access token your cloud provider issued to this device).
+              {PHONE
+                ? "If you turned on iCloud Drive, which backend you chose — it needs no sign-in and no token."
+                : "If you turned on an optional sync backend, the small amount of configuration it needs to reconnect (which folder you picked, or an access token your cloud provider issued to this device)."}
             </li>
             <li>
               If you turned on contacts in the installed app, only the{" "}
@@ -225,9 +234,12 @@ export function PrivacyPage() {
               The app makes no network request on account of this feature, at
               any point. Contacts are not uploaded to us — we run no server to
               upload them to — and they are deliberately kept out of the sync
-              backends as well: a calendar synced to Dropbox, iCloud Drive or a
-              local folder carries your notes and no contact data. They are also
-              kept out of the Home Screen widgets (see{" "}
+              backends as well: a calendar synced to{" "}
+              {PHONE
+                ? "iCloud Drive"
+                : "Dropbox, iCloud Drive or a local folder"}{" "}
+              carries your notes and no contact data. They are also kept out of
+              the Home Screen widgets (see{" "}
               <a className="text-link hover:underline" href="#installed-app">
                 The installed app
               </a>
@@ -320,13 +332,21 @@ export function PrivacyPage() {
             the download. No fonts, analytics scripts, error-reporting services,
             or advertising networks are ever loaded.
           </p>
-          <p>
-            If you opt in to Dropbox sync, the app additionally talks directly
-            from your device to Dropbox&apos;s own API, to sign you in and to
-            read and write your notes. Those requests go to the provider, not to
-            us. iCloud Drive needs no request from the app at all: it writes to
-            a folder on the device, and the system syncs it.
-          </p>
+          {PHONE ? (
+            <p>
+              Sync adds none either. iCloud Drive needs no request from the app
+              at all: it writes to a folder on the device, and the system syncs
+              it.
+            </p>
+          ) : (
+            <p>
+              If you opt in to Dropbox sync, the app additionally talks directly
+              from your device to Dropbox&apos;s own API, to sign you in and to
+              read and write your notes. Those requests go to the provider, not
+              to us. iCloud Drive needs no request from the app at all: it
+              writes to a folder on the device, and the system syncs it.
+            </p>
+          )}
         </Section>
 
         <Section title="Optional sync" id="cloud-sync">
@@ -335,20 +355,24 @@ export function PrivacyPage() {
             back to device-only at any time:
           </p>
           <ul className="ml-5 list-disc space-y-2">
-            <li>
-              <span className="text-fg-bright">Local folder.</span> Using your
-              browser&apos;s File System Access API, you grant the app access to
-              a folder you pick on your own computer. Your calendar is written
-              there as an ordinary file. Nothing is sent over the network; the
-              data never leaves your machine.
-            </li>
-            <li>
-              <span className="text-fg-bright">Dropbox.</span> The app uses an
-              app-scoped folder, so it can only read and write inside its own
-              dedicated folder — never the rest of your Dropbox. Sign-in uses
-              Dropbox&apos;s OAuth flow (PKCE), and the resulting token is held
-              only on this device.
-            </li>
+            {!PHONE && (
+              <>
+                <li>
+                  <span className="text-fg-bright">Local folder.</span> Using
+                  your browser&apos;s File System Access API, you grant the app
+                  access to a folder you pick on your own computer. Your
+                  calendar is written there as an ordinary file. Nothing is sent
+                  over the network; the data never leaves your machine.
+                </li>
+                <li>
+                  <span className="text-fg-bright">Dropbox.</span> The app uses
+                  an app-scoped folder, so it can only read and write inside its
+                  own dedicated folder — never the rest of your Dropbox. Sign-in
+                  uses Dropbox&apos;s OAuth flow (PKCE), and the resulting token
+                  is held only on this device.
+                </li>
+              </>
+            )}
             <li>
               <span className="text-fg-bright">iCloud Drive.</span> In the App
               Store app only, and only when you choose it: your calendars are
@@ -367,12 +391,13 @@ export function PrivacyPage() {
               your calendar and nothing else
             </span>
             , it stays in your account with your provider, and the project
-            authors never receive it or hold any token for it. Revoke the
-            app&apos;s access at any time from your provider&apos;s security
-            settings and it simply stops syncing. When Dropbox or iCloud Drive
-            is active the app also keeps a mirror of the synced calendar on the
-            device, so you can read and write while disconnected and the Home
-            Screen widgets can print it.
+            authors never receive it or hold any token for it.{" "}
+            {PHONE
+              ? "Turn iCloud Drive off for the app in your device's settings and it simply stops syncing. When iCloud Drive is active"
+              : "Revoke the app's access at any time from your provider's security settings and it simply stops syncing. When Dropbox or iCloud Drive is active"}{" "}
+            the app also keeps a mirror of the synced calendar on the device, so
+            you can read and write while disconnected and the Home Screen
+            widgets can print it.
           </p>
         </Section>
 

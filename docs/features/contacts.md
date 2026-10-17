@@ -120,8 +120,8 @@ Names and birthdays are read into memory each time the app starts, used to
 draw the calendar, and dropped when it closes. That is what makes the rest
 true:
 
-- a calendar **synced** to Dropbox or a local folder carries
-  your notes and no contact data;
+- a calendar **synced** to iCloud Drive (or, on the website and the desktop
+  app, to Dropbox or a local folder) carries your notes and no contact data;
 - an **exported backup** carries no contact data;
 - the **Home Screen widgets** print the date and your note, never a birthday
   or a name day, and the opt-in list is excluded by name from the bridge that

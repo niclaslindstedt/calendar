@@ -222,9 +222,18 @@ There is no iCloud on Android, and the module says so rather than pretending:
 `modules/icloud-store` declares only the `apple` platform, so
 `requireOptionalNativeModule` returns `null` there and the backend is reported
 unavailable — which means the web app never lists it. The Android build keeps
-the same local folder, Dropbox and on-device backends the website has.
+the backends its WebView can reach — the device's own storage — and, like the
+iPhone build, offers no Dropbox.
 
 ## Signing in to Dropbox
+
+**The phone app offers no Dropbox** (by owner decision): its web build sets
+`VITE_NATIVE_BUILD=on`, which folds the Dropbox backend out of the page
+(`src/app/storage/backends.ts`, `DROPBOX_OFFERED`), and `native.yml` passes no
+Dropbox key. So no page asks for an authentication session today. The bridge
+below stays — it is a capability the page can ask for, not Dropbox's — and
+this is how it works for a page that does. The website and the desktop app
+keep Dropbox.
 
 The page's own Dropbox sign-in is a redirect: consent at dropbox.com, then
 back to the page's origin with a code, which the page trades for tokens using

@@ -165,6 +165,22 @@ function websiteOnly(): Plugin {
   };
 }
 
+// What the phone build leaves out on top of that (by owner decision): Dropbox.
+// The app's own code folds it away on the same flag (`storage/backends.ts`);
+// this takes it out of the page description in `index.html`, which every
+// build carries, so nothing in the phone app's page names it.
+function phoneOnly(): Plugin {
+  return {
+    name: "phone-only",
+    transformIndexHtml(html) {
+      return html.replace(
+        /(<meta\s+name="description"\s+content="[^"]*?)\s*Entries live[^"]*"/,
+        '$1 Entries live on your device unless you choose to sync them."',
+      );
+    },
+  };
+}
+
 export default defineConfig({
   base,
   build: {
@@ -196,6 +212,7 @@ export default defineConfig({
     tailwindcss(),
     appPwa({ base, version, serviceWorker: !shellBuild }),
     ...(appBuild ? [websiteOnly()] : []),
+    ...(nativeBuild ? [phoneOnly()] : []),
     titled(appName),
     emitPrivacyAlias(),
   ],

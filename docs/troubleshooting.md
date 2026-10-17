@@ -13,7 +13,8 @@ theme engine lazy-loads the optional font families from real packages.
 ## Storage
 
 **Dropbox doesn't appear in Settings → Storage** — the backend is hidden
-unless `VITE_DROPBOX_APP_KEY` was set at build time. See [configuration.md](configuration.md).
+unless `VITE_DROPBOX_APP_KEY` was set at build time, and the phone app never
+offers it (by owner decision). See [configuration.md](configuration.md).
 
 **iCloud Drive is missing** — it is only offered in the App Store app on
 iPhone and iPad; a browser and the Android app have no way to reach it. In the

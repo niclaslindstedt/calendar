@@ -4,7 +4,7 @@ This file is the canonical source of truth for AI coding agents working in this
 repo. `CLAUDE.md`, `.cursorrules`, `.windsurfrules`, `GEMINI.md`, and
 `.github/copilot-instructions.md` are symlinks to this file.
 
-Fleet guidelines: APP_GUIDELINES 1.2.0
+Fleet guidelines: APP_GUIDELINES 2.0.0
 
 ## Build and test commands
 
@@ -460,9 +460,10 @@ it has to clear both rules below and it has to be worth its own row here.
   with no change to `src/`. iCloud Drive is the second:
   `src/app/storage/icloudHost.ts` asks whether an iCloud provider is present,
   and the Storage tab's row, like the Contacts tab, is absent without one.
-  Dropbox's in-app sign-in is the third: the framework's `getAuthSessionHost`
+  An in-app sign-in is the third: the framework's `getAuthSessionHost`
   looks for a sign-in provider at `window.__ossAuthSession`, and without one
-  Dropbox keeps its redirect sign-in. If a change seems to need the web app to know it
+  Dropbox keeps its redirect sign-in. (The phone build offers no Dropbox, by
+  owner decision, so today nothing there asks for one — see below.) If a change seems to need the web app to know it
   is native, the change is wrong; if it needs a capability the host can offer,
   name the capability.
 
@@ -509,9 +510,16 @@ it has to clear both rules below and it has to be worth its own row here.
   to Safari, where it never returns. `tests/native_auth_session_test.ts` pins
   them and runs the injected script. Its redirect URI is `<scheme>://oauth`,
   and the scheme is the bundle id (`native/app.config.js` takes it from
-  `native/identifiers.js`), so the Dropbox app must list
-  `se.agilator.calendar://oauth` — a different `APP_BUNDLE_ID` breaks phone
-  sign-in until the App Console follows. The widgets never name the scheme.
+  `native/identifiers.js`). The widgets never name the scheme.
+- **The phone build offers no Dropbox** (by owner decision): no row, no
+  connect, no sign-in, no mention in its privacy page or page description.
+  `DROPBOX_OFFERED` in `src/app/storage/backends.ts` is false whenever
+  `VITE_NATIVE_BUILD=on`, read through `import.meta.env` so Vite folds the
+  Dropbox UI out of that bundle; `native.yml` passes it no Dropbox key; a
+  phone with Dropbox still stored as its backend opens on the device's copy,
+  as from any unavailable backend. `tests/dropbox_offered_test.ts` pins it.
+  The website and the desktop app keep Dropbox exactly as before — gate a
+  new Dropbox surface on `DROPBOX_OFFERED`, not on the key.
 - **The iCloud container is committed, never derived from the bundle id**:
   `iCloud.se.agilator.calendar` in `identifiers.js` (which the entitlements
   and `plugins/with-icloud.js`'s `NSUbiquitousContainers` read) and as a
@@ -763,7 +771,7 @@ month cell set half again too big on a laptop.
 | deployment slots / hosting                                               | `docs/deployment.md`, `tests/slot_test.ts`                                                                                                               |
 | the release flow / fragments                                             | this file's "Releases and changelog", `docs/deployment.md`, `tests/changeset_test.ts`                                                                    |
 | the native wrapper / the widgets                                         | `docs/features/native-app.md`, `native/README.md`, `native/RELEASING.md`, `tests/native_snapshot_test.ts`                                                |
-| the phone's Dropbox sign-in (the auth-session bridge, the URL scheme)    | `native/README.md`, `native/RELEASING.md`, `docs/configuration.md`, `tests/native_auth_session_test.ts`                                                  |
+| the auth-session bridge, the URL scheme; Dropbox's absence on the phone  | `native/README.md`, `native/RELEASING.md`, `docs/configuration.md`, `tests/native_auth_session_test.ts`, `tests/dropbox_offered_test.ts`                 |
 | an export (`saveFile`) or the save-file bridge                           | `docs/storage.md`, `native/README.md`, `tests/export_test.ts`, `tests/native_save_file_test.ts`                                                          |
 | the desktop shell                                                        | `tauri/README.md`, `docs/features/desktop-app.md`, `tauri/shell/tests/`                                                                                  |
 | contacts (the host seam, the matching, the Settings tab)                 | `docs/features/contacts.md`, `src/app/PrivacyPage.tsx`, `tests/celebrations_test.ts`, `tests/contact_selection_test.ts`, `tests/native_contacts_test.ts` |

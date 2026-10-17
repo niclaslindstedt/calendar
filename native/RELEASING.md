@@ -63,16 +63,12 @@ id, so it is the same whichever listing the build ships under.
 
 ### 5. Dropbox
 
-The phone app signs in to Dropbox through an in-app authentication session
-that returns on **`<bundle id>://oauth`** — `se.agilator.calendar://oauth` for
-the store build, whose `APP_BUNDLE_ID` is `se.agilator.calendar` (see
-[README → Signing in to Dropbox](README.md#signing-in-to-dropbox)). In the
-[Dropbox App Console](https://www.dropbox.com/developers/apps), open the app
-whose key is the `VITE_DROPBOX_APP_KEY` secret and add
-`se.agilator.calendar://oauth` under **Settings → OAuth 2 → Redirect URIs**,
-exactly as written. The same secret (with `VITE_DROPBOX_APP_FOLDER`) is what
-the build job passes to the web bundle; without it the app offers no Dropbox
-at all.
+Nothing to set up. The phone app offers no Dropbox (by owner decision): the
+build job passes no `VITE_DROPBOX_APP_KEY` / `VITE_DROPBOX_APP_FOLDER` to the
+web bundle, and the bundle's own flag (`VITE_NATIVE_BUILD=on`) folds the
+backend out even when one is set. Its calendars stay on the device, or on
+iPhone and iPad in the reader's own iCloud Drive (step 4 above). The website and the
+desktop app keep Dropbox; see [`docs/configuration.md`](../docs/configuration.md).
 
 ## Cutting a build
 
@@ -116,6 +112,5 @@ build without it launches to a blank screen.
 - [ ] The version in the root `package.json` is the one you mean to ship.
 - [ ] Widgets have been placed on a home screen on a real device and show
       today's notes.
-- [ ] Settings → Storage → Dropbox → Connect opens Dropbox in a sheet over
-      the app (not in Safari), and approving closes the sheet and connects.
-      Closing the sheet instead says "cancelled" and leaves nothing connected.
+- [ ] Settings → Storage offers no Dropbox — only this device and, on
+      iPhone and iPad, iCloud Drive.

@@ -65,8 +65,26 @@ const ACTIVE_KEY = "calendar:backend";
 const DROPBOX_ACCESS_KEY = "calendar:dropbox:access";
 const DROPBOX_REFRESH_KEY = "calendar:dropbox:refresh";
 
-const DROPBOX_APP_KEY = import.meta.env.VITE_DROPBOX_APP_KEY as
-  string | undefined;
+// The phone build offers no Dropbox at all (by owner decision): no row, no
+// connect, no sign-in to finish — it keeps its calendars on the device or in
+// the reader's own iCloud Drive. The website and the desktop app keep Dropbox
+// exactly as before. Keyed on the phone build's own flag
+// (`native/scripts/web-build-env.mjs`) and read through `import.meta.env`, so
+// Vite folds it to a constant and the phone bundle drops the Dropbox UI rather
+// than hiding it; a key in the environment no longer reaches that bundle
+// either. A phone that still has Dropbox stored as its backend (an early test
+// install) gets null from `buildAdapter` and opens on the device's own copy,
+// like any backend that is not available.
+const PHONE_BUILD = import.meta.env.VITE_NATIVE_BUILD === "on";
+
+const DROPBOX_APP_KEY = PHONE_BUILD
+  ? undefined
+  : (import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined);
+
+/** Whether this build offers Dropbox at all: never in the phone build, and
+ *  elsewhere only when the deployment configured an app key. */
+export const DROPBOX_OFFERED =
+  !PHONE_BUILD && Boolean(import.meta.env.VITE_DROPBOX_APP_KEY);
 
 // Dropbox fixes the app folder's name in the app's own configuration — an
 // "App folder"-scoped app lives under `Apps/<name>/` and the API's root *is*
@@ -134,10 +152,6 @@ export function writeActiveBackendId(id: BackendId): void {
 }
 
 // --- availability (build/browser gates) -------------------------------------
-
-export function isDropboxAvailable(): boolean {
-  return Boolean(DROPBOX_APP_KEY);
-}
 
 export function isFolderAvailable(): boolean {
   return isFolderBackendAvailable();
@@ -403,7 +417,12 @@ export async function discardCalendarData(
   }
 
   if (id === "browser" || id === "demo") return;
-  if (id === "dropbox" && (await removeDropboxCalendarFolder(slug))) return;
+  if (
+    DROPBOX_OFFERED &&
+    id === "dropbox" &&
+    (await removeDropboxCalendarFolder(slug))
+  )
+    return;
   try {
     const adapter = await buildAdapter(id, slug);
     await adapter?.save(serializeDoc(emptyDoc()));
