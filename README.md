@@ -11,8 +11,8 @@
 [![license](https://img.shields.io/badge/license-PolyForm--NC--1.0.0-blue.svg)](LICENSE)
 
 **[calendar.niclaslindstedt.se](https://calendar.niclaslindstedt.se)** — open
-it in a browser and install it from there for offline use. No download, no
-account, no server.
+it in a browser and install it from there for offline use. No download, nothing
+to sign up for, no server.
 
 ## What it is
 
@@ -32,8 +32,8 @@ Three views, all month-scoped:
 ## Why
 
 Calendar apps want to _remind_ you. This one doesn't: it's a surface you
-glance at, like the calendar on the kitchen wall. No notifications, no
-accounts, no server — your entries are a small JSON document on your device,
+glance at, like the calendar on the kitchen wall. No notifications,
+nothing to sign up for, no server — your entries are a small JSON document on your device,
 optionally synced to a storage backend you control.
 
 - **Local-first**: works offline, installable as a PWA.
