@@ -35,7 +35,7 @@ browser rather than inside the app, which is what the stores expect.
 ## iCloud Drive
 
 On iPhone and iPad, **Settings → Storage** has one more row than the website:
-**iCloud Drive**. There's no account to create and no sign-in — your device is
+**iCloud Drive**. There's nothing to sign up for and no sign-in — your device is
 already signed in to iCloud, so connecting is one tap, and your calendars
 follow you between your own Apple devices. Nobody else holds the files.
 

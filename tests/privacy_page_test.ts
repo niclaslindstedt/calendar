@@ -74,4 +74,12 @@ describe("the other builds' privacy page", () => {
     expect(text).toMatch(/browser/);
     expect(text).not.toContain("niclaslindstedt");
   });
+
+  it("says no account in no build", async () => {
+    for (const build of [PHONE, DESKTOP, WEBSITE]) {
+      const text = await privacyText(build);
+      expect(text).not.toMatch(/no account/i);
+      expect(text).toMatch(/nothing to sign up for/);
+    }
+  });
 });

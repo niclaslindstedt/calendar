@@ -4,7 +4,7 @@
 // which together put it on every deployment slot (`/privacy/`,
 // `/preview/privacy/`, `/branch/privacy/`).
 //
-// The calendar is local-first with no backend of our own, no account and no
+// The calendar is local-first with no backend of our own, no sign-up and no
 // analytics: by default everything stays on the device. Three things are
 // worth spelling out, and this page exists for them — the opt-in sync
 // backends (a picked local folder, the reader's own Dropbox — never in the
@@ -93,9 +93,9 @@ export function PrivacyPage() {
               inside the download, and it runs entirely on your device: it sends
               nothing when it starts, and the only network traffic it ever
               causes is the sync you turn on yourself. There is no server of our
-              own, no account, no cookies, and no analytics or tracking. By
-              default your notes are stored only on your device and never leave
-              it.
+              own, nothing to sign up for, no cookies, and no analytics or
+              tracking. By default your notes are stored only on your device and
+              never leave it.
             </p>
           ) : (
             <p>
@@ -113,9 +113,9 @@ export function PrivacyPage() {
               )}{" "}
               and shipped to the App Store and Google Play as an app that
               carries that same page inside it. It runs entirely on your device.
-              There is no backend of our own, no account, no cookies, and no
-              analytics or tracking. By default your notes are stored only on
-              your device and never leave it.
+              There is no backend of our own, nothing to sign up for, no
+              cookies, and no analytics or tracking. By default your notes are
+              stored only on your device and never leave it.
             </p>
           )}
           <p>

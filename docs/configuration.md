@@ -41,7 +41,7 @@ registered with Apple, not configured here (see `native/RELEASING.md`).
 
 Everything the user changes at runtime (country, language, view, theme,
 storage choice, developer mode) is persisted per device in `localStorage`
-under `calendar:*` keys — no server, no account.
+under `calendar:*` keys — no server, no sign-in.
 
 The keys worth knowing by name:
 

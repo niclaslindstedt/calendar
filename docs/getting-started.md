@@ -499,7 +499,7 @@ in English whatever the app's language is set to, because it is a legal
 document rather than app chrome.
 
 The short version: the calendar runs entirely on your device, there is no
-backend and no account, and nothing is sent anywhere unless you switch on one
+backend and nothing to sign up for, and nothing is sent anywhere unless you switch on one
 of the optional sync backends — and then only to your own account with that
 provider.
 

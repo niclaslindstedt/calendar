@@ -219,7 +219,7 @@ export const nb: Catalog = {
     dropboxHint: "Én mappe per kalender i Dropbox-appmappen din.",
     icloud: "iCloud Drive",
     icloudHint:
-      "Din egen iCloud Drive: kalenderne følger deg mellom Apple-enhetene dine, uten noen konto å opprette. Åpne dem i Filer-appen.",
+      "Din egen iCloud Drive: kalenderne følger deg mellom Apple-enhetene dine, uten noen registrering. Åpne dem i Filer-appen.",
     icloudSignedOut:
       "Denne enheten er ikke logget på iCloud, eller iCloud Drive er slått av. Slå det på i systeminnstillingene, og koble til på nytt.",
     connect: "Koble til",

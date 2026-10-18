@@ -219,7 +219,7 @@ export const nl: Catalog = {
     dropboxHint: "Eén map per kalender in uw Dropbox-appmap.",
     icloud: "iCloud Drive",
     icloudHint:
-      "Uw eigen iCloud Drive: uw kalenders gaan mee tussen uw Apple-apparaten, zonder account aan te maken. Open ze in de app Bestanden.",
+      "Uw eigen iCloud Drive: uw kalenders gaan mee tussen uw Apple-apparaten, zonder registratie. Open ze in de app Bestanden.",
     icloudSignedOut:
       "Dit apparaat is niet aangemeld bij iCloud, of iCloud Drive staat uit. Zet het aan in de systeeminstellingen en maak daarna opnieuw verbinding.",
     connect: "Verbinden",
