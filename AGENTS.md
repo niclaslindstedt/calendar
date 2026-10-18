@@ -528,6 +528,16 @@ it has to clear both rules below and it has to be worth its own row here.
   `PHONE_BUILD` (`src/app/phoneBuild.ts`) — and its privacy page says the app's
   own storage where the others say the browser's. Both pinned in
   `tests/dropbox_offered_test.ts`.
+- **The phone app's privacy page names no other edition of itself**: no
+  website, static site or web app, no GitHub Pages and its server logs, no
+  browser, no "installed app" as opposed to something else. Its copy is true
+  of the phone app alone — everything comes inside the download, nothing is
+  sent on launch, and the only traffic is the iCloud Drive sync the user turns
+  on. Every gate in `src/app/PrivacyPage.tsx` spells `__NATIVE_BUILD__` out at
+  the use site, so the other wording leaves the bundle. `phoneOnly` in
+  `vite.config.ts` does the same for `index.html` (no "PWA", no share tags, no
+  HTML comments). Pinned in `tests/privacy_page_test.ts`, which also checks
+  the website's and the desktop app's copies still describe the website.
 - **The iCloud container is committed, never derived from the bundle id**:
   `iCloud.se.agilator.calendar` in `identifiers.js` (which the entitlements
   and `plugins/with-icloud.js`'s `NSUbiquitousContainers` read) and as a

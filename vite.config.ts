@@ -168,15 +168,30 @@ function websiteOnly(): Plugin {
 // What the phone build leaves out on top of that (by owner decision): Dropbox.
 // The app's own code folds it away on the same flag (`storage/backends.ts`);
 // this takes it out of the page description in `index.html`, which every
-// build carries, so nothing in the phone app's page names it.
+// build carries, so nothing in the phone app's page names it. Nor does the
+// phone app's page name another edition of itself: the description calls it
+// an app rather than a PWA, the rest of the share tags (written for a link to
+// the website, and read by nothing on a phone) go with the ones `websiteOnly`
+// drops, and so do the source's HTML comments, which talk about the website.
 function phoneOnly(): Plugin {
   return {
     name: "phone-only",
     transformIndexHtml(html) {
-      return html.replace(
-        /(<meta\s+name="description"\s+content="[^"]*?)\s*Entries live[^"]*"/,
-        '$1 Entries live on your device unless you choose to sync them."',
-      );
+      return html
+        .replace(/[ \t]*<!--[\s\S]*?-->\n?/g, "")
+        .replace(
+          /[ \t]*<meta\b[^>]*\b(?:property="og:|name="twitter:)[^>]*>\n?/g,
+          "",
+        )
+        .replace(/\n(?:[ \t]*\n)+/g, "\n")
+        .replace(
+          /(<meta\s+name="description"\s+content="[^"]*?)\s*Entries live[^"]*"/,
+          '$1 Entries live on your device unless you choose to sync them."',
+        )
+        .replace(
+          /(<meta\s+name="description"\s+content="[^"]*?)\bPWA\b/,
+          "$1app",
+        );
     },
   };
 }

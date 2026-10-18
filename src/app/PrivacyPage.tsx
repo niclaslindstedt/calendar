@@ -43,13 +43,16 @@ const LAST_UPDATED = "2026-10-18";
 // says the same thing without them.
 const WEBSITE = !__NATIVE_BUILD__ && !__SHELL_BUILD__;
 
-// Whether this is the phone app's copy. The phone app offers no Dropbox (by
-// owner decision; `storage/backends.ts`) and no local folder, so its copy of
-// the policy does not describe them — folded out the same way. Nor does it
-// talk about a browser: inside the app the calendar is kept in the app's own
-// storage on the device, and that is what its copy says. The website's and
-// the desktop app's keep it all.
-const PHONE = __NATIVE_BUILD__;
+// The phone app's copy is gated on `__NATIVE_BUILD__`, spelled out at each
+// use: a constant derived from it was not reliably folded by the minifier, and
+// what is gated has to leave the bundle rather than sit in it as dead code.
+// The phone app offers no Dropbox (by owner decision; `storage/backends.ts`)
+// and no local folder, so its copy of the policy does not describe them. Nor
+// does it describe any other edition: no website, no browser, no hosting and
+// its server logs, no "installed app" as opposed to something else. It is
+// true of the phone app alone — everything it runs comes inside the download,
+// it sends nothing when it starts, and the only traffic is the iCloud Drive
+// sync the reader turns on. The website's and the desktop app's keep it all.
 
 export function PrivacyPage() {
   // The page mounts on its own, outside the app shell, so it has to paint its
@@ -83,29 +86,42 @@ export function PrivacyPage() {
         </header>
 
         <Section title="Summary">
-          <p>
-            <span className="text-fg-bright">{__APP_NAME__}</span> is a
-            local-first wall calendar, served as a static site{" "}
-            {WEBSITE ? (
-              <>
-                at{" "}
-                <span className="text-fg-bright">
-                  calendar.niclaslindstedt.se
-                </span>
-              </>
-            ) : (
-              "on the web"
-            )}{" "}
-            and shipped to the App Store and Google Play as an app that carries
-            that same page inside it. It runs entirely on your device. There is
-            no backend of our own, no account, no cookies, and no analytics or
-            tracking. By default your notes are stored only on your device and
-            never leave it.
-          </p>
+          {__NATIVE_BUILD__ ? (
+            <p>
+              <span className="text-fg-bright">{__APP_NAME__}</span> is a
+              local-first wall calendar. The app and every file it runs come
+              inside the download, and it runs entirely on your device: it sends
+              nothing when it starts, and the only network traffic it ever
+              causes is the sync you turn on yourself. There is no server of our
+              own, no account, no cookies, and no analytics or tracking. By
+              default your notes are stored only on your device and never leave
+              it.
+            </p>
+          ) : (
+            <p>
+              <span className="text-fg-bright">{__APP_NAME__}</span> is a
+              local-first wall calendar, served as a static site{" "}
+              {WEBSITE ? (
+                <>
+                  at{" "}
+                  <span className="text-fg-bright">
+                    calendar.niclaslindstedt.se
+                  </span>
+                </>
+              ) : (
+                "on the web"
+              )}{" "}
+              and shipped to the App Store and Google Play as an app that
+              carries that same page inside it. It runs entirely on your device.
+              There is no backend of our own, no account, no cookies, and no
+              analytics or tracking. By default your notes are stored only on
+              your device and never leave it.
+            </p>
+          )}
           <p>
             You may <span className="text-fg-bright">optionally</span> turn on
             sync to a storage location <em>you</em> control —{" "}
-            {PHONE
+            {__NATIVE_BUILD__
               ? "on iPhone and iPad, your own iCloud Drive"
               : "a local folder on your computer, your own Dropbox, or, in the App Store app, your own iCloud Drive"}{" "}
             — so the same calendar appears on more than one device. Even then
@@ -117,7 +133,9 @@ export function PrivacyPage() {
             below.
           </p>
           <p>
-            In the installed app you may also{" "}
+            {__NATIVE_BUILD__
+              ? "You may also"
+              : "In the installed app you may also"}{" "}
             <span className="text-fg-bright">optionally</span> let the calendar
             read your contacts, so it can mark your people&apos;s birthdays and
             name days. That is off until you turn it on, it is chosen one
@@ -135,7 +153,7 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="What the app stores">
-          {PHONE ? (
+          {__NATIVE_BUILD__ ? (
             <p>
               On your device, inside the app&apos;s own private storage, the
               calendar keeps:
@@ -173,12 +191,14 @@ export function PrivacyPage() {
               works, your vacation allowance, and the developer switches.
             </li>
             <li>
-              {PHONE
+              {__NATIVE_BUILD__
                 ? "If you turned on iCloud Drive, which backend you chose — it needs no sign-in and no token."
                 : "If you turned on an optional sync backend, the small amount of configuration it needs to reconnect (which folder you picked, or an access token your cloud provider issued to this device)."}
             </li>
             <li>
-              If you turned on contacts in the installed app, only the{" "}
+              {__NATIVE_BUILD__
+                ? "If you turned on contacts, only the"
+                : "If you turned on contacts in the installed app, only the"}{" "}
               <em>identifiers</em> of the contacts you checked — see{" "}
               <a className="text-link hover:underline" href="#contacts">
                 Contacts
@@ -188,7 +208,7 @@ export function PrivacyPage() {
           </ul>
           <p>
             This data is stored as plain JSON on your own device.{" "}
-            {PHONE
+            {__NATIVE_BUILD__
               ? "Deleting the app"
               : "Clearing the browser's site data for this origin — or deleting the installed app —"}{" "}
             erases the local copy permanently; if you have not enabled sync,
@@ -197,17 +217,23 @@ export function PrivacyPage() {
           <p>
             Exporting a backup writes a file to your device and uploads nothing;
             importing one reads a file you picked and sends nothing. Both happen
-            entirely in the page.
+            entirely {__NATIVE_BUILD__ ? "on the device" : "in the page"}.
           </p>
         </Section>
 
         <Section title="Contacts" id="contacts">
           <p>
-            The <span className="text-fg-bright">installed app</span> can mark
-            the days your people are celebrated: their birthday, and — in a
-            country with a name-day tradition — the day the almanac celebrates
-            their name. This section describes that feature in full, because it
-            is the one that touches data belonging to people other than you.
+            The{" "}
+            {__NATIVE_BUILD__ ? (
+              "app"
+            ) : (
+              <span className="text-fg-bright">installed app</span>
+            )}{" "}
+            can mark the days your people are celebrated: their birthday, and —
+            in a country with a name-day tradition — the day the almanac
+            celebrates their name. This section describes that feature in full,
+            because it is the one that touches data belonging to people other
+            than you.
           </p>
           <ul className="ml-5 list-disc space-y-2">
             <li>
@@ -246,13 +272,15 @@ export function PrivacyPage() {
               any point. Contacts are not uploaded to us — we run no server to
               upload them to — and they are deliberately kept out of the sync
               backends as well: a calendar synced to{" "}
-              {PHONE
+              {__NATIVE_BUILD__
                 ? "iCloud Drive"
                 : "Dropbox, iCloud Drive or a local folder"}{" "}
               carries your notes and no contact data. They are also kept out of
               the Home Screen widgets (see{" "}
               <a className="text-link hover:underline" href="#installed-app">
-                The installed app
+                {__NATIVE_BUILD__
+                  ? "The app on your device"
+                  : "The installed app"}
               </a>
               ).
             </li>
@@ -274,7 +302,7 @@ export function PrivacyPage() {
               reading them at all.
             </li>
           </ul>
-          {!PHONE && (
+          {!__NATIVE_BUILD__ && (
             <p>
               The website{" "}
               {WEBSITE && (
@@ -292,58 +320,83 @@ export function PrivacyPage() {
           )}
         </Section>
 
-        <Section title="The installed app" id="installed-app">
-          <p>
-            The App Store and Google Play builds are a thin native shell around
-            the same web app, carrying a copy of it inside the download and
-            serving it locally, so the app works with no network at all. It adds
-            features of its own:{" "}
-            <span className="text-fg-bright">Home Screen widgets</span>, which
-            read the calendar from the page, on the device; reading your
-            contacts (see{" "}
-            <a className="text-link hover:underline" href="#contacts">
-              Contacts
-            </a>
-            ); and, on iPhone and iPad,{" "}
-            <span className="text-fg-bright">iCloud Drive</span> as a place to
-            sync your notes (see{" "}
-            <a className="text-link hover:underline" href="#cloud-sync">
-              Optional sync
-            </a>
-            ).
-            {!PHONE &&
-              " The website offers neither contacts nor iCloud Drive: a browser gives it no way to reach them."}
-          </p>
+        <Section
+          title={
+            __NATIVE_BUILD__ ? "The app on your device" : "The installed app"
+          }
+          id="installed-app"
+        >
+          {__NATIVE_BUILD__ ? (
+            <p>
+              Besides the calendar itself, the app offers{" "}
+              <span className="text-fg-bright">Home Screen widgets</span>, which
+              read the calendar from the app, on the device; reading your
+              contacts (see{" "}
+              <a className="text-link hover:underline" href="#contacts">
+                Contacts
+              </a>
+              ); and, on iPhone and iPad,{" "}
+              <span className="text-fg-bright">iCloud Drive</span> as a place to
+              sync your notes (see{" "}
+              <a className="text-link hover:underline" href="#cloud-sync">
+                Optional sync
+              </a>
+              ).
+            </p>
+          ) : (
+            <p>
+              The App Store and Google Play builds are a thin native shell
+              around the same web app, carrying a copy of it inside the download
+              and serving it locally, so the app works with no network at all.
+              It adds features of its own:{" "}
+              <span className="text-fg-bright">Home Screen widgets</span>, which
+              read the calendar from the page, on the device; reading your
+              contacts (see{" "}
+              <a className="text-link hover:underline" href="#contacts">
+                Contacts
+              </a>
+              ); and, on iPhone and iPad,{" "}
+              <span className="text-fg-bright">iCloud Drive</span> as a place to
+              sync your notes (see{" "}
+              <a className="text-link hover:underline" href="#cloud-sync">
+                Optional sync
+              </a>
+              ). The website offers neither contacts nor iCloud Drive: a browser
+              gives it no way to reach them.
+            </p>
+          )}
           <p>
             The widget shows the date and, if you wrote one, that day&apos;s
             note, so those are copied into a private container the app and the
             widget share. That container is local to your device and is not
             backed up to any service by the app.{" "}
             <span className="text-fg-bright">
-              Access tokens and contact data are explicitly excluded from it
+              {__NATIVE_BUILD__
+                ? "Contact data is explicitly excluded from it"
+                : "Access tokens and contact data are explicitly excluded from it"}
             </span>{" "}
             — a widget never prints a contact&apos;s name, birthday, or name
             day, and no contact information is placed where the widget could
             read it.
           </p>
           <p>
-            The shell requests no advertising identifier, contains no analytics
-            or crash-reporting SDK, and makes no network request of its own. The
-            app stores themselves report the usual download and crash statistics
-            to the developer account; that is Apple&apos;s and Google&apos;s
-            collection, described in their own policies, and it carries nothing
-            from inside the app.
+            The {__NATIVE_BUILD__ ? "app" : "shell"} requests no advertising
+            identifier, contains no analytics or crash-reporting SDK, and makes
+            no network request of its own. The app stores themselves report the
+            usual download and crash statistics to the developer account; that
+            is Apple&apos;s and Google&apos;s collection, described in their own
+            policies, and it carries nothing from inside the app.
           </p>
         </Section>
 
         <Section title="Network requests">
-          {PHONE ? (
+          {__NATIVE_BUILD__ ? (
             <p>
-              With no sync backend enabled, the app makes no third-party network
-              calls. Its own files (HTML, JavaScript, CSS, fonts, and icons)
-              come from inside the download, so it works fully offline. No
-              fonts, analytics scripts, error-reporting services, or advertising
-              networks are ever loaded.
+              With no sync turned on, the app makes no network request at all —
+              not when it starts, and not while you use it. Everything it runs
+              (its code, fonts, and icons) comes inside the download, so it
+              works fully offline. No analytics scripts, error-reporting
+              services, or advertising networks are ever loaded.
             </p>
           ) : (
             <p>
@@ -356,11 +409,12 @@ export function PrivacyPage() {
               services, or advertising networks are ever loaded.
             </p>
           )}
-          {PHONE ? (
+          {__NATIVE_BUILD__ ? (
             <p>
-              Sync adds none either. iCloud Drive needs no request from the app
-              at all: it writes to a folder on the device, and the system syncs
-              it.
+              The only network traffic is the sync you turn on: iCloud Drive,
+              through your own Apple Account. Even that needs no request from
+              the app itself — it writes to a folder on the device, and the
+              system syncs it.
             </p>
           ) : (
             <p>
@@ -379,7 +433,7 @@ export function PrivacyPage() {
             back to device-only at any time:
           </p>
           <ul className="ml-5 list-disc space-y-2">
-            {!PHONE && (
+            {!__NATIVE_BUILD__ && (
               <>
                 <li>
                   <span className="text-fg-bright">Local folder.</span> Using
@@ -398,15 +452,17 @@ export function PrivacyPage() {
               </>
             )}
             <li>
-              <span className="text-fg-bright">iCloud Drive.</span> In the App
-              Store app only, and only when you choose it: your calendars are
-              written to the app&apos;s own <em>Calendar</em> folder in your
-              iCloud Drive, which you can open in the Files app, and Apple syncs
-              them between your devices signed in to the same Apple Account.
-              Your notes are then also subject to Apple&apos;s privacy policy.
-              There is no sign-in and no token; switching back to another
-              backend stops the syncing, and the files stay in your iCloud Drive
-              until you delete them.
+              <span className="text-fg-bright">iCloud Drive.</span>{" "}
+              {__NATIVE_BUILD__
+                ? "On iPhone and iPad, and only when you choose it:"
+                : "In the App Store app only, and only when you choose it:"}{" "}
+              your calendars are written to the app&apos;s own <em>Calendar</em>{" "}
+              folder in your iCloud Drive, which you can open in the Files app,
+              and Apple syncs them between your devices signed in to the same
+              Apple Account. Your notes are then also subject to Apple&apos;s
+              privacy policy. There is no sign-in and no token; switching back
+              to another backend stops the syncing, and the files stay in your
+              iCloud Drive until you delete them.
             </li>
           </ul>
           <p>
@@ -416,7 +472,7 @@ export function PrivacyPage() {
             </span>
             , it stays in your account with your provider, and the project
             authors never receive it or hold any token for it.{" "}
-            {PHONE
+            {__NATIVE_BUILD__
               ? "Turn iCloud Drive off for the app in your device's settings and it simply stops syncing. When iCloud Drive is active"
               : "Revoke the app's access at any time from your provider's security settings and it simply stops syncing. When Dropbox or iCloud Drive is active"}{" "}
             the app also keeps a mirror of the synced calendar on the device, so
@@ -426,14 +482,21 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="Cookies">
-          <p>
-            The app sets no cookies. All persistence uses{" "}
-            <code className="text-fg-bright">localStorage</code> and the storage
-            location you chose.
-          </p>
+          {__NATIVE_BUILD__ ? (
+            <p>
+              The app sets no cookies. Everything it keeps is in its own storage
+              on the device and in the storage location you chose.
+            </p>
+          ) : (
+            <p>
+              The app sets no cookies. All persistence uses{" "}
+              <code className="text-fg-bright">localStorage</code> and the
+              storage location you chose.
+            </p>
+          )}
         </Section>
 
-        <Section title="Web analytics">
+        <Section title={__NATIVE_BUILD__ ? "Analytics" : "Web analytics"}>
           <p>
             None. The app loads no analytics or behavioral-tracking SDK, and the
             project authors collect no usage statistics from it.
@@ -441,22 +504,30 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="Server logs">
-          <p>
-            The website is served by{" "}
-            <strong className="text-fg-bright">GitHub Pages</strong>. GitHub may
-            collect standard request metadata (IP address, user agent, request
-            path) for operating the service. This is covered by{" "}
-            <a
-              href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
-              className="text-link hover:underline"
-            >
-              GitHub&apos;s privacy statement
-            </a>
-            . The app from the App Store or Google Play carries its own copy of
-            the site and serves it on the device, so opening it sends no such
-            request. The project authors do not run an additional logging
-            service.
-          </p>
+          {__NATIVE_BUILD__ ? (
+            <p>
+              There are none. The app has no server of ours to talk to:
+              everything it runs comes inside the download, so opening it sends
+              no request, and there is nothing to log.
+            </p>
+          ) : (
+            <p>
+              The website is served by{" "}
+              <strong className="text-fg-bright">GitHub Pages</strong>. GitHub
+              may collect standard request metadata (IP address, user agent,
+              request path) for operating the service. This is covered by{" "}
+              <a
+                href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
+                className="text-link hover:underline"
+              >
+                GitHub&apos;s privacy statement
+              </a>
+              . The app from the App Store or Google Play carries its own copy
+              of the site and serves it on the device, so opening it sends no
+              such request. The project authors do not run an additional logging
+              service.
+            </p>
+          )}
         </Section>
 
         <Section title="Children">
