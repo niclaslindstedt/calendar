@@ -2,6 +2,7 @@
 // The Swedish UI catalog. Must satisfy `Catalog` (typed from `en.ts`), so a
 // string added to English without a Swedish translation fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const sv: Catalog = {
@@ -205,8 +206,10 @@ export const sv: Catalog = {
   storage: {
     heading: "Var din kalender lagras",
     hint: "En lagringsplats är aktiv åt gången. Vid byte läses dokumentet från den nya platsen.",
-    browser: "Den här webbläsaren",
-    browserHint: "Sparas i webbläsarens lokala lagring. Ingen konfiguration.",
+    browser: PHONE_BUILD ? "Den här enheten" : "Den här webbläsaren",
+    browserHint: PHONE_BUILD
+      ? "Sparas på den här enheten, i appens egen lagring. Ingen konfiguration."
+      : "Sparas i webbläsarens lokala lagring. Ingen konfiguration.",
     folder: "Lokal mapp",
     folderHint: "En mapp på den här enheten (endast Chromium-webbläsare).",
     folderConnect: "Välj mapp…",

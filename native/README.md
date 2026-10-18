@@ -223,7 +223,10 @@ There is no iCloud on Android, and the module says so rather than pretending:
 `requireOptionalNativeModule` returns `null` there and the backend is reported
 unavailable — which means the web app never lists it. The Android build keeps
 the backends its WebView can reach — the device's own storage — and, like the
-iPhone build, offers no Dropbox.
+iPhone build, offers no Dropbox and no local folder (`FOLDER_OFFERED` in
+`src/app/storage/backends.ts`: no WebView here has a directory picker). The
+phone build calls the device's own storage "This device", where the website
+and the desktop app say "This browser".
 
 ## Signing in to Dropbox
 

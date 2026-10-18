@@ -2,6 +2,7 @@
 // The Finnish UI catalog. Must satisfy `Catalog` (typed from `en.ts`), so a
 // string added to English without a Finnish translation fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const fi: Catalog = {
@@ -205,8 +206,10 @@ export const fi: Catalog = {
   storage: {
     heading: "Missä kalenterisi on",
     hint: "Kerrallaan on käytössä yksi tallennuspaikka. Vaihtaminen lataa asiakirjan uudesta paikasta.",
-    browser: "Tämä selain",
-    browserHint: "Tämän selaimen paikallisessa tallennustilassa. Ei asetuksia.",
+    browser: PHONE_BUILD ? "Tämä laite" : "Tämä selain",
+    browserHint: PHONE_BUILD
+      ? "Tällä laitteella, sovelluksen omassa tallennustilassa. Ei asetuksia."
+      : "Tämän selaimen paikallisessa tallennustilassa. Ei asetuksia.",
     folder: "Paikallinen kansio",
     folderHint: "Kansio tällä laitteella (vain Chromium-selaimet).",
     folderConnect: "Valitse kansio…",

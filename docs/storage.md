@@ -30,8 +30,8 @@ document from the new backend.
 
 | Backend          | Where the data lives                         | Notes                                                                                            |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **This browser** | `localStorage` on the device                 | The default; zero setup.                                                                         |
-| **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only.                                                 |
+| **This browser** | `localStorage` on the device                 | The default; zero setup. Called **This device** in the phone app.                                |
+| **Local folder** | `calendar.json` in a folder you pick         | File System Access API — Chromium browsers only. Never the phone app.                            |
 | **Dropbox**      | `<calendar>/calendar.json` in the app folder | PKCE OAuth; requires `VITE_DROPBOX_APP_KEY`. Website and desktop app only — never the phone app. |
 | **iCloud Drive** | `calendar.json` in the app's iCloud folder   | App Store app only — see below.                                                                  |
 | **Demo data**    | In memory only                               | Developer mode; the demo's Personal calendar.                                                    |

@@ -45,6 +45,7 @@ import {
 } from "@niclaslindstedt/oss-framework/storage";
 
 import { logStore } from "../log.ts";
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import { emptyDoc, serializeDoc } from "../types.ts";
 import type { BackendId } from "./demoAdapter.ts";
 import { getICloudHost, probeICloudStatus } from "./icloudHost.ts";
@@ -68,23 +69,36 @@ const DROPBOX_REFRESH_KEY = "calendar:dropbox:refresh";
 // The phone build offers no Dropbox at all (by owner decision): no row, no
 // connect, no sign-in to finish — it keeps its calendars on the device or in
 // the reader's own iCloud Drive. The website and the desktop app keep Dropbox
-// exactly as before. Keyed on the phone build's own flag
-// (`native/scripts/web-build-env.mjs`) and read through `import.meta.env`, so
-// Vite folds it to a constant and the phone bundle drops the Dropbox UI rather
-// than hiding it; a key in the environment no longer reaches that bundle
-// either. A phone that still has Dropbox stored as its backend (an early test
-// install) gets null from `buildAdapter` and opens on the device's own copy,
-// like any backend that is not available.
-const PHONE_BUILD = import.meta.env.VITE_NATIVE_BUILD === "on";
+// exactly as before. Keyed on the phone build's own flag (`PHONE_BUILD`, read
+// through `import.meta.env`), so Vite folds it to a constant and the phone
+// bundle drops the Dropbox UI rather than hiding it; a key in the environment
+// no longer reaches that bundle either. A phone that still has Dropbox stored
+// as its backend (an early test install) gets null from `buildAdapter` and
+// opens on the device's own copy, like any backend that is not available.
 
 const DROPBOX_APP_KEY = PHONE_BUILD
   ? undefined
   : (import.meta.env.VITE_DROPBOX_APP_KEY as string | undefined);
 
+// The two gates below spell the flag out rather than reading `PHONE_BUILD`:
+// the minifier folds a comparison written in place to a literal that every
+// use site then drops on, but leaves a constant derived from another constant
+// as a variable — and the gated rows, their handlers and the code they call
+// would then ride along in the phone bundle, dead but present.
+
 /** Whether this build offers Dropbox at all: never in the phone build, and
  *  elsewhere only when the deployment configured an app key. */
 export const DROPBOX_OFFERED =
-  !PHONE_BUILD && Boolean(import.meta.env.VITE_DROPBOX_APP_KEY);
+  import.meta.env.VITE_NATIVE_BUILD !== "on" &&
+  Boolean(import.meta.env.VITE_DROPBOX_APP_KEY);
+
+/** Whether this build offers a local folder at all: never in the phone build,
+ *  whose WebView has no directory picker, so the row could only ever be
+ *  missing or dead — it is left out of that bundle instead, and a stored
+ *  folder choice there reads as this device (`readActiveBackendId`). The
+ *  website and the desktop app keep it, shown where the browser can pick a
+ *  folder. */
+export const FOLDER_OFFERED = import.meta.env.VITE_NATIVE_BUILD !== "on";
 
 // Dropbox fixes the app folder's name in the app's own configuration — an
 // "App folder"-scoped app lives under `Apps/<name>/` and the API's root *is*
@@ -101,12 +115,10 @@ const storageLog = (scope: string) => logStore.createLogger(scope);
 
 export function readActiveBackendId(): BackendId {
   const stored = localStorage.getItem(ACTIVE_KEY);
-  if (
-    stored === "browser" ||
-    stored === "folder" ||
-    stored === "dropbox" ||
-    stored === "icloud"
-  ) {
+  // A phone install never had a folder to write to (its WebView cannot pick
+  // one), so its calendars have been on the device all along.
+  if (stored === "folder") return FOLDER_OFFERED ? "folder" : "browser";
+  if (stored === "browser" || stored === "dropbox" || stored === "icloud") {
     return stored;
   }
   // The retired `gdrive` backend is gone. A device that had it selected is
@@ -154,7 +166,7 @@ export function writeActiveBackendId(id: BackendId): void {
 // --- availability (build/browser gates) -------------------------------------
 
 export function isFolderAvailable(): boolean {
-  return isFolderBackendAvailable();
+  return FOLDER_OFFERED && isFolderBackendAvailable();
 }
 
 // --- connection state -------------------------------------------------------
@@ -324,6 +336,7 @@ export async function buildAdapter(
       });
 
     case "folder": {
+      if (!FOLDER_OFFERED) return null;
       const handle = await loadDirectoryHandle();
       if (!handle) return null;
       return createFolderAdapter(handle, {

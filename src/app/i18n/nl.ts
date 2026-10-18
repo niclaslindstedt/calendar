@@ -2,6 +2,7 @@
 // The Dutch UI catalog. Must satisfy `Catalog` (typed from `en.ts`), so a
 // string added to English without a Dutch translation fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const nl: Catalog = {
@@ -206,8 +207,10 @@ export const nl: Catalog = {
   storage: {
     heading: "Waar uw kalender staat",
     hint: "Er is telkens één opslag actief. Wisselen laadt het document uit de nieuwe opslag.",
-    browser: "Deze browser",
-    browserHint: "In de lokale opslag van deze browser. Niets in te stellen.",
+    browser: PHONE_BUILD ? "Dit apparaat" : "Deze browser",
+    browserHint: PHONE_BUILD
+      ? "Op dit apparaat, in de eigen opslag van de app. Niets in te stellen."
+      : "In de lokale opslag van deze browser. Niets in te stellen.",
     folder: "Lokale map",
     folderHint: "Een map op dit apparaat (alleen Chromium-browsers).",
     folderConnect: "Map kiezen…",

@@ -33,7 +33,7 @@ import { APPEARANCE_KEY, DEFAULT_APPEARANCE } from "./appearance.ts";
 // Last meaningful change to the policy text below. Bump it whenever the
 // wording is edited — it renders verbatim at the top of the page and is the
 // only line a reader has to look at to see how fresh the policy is.
-const LAST_UPDATED = "2026-10-17";
+const LAST_UPDATED = "2026-10-18";
 
 // Whether this is the website's copy of the page. The phone and desktop apps
 // carry their own copy, and an app carries no link back to the source (by owner
@@ -44,9 +44,11 @@ const LAST_UPDATED = "2026-10-17";
 const WEBSITE = !__NATIVE_BUILD__ && !__SHELL_BUILD__;
 
 // Whether this is the phone app's copy. The phone app offers no Dropbox (by
-// owner decision; `storage/backends.ts`), so its copy of the policy does not
-// describe it — folded out the same way. The website's and the desktop app's
-// keep it.
+// owner decision; `storage/backends.ts`) and no local folder, so its copy of
+// the policy does not describe them — folded out the same way. Nor does it
+// talk about a browser: inside the app the calendar is kept in the app's own
+// storage on the device, and that is what its copy says. The website's and
+// the desktop app's keep it all.
 const PHONE = __NATIVE_BUILD__;
 
 export function PrivacyPage() {
@@ -133,22 +135,29 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="What the app stores">
-          <p>
-            On your device, inside the browser&apos;s{" "}
-            <code className="text-fg-bright">localStorage</code>{" "}
-            {WEBSITE ? (
-              <>
-                for the origin{" "}
-                <span className="text-fg-bright">
-                  calendar.niclaslindstedt.se
-                </span>
-              </>
-            ) : (
-              "for the website's origin"
-            )}{" "}
-            — or, in the installed app, inside the app&apos;s own private
-            storage — the calendar keeps:
-          </p>
+          {PHONE ? (
+            <p>
+              On your device, inside the app&apos;s own private storage, the
+              calendar keeps:
+            </p>
+          ) : (
+            <p>
+              On your device, inside the browser&apos;s{" "}
+              <code className="text-fg-bright">localStorage</code>{" "}
+              {WEBSITE ? (
+                <>
+                  for the origin{" "}
+                  <span className="text-fg-bright">
+                    calendar.niclaslindstedt.se
+                  </span>
+                </>
+              ) : (
+                "for the website's origin"
+              )}{" "}
+              — or, in the installed app, inside the app&apos;s own private
+              storage — the calendar keeps:
+            </p>
+          )}
           <ul className="ml-5 list-disc space-y-1">
             <li>
               The note you wrote on each day, as plain text keyed by date.
@@ -178,10 +187,12 @@ export function PrivacyPage() {
             </li>
           </ul>
           <p>
-            This data is stored as plain JSON on your own device. Clearing the
-            browser&apos;s site data for this origin — or deleting the installed
-            app — erases the local copy permanently; if you have not enabled
-            sync, there is no copy elsewhere to restore from.
+            This data is stored as plain JSON on your own device.{" "}
+            {PHONE
+              ? "Deleting the app"
+              : "Clearing the browser's site data for this origin — or deleting the installed app —"}{" "}
+            erases the local copy permanently; if you have not enabled sync,
+            there is no copy elsewhere to restore from.
           </p>
           <p>
             Exporting a backup writes a file to your device and uploads nothing;
@@ -263,20 +274,22 @@ export function PrivacyPage() {
               reading them at all.
             </li>
           </ul>
-          <p>
-            The website{" "}
-            {WEBSITE && (
-              <>
-                at{" "}
-                <span className="text-fg-bright">
-                  calendar.niclaslindstedt.se
-                </span>{" "}
-              </>
-            )}
-            has no contacts feature: a browser offers the app no way to read
-            them, and the app makes no attempt to obtain them by any other
-            route. The <em>Contacts</em> tab is simply not shown there.
-          </p>
+          {!PHONE && (
+            <p>
+              The website{" "}
+              {WEBSITE && (
+                <>
+                  at{" "}
+                  <span className="text-fg-bright">
+                    calendar.niclaslindstedt.se
+                  </span>{" "}
+                </>
+              )}
+              has no contacts feature: a browser offers the app no way to read
+              them, and the app makes no attempt to obtain them by any other
+              route. The <em>Contacts</em> tab is simply not shown there.
+            </p>
+          )}
         </Section>
 
         <Section title="The installed app" id="installed-app">
@@ -297,8 +310,9 @@ export function PrivacyPage() {
             <a className="text-link hover:underline" href="#cloud-sync">
               Optional sync
             </a>
-            ). The website offers neither contacts nor iCloud Drive: a browser
-            gives it no way to reach them.
+            ).
+            {!PHONE &&
+              " The website offers neither contacts nor iCloud Drive: a browser gives it no way to reach them."}
           </p>
           <p>
             The widget shows the date and, if you wrote one, that day&apos;s
@@ -323,15 +337,25 @@ export function PrivacyPage() {
         </Section>
 
         <Section title="Network requests">
-          <p>
-            With no sync backend enabled, the app makes no third-party network
-            calls. On the website, the only requests your browser makes are for
-            the app&apos;s own static files (HTML, JavaScript, CSS, fonts, and
-            icons) from its own origin; once loaded it works fully offline as an
-            installed PWA. In the app-store build even those come from inside
-            the download. No fonts, analytics scripts, error-reporting services,
-            or advertising networks are ever loaded.
-          </p>
+          {PHONE ? (
+            <p>
+              With no sync backend enabled, the app makes no third-party network
+              calls. Its own files (HTML, JavaScript, CSS, fonts, and icons)
+              come from inside the download, so it works fully offline. No
+              fonts, analytics scripts, error-reporting services, or advertising
+              networks are ever loaded.
+            </p>
+          ) : (
+            <p>
+              With no sync backend enabled, the app makes no third-party network
+              calls. On the website, the only requests your browser makes are
+              for the app&apos;s own static files (HTML, JavaScript, CSS, fonts,
+              and icons) from its own origin; once loaded it works fully offline
+              as an installed PWA. In the app-store build even those come from
+              inside the download. No fonts, analytics scripts, error-reporting
+              services, or advertising networks are ever loaded.
+            </p>
+          )}
           {PHONE ? (
             <p>
               Sync adds none either. iCloud Drive needs no request from the app

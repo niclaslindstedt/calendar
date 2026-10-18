@@ -4,6 +4,8 @@
 // These are the app-chrome strings; calendar-domain names (months, weekdays,
 // name days) come from the country packs in `../locale/`, not from here.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
+
 export const en = {
   app: {
     title: "Calendar",
@@ -220,8 +222,13 @@ export const en = {
   storage: {
     heading: "Where your calendar is stored",
     hint: "One backend is active at a time. Switching loads the document from the new backend.",
-    browser: "This browser",
-    browserHint: "Stored in this browser's local storage. No setup.",
+    // The on-device backend. Inside the phone app (`PHONE_BUILD`) no browser
+    // is in sight, so it is the device there; the website and the desktop
+    // app keep calling it the browser. Every catalog follows suit.
+    browser: PHONE_BUILD ? "This device" : "This browser",
+    browserHint: PHONE_BUILD
+      ? "Kept on this device, in the app's own storage. No setup."
+      : "Stored in this browser's local storage. No setup.",
     folder: "Local folder",
     folderHint: "A folder on this device (Chromium browsers only).",
     folderConnect: "Choose folder…",

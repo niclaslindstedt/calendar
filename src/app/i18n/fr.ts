@@ -2,6 +2,7 @@
 // The French UI catalog. Must satisfy `Catalog` (typed from `en.ts`), so a
 // string added to English without a French translation fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const fr: Catalog = {
@@ -207,8 +208,10 @@ export const fr: Catalog = {
   storage: {
     heading: "Où votre calendrier est conservé",
     hint: "Un seul stockage est actif à la fois. En changer recharge le document depuis le nouveau.",
-    browser: "Ce navigateur",
-    browserHint: "Dans le stockage local de ce navigateur. Rien à configurer.",
+    browser: PHONE_BUILD ? "Cet appareil" : "Ce navigateur",
+    browserHint: PHONE_BUILD
+      ? "Sur cet appareil, dans le stockage propre de l'app. Rien à configurer."
+      : "Dans le stockage local de ce navigateur. Rien à configurer.",
     folder: "Dossier local",
     folderHint: "Un dossier sur cet appareil (navigateurs Chromium seulement).",
     folderConnect: "Choisir un dossier…",

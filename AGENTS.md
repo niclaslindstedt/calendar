@@ -520,6 +520,14 @@ it has to clear both rules below and it has to be worth its own row here.
   as from any unavailable backend. `tests/dropbox_offered_test.ts` pins it.
   The website and the desktop app keep Dropbox exactly as before — gate a
   new Dropbox surface on `DROPBOX_OFFERED`, not on the key.
+- **Nor a local folder** (`FOLDER_OFFERED`, same file): the phone's WebView
+  has no directory picker, so the row is left out of that bundle rather than
+  hidden at run time, and a stored `"folder"` choice reads as `"browser"`
+  (`readActiveBackendId`). The phone build calls the on-device backend "This
+  device" — every catalog picks its `storage.browser` / `browserHint` on
+  `PHONE_BUILD` (`src/app/phoneBuild.ts`) — and its privacy page says the app's
+  own storage where the others say the browser's. Both pinned in
+  `tests/dropbox_offered_test.ts`.
 - **The iCloud container is committed, never derived from the bundle id**:
   `iCloud.se.agilator.calendar` in `identifiers.js` (which the entitlements
   and `plugins/with-icloud.js`'s `NSUbiquitousContainers` read) and as a

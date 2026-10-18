@@ -20,6 +20,7 @@ import { useT } from "../i18n/index.ts";
 import type { BackendId } from "../storage/backends.ts";
 import {
   DROPBOX_OFFERED,
+  FOLDER_OFFERED,
   dropboxLocation,
   icloudLocation,
   isDropboxConnected,
@@ -173,14 +174,15 @@ export function StorageSection({
                 : undefined,
             disconnectable: effectiveBackend === "icloud",
           })}
-          {backendRow("folder", t("storage.folder"), t("storage.folderHint"), {
-            available: isFolderAvailable(),
-            connected: storage.folderConnected,
-            onConnect: storage.connectFolder,
-            connectLabel: t("storage.folderConnect"),
-          })}
-          {/* A build-time constant, so a build without Dropbox (the phone
-              app's) carries no row for it at all. */}
+          {/* Build-time constants, so the phone app's build carries no row
+              for a local folder or for Dropbox at all. */}
+          {FOLDER_OFFERED &&
+            backendRow("folder", t("storage.folder"), t("storage.folderHint"), {
+              available: isFolderAvailable(),
+              connected: storage.folderConnected,
+              onConnect: storage.connectFolder,
+              connectLabel: t("storage.folderConnect"),
+            })}
           {DROPBOX_OFFERED &&
             backendRow(
               "dropbox",

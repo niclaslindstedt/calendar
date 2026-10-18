@@ -2,6 +2,7 @@
 // The German UI catalog. Must satisfy `Catalog` (typed from `en.ts`), so a
 // string added to English without a German translation fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const de: Catalog = {
@@ -206,8 +207,10 @@ export const de: Catalog = {
   storage: {
     heading: "Wo Ihr Kalender liegt",
     hint: "Es ist immer genau ein Speicher aktiv. Beim Wechsel wird das Dokument aus dem neuen Speicher geladen.",
-    browser: "Dieser Browser",
-    browserHint: "Im lokalen Speicher dieses Browsers. Ohne Einrichtung.",
+    browser: PHONE_BUILD ? "Dieses Gerät" : "Dieser Browser",
+    browserHint: PHONE_BUILD
+      ? "Auf diesem Gerät, im eigenen Speicher der App. Ohne Einrichtung."
+      : "Im lokalen Speicher dieses Browsers. Ohne Einrichtung.",
     folder: "Lokaler Ordner",
     folderHint: "Ein Ordner auf diesem Gerät (nur Chromium-Browser).",
     folderConnect: "Ordner wählen…",

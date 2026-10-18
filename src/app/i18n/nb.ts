@@ -3,6 +3,7 @@
 // `en.ts`), so a string added to English without a Norwegian translation
 // fails `tsc`.
 
+import { PHONE_BUILD } from "../phoneBuild.ts";
 import type { Catalog } from "./en.ts";
 
 export const nb: Catalog = {
@@ -206,8 +207,10 @@ export const nb: Catalog = {
   storage: {
     heading: "Hvor kalenderen din ligger",
     hint: "Bare én lagringsplass er aktiv om gangen. Å bytte laster dokumentet fra den nye.",
-    browser: "Denne nettleseren",
-    browserHint: "I den lokale lagringen til denne nettleseren. Ingen oppsett.",
+    browser: PHONE_BUILD ? "Denne enheten" : "Denne nettleseren",
+    browserHint: PHONE_BUILD
+      ? "Lagres på denne enheten, i appens egen lagring. Ingen oppsett."
+      : "I den lokale lagringen til denne nettleseren. Ingen oppsett.",
     folder: "Lokal mappe",
     folderHint: "En mappe på denne enheten (bare Chromium-nettlesere).",
     folderConnect: "Velg mappe…",

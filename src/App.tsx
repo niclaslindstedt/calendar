@@ -61,6 +61,7 @@ import { cacheIdForBase } from "./app/pwa.ts";
 import { applyRoomVars } from "./app/roomScale.ts";
 import {
   DROPBOX_OFFERED,
+  FOLDER_OFFERED,
   completeOauthOnBoot,
   connectDropbox,
   connectFolder,
@@ -918,10 +919,13 @@ export function App() {
                     status("Connected icloud");
                   }
                 }),
+          // Never reached in the phone app's build, which has no folder row
+          // to call it from; the constant folds it out there.
           connectFolder: () =>
             DEMO
               ? refuseInDemo()
-              : void connectFolder().then((ok) => {
+              : FOLDER_OFFERED &&
+                void connectFolder().then((ok) => {
                   if (ok) {
                     setFolderConnected(true);
                     setActiveBackend("folder");
